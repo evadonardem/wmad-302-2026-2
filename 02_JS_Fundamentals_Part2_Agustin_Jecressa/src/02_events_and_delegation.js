@@ -10,9 +10,25 @@ export function initSariSariPOS() {
     const btn = e.target.closest('button');
     if (!btn) return;
 
-    // TODO:
-    // 1. Read btn.dataset.action ('add' or 'clear')
-    // 2. Update currentTotal state
-    // 3. Update billTotalEl textContent formatted as ₱XX.XX
+    const { action, price } = btn.dataset;
+
+    if (action === 'clear') {
+      currentTotal = 0;
+    } else {
+  
+      let itemPrice = parseFloat(price);
+
+      if (isNaN(itemPrice)) {
+        const match = btn.textContent.match(/\d+/);
+        itemPrice = match ? parseFloat(match[0]) : 0;
+      }
+
+      currentTotal += itemPrice;
+    }
+
+    if (billTotalEl) {
+      billTotalEl.textContent = `₱${currentTotal.toFixed(2)}`;
+    }
+
   });
 }
