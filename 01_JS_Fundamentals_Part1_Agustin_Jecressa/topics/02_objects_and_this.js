@@ -25,6 +25,7 @@ export function GCashAccount(accountName, initialBalance = 0) {
 
 export function getBarangayName(resident) {
   // TODO: Use optional chaining resident?.address?.barangay?.name
+  return resident?.address?.barangay?.name || 'Unregistered Barangay';
 }
 
 export function runObjectsTests() {
