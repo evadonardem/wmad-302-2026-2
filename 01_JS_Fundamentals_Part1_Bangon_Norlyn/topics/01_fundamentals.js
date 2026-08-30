@@ -10,7 +10,6 @@ export function computeJollibeeBill(rawPrice, isSeniorOrPWD) {
   if(typeof rawPrice !== 'number' || NaN(rawPrice) || rawPrice < 0){
     return 0;
   }
-
   let total;
 
   if(isSeniorOrPWD){
