@@ -1,12 +1,11 @@
 import console from 'node:console';
 
 export function evaluateAyudaEligibility(citizen) {
-  return citizen.isOnPWD || citizen.isLowIncome && (citizen.dependentCount ?? 0) >= 3;
+  return citizen.isSeniorPWD || (citizen.isLowIncome && (citizen.dependentCount ?? 0) >= 3);
 }
-
 export function computeJollibeeBill(rawPrice, isSeniorOrPWD) {
-  // TODO: Task 2 - Compute bill returning rounded Number (e.g., Number(total.toFixed(2)))
-  if (typeof rawPrice !== 'number' || isNaN(rawPrice)) {
+  
+  if (typeof rawPrice !== 'number' || Number.isNaN(rawPrice) || rawPrice <= 0) {
     return 0;
   }
 
