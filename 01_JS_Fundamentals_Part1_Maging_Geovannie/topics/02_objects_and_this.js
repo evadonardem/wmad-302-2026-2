@@ -1,14 +1,39 @@
-import console from 'node:console';
-
 export function GCashAccount(accountName, initialBalance = 0) {
   this.accountName = accountName;
   this.balance = initialBalance;
 
-  // TODO: Implement cashIn(amount), sendMoney(amount, recipient), and getBalance()
+  function GCashWallet(balance = 0) {
+    this.balance = balance;
+
+    this.cashIn = function (amount) {
+      this.balance += amount;
+      return this;
+    };
+
+    this.sendMoney = function (amount, recipient) {
+      if (this.balance < amount + 15) {
+        throw new Error("Insufficient GCash Balance");
+      }
+      this.balance -= amount + 15;
+      return this;
+    };
+  }
+
+  // Actually create the wallet and copy its methods onto this account
+  const wallet = new GCashWallet(initialBalance);
+  this.cashIn = wallet.cashIn.bind(this);
+  this.sendMoney = wallet.sendMoney.bind(this);
+
+  this.getBalance = function () {
+    return `₱${this.balance.toFixed(2)}`;
+  };
 }
 
 export function getBarangayName(resident) {
-  // TODO: Use optional chaining resident?.address?.barangay?.name
+  function innerGetBarangayName(resident) {
+    return resident?.address?.barangay?.name ?? "Unregistered Barangay";
+  }
+  return innerGetBarangayName(resident);
 }
 
 export function runObjectsTests() {
