@@ -1,6 +1,6 @@
 services:
   ep01-runner:
-    build: .
+    build: .docker compose down
     volumes:
       - .:/app
     stdin_open: true
