@@ -1,3 +1,2 @@
-const fullname = "Charlie Batil";
-console.log(`Hi! ${fullname}`);
-console.log("Welcome to JavaScript language!");
+console.log("Hello, this is my test run for Batil Charlie");
+console.log("Welcome to JavaScript programming");
