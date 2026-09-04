@@ -22,7 +22,7 @@ This lab focuses on core JavaScript runtime mechanics: variable scoping, type co
     - If `dependentCount` is `null` or `undefined`, default to `0` using the nullish coalescing operator (`??`).
 - Task 2: Jollibee Receipt Bill Calculator (`computeJollibeeBill(rawPrice, isSeniorOrPWD)`)
     - If `isSeniorOrPWD === true`, apply a 20% discount (VAT exempt).
-    - If `isSeniorOrPWD === false`, apply 12% VAT (`rawPrice * 1.12`).
+    - If `isSeniorOrPWD === false`, apply 12% VAT (`rawPrice * 1.12`).S
     - Return `0` if `rawPrice` is non-numeric, `NaN`, or <= `0`.
     - Return Type: Must return a `Number` rounded to 2 decimal places (e.g., `Number(total.toFixed(2))`).
 
