@@ -2,7 +2,7 @@ import console from 'node:console';
 
 export function evaluateAyudaEligibility(citizen) {
   const dependentCount = citizen.dependentCount ?? 0;
-  return citizen.isSeniorPWD || (citizen.isLowIncome && dependentCount > 0);
+  return citizen.isSeniorPWD || (citizen.isLowIncome && dependentCount >= 0);
 }
 
 export function computeJollibeeBill(rawPrice, isSeniorOrPWD) {
