@@ -29,7 +29,7 @@ This lab focuses on core JavaScript runtime mechanics: variable scoping, type co
 ### Module 02: Objects & Context (`topics/02_objects_and_this.js`)
 
 - Task 1: GCash Wallet Engine (`GCashAccount(accountName, initialBalance)`)
-    - Constructor function maintaining internal balance.
+    - Constructor function  maintaining internal balance.
     - `cashIn(amount)`: Adds `amount` to balance. Must return `this`.
     - `sendMoney(amount, recipient)`: Deducts `amount + 15` (₱15 transfer fee). If balance is insufficient for `(amount + 15)`, throw an `Error("Insufficient GCash Balance")`. Must return `this`.
     - getBalance(): Returns string formatted as "₱XXX.XX".
