@@ -50,8 +50,8 @@ export function initResidentIdGenerator() {
       cardsGrid.insertAdjacentHTML('beforeend', `
         <div class="resident-card">
           <h3>🏛️ Barangay Resident Card</h3>
-          <p><strong>Name:</strong> [FullName]</p>
-          <p><strong>Zone:</strong> [Purok]</p>
+          <p><strong>Name:</strong> ${name}</p>
+          <p><strong>Zone:</strong> ${purok}</p>
         </div>
       `);
     }
