@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Barangay Ayuda and Resident System</title>
+    <link rel="stylesheet" href="./src/style.css">
+</head>
+
+<body>
+
+    <h1>Barangay System</h1>
+
+    <hr>
+
+    <h2>Module 01: Route Status Monitor</h2>
+
+    <button id="btn-sync-routes">Sync Routes</button>
+
+    <ul id="route-list">
+        <li data-status="active">Route 1 - Active</li>
+        <li data-status="active">Route 2 - Active</li>
+        <li data-status="delayed">Route 3 - Delayed</li>
+        <li data-status="active">Route 4 - Active</li>
+        <li data-status="delayed">Route 5 - Full</li>
+    </ul>
+
+    <div id="stats-panel">
+        <p id="stat-active">Active Routes: 0</p>
+        <p id="stat-delayed">Delayed/Full: 0</p>
+    </div>
+
+    <hr>
+
+    <h2>Module 02: POS Register</h2>
+
+    <div id="pos-register">
+        <button data-action="add" data-amount="50">Add ₱50</button>
+        <button data-action="add" data-amount="100">Add ₱100</button>
+        <button data-action="add" data-amount="150">Add ₱150</button>
+        <button data-action="clear">Clear</button>
+    </div>
+
+    <p id="bill-total">₱0.00</p>
+
+    <hr>
+
+    <h2>Module 03: Resident Form</h2>
+
+    <form id="resident-form">
+
+        <label for="res-name">Full Name:</label>
+        <input type="text" id="res-name">
+
+        <p id="err-name"></p>
+
+        <br>
+
+        <label for="res-purok">Purok:</label>
+
+        <select id="res-purok">
+            <option value="">Select Purok</option>
+            <option value="Purok 1">Purok 1</option>
+            <option value="Purok 2">Purok 2</option>
+            <option value="Purok 3">Purok 3</option>
+            <option value="Purok 4">Purok 4</option>
+        </select>
+
+        <p id="err-purok"></p>
+
+        <button type="submit">Create Resident Card</button>
+
+    </form>
+
+    <div id="id-cards-grid"></div>
+
+    <script type="module" src="./index.js"></script>
+
+</body>
+</html>
