@@ -5,10 +5,31 @@ export function GCashAccount(accountName, initialBalance = 0) {
   this.balance = initialBalance;
 
   // TODO: Implement cashIn(amount), sendMoney(amount, recipient), and getBalance()
+  // Add money to the GCash balance 
+  this.cashIn = function(amount) { 
+    this.balance += amount; 
+    return this; 
+  }; 
+
+  // Send money to another person 
+  this.sendMoney = function(amount, recipient) { 
+    const totalCost = amount + 15; 
+    if (this.balance < totalCost) { 
+      throw new Error('Insufficient GCash Balance'); 
+    } 
+    this.balance -= totalCost; return this; 
+  }; 
+  
+  // Get balance formatted as Philippine Peso 
+  this.getBalance = function() {
+    return `₱${this.balance.toFixed(2)}`; 
+  };
 }
 
 export function getBarangayName(resident) {
   // TODO: Use optional chaining resident?.address?.barangay?.name
+  const barangayName = resident?.address?.barangay?.name; 
+  return barangayName ?? 'Unregistered Barangay';
 }
 
 export function runObjectsTests() {
