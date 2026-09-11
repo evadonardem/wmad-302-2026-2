@@ -2,15 +2,45 @@
  * [ROLE C] Async & Storage Module - Student Starter Template
  */
 
+let cachedProvinces = [];
 export async function fetchProvinces() {
   // TODO: Fetch provinces from https://psgc.gitlab.io/api/provinces.json
   // Include offline fallback array.
-  return [];
+  try{
+    const response = await fetch('https://psgc.gitlab.io/api/provinces.json');
+
+    if (!response.ok){
+      throw new Error (`API responded with ${response.status}`);
+    }
+
+    const data = await response.json();
+    cachedProvinces = data;
+    return data;
+
+  } catch (error){
+    console.warn("fetchProvinces: using cached data", error.message);
+    return cachedProvinces;
+  }
 }
 
+let cachedCitiesMunicipalities ={};
 export async function fetchCitiesMunicipalities(provinceCode) {
   // TODO: Fetch cities/municipalities for the given province code from PSGC API with offline fallback.
-  return [];
+  try{
+    const response = await fetch(`https://psgc.gitlab.io/api/provinces/${provinceCode}/cities-municipalities.json`);
+
+    if(!response.ok){
+      throw new Error(`API responded with ${response.status}`);
+    }
+
+    const data = await response.json();
+    cachedCitiesMunicipalities[provinceCode] = data;
+    return data;
+
+  } catch (error){
+    console.warn("fetchCitiesMunicipalities: using cached data", error.message);
+    return cachedCitiesMunicipalities[provinceCode] || [];
+  }
 }
 
 export function getOfflineQueue() {
