@@ -61,8 +61,15 @@ export function getOfflineQueue() {
 
 export function saveToOfflineQueue(appData) {
   // TODO: Save application object to localStorage queue
+  const currentQueue = getOfflineQueue();
+  currentQueue.push(appData);
+  localStorage.setItem('ebarangay_offline_applications', JSON.stringify(currentQueue));
 }
+  
 
 export function removeFromOfflineQueue(id) {
   // TODO: Remove application from localStorage queue by id
+  const currentQueue = getOfflineQueue();
+  const updatedQueue = currentQueue.filter(app => app.id !== id);
+  localStorage.setItem('ebarangay_offline_applications', JSON.stringify(updatedQueue));
 }
