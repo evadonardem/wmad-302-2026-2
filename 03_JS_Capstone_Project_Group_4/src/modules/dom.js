@@ -1,19 +1,26 @@
 /**
- * [ROLE B] DOM & UI Module - Student Starter Template
+ * [ROLE B] DOM & UI Module
+ * e-Barangay — Resident Queue & POS Register rendering
  */
 
+/**
+ * Escapes a string for safe insertion into innerHTML, preventing XSS.
+ * Uses the browser's own text-node encoding rather than a manual
+ * blocklist, so it's safe against every HTML-special character.
+ */
 export function sanitizeHTML(str) {
   const temp = document.createElement('div');
   temp.textContent = str;
   return temp.innerHTML;
 }
 
+/**
+ * Renders resident queue cards into `container`.
+ * Each card carries a real `data-priority="${resident.priority}"` attribute
+ * (used by CSS for the color-coded accent bar) and a delete button wired
+ * for event delegation via `data-action="remove-resident"` + `data-id`.
+ */
 export function renderResidentCards(container, residents) {
-<<<<<<< HEAD
-  // TODO: Render resident cards into container. 
-  // Handle empty state if residents array is empty.
-  // Include data-action="remove-resident" and data-id attributes on delete buttons.
-=======
   if (!container) return;
 
   if (!residents || residents.length === 0) {
@@ -63,18 +70,15 @@ export function renderResidentCards(container, residents) {
   }).join('');
 
   container.innerHTML = `<div class="queue-list">${rows}</div>`;
->>>>>>> e5568dda4819f9089866e3b973184baaad1d9b1b
 }
 
+/**
+ * Renders the POS register: item list, subtotal, budget cap and a
+ * live `<progress>` bar showing how much of the budget has been used.
+ * Expects `packerState` shaped roughly as:
+ *   { items: [{ id, name, price, qty }], budgetCap: number }
+ */
 export function renderPOSRegister(container, packerState) {
-<<<<<<< HEAD
-  // TODO: Render POS register showing subtotal, budget cap, <progress> bar, and item list with remove buttons.
-}
-
-export function setupActionDelegation(rootElement, actionMap) {
-  // TODO: Implement event delegation on rootElement for elements with [data-action].
-}
-=======
   if (!container) return;
 
   const items = Array.isArray(packerState?.items) ? packerState.items : [];
@@ -224,4 +228,3 @@ export function bindButtonFeedback(button) {
   button.addEventListener('pointerup', release);
   button.addEventListener('pointercancel', release);
 }
->>>>>>> e5568dda4819f9089866e3b973184baaad1d9b1b
