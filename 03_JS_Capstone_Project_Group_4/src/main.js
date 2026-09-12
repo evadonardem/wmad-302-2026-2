@@ -1,128 +1,332 @@
 /**
- * [INTEGRATION] Main Entrypoint Module - Student Starter Template
+ * [INTEGRATION] Main Entrypoint Module
+ * Wires together engine.js (Role A), dom.js (Role B), and async.js (Role C)
+ * to match the e-Barangay Disaster & Ayuda Portal markup.
  */
 
 import { evaluateAyudaEligibility, createReliefPacker } from './engine.js';
 
-// ASSUMED exports from dom.js — please confirm/correct:
 import {
-  renderProvinceDropdown,
-  renderCityDropdown,
-  renderEligibilityResult,
-  renderPackerState,
-  getFormValues,
+  renderResidentCards,
+  renderPOSRegister,
+  setupActionDelegation,
 } from './dom.js';
 
-// ASSUMED exports from async.js — please confirm/correct:
 import {
   fetchProvinces,
-  fetchCitiesByProvince,
-  loadQueueFromStorage,
-  saveQueueToStorage,
+  fetchCitiesMunicipalities,
+  getOfflineQueue,
+  saveToOfflineQueue,
+  removeFromOfflineQueue,
 } from './async.js';
 
-const STORAGE_KEY = 'ayuda_queue'; // ASSUMPTION: confirm actual key name
+// ---------------------------------------------------------------------------
+// Element ids — matched to index.html
+// ---------------------------------------------------------------------------
+const EL = {
+  ayudaForm: 'ayuda-form',
+  nameInput: 'name',
+  provinceSelect: 'prov-select',
+  citySelect: 'city-select',
+  monthlyIncomeInput: 'monthly-income',
+  isSeniorCheckbox: 'is-senior',
+  isPWDCheckbox: 'is-pwd',
+  dependentCountInput: 'dependent-count',
 
-let packer = createReliefPacker(1000); // ASSUMPTION: default budget cap
-let citizenQueue = [];
+  posContainer: 'pos-container',
+  itemNameInput: 'item-name',
+  itemPriceInput: 'item-price',
+  addItemBtn: 'add-item-btn',
 
-document.addEventListener('DOMContentLoaded', async () => {
-  console.log("e-Barangay Starter Kit Initialized. Happy Coding!");
+  queueContainer: 'queue-container',
+  queueSearchInput: 'queue-search',
+  queuePriorityFilter: 'queue-priority-filter',
+  queueSortSelect: 'queue-sort',
+};
 
-  // 1. Load persisted queue from LocalStorage
-  try {
-    citizenQueue = loadQueueFromStorage(STORAGE_KEY) ?? [];
-  } catch (err) {
-    console.error('Failed to load queue from storage:', err);
-    citizenQueue = [];
-  }
+// Higher rank = more urgent = sorts first
+const PRIORITY_RANK = { CRITICAL: 3, HIGH: 2, LOW: 1 };
 
-  // 2. Fetch provinces and populate dropdown
-  try {
-    const provinces = await fetchProvinces();
-    renderProvinceDropdown(provinces);
-  } catch (err) {
-    console.error('Failed to fetch provinces:', err);
-  }
+const BUDGET_CAP = 1000; // ASSUMPTION: default relief-goods budget cap; no cap input exists in the markup
 
-  // 3. Cascading province -> city dropdown
-  const provinceSelect = document.getElementById('province-select'); // ASSUMPTION: element id
-  if (provinceSelect) {
-    provinceSelect.addEventListener('change', async (e) => {
-      const provinceCode = e.target.value;
-      try {
-        const cities = await fetchCitiesByProvince(provinceCode);
-        renderCityDropdown(cities);
-      } catch (err) {
-        console.error('Failed to fetch cities:', err);
-      }
+// ---------------------------------------------------------------------------
+// State
+// ---------------------------------------------------------------------------
+
+// packer.addItem/removeItem work by index, but the DOM removes items by id
+// (data-action="remove-item" data-id="..."). itemIds mirrors the packer's
+// internal items array 1:1 so an id can be translated back into an index.
+const packer = createReliefPacker(BUDGET_CAP);
+let itemIds = [];
+
+let residentQueue = []; // in-memory mirror of the full offline queue (unfiltered, unsorted)
+
+// Queue view state — search/filter/sort are applied on top of residentQueue
+// without mutating it, so the underlying stored data is never lost.
+const queueView = {
+  searchTerm: '',
+  priorityFilter: 'all', // 'all' | 'critical' | 'high' | 'low'
+  sortMode: 'priority', // 'priority' | 'registered'
+};
+
+// ---------------------------------------------------------------------------
+// Rendering helpers
+// ---------------------------------------------------------------------------
+
+function getVisibleQueue() {
+  const term = queueView.searchTerm.trim().toLowerCase();
+
+  let visible = residentQueue.filter((resident) => {
+    const matchesSearch = !term || (resident.name ?? '').toLowerCase().includes(term);
+    const matchesPriority =
+      queueView.priorityFilter === 'all' ||
+      (resident.priority ?? '').toLowerCase() === queueView.priorityFilter;
+    return matchesSearch && matchesPriority;
+  });
+
+  if (queueView.sortMode === 'priority') {
+    // Priority first (CRITICAL > HIGH > LOW), then longest-waiting first
+    // within the same priority tier.
+    visible = [...visible].sort((a, b) => {
+      const rankDiff = (PRIORITY_RANK[b.priority] ?? 0) - (PRIORITY_RANK[a.priority] ?? 0);
+      if (rankDiff !== 0) return rankDiff;
+      return (b.waitMinutes ?? 0) - (a.waitMinutes ?? 0);
     });
   }
+  // 'registered' mode: leave in the order getOfflineQueue() returned (registration order)
 
-  // 4. Eligibility form submission
-  const eligibilityForm = document.getElementById('eligibility-form'); // ASSUMPTION: element id
-  if (eligibilityForm) {
-    eligibilityForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const citizen = getFormValues(eligibilityForm); // ASSUMPTION: returns { isSenior, isPWD, monthlyIncome, dependentCount, ... }
-      const result = evaluateAyudaEligibility(citizen);
+  return visible;
+}
 
-      renderEligibilityResult(result);
+function renderQueue() {
+  const container = document.getElementById(EL.queueContainer);
+  renderResidentCards(container, getVisibleQueue());
+}
 
-      if (result.approved) {
-        citizenQueue.push({ ...citizen, ...result });
-        saveQueueToStorage(STORAGE_KEY, citizenQueue);
-      }
-    });
-  }
+function renderPacker() {
+  const container = document.getElementById(EL.posContainer);
+  const items = packer.getItems().map((item, i) => ({
+    id: itemIds[i],
+    name: item.name,
+    price: item.price,
+    qty: 1, // engine.js's packer has no quantity concept; always 1 per line
+  }));
+  renderPOSRegister(container, { items, budgetCap: packer.getBudgetCap() });
+}
 
-  // 5. Relief goods packer (POS-style) setup
-  const packerForm = document.getElementById('packer-form'); // ASSUMPTION: element id
-  if (packerForm) {
-    packerForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const nameInput = document.getElementById('item-name');
-      const priceInput = document.getElementById('item-price');
-      const name = nameInput?.value?.trim();
-      const price = parseFloat(priceInput?.value);
+function generateId() {
+  return crypto.randomUUID?.() ?? `id-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
 
-      const result = packer.addItem(name, price);
-      if (!result.success) {
-        console.warn('Could not add item:', result.reason);
-      }
+// ---------------------------------------------------------------------------
+// Province / City cascading dropdowns
+// (dom.js has no dropdown-render helper, so options are populated directly)
+// ---------------------------------------------------------------------------
 
-      renderPackerState({
-        items: packer.getItems(),
-        total: packer.getTotal(),
-        cap: packer.getBudgetCap(),
-      });
+function populateSelect(selectEl, options, placeholderText) {
+  if (!selectEl) return;
+  selectEl.innerHTML = '';
 
-      packerForm.reset();
-    });
-  }
+  const placeholderOpt = document.createElement('option');
+  placeholderOpt.value = '';
+  placeholderOpt.textContent = placeholderText;
+  selectEl.appendChild(placeholderOpt);
 
-  // 6. Action delegation (e.g. remove item, remove queue entry) via a single listener
-  document.addEventListener('click', (e) => {
-    const removeItemBtn = e.target.closest('[data-action="remove-item"]'); // ASSUMPTION: data attribute contract
-    if (removeItemBtn) {
-      const index = Number(removeItemBtn.dataset.index);
-      const result = packer.removeItem(index);
-      if (result.success) {
-        renderPackerState({
-          items: packer.getItems(),
-          total: packer.getTotal(),
-          cap: packer.getBudgetCap(),
-        });
-      }
+  options.forEach((opt) => {
+    const optionEl = document.createElement('option');
+    optionEl.value = opt.code;
+    optionEl.textContent = opt.name;
+    selectEl.appendChild(optionEl);
+  });
+}
+
+async function initProvinceDropdown() {
+  const provinceSelect = document.getElementById(EL.provinceSelect);
+  const citySelect = document.getElementById(EL.citySelect);
+  if (!provinceSelect) return;
+
+  const provinces = await fetchProvinces();
+  populateSelect(provinceSelect, provinces, 'Select Province...');
+
+  provinceSelect.addEventListener('change', async (e) => {
+    if (!citySelect) return;
+
+    citySelect.disabled = true;
+    populateSelect(citySelect, [], 'Loading...');
+
+    const cities = await fetchCitiesMunicipalities(e.target.value);
+    populateSelect(citySelect, cities, 'Select City/Municipality...');
+    citySelect.disabled = false;
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Ayuda registration form
+// ---------------------------------------------------------------------------
+
+function readAyudaForm() {
+  const name = document.getElementById(EL.nameInput)?.value.trim() || 'Unnamed resident';
+  const province = document.getElementById(EL.provinceSelect)?.value || '';
+  const city = document.getElementById(EL.citySelect)?.value || '';
+  const monthlyIncome = Number(document.getElementById(EL.monthlyIncomeInput)?.value) || 0;
+  const isSenior = document.getElementById(EL.isSeniorCheckbox)?.checked || false;
+  const isPWD = document.getElementById(EL.isPWDCheckbox)?.checked || false;
+  const dependentCount = Number(document.getElementById(EL.dependentCountInput)?.value) || 0;
+
+  return { name, province, city, monthlyIncome, isSenior, isPWD, dependentCount };
+}
+
+function resetAyudaForm(form) {
+  form.reset();
+  // Re-apply the placeholder state on the city dropdown since form.reset()
+  // doesn't clear dynamically-injected <option>s.
+  const citySelect = document.getElementById(EL.citySelect);
+  if (citySelect) populateSelect(citySelect, [], 'Select City/Municipality...');
+}
+
+function initAyudaForm() {
+  const form = document.getElementById(EL.ayudaForm);
+  if (!form) return;
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+
+    const citizen = readAyudaForm();
+    const result = evaluateAyudaEligibility(citizen);
+
+    const record = {
+      id: generateId(),
+      name: citizen.name,
+      province: citizen.province,
+      city: citizen.city,
+      waitMinutes: 0,
+      priority: result.priority,
+      score: result.score,
+      approved: result.approved,
+      monthlyIncome: citizen.monthlyIncome,
+      dependentCount: citizen.dependentCount,
+      isSenior: citizen.isSenior,
+      isPWD: citizen.isPWD,
+    };
+
+    if (result.approved) {
+      saveToOfflineQueue(record);
+      residentQueue = getOfflineQueue();
+      renderQueue();
+      resetAyudaForm(form);
+    } else {
+      // ASSUMPTION: no "rejected" UI exists in the markup, so this is
+      // surfaced via alert. Swap in a proper message element if desired.
+      alert(`Not approved for Ayuda. Score: ${result.score} (${result.priority} priority).`);
+    }
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Relief goods packer (POS register)
+// ---------------------------------------------------------------------------
+
+function initPackerControls() {
+  const addBtn = document.getElementById(EL.addItemBtn);
+  if (!addBtn) return;
+
+  addBtn.addEventListener('click', () => {
+    const nameInput = document.getElementById(EL.itemNameInput);
+    const priceInput = document.getElementById(EL.itemPriceInput);
+    const name = nameInput?.value.trim();
+    const price = parseFloat(priceInput?.value);
+
+    const result = packer.addItem(name, price);
+
+    if (!result.success) {
+      alert(`Could not add item: ${result.reason}`);
       return;
     }
 
-    const removeQueueBtn = e.target.closest('[data-action="remove-queue-entry"]'); // ASSUMPTION
-    if (removeQueueBtn) {
-      const index = Number(removeQueueBtn.dataset.index);
-      citizenQueue.splice(index, 1);
-      saveQueueToStorage(STORAGE_KEY, citizenQueue);
-      // re-render queue if there's a dedicated render function — not yet imported
-    }
+    itemIds.push(generateId());
+    renderPacker();
+
+    nameInput.value = '';
+    priceInput.value = '';
+    nameInput.focus();
   });
+}
+
+// ---------------------------------------------------------------------------
+// Queue search / filter / sort controls
+// ---------------------------------------------------------------------------
+
+function initQueueControls() {
+  const searchInput = document.getElementById(EL.queueSearchInput);
+  const priorityFilter = document.getElementById(EL.queuePriorityFilter);
+  const sortSelect = document.getElementById(EL.queueSortSelect);
+
+  if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+      queueView.searchTerm = e.target.value;
+      renderQueue();
+    });
+  }
+
+  if (priorityFilter) {
+    priorityFilter.addEventListener('change', (e) => {
+      queueView.priorityFilter = e.target.value;
+      renderQueue();
+    });
+  }
+
+  if (sortSelect) {
+    sortSelect.addEventListener('change', (e) => {
+      queueView.sortMode = e.target.value;
+      renderQueue();
+    });
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Delegated click actions (resident removal, packer item removal)
+// ---------------------------------------------------------------------------
+
+function initActionDelegation() {
+  setupActionDelegation(document.body, {
+    'remove-resident': (el) => {
+      const id = el.dataset.id;
+      removeFromOfflineQueue(id);
+      residentQueue = getOfflineQueue();
+      renderQueue();
+    },
+    'remove-item': (el) => {
+      const id = el.dataset.id;
+      const index = itemIds.indexOf(id);
+      if (index === -1) return;
+
+      const result = packer.removeItem(index);
+      if (result.success) {
+        itemIds.splice(index, 1);
+        renderPacker();
+      }
+    },
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Bootstrap
+// ---------------------------------------------------------------------------
+
+document.addEventListener('DOMContentLoaded', async () => {
+  console.log('e-Barangay Starter Kit Initialized. Happy Coding!');
+
+  // Load persisted resident queue
+  residentQueue = getOfflineQueue();
+  renderQueue();
+
+  // Empty packer state on load
+  renderPacker();
+
+  // Wire up everything else
+  await initProvinceDropdown();
+  initAyudaForm();
+  initPackerControls();
+  initActionDelegation();
+  initQueueControls();
 });
