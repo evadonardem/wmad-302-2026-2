@@ -1,16 +1,15 @@
-/**
- * [ROLE C] Async & Storage Module - Student Starter Template
- */
-
 const STORAGE_KEY = 'ebarangay_offline_applications';
 
 const OFFLINE_PROVINCES_FALLBACK = [
-  { code: '0128', name: 'Pampanga' },
-  { code: '1339', name: 'Metro Manila' },
+  { code: '141100000', name: 'Benguet' },
+  { code: '133900000', name: 'Metro Manila' }
 ];
 
 const OFFLINE_CITIES_FALLBACK = {
-  '0128': [{ code: '012803', name: 'Angeles City' }],
+  '141100000': [
+    { code: '141102000', name: 'Baguio City', provinceCode: '141100000' },
+    { code: '141103000', name: 'La Trinidad', provinceCode: '141100000' }
+  ]
 };
 
 export async function fetchProvinces() {
@@ -18,43 +17,42 @@ export async function fetchProvinces() {
     const response = await fetch('https://psgc.gitlab.io/api/provinces.json');
     if (!response.ok) throw new Error('Failed to fetch provinces');
     return await response.json();
-  } catch (error) {
-    console.warn('Using offline province fallback:', error.message);
+  } catch (err) {
+    console.error('fetchProvinces failed, using offline fallback:', err.message);
     return OFFLINE_PROVINCES_FALLBACK;
   }
 }
 
 export async function fetchCitiesMunicipalities(provinceCode) {
   try {
-    const response = await fetch(
-      `https://psgc.gitlab.io/api/provinces/${provinceCode}/cities-municipalities.json`
-    );
+    const response = await fetch('https://psgc.gitlab.io/api/cities-municipalities.json');
     if (!response.ok) throw new Error('Failed to fetch cities/municipalities');
-    return await response.json();
-  } catch (error) {
-    console.warn('Using offline city fallback:', error.message);
+    const all = await response.json();
+    return all.filter(place => place.provinceCode === provinceCode);
+  } catch (err) {
+    console.error('fetchCitiesMunicipalities failed, using offline fallback:', err.message);
     return OFFLINE_CITIES_FALLBACK[provinceCode] || [];
   }
 }
 
 export function getOfflineQueue() {
-  const raw = localStorage.getItem(STORAGE_KEY);
   try {
+    const raw = localStorage.getItem(STORAGE_KEY);
     return raw ? JSON.parse(raw) : [];
-  } catch {
+  } catch (err) {
+    console.error('getOfflineQueue failed to parse storage:', err.message);
     return [];
   }
 }
 
 export function saveToOfflineQueue(appData) {
   const queue = getOfflineQueue();
-  const entry = { id: crypto.randomUUID(), ...appData, savedAt: new Date().toISOString() };
-  queue.push(entry);
+  queue.push(appData);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(queue));
-  return entry;
 }
 
 export function removeFromOfflineQueue(id) {
-  const queue = getOfflineQueue().filter(item => item.id !== id);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(queue));
+  const queue = getOfflineQueue();
+  const updatedQueue = queue.filter(app => app.id !== id);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedQueue));
 }
