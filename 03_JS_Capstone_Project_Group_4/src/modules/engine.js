@@ -10,7 +10,7 @@ export function evaluateAyudaEligibility(citizen) {
 
   if (isSenior === true) score += 35;
   if (isPWD === true) score += 35;
-  if (monthlyIncome < 10000) score += 20;
+  if (monthlyIncome <= 12000) score += 20;
 
   const dependents = Math.max(0, dependentCount ?? 0);
   const dependentPoints = Math.min(dependents * 5, 20);
