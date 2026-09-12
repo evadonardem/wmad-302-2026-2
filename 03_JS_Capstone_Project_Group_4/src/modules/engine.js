@@ -1,5 +1,3 @@
-//role A
-
 export function evaluateAyudaEligibility(citizen) {
   const {
     isSenior = false,
@@ -10,19 +8,11 @@ export function evaluateAyudaEligibility(citizen) {
 
   let score = 0;
 
-  if (isSenior === true) {
-    score += 35;
-  }
+  if (isSenior === true) score += 35;
+  if (isPWD === true) score += 35;
+  if (monthlyIncome < 10000) score += 20;
 
-  if (isPWD === true) {
-    score += 35;
-  }
-
-  if (monthlyIncome < 10000) {
-    score += 20;
-  }
-
-  const dependents = dependentCount ?? 0;
+  const dependents = Math.max(0, dependentCount ?? 0);
   const dependentPoints = Math.min(dependents * 5, 20);
   score += dependentPoints;
 
@@ -85,5 +75,90 @@ export function createReliefPacker(budgetCap = 1000) {
     getTotal,
     getItems,
     getBudgetCap,
+  };
+}
+
+export function createPOSRegister(budgetCap = 1000) {
+  const packer = createReliefPacker(budgetCap);
+  const registeredApplicants = new Map();
+
+  async function registerApplicant(registrationCallback) {
+    try {
+      const applicantData = await registrationCallback();
+
+      if (!applicantData || !applicantData.id) {
+        return {
+          status: 'REJECTED',
+          reason: 'Invalid applicant details or missing ID.',
+        };
+      }
+
+      const evaluation = evaluateAyudaEligibility(applicantData);
+      const record = {
+        ...applicantData,
+        evaluation,
+        registeredAt: new Date(),
+      };
+
+      registeredApplicants.set(applicantData.id, record);
+
+      if (!evaluation.approved) {
+        return {
+          status: 'DENIED',
+          reason: `Failed qualification criteria. Score: ${evaluation.score} (${evaluation.priority} Priority)`,
+          evaluation,
+        };
+      }
+
+      return {
+        status: 'APPROVED',
+        applicantId: applicantData.id,
+        evaluation,
+      };
+    } catch (error) {
+      return {
+        status: 'ERROR',
+        reason: error.message || 'Registration failed unexpectedly.',
+      };
+    }
+  }
+
+  function checkout(applicantId) {
+    const applicant = registeredApplicants.get(applicantId);
+
+    if (!applicant) {
+      return { success: false, reason: 'Applicant not found in register.' };
+    }
+
+    if (!applicant.evaluation.approved) {
+      return { success: false, reason: 'Applicant is not eligible for distribution.' };
+    }
+
+    const cart = packer.getItems();
+    const totalSpent = packer.getTotal();
+
+    if (cart.length === 0) {
+      return { success: false, reason: 'Relief pack is empty.' };
+    }
+
+    return {
+      success: true,
+      transaction: {
+        applicantId: applicant.id,
+        name: applicant.name,
+        priority: applicant.evaluation.priority,
+        score: applicant.evaluation.score,
+        items: cart,
+        total: totalSpent,
+        remainingBudget: packer.getBudgetCap() - totalSpent,
+      },
+    };
+  }
+
+  return {
+    packer,
+    registerApplicant,
+    checkout,
+    getApplicantRecord: (id) => registeredApplicants.get(id),
   };
 }
