@@ -1,24 +1,25 @@
 import console from 'node:console';
 
 export function evaluateAyudaEligibility(citizen) {
-
   return citizen.isSeniorPWD || citizen.isLowIncome && (citizen.dependentCount ?? 0) >= 3;
   // TODO: Task 1 - Evaluate Ayuda Eligibility using ?? and logical operators
 }
 
 export function computeJollibeeBill(rawPrice, isSeniorOrPWD) {
-  if(typeof rawPrice !== 'number' || NaN(rawPrice) || rawPrice < 0){
-    return 0;
-  }
-  let total;
+    if (typeof rawPrice !== 'number' || Number.isNaN(rawPrice) || rawPrice <= 0){
+      return 0;
+    }
 
-  if(isSeniorOrPWD){
-    total = rawPrice * .8;
-  }else{
-    total = rawPrice * 1.12;
-  }
+    let total;
 
-  return Number(total.toFixed(2));
+    if(isSeniorOrPWD === true){
+      total = rawPrice* 0.80;
+    }
+    else{
+      total = rawPrice*1.12;
+    }
+
+    return Number(total.totalFixed(2));
   // TODO: Task 2 - Compute bill returning rounded Number (e.g., Number(total.toFixed(2)))
 }
 
