@@ -1,11 +1,9 @@
 /**
- * [ROLE C] Async & Storage Module - Fixed Implementation
+ * [ROLE C] Async & Storage Module
  */
 
-// Key required by the Definition of Done
 const OFFLINE_STORAGE_KEY = 'ebarangay_offline_applications';
 
-// Fallback data formatted with standard property keys
 const MOCK_PROVINCES = [
   { code: '012800000', name: 'Ilocos Norte' },
   { code: '012900000', name: 'Ilocos Sur' },
@@ -22,84 +20,70 @@ const MOCK_CITIES_MUNICIPALITIES = {
 };
 
 /**
- * Fetches all provinces from the PSGC API with offline fallback.
- * @returns {Promise<Array<{code: string, name: string}>>} Array of province objects
+ * Fetches all provinces with multi-level endpoint fallback handling.
  */
 export async function fetchProvinces() {
-  // If browser is offline, skip network delay and return mock data immediately
-  if (!navigator.onLine) {
-    return MOCK_PROVINCES;
+  // Primary endpoint required by prompt
+  const PRIMARY_URL = 'https://psgc.gitlab.io/api/provinces.json';
+  // Secondary modern public API fallback
+  const SECONDARY_URL = 'https://psgc.cloud/api/provinces';
+
+  try {
+    const res = await fetch(PRIMARY_URL);
+    if (res.ok) {
+      // Handles cases where psgc.gitlab.io returns text/html content-type
+      const text = await res.text();
+      return JSON.parse(text);
+    }
+  } catch (err) {
+    console.warn('GitLab PSGC API failed, trying secondary URL...', err);
   }
 
   try {
-    const response = await fetch('https://psgc.gitlab.io/api/provinces.json', {
-      method: 'GET',
-      headers: { 'Accept': 'application/json' }
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
+    const res = await fetch(SECONDARY_URL);
+    if (res.ok) {
+      return await res.json();
     }
-
-    const data = await response.json();
-
-    // Map response to ensure uniform { code, name } structure for UI components
-    if (Array.isArray(data) && data.length > 0) {
-      return data.map((item) => ({
-        code: item.code || item.psgcCode || '',
-        name: item.name || item.provinceName || 'Unknown Province'
-      }));
-    }
-
-    return MOCK_PROVINCES;
-  } catch (error) {
-    console.warn('Network or CORS error when fetching provinces. Using fallback data:', error);
-    return MOCK_PROVINCES;
+  } catch (err) {
+    console.warn('Secondary PSGC API failed, returning offline mock data...', err);
   }
+
+  return MOCK_PROVINCES;
 }
 
 /**
- * Fetches cities/municipalities for a given province code with offline fallback.
- * @param {string} provinceCode - The code of the selected province
- * @returns {Promise<Array<{code: string, name: string}>>} Array of city/municipality objects
+ * Fetches cities/municipalities by province code.
  */
 export async function fetchCitiesMunicipalities(provinceCode) {
   if (!provinceCode) return [];
 
-  if (!navigator.onLine) {
-    return MOCK_CITIES_MUNICIPALITIES[provinceCode] || [];
+  const PRIMARY_URL = `https://psgc.gitlab.io/api/provinces/${provinceCode}/cities-municipalities.json`;
+  const SECONDARY_URL = `https://psgc.cloud/api/provinces/${provinceCode}/cities-municipalities`;
+
+  try {
+    const res = await fetch(PRIMARY_URL);
+    if (res.ok) {
+      const text = await res.text();
+      return JSON.parse(text);
+    }
+  } catch (err) {
+    console.warn(`GitLab API failed for province ${provinceCode}, trying secondary...`, err);
   }
 
   try {
-    const url = `https://psgc.gitlab.io/api/provinces/${provinceCode}/cities-municipalities.json`;
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: { 'Accept': 'application/json' }
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
+    const res = await fetch(SECONDARY_URL);
+    if (res.ok) {
+      return await res.json();
     }
-
-    const data = await response.json();
-
-    if (Array.isArray(data) && data.length > 0) {
-      return data.map((item) => ({
-        code: item.code || item.psgcCode || '',
-        name: item.name || item.cityName || item.municipalityName || 'Unknown Municipality'
-      }));
-    }
-
-    return MOCK_CITIES_MUNICIPALITIES[provinceCode] || [];
-  } catch (error) {
-    console.warn(`Network error fetching cities for code ${provinceCode}. Using fallback data:`, error);
-    return MOCK_CITIES_MUNICIPALITIES[provinceCode] || [];
+  } catch (err) {
+    console.warn(`Secondary API failed for province ${provinceCode}, using offline fallback...`, err);
   }
+
+  return MOCK_CITIES_MUNICIPALITIES[provinceCode] || [];
 }
 
 /**
  * Retrieves stored applications from localStorage.
- * @returns {Array} List of stored application objects
  */
 export function getOfflineQueue() {
   try {
@@ -112,15 +96,13 @@ export function getOfflineQueue() {
 }
 
 /**
- * Saves application data into localStorage.
- * @param {Object} appData - Application payload
+ * Saves application data into localStorage queue.
  */
 export function saveToOfflineQueue(appData) {
   try {
     const currentQueue = getOfflineQueue();
-    const newItem = { id: Date.now().toString(), ...appData };
+    const newItem = { id: appData.id || Date.now().toString(), ...appData };
     const updatedQueue = [...currentQueue, newItem];
-
     localStorage.setItem(OFFLINE_STORAGE_KEY, JSON.stringify(updatedQueue));
   } catch (error) {
     console.error('Error saving to localStorage:', error);
@@ -128,14 +110,12 @@ export function saveToOfflineQueue(appData) {
 }
 
 /**
- * Removes an application from localStorage by ID.
- * @param {string|number} id - Application identifier
+ * Removes application from localStorage queue by ID.
  */
 export function removeFromOfflineQueue(id) {
   try {
     const currentQueue = getOfflineQueue();
     const updatedQueue = currentQueue.filter((item) => String(item.id) !== String(id));
-
     localStorage.setItem(OFFLINE_STORAGE_KEY, JSON.stringify(updatedQueue));
   } catch (error) {
     console.error('Error removing item from localStorage:', error);
