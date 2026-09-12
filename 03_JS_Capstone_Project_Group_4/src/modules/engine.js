@@ -1,32 +1,87 @@
-/**
- * [ROLE A] Core Engine Module - Student Starter Template
- */
-
 export function evaluateAyudaEligibility(citizen) {
-  // TODO: Implement scoring logic
-  // Rules:
-  // - Senior Citizen (+35 pts)
-  // - PWD (+35 pts)
-  // - Monthly Income < 10,000 (+20 pts)
-  // - Dependents (+5 pts per dependent, capped at max 20 pts)
-  // Priority: score >= 70 -> 'CRITICAL' (approved: true), score >= 40 -> 'HIGH' (approved: true), else -> 'LOW' (approved: false)
-  
-  return { priority: 'LOW', score: 0, approved: false };
+  const {
+    isSenior = false,
+    isPWD = false,
+    monthlyIncome = Infinity,
+    dependentCount,
+  } = citizen ?? {};
+
+  let score = 0;
+
+  if (isSenior === true) {
+    score += 35;
+  }
+
+  if (isPWD === true) {
+    score += 35;
+  }
+
+  if (monthlyIncome < 10000) {
+    score += 20;
+  }
+
+  const dependents = dependentCount ?? 0;
+  const dependentPoints = Math.min(dependents * 5, 20);
+  score += dependentPoints;
+
+  let priority;
+  let approved;
+
+  if (score >= 70) {
+    priority = 'CRITICAL';
+    approved = true;
+  } else if (score >= 40) {
+    priority = 'HIGH';
+    approved = true;
+  } else {
+    priority = 'LOW';
+    approved = false;
+  }
+
+  return { priority, score, approved };
 }
 
 export function createReliefPacker(budgetCap = 1000) {
-  // TODO: Implement closure/factory function returning an object with methods:
-  // - addItem(name, price): checks budget cap, adds item if valid
-  // - removeItem(index): removes item by index and adjusts total
-  // - getTotal(): returns current total price
-  // - getItems(): returns array of items (copy)
-  // - getBudgetCap(): returns budget cap
-  
+  const items = [];
+
+  function getTotal() {
+    return items.reduce((sum, item) => sum + item.price, 0);
+  }
+
+  function addItem(name, price) {
+    if (typeof name !== 'string' || typeof price !== 'number' || price < 0) {
+      return { success: false, reason: "Invalid name or price" };
+    }
+
+    if (getTotal() + price > budgetCap) {
+      return { success: false, reason: "Exceeds budget cap" };
+    }
+
+    items.push({ name, price });
+    return { success: true };
+  }
+
+  function removeItem(index) {
+    if (index < 0 || index >= items.length) {
+      return { success: false, reason: "Invalid index" };
+    }
+    items.splice(index, 1);
+    return { success: true };
+  }
+
+  function getItems() {
+    return items.map((item) => ({ ...item }));
+  }
+
+  function getBudgetCap() {
+    return budgetCap;
+  }
+
   return {
-    addItem: (name, price) => ({ success: false, reason: "Not implemented" }),
-    removeItem: (index) => {},
-    getTotal: () => 0,
-    getItems: () => [],
-    getBudgetCap: () => budgetCap
+    addItem,
+    removeItem,
+    getTotal,
+    getItems,
+    getBudgetCap,
   };
 }
