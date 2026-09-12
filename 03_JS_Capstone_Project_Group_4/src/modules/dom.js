@@ -33,38 +33,43 @@ export function renderResidentCards(container, residents) {
     return;
   }
 
-  container.innerHTML = residents.map((resident) => {
+  const rows = residents.map((resident, index) => {
     const id = sanitizeHTML(String(resident.id ?? ''));
     const name = sanitizeHTML(resident.name ?? 'Unknown resident');
     const priority = sanitizeHTML(String(resident.priority ?? 'low').toLowerCase());
     const need = sanitizeHTML(resident.need ?? resident.concern ?? '');
-    const initial = sanitizeHTML((resident.name ?? '?').trim().charAt(0).toUpperCase() || '?');
+    const queueNumber = sanitizeHTML(String(resident.queueNumber ?? index + 1).padStart(3, '0'));
     const waitMinutes = resident.waitMinutes;
     const waitLabel = (waitMinutes !== undefined && waitMinutes !== null)
       ? `${sanitizeHTML(String(waitMinutes))} min wait`
       : '';
 
     return `
-      <article class="resident-card" data-priority="${priority}" data-id="${id}">
-        <div class="resident-card__avatar" aria-hidden="true">${initial}</div>
-        <div class="resident-card__body">
-          <div class="resident-card__top">
-            <h3 class="resident-card__name">${name}</h3>
-            <span class="badge ${priority}">${priority}</span>
-          </div>
-          ${need ? `<p class="resident-card__need">${need}</p>` : ''}
-          ${waitLabel ? `<p class="resident-card__wait"><span aria-hidden="true">⏱</span> ${waitLabel}</p>` : ''}
+      <article class="resident-ticket" data-priority="${priority}" data-id="${id}">
+        <div class="resident-ticket__number">
+          <span class="resident-ticket__number-label">No.</span>
+          <span class="resident-ticket__number-value">${queueNumber}</span>
         </div>
-        <button
-          type="button"
-          class="icon-btn icon-btn--danger"
-          data-action="remove-resident"
-          data-id="${id}"
-          aria-label="Remove ${name} from the queue"
-        >✕</button>
+        <div class="resident-ticket__body">
+          <h3 class="resident-ticket__name">${name}</h3>
+          ${need ? `<p class="resident-ticket__need">${need}</p>` : ''}
+          ${waitLabel ? `<p class="resident-ticket__wait">${waitLabel}</p>` : ''}
+        </div>
+        <div class="resident-ticket__side">
+          <span class="stamp ${priority}">${priority}</span>
+          <button
+            type="button"
+            class="ticket-remove"
+            data-action="remove-resident"
+            data-id="${id}"
+            aria-label="Remove ${name} from the queue"
+          >Remove</button>
+        </div>
       </article>
     `;
   }).join('');
+
+  container.innerHTML = `<div class="queue-list">${rows}</div>`;
 }
 
 /**
@@ -97,14 +102,15 @@ export function renderPOSRegister(container, packerState) {
         const lineTotal = (price * qty).toFixed(2);
 
         return `
-          <li class="pos-item" data-id="${id}">
-            <span class="pos-item__name">
-              ${name}${qty > 1 ? ` <span class="pos-item__qty">×${qty}</span>` : ''}
+          <li class="receipt__item" data-id="${id}">
+            <span class="receipt__item-name">
+              ${name}${qty > 1 ? ` <span class="receipt__qty">×${qty}</span>` : ''}
             </span>
-            <span class="pos-item__price">₱${lineTotal}</span>
+            <span class="receipt__dots" aria-hidden="true"></span>
+            <span class="receipt__item-price">₱${lineTotal}</span>
             <button
               type="button"
-              class="icon-btn icon-btn--danger icon-btn--small"
+              class="receipt__remove"
               data-action="remove-item"
               data-id="${id}"
               aria-label="Remove ${name} from cart"
@@ -112,37 +118,39 @@ export function renderPOSRegister(container, packerState) {
           </li>
         `;
       }).join('')
-    : `<li class="pos-item pos-item--empty">No items scanned yet.</li>`;
+    : `<li class="receipt__item receipt__item--empty">No items scanned yet.</li>`;
 
   container.innerHTML = `
-    <div class="pos-register ${isOverBudget ? 'pos-register--over' : ''}">
-      <ul class="pos-item-list">${itemRows}</ul>
+    <div class="receipt" data-over-budget="${isOverBudget}">
+      <h3 class="receipt__heading">Relief Goods Register</h3>
+      <ul class="receipt__items">${itemRows}</ul>
+      <div class="receipt__rule"></div>
 
-      <div class="pos-summary">
-        <div class="pos-summary__row">
-          <span>Subtotal</span>
-          <strong>₱${subtotal.toFixed(2)}</strong>
-        </div>
-        <div class="pos-summary__row">
-          <span>Budget cap</span>
-          <strong>₱${budgetCap.toFixed(2)}</strong>
-        </div>
-
-        <div class="pos-progress-wrap">
-          <progress
-            class="pos-progress"
-            value="${subtotal}"
-            max="${progressMax}"
-            aria-label="Budget used"
-          ></progress>
-          <span class="pos-progress__label">${percentUsed.toFixed(0)}% used</span>
-        </div>
-
-        <div class="pos-summary__row pos-summary__row--remaining ${isOverBudget ? 'is-over' : ''}">
-          <span>${isOverBudget ? 'Over budget by' : 'Remaining'}</span>
-          <strong>₱${Math.abs(remaining).toFixed(2)}</strong>
-        </div>
+      <div class="receipt__row">
+        <span>Subtotal</span>
+        <span>₱${subtotal.toFixed(2)}</span>
       </div>
+      <div class="receipt__row">
+        <span>Budget cap</span>
+        <span>₱${budgetCap.toFixed(2)}</span>
+      </div>
+
+      <div class="receipt__gauge">
+        <progress
+          class="receipt__progress"
+          value="${subtotal}"
+          max="${progressMax}"
+          aria-label="Budget used"
+        ></progress>
+        <span class="receipt__gauge-label">${percentUsed.toFixed(0)}% used</span>
+      </div>
+
+      <div class="receipt__row receipt__row--total">
+        <span>${isOverBudget ? 'Over budget by' : 'Remaining'}</span>
+        <span>₱${Math.abs(remaining).toFixed(2)}</span>
+      </div>
+
+      <div class="receipt__tear"></div>
     </div>
   `;
 }
@@ -152,9 +160,35 @@ export function renderPOSRegister(container, packerState) {
  * Any descendant with a `data-action` attribute triggers the matching
  * handler in `actionMap`, receiving (element, event) as arguments.
  * Uses `closest()` so clicks on icons/text inside a button still work.
+ *
+ * Also drives the visual press/release feedback on the target button:
+ * `.is-down` while the pointer is held down, then a brief `.is-up`
+ * flash on release, so hover / down / up / click each render as a
+ * distinct color in style.css.
  */
 export function setupActionDelegation(rootElement, actionMap) {
   if (!rootElement) return;
+
+  const FLASH_MS = 220;
+
+  rootElement.addEventListener('pointerdown', (e) => {
+    const target = e.target.closest('[data-action]');
+    if (!target || !rootElement.contains(target)) return;
+    target.classList.remove('is-up');
+    target.classList.add('is-down');
+  });
+
+  const releasePress = (e) => {
+    const target = e.target.closest('[data-action]');
+    if (!target || !rootElement.contains(target)) return;
+    if (!target.classList.contains('is-down')) return;
+    target.classList.remove('is-down');
+    target.classList.add('is-up');
+    setTimeout(() => target.classList.remove('is-up'), FLASH_MS);
+  };
+
+  rootElement.addEventListener('pointerup', releasePress);
+  rootElement.addEventListener('pointercancel', releasePress);
 
   rootElement.addEventListener('click', (e) => {
     const target = e.target.closest('[data-action]');
@@ -167,4 +201,30 @@ export function setupActionDelegation(rootElement, actionMap) {
       handler(target, e);
     }
   });
+}
+
+/**
+ * Wires the same hover / down / up press feedback used by delegated
+ * `[data-action]` buttons onto a single standalone button — for cases
+ * like a form's primary `.btn` that isn't part of an action map.
+ */
+export function bindButtonFeedback(button) {
+  if (!button) return;
+
+  const FLASH_MS = 220;
+
+  button.addEventListener('pointerdown', () => {
+    button.classList.remove('is-up');
+    button.classList.add('is-down');
+  });
+
+  const release = () => {
+    if (!button.classList.contains('is-down')) return;
+    button.classList.remove('is-down');
+    button.classList.add('is-up');
+    setTimeout(() => button.classList.remove('is-up'), FLASH_MS);
+  };
+
+  button.addEventListener('pointerup', release);
+  button.addEventListener('pointercancel', release);
 }
