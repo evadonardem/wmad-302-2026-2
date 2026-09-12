@@ -51,6 +51,9 @@ export function createReliefPacker(budgetCap = 1000) {
 
   return {
     addItem(name, price) {
+      if (typeof price !== 'number' || isNaN(price) || price <= 0) {
+        return { success: false, reason: 'Invalid price.' };
+      }
       if (getTotal() + price > budgetCap) {
         return { success: false, reason: `Adding "${name}" would exceed the ₱${budgetCap} budget cap.` };
       }
@@ -58,6 +61,7 @@ export function createReliefPacker(budgetCap = 1000) {
       return { success: true };
     },
     removeItem(index) {
+      if (index < 0 || index >= items.length) return;
       items.splice(index, 1);
     },
     getTotal,
@@ -67,14 +71,5 @@ export function createReliefPacker(budgetCap = 1000) {
     getBudgetCap() {
       return budgetCap;
     }
-  };
-
-  
-  return {
-    addItem: (name, price) => ({ success: false, reason: "Not implemented" }),
-    removeItem: (index) => {},
-    getTotal: () => 0,
-    getItems: () => [],
-    getBudgetCap: () => budgetCap
   };
 }
