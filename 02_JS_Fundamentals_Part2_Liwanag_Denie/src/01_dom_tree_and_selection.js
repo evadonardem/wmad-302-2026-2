@@ -9,7 +9,17 @@ export function initRouteStatusMonitor() {
   syncBtn.addEventListener('click', () => {
     // TODO:
     // 1. Loop through routeList items
+    
     // 2. Count active (data-status="active") vs delayed items
+    
     // 3. Update activeStat and delayedStat text content
+    let activeCount = 0;
+    let delayedCount =0;
+
+    routelist.forEach((route) => {
+      console.log(route.getattribute('data-status'));
+    })
+
+    console.log('Denie',routeList);
   });
 }
