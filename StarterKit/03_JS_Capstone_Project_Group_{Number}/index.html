@@ -14,68 +14,72 @@
       </header>
 
       <main class="container">
-        <!-- Ayuda Application Form -->
-        <section class="card">
-          <h2>Resident Registration</h2>
-          <form id="ayuda-form">
-            <div class="form-group">
-              <label for="name">Full Name</label>
-              <input type="text" id="name" required placeholder="Juan Dela Cruz" />
-            </div>
+        <div class="layout-grid">
 
-            <div class="form-group">
-              <label for="prov-select">Province</label>
-              <select id="prov-select" required>
-                <option value="">Select Province...</option>
-              </select>
-            </div>
+          <!-- Ayuda Application Form -->
+          <section class="card">
+            <h2>Resident Registration</h2>
+            <form id="ayuda-form">
+              <div class="form-group">
+                <label for="name">Full Name</label>
+                <input type="text" id="name" required placeholder="Enter your full name" />
+              </div>
 
-            <div class="form-group">
-              <label for="city-select">City / Municipality</label>
-              <select id="city-select" required>
-                <option value="">Select City/Municipality...</option>
-              </select>
-            </div>
+              <div class="form-group">
+                <label for="prov-select">Province</label>
+                <select id="prov-select" required>
+                  <option value="">Select Province...</option>
+                </select>
+              </div>
 
-            <div class="form-group">
-              <label for="monthly-income">Monthly Income (₱)</label>
-              <input type="number" id="monthly-income" required placeholder="9500" />
-            </div>
+              <div class="form-group">
+                <label for="city-select">City / Municipality</label>
+                <select id="city-select" required>
+                  <option value="">Select City/Municipality...</option>
+                </select>
+              </div>
 
-            <div class="form-group checkbox-group">
-              <label><input type="checkbox" id="is-senior" /> Senior Citizen</label>
-              <label><input type="checkbox" id="is-pwd" /> Person with Disability (PWD)</label>
-            </div>
+              <div class="form-group">
+                <label for="monthly-income">Monthly Income (₱)</label>
+                <input type="number" id="monthly-income" required placeholder="1000" />
+              </div>
 
-            <div class="form-group">
-              <label for="dependent-count">Number of Dependents</label>
-              <input type="number" id="dependent-count" value="0" min="0" />
-            </div>
+              <div class="form-group checkbox-group">
+                <label><input type="checkbox" id="is-senior" /> Senior Citizen</label>
+                <label><input type="checkbox" id="is-pwd" /> Person with Disability (PWD)</label>
+              </div>
 
-            <button type="submit" class="btn primary">Evaluate & Register</button>
-          </form>
-        </section>
+              <div class="form-group">
+                <label for="dependent-count">Number of Dependents</label>
+                <input type="number" id="dependent-count" value="0" min="0" />
+              </div>
 
-        <!-- Relief Packer POS Register -->
-        <section class="card">
-          <h2>Relief Package POS Register</h2>
-          <div id="pos-container">
-            <!-- TODO: Render POS register and progress bar here -->
+              <button type="submit" class="btn primary">Evaluate & Register</button>
+            </form>
+          </section>
+
+          <!-- Right column: Relief Packer + Registered Queue -->
+          <div class="side-column">
+
+            <section class="card">
+              <h2>Relief Package POS Register</h2>
+              <div id="eligibility-notice" class="empty-state" style="display: none;"></div>
+              <div id="pos-wrapper" style="display: none;">
+                <div id="pos-container"></div>
+                <div id="catalog-container" class="catalog-grid" style="margin-top: 1rem;"></div>
+              </div>
+            </section>
+
+            <section class="card">
+              <h2>Registered Queue</h2>
+              <div id="queue-container">
+                <!-- Resident cards render here -->
+              </div>
+            </section>
+
           </div>
-          <div class="pos-controls" style="margin-top: 1rem; display: flex; gap: 0.5rem;">
-            <input type="text" id="item-name" placeholder="Item Name (e.g., Rice 5kg)" style="flex: 2;" />
-            <input type="number" id="item-price" placeholder="Price (₱)" style="flex: 1;" />
-            <button type="button" id="add-item-btn" class="btn primary" style="width: auto;">Add Item</button>
-          </div>
-        </section>
 
-        <!-- Live Queue Display -->
-        <section class="card">
-          <h2>Registered Queue</h2>
-          <div id="queue-container">
-            <!-- TODO: Render resident cards here -->
-          </div>
-        </section>
+        </div>
       </main>
     </div>
 
