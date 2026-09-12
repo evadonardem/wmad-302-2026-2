@@ -1,11 +1,11 @@
 /**
- * [ROLE C] Async & Storage Module - Student Starter Template
+ * [ROLE C] Async & Storage Module - Fixed Implementation
  */
 
 // Key required by the Definition of Done
 const OFFLINE_STORAGE_KEY = 'ebarangay_offline_applications';
 
-// Sample fallback data in case of network errors or offline state
+// Fallback data formatted with standard property keys
 const MOCK_PROVINCES = [
   { code: '012800000', name: 'Ilocos Norte' },
   { code: '012900000', name: 'Ilocos Sur' },
@@ -23,40 +23,76 @@ const MOCK_CITIES_MUNICIPALITIES = {
 
 /**
  * Fetches all provinces from the PSGC API with offline fallback.
- * @returns {Promise<Array>} Array of province objects
+ * @returns {Promise<Array<{code: string, name: string}>>} Array of province objects
  */
 export async function fetchProvinces() {
+  // If browser is offline, skip network delay and return mock data immediately
+  if (!navigator.onLine) {
+    return MOCK_PROVINCES;
+  }
+
   try {
-    const response = await fetch('https://psgc.gitlab.io/api/provinces.json');
+    const response = await fetch('https://psgc.gitlab.io/api/provinces.json', {
+      method: 'GET',
+      headers: { 'Accept': 'application/json' }
+    });
+
     if (!response.ok) {
       throw new Error(`HTTP error! Status: ${response.status}`);
     }
+
     const data = await response.json();
-    return data;
+
+    // Map response to ensure uniform { code, name } structure for UI components
+    if (Array.isArray(data) && data.length > 0) {
+      return data.map((item) => ({
+        code: item.code || item.psgcCode || '',
+        name: item.name || item.provinceName || 'Unknown Province'
+      }));
+    }
+
+    return MOCK_PROVINCES;
   } catch (error) {
-    console.warn('Network request failed for fetchProvinces. Using offline fallback.', error);
+    console.warn('Network or CORS error when fetching provinces. Using fallback data:', error);
     return MOCK_PROVINCES;
   }
 }
 
 /**
- * Fetches cities and municipalities for a given province code with offline fallback.
+ * Fetches cities/municipalities for a given province code with offline fallback.
  * @param {string} provinceCode - The code of the selected province
- * @returns {Promise<Array>} Array of city/municipality objects
+ * @returns {Promise<Array<{code: string, name: string}>>} Array of city/municipality objects
  */
 export async function fetchCitiesMunicipalities(provinceCode) {
   if (!provinceCode) return [];
 
+  if (!navigator.onLine) {
+    return MOCK_CITIES_MUNICIPALITIES[provinceCode] || [];
+  }
+
   try {
     const url = `https://psgc.gitlab.io/api/provinces/${provinceCode}/cities-municipalities.json`;
-    const response = await fetch(url);
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: { 'Accept': 'application/json' }
+    });
+
     if (!response.ok) {
       throw new Error(`HTTP error! Status: ${response.status}`);
     }
+
     const data = await response.json();
-    return data;
+
+    if (Array.isArray(data) && data.length > 0) {
+      return data.map((item) => ({
+        code: item.code || item.psgcCode || '',
+        name: item.name || item.cityName || item.municipalityName || 'Unknown Municipality'
+      }));
+    }
+
+    return MOCK_CITIES_MUNICIPALITIES[provinceCode] || [];
   } catch (error) {
-    console.warn(`Network request failed for fetchCitiesMunicipalities (${provinceCode}). Using offline fallback.`, error);
+    console.warn(`Network error fetching cities for code ${provinceCode}. Using fallback data:`, error);
     return MOCK_CITIES_MUNICIPALITIES[provinceCode] || [];
   }
 }
@@ -76,16 +112,15 @@ export function getOfflineQueue() {
 }
 
 /**
- * Appends a new application object to the offline queue in localStorage.
- * @param {Object} appData - Application object to store (should include a unique `id`)
+ * Saves application data into localStorage.
+ * @param {Object} appData - Application payload
  */
 export function saveToOfflineQueue(appData) {
   try {
     const currentQueue = getOfflineQueue();
-    // Ensure every record has a fallback ID if one isn't provided
     const newItem = { id: Date.now().toString(), ...appData };
     const updatedQueue = [...currentQueue, newItem];
-    
+
     localStorage.setItem(OFFLINE_STORAGE_KEY, JSON.stringify(updatedQueue));
   } catch (error) {
     console.error('Error saving to localStorage:', error);
@@ -93,14 +128,14 @@ export function saveToOfflineQueue(appData) {
 }
 
 /**
- * Removes an application object from the offline queue by its ID.
- * @param {string|number} id - Unique identifier of the application to remove
+ * Removes an application from localStorage by ID.
+ * @param {string|number} id - Application identifier
  */
 export function removeFromOfflineQueue(id) {
   try {
     const currentQueue = getOfflineQueue();
     const updatedQueue = currentQueue.filter((item) => String(item.id) !== String(id));
-    
+
     localStorage.setItem(OFFLINE_STORAGE_KEY, JSON.stringify(updatedQueue));
   } catch (error) {
     console.error('Error removing item from localStorage:', error);
