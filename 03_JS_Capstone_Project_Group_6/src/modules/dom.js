@@ -62,7 +62,7 @@ export function renderPOSRegister(container, packerState) {
 
       itemsHTML += `
         <li>
-          ${safeName} - $${item.price.toFixed(2)}
+          ${safeName} - ₱${item.price.toFixed(2)}
 
           <!-- Button for removing this item -->
           <button data-action="remove-item" data-index="${i}">
@@ -76,8 +76,8 @@ export function renderPOSRegister(container, packerState) {
   container.innerHTML = `
     <div class="pos-register">
       <p>
-        Subtotal: $${total.toFixed(2)}
-        / Budget: $${budgetCap.toFixed(2)}
+        Subtotal: ₱${total.toFixed(2)}
+        / Budget: ₱${budgetCap.toFixed(2)}
       </p>
 
       <!-- Shows how much of the budget is being used -->
