@@ -45,6 +45,17 @@ export async function fetchCitiesMunicipalities(provinceCode) {
 
 export function getOfflineQueue() {
   // TODO: Retrieve stored applications from localStorage key 'ebarangay_offline_applications'
+  const offlineApplications = localStorage.getItem('ebarangay_offline_applications');
+  
+  if (offlineApplications) {
+    try {
+      return JSON.parse(offlineApplications);
+    } catch (error) {
+      console.error("Error parsing offline applications from localStorage:", error);
+      return [];
+    }
+  }
+
   return [];
 }
 
