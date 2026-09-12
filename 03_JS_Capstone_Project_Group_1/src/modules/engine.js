@@ -3,30 +3,66 @@
  */
 
 export function evaluateAyudaEligibility(citizen) {
-  // TODO: Implement scoring logic
-  // Rules:
-  // - Senior Citizen (+35 pts)
-  // - PWD (+35 pts)
-  // - Monthly Income < 10,000 (+20 pts)
-  // - Dependents (+5 pts per dependent, capped at max 20 pts)
-  // Priority: score >= 70 -> 'CRITICAL' (approved: true), score >= 40 -> 'HIGH' (approved: true), else -> 'LOW' (approved: false)
-  
-  return { priority: 'LOW', score: 0, approved: false };
+  const {
+    isSenior = false,
+    isPWD = false,
+    monthlyIncome = Infinity,
+    dependents = 0
+  } = citizen;
+
+  let score = 0;
+
+  if (isSenior) score += 35;
+  if (isPWD) score += 35;
+  if (monthlyIncome < 10000) score += 20;
+
+  const dependentPoints = Math.min(dependents * 5, 20);
+  score += dependentPoints;
+
+  let priority;
+  let approved;
+
+  if (score >= 70) {
+    priority = 'CRITICAL';
+    approved = true;
+  } else if (score >= 40) {
+    priority = 'HIGH';
+    approved = true;
+  } else {
+    priority = 'LOW';
+    approved = false;
+  }
+
+  return { priority, score, approved };
 }
 
 export function createReliefPacker(budgetCap = 1000) {
-  // TODO: Implement closure/factory function returning an object with methods:
-  // - addItem(name, price): checks budget cap, adds item if valid
-  // - removeItem(index): removes item by index and adjusts total
-  // - getTotal(): returns current total price
-  // - getItems(): returns array of items (copy)
-  // - getBudgetCap(): returns budget cap
-  
+  const items = [];
+  let total = 0;
+
   return {
-    addItem: (name, price) => ({ success: false, reason: "Not implemented" }),
-    removeItem: (index) => {},
-    getTotal: () => 0,
-    getItems: () => [],
+    addItem: (name, price) => {
+      if (total + price > budgetCap) {
+        return { success: false, reason: 'Exceeds budget cap' };
+      }
+
+      items.push({ name, price });
+      total += price;
+
+      return { success: true };
+    },
+
+    removeItem: (index) => {
+      if (index < 0 || index >= items.length) return;
+
+      total -= items[index].price;
+      items.splice(index, 1);
+    },
+
+    getTotal: () => total,
+
+    getItems: () => [...items],
+
     getBudgetCap: () => budgetCap
   };
 }

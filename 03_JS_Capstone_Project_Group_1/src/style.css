@@ -53,14 +53,18 @@ body {
 }
 
 .header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
   background: var(--card-bg);
   color: var(--text-main);
   padding: 2.5rem 1rem 2rem;
-  text-align: center;
+  text-align: left;
   border-bottom: 3px solid var(--primary-color);
 }
 
-.header h1 {
+.header-text h1 {
   margin: 0 0 0.4rem;
   font-size: 1.9rem;
   font-weight: 700;
@@ -68,14 +72,13 @@ body {
 }
 
 .logo {
-  width: 48px;
-  height: 48px;
-  color: var(--primary-color);
-  display: block;
-  margin: 0 auto 0.75rem;
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+  flex-shrink: 0;
 }
 
-.header p {
+.header-text p {
   margin: 0;
   color: var(--text-muted);
   font-size: 0.95rem;
