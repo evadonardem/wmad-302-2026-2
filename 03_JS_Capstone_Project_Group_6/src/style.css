@@ -1,121 +1,588 @@
-/* [STYLING] e-Barangay Theme & Layout - Starter Template */
+/* =========================================
+   e-BARANGAY FAIRYCORE THEME
+========================================= */
 
 :root {
-  --primary-color: #0f766e;
-  --primary-hover: #115e59;
-  --bg-color: #f4f6f8;
-  --card-bg: #ffffff;
-  --text-main: #1f2937;
-  --text-muted: #6b7280;
-  --border-color: #d1d5db;
-  --radius: 8px;
-  --critical-color: #dc2626;
-  --high-color: #d97706;
-  --low-color: #2563eb;
+  --primary-color: #9b72cf;
+  --primary-hover: #7953a8;
+
+  --bg-color: #f7f3fa;
+  --card-bg: #fffdfb;
+
+  --text-main: #493853;
+  --text-muted: #92819b;
+
+  --border-color: #e4d8eb;
+
+  --radius: 18px;
+
+  --critical-color: #d66f89;
+  --high-color: #d5a05c;
+  --low-color: #79a88c;
 }
+
+
+/* =========================================
+   BODY
+========================================= */
 
 body {
   font-family: system-ui, -apple-system, sans-serif;
+
   margin: 0;
   padding: 0;
-  background-color: var(--bg-color);
+
   color: var(--text-main);
+
+  background:
+    radial-gradient(circle at 10% 10%,
+      rgba(188, 153, 214, 0.18),
+      transparent 25%),
+    radial-gradient(circle at 90% 80%,
+      rgba(157, 192, 166, 0.16),
+      transparent 25%),
+    var(--bg-color);
 }
 
+
+/* =========================================
+   HEADER
+========================================= */
+
 .header {
-  background: var(--primary-color);
+  background:
+    linear-gradient(135deg,
+      #755596,
+      #a884c0 55%,
+      #91b29c);
+
   color: white;
-  padding: 1.5rem 1rem;
+
+  padding: 2.5rem 1rem;
+
   text-align: center;
+
+  position: relative;
+
+  overflow: hidden;
+
+  box-shadow:
+    0 10px 30px rgba(100, 70, 120, 0.18);
 }
+
+
+/* Fairy decorations */
+
+.header::before {
+  content: "✦   ✧   ⋆";
+
+  position: absolute;
+
+  left: 8%;
+  top: 18px;
+
+  font-size: 24px;
+
+  letter-spacing: 12px;
+
+  color: rgba(255, 255, 255, 0.6);
+}
+
+
+.header::after {
+  content: "⋆   ✧   ✦";
+
+  position: absolute;
+
+  right: 8%;
+  bottom: 15px;
+
+  font-size: 23px;
+
+  letter-spacing: 12px;
+
+  color: rgba(255, 255, 255, 0.5);
+}
+
+
+/* =========================================
+   MAIN CONTAINER
+========================================= */
 
 .container {
   max-width: 1200px;
-  margin: 2rem auto;
+
+  margin: 2.5rem auto;
+
   padding: 0 1rem;
+
   display: grid;
-  gap: 1.5rem;
+
+  gap: 2rem;
 }
+
+
+/* =========================================
+   MAIN CARD
+========================================= */
 
 .card {
   background: var(--card-bg);
-  border-radius: var(--radius);
-  padding: 1.5rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+
+  border: 1px solid var(--border-color);
+
+  /*
+     Asymmetric fairy-window shape
+  */
+  border-radius:
+    28px 8px 28px 8px;
+
+  padding: 1.7rem;
+
+  position: relative;
+
+  overflow: hidden;
+
+  box-shadow:
+    0 12px 25px rgba(94, 69, 110, 0.08),
+    7px 7px 0 rgba(208, 186, 220, 0.22);
+
+  transition: 0.25s ease;
 }
 
-.form-group {
-  margin-bottom: 1rem;
+
+/* Decorative top layer */
+
+.card::before {
+  content: "";
+
+  position: absolute;
+
+  width: 110px;
+  height: 110px;
+
+  right: -40px;
+  top: -40px;
+
+  border-radius: 50%;
+
+  background:
+    rgba(185, 151, 210, 0.12);
 }
+
+
+/* Sparkle */
+
+.card::after {
+  content: "✦";
+
+  position: absolute;
+
+  right: 20px;
+  top: 15px;
+
+  font-size: 20px;
+
+  color: #c5a6d8;
+}
+
+
+/* =========================================
+   FORM GROUP
+========================================= */
+
+.form-group {
+  margin-bottom: 1.2rem;
+}
+
 
 .form-group label {
   display: block;
+
   margin-bottom: 0.5rem;
-  font-weight: 500;
+
+  font-weight: 600;
+
+  color: #5d456b;
 }
+
+
+/* =========================================
+   INPUTS
+========================================= */
 
 .form-group input[type="text"],
 .form-group input[type="number"],
 .form-group select {
+
   width: 100%;
-  padding: 0.75rem;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius);
+
+  padding: 0.9rem 1rem;
+
+  border: 1px solid #dfd2e7;
+
+  /*
+     Different shape from normal boxes
+  */
+  border-radius:
+    12px 20px 12px 20px;
+
   box-sizing: border-box;
+
+  background: #fcf9ff;
+
+  color: var(--text-main);
+
+  transition: all 0.25s ease;
+
+  box-shadow:
+    inset 0 2px 4px rgba(100, 70, 120, 0.03);
 }
+
+
+.form-group input[type="text"]::placeholder,
+.form-group input[type="number"]::placeholder {
+
+  color: #b3a5b9;
+}
+
+
+.form-group input[type="text"]:hover,
+.form-group input[type="number"]:hover,
+.form-group select:hover {
+
+  background: white;
+
+  border-color: #c4a6d5;
+
+  transform: translateY(-1px);
+}
+
+
+.form-group input[type="text"]:focus,
+.form-group input[type="number"]:focus,
+.form-group select:focus {
+
+  outline: none;
+
+  background: white;
+
+  border-color: var(--primary-color);
+
+  box-shadow:
+    0 0 0 4px rgba(155, 114, 207, 0.12),
+    0 6px 15px rgba(155, 114, 207, 0.08);
+}
+
+
+/* =========================================
+   CHECKBOX GROUP
+========================================= */
 
 .checkbox-group {
+
   display: flex;
-  gap: 1.5rem;
+
+  gap: 1rem;
+
   align-items: center;
+
+  flex-wrap: wrap;
+
+  padding: 1rem;
+
+  background:
+    linear-gradient(135deg,
+      #fcf9ff,
+      #f8fcf9);
+
+  border: 1px solid #e2d7e8;
+
+  /*
+     Layered shape
+  */
+  border-radius:
+    18px 7px 18px 7px;
+
+  box-shadow:
+    4px 4px 0 rgba(210, 190, 220, 0.15);
 }
+
 
 .checkbox-group label {
+
   display: flex;
+
   align-items: center;
+
   gap: 0.5rem;
+
   font-weight: normal;
+
   cursor: pointer;
+
+  padding: 0.35rem 0.5rem;
+
+  border-radius: 10px;
+
+  transition: 0.2s ease;
 }
+
+
+.checkbox-group label:hover {
+
+  background: #f1e8f6;
+
+}
+
+
+/* =========================================
+   BUTTON
+========================================= */
 
 .btn {
-  background: var(--primary-color);
+
+  background:
+    linear-gradient(135deg,
+      #9670b9,
+      #b18aca);
+
   color: white;
+
   border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: var(--radius);
+
+  padding: 0.9rem 1.5rem;
+
+  border-radius:
+    18px 8px 18px 8px;
+
   cursor: pointer;
-  font-weight: 600;
+
+  font-weight: 700;
+
   width: 100%;
+
+  transition: all 0.25s ease;
+
+  box-shadow:
+    0 6px 0 #79599a,
+    0 10px 20px rgba(126, 91, 158, 0.12);
 }
+
 
 .btn:hover {
-  background: var(--primary-hover);
+
+  background:
+    linear-gradient(135deg,
+      #835fa9,
+      #a478bf);
+
+  transform: translateY(-3px);
+
+  box-shadow:
+    0 8px 0 #79599a,
+    0 14px 25px rgba(126, 91, 158, 0.18);
 }
+
+
+.btn:active {
+
+  transform: translateY(2px);
+
+  box-shadow:
+    0 3px 0 #79599a;
+}
+
+
+/* =========================================
+   RESIDENT CARD
+========================================= */
 
 .resident-card {
-  background: #ffffff;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius);
-  padding: 1rem;
+
+  background:
+    linear-gradient(135deg,
+      #ffffff,
+      #fdfaff 65%,
+      #f7fcf8);
+
+  border: 1px solid #e2d7e8;
+
+  /*
+     More organic shape
+  */
+  border-radius:
+    22px 8px 22px 8px;
+
+  padding: 1.3rem;
+
   margin-bottom: 1rem;
-  border-left: 6px solid var(--border-color);
+
+  /*
+     Fairy accent instead of ordinary border
+  */
+  border-left: 6px solid #a77bc9;
+
+  position: relative;
+
+  overflow: hidden;
+
+  box-shadow:
+    5px 6px 0 rgba(207, 184, 220, 0.18),
+    0 7px 18px rgba(102, 76, 122, 0.06);
+
+  transition: all 0.25s ease;
 }
+
+
+/* Decorative fairy circle */
+
+.resident-card::before {
+
+  content: "";
+
+  position: absolute;
+
+  width: 65px;
+  height: 65px;
+
+  right: -25px;
+  top: -25px;
+
+  border-radius: 50%;
+
+  background:
+    rgba(173, 139, 197, 0.10);
+}
+
+
+/* Sparkle */
+
+.resident-card::after {
+
+  content: "✧";
+
+  position: absolute;
+
+  right: 18px;
+  bottom: 10px;
+
+  font-size: 24px;
+
+  color: #cbb0da;
+
+  opacity: 0.75;
+}
+
+
+.resident-card:hover {
+
+  transform:
+    translateY(-4px) rotate(0.2deg);
+
+  border-left-color: #815ca5;
+
+  box-shadow:
+    7px 9px 0 rgba(207, 184, 220, 0.22),
+    0 13px 25px rgba(102, 76, 122, 0.11);
+}
+
+
+/* =========================================
+   BADGES
+========================================= */
 
 .badge {
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  font-size: 0.75rem;
-  font-weight: bold;
+
+  padding: 0.4rem 0.8rem;
+
+  border-radius: 50px;
+
+  font-size: 0.7rem;
+
+  font-weight: 800;
+
   color: white;
+
+  letter-spacing: 0.4px;
+
+  text-transform: uppercase;
+
+  display: inline-block;
+
+  box-shadow:
+    0 3px 7px rgba(80, 60, 90, 0.12);
 }
 
-.badge.critical { background: var(--critical-color); }
-.badge.high { background: var(--high-color); }
-.badge.low { background: var(--low-color); }
+
+.badge.critical {
+
+  background: var(--critical-color);
+}
+
+
+.badge.high {
+
+  background: var(--high-color);
+}
+
+
+.badge.low {
+
+  background: var(--low-color);
+}
+
+
+/* =========================================
+   EMPTY STATE
+========================================= */
 
 .empty-state {
+
   color: var(--text-muted);
+
   text-align: center;
-  padding: 1rem;
+
+  padding: 2.5rem;
+
+  border:
+    2px dashed #d7c7e0;
+
+  border-radius:
+    28px 8px 28px 8px;
+
+  background:
+    linear-gradient(135deg,
+      #fcf9ff,
+      #f7fcf8);
+
+  box-shadow:
+    5px 5px 0 rgba(210, 190, 220, 0.15);
+
+}
+
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (max-width: 700px) {
+
+  .container {
+    margin-top: 1.5rem;
+  }
+
+  .header {
+    padding: 2rem 1rem;
+  }
+
+  .card {
+    padding: 1.3rem;
+  }
+
+  .checkbox-group {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
 }
