@@ -1,123 +1,150 @@
 /**
- * [ROLE C] Async & Storage Module
+ * [ROLE C] Async & Storage Module - Student Starter Template
  */
 
-const OFFLINE_STORAGE_KEY = 'ebarangay_offline_applications';
+const OFFLINE_QUEUE_KEY = 'ebarangay_offline_applications';
 
-const MOCK_PROVINCES = [
-  { code: '012800000', name: 'Ilocos Norte' },
-  { code: '012900000', name: 'Ilocos Sur' },
-  { code: '013300000', name: 'La Union' },
-  { code: '015500000', name: 'Pangasinan' }
+// Minimal offline fallbacks (you can expand these as needed)
+const OFFLINE_PROVINCES_FALLBACK = [
+  { code: '010000000', name: 'Ilocos Norte', regionCode: '010000000' },
+  { code: '010200000', name: 'Ilocos Sur', regionCode: '010000000' },
+  { code: '130000000', name: 'National Capital Region (NCR)', regionCode: '130000000' },
 ];
 
-const MOCK_CITIES_MUNICIPALITIES = {
-  '012800000': [
-    { code: '012801000', name: 'Adams' },
-    { code: '012802000', name: 'Bacarra' },
-    { code: '012805000', name: 'Laoag City' }
-  ]
+const OFFLINE_CITIES_MUNICIPALITIES_FALLBACK = {
+  '010000000': [
+    { code: '0100101000', name: 'Laoag City', provinceCode: '010000000' },
+    { code: '0100201000', name: 'Batac City', provinceCode: '010000000' },
+  ],
+  '010200000': [
+    { code: '0102010000', name: 'Candon City', provinceCode: '010200000' },
+    { code: '0102020000', name: 'Vigan City', provinceCode: '010200000' },
+  ],
+  '130000000': [
+    { code: '1301010000', name: 'Manila', provinceCode: '130000000' },
+    { code: '1302010000', name: 'Quezon City', provinceCode: '130000000' },
+  ],
 };
 
 /**
- * Fetches all provinces with multi-level endpoint fallback handling.
+ * Fetch provinces from PSGC API with offline fallback on network error.
  */
 export async function fetchProvinces() {
-  // Primary endpoint required by prompt
-  const PRIMARY_URL = 'https://psgc.gitlab.io/api/provinces.json';
-  // Secondary modern public API fallback
-  const SECONDARY_URL = 'https://psgc.cloud/api/provinces';
-
   try {
-    const res = await fetch(PRIMARY_URL);
-    if (res.ok) {
-      // Handles cases where psgc.gitlab.io returns text/html content-type
-      const text = await res.text();
-      return JSON.parse(text);
+    const res = await fetch('https://psgc.gitlab.io/api/provinces.json');
+    if (!res.ok) {
+      throw new Error(`PSGC provinces request failed: ${res.status}`);
     }
+    const data = await res.json();
+    // PSGC returns an array; ensure we return an array even if empty
+    return Array.isArray(data) ? data : [];
   } catch (err) {
-    console.warn('GitLab PSGC API failed, trying secondary URL...', err);
+    // Fallback to mock data on network error or parse error
+    console.warn('fetchProvinces: using offline fallback due to', err);
+    return OFFLINE_PROVINCES_FALLBACK;
   }
-
-  try {
-    const res = await fetch(SECONDARY_URL);
-    if (res.ok) {
-      return await res.json();
-    }
-  } catch (err) {
-    console.warn('Secondary PSGC API failed, returning offline mock data...', err);
-  }
-
-  return MOCK_PROVINCES;
 }
 
 /**
- * Fetches cities/municipalities by province code.
+ * Fetch cities/municipalities for a given province code from PSGC API.
+ * Uses cascading lookup: tries API first, then offline fallback.
  */
 export async function fetchCitiesMunicipalities(provinceCode) {
-  if (!provinceCode) return [];
-
-  const PRIMARY_URL = `https://psgc.gitlab.io/api/provinces/${provinceCode}/cities-municipalities.json`;
-  const SECONDARY_URL = `https://psgc.cloud/api/provinces/${provinceCode}/cities-municipalities`;
-
-  try {
-    const res = await fetch(PRIMARY_URL);
-    if (res.ok) {
-      const text = await res.text();
-      return JSON.parse(text);
-    }
-  } catch (err) {
-    console.warn(`GitLab API failed for province ${provinceCode}, trying secondary...`, err);
+  if (!provinceCode) {
+    console.warn('fetchCitiesMunicipalities: no provinceCode provided');
+    return [];
   }
 
   try {
-    const res = await fetch(SECONDARY_URL);
-    if (res.ok) {
-      return await res.json();
+    // PSGC pattern: /api/provinces/{provinceCode}/cities-municipalities.json
+    const url = `https://psgc.gitlab.io/api/provinces/${provinceCode}/cities-municipalities.json`;
+    const res = await fetch(url);
+    if (!res.ok) {
+      throw new Error(`PSGC cities/municipalities request failed: ${res.status}`);
     }
+    const data = await res.json();
+    return Array.isArray(data) ? data : [];
   } catch (err) {
-    console.warn(`Secondary API failed for province ${provinceCode}, using offline fallback...`, err);
+    // Fallback to offline data
+    console.warn(
+      'fetchCitiesMunicipalities: using offline fallback due to',
+      err
+    );
+    return OFFLINE_CITIES_MUNICIPALITIES_FALLBACK[provinceCode] || [];
   }
-
-  return MOCK_CITIES_MUNICIPALITIES[provinceCode] || [];
 }
 
 /**
- * Retrieves stored applications from localStorage.
+ * Retrieve stored applications from localStorage key 'ebarangay_offline_applications'.
  */
 export function getOfflineQueue() {
+  if (typeof localStorage === 'undefined') {
+    console.warn('getOfflineQueue: localStorage not available');
+    return [];
+  }
+
   try {
-    const data = localStorage.getItem(OFFLINE_STORAGE_KEY);
-    return data ? JSON.parse(data) : [];
-  } catch (error) {
-    console.error('Error reading from localStorage:', error);
+    const raw = localStorage.getItem(OFFLINE_QUEUE_KEY);
+    if (!raw) return [];
+
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (err) {
+    console.warn('getOfflineQueue: failed to parse offline queue', err);
     return [];
   }
 }
 
 /**
- * Saves application data into localStorage queue.
+ * Save application object to localStorage queue.
+ * Assumes appData has a unique `id` field.
  */
 export function saveToOfflineQueue(appData) {
+  if (typeof localStorage === 'undefined') {
+    console.warn('saveToOfflineQueue: localStorage not available');
+    return;
+  }
+
   try {
-    const currentQueue = getOfflineQueue();
-    const newItem = { id: appData.id || Date.now().toString(), ...appData };
-    const updatedQueue = [...currentQueue, newItem];
-    localStorage.setItem(OFFLINE_STORAGE_KEY, JSON.stringify(updatedQueue));
-  } catch (error) {
-    console.error('Error saving to localStorage:', error);
+    const queue = getOfflineQueue();
+
+    // Avoid duplicates by id if present
+    const existingIndex = queue.findIndex(
+      (item) => item && item.id === appData.id
+    );
+
+    if (existingIndex >= 0) {
+      // Update existing entry
+      queue[existingIndex] = appData;
+    } else {
+      // Append new entry
+      queue.push(appData);
+    }
+
+    localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(queue));
+  } catch (err) {
+    console.error('saveToOfflineQueue: failed to save to localStorage', err);
   }
 }
 
 /**
- * Removes application from localStorage queue by ID.
+ * Remove application from localStorage queue by id.
  */
 export function removeFromOfflineQueue(id) {
+  if (typeof localStorage === 'undefined') {
+    console.warn('removeFromOfflineQueue: localStorage not available');
+    return;
+  }
+
   try {
-    const currentQueue = getOfflineQueue();
-    const updatedQueue = currentQueue.filter((item) => String(item.id) !== String(id));
-    localStorage.setItem(OFFLINE_STORAGE_KEY, JSON.stringify(updatedQueue));
-  } catch (error) {
-    console.error('Error removing item from localStorage:', error);
+    const queue = getOfflineQueue();
+    const filtered = queue.filter((item) => !(item && item.id === id));
+
+    // Only write back if something was removed
+    if (filtered.length !== queue.length) {
+      localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(filtered));
+    }
+  } catch (err) {
+    console.error('removeFromOfflineQueue: failed to remove from localStorage', err);
   }
 }
