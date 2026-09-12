@@ -15,7 +15,7 @@ import {
   removeFromOfflineQueue
 } from './modules/async.js';
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   console.log("e-Barangay Starter Kit Initialized. Happy Coding!");
 
   const form = document.getElementById('ayuda-form');
