@@ -11,6 +11,35 @@ export function initResidentIdGenerator() {
   form.addEventListener('submit', (e) => {
     e.preventDefault();
 
+    const residentName = nameInput.ariaValueMax.trim();
+    const selectedPurok = purokSelect.value;
+
+    errName.textContent = '';
+    errPurok.textContent = '';
+
+    let valid = true;
+
+    if(residentName.length < 5){
+      errName.textContent = 'Name must be at least 5 charcaters.';
+      valid = false;
+    }
+
+    if(selectedPurok === ''){
+      errPurok.textContent = 'Please select a Purok.';
+      valid = false;
+    }
+
+    if( valid){
+      const residentCard = `
+      <div class = "resident-card">
+      <h3> Barangay Resident Card</h3>
+      <p><strong>Name:</strong> ${name}</p>
+      <p><strong>Zone:</strong> ${purok}</p>
+      </div>`;
+
+      form.reset();
+    }
+
     // TODO:
     // 1. Validate name length >= 5
     // 2. Validate purok selection is not empty
