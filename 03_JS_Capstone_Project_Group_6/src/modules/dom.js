@@ -9,32 +9,26 @@ export function sanitizeHTML(str) {
 }
 
 
-// Displays all residents as cards
 export function renderResidentCards(container, residents) {
-
-  // Check if there are no residents
+  // TODO: Render resident cards into container. 
+  // Handle empty state if residents array is empty.
+  // Include data-action="remove-resident" and data-id attributes on delete buttons.
   if (!residents || residents.length === 0) {
     container.innerHTML = '<p>No residents yet.</p>';
     return;
   }
 
-  // This will store all the resident cards
   let html = '';
 
-  // Go through each resident
   for (let i = 0; i < residents.length; i++) {
-
     const resident = residents[i];
-
-    // Make the resident's name safe
     const safeName = sanitizeHTML(resident.name);
 
-    // Create the resident card
     html += `
-      <div class="resident-card">
+      <div class="resident-card" data-priority="${resident.priority}">
         <span>${safeName}</span>
-
-        <!-- Button for removing the resident -->
+        <span class="badge ${resident.priority.toLowerCase()}">${resident.priority}</span>
+        <p>Score: ${resident.score} | Approved: ${resident.approved ? 'Yes' : 'No'}</p>
         <button data-action="remove-resident" data-id="${resident.id}">
           Remove
         </button>
@@ -42,37 +36,30 @@ export function renderResidentCards(container, residents) {
     `;
   }
 
-  // Display all resident cards on the page
   container.innerHTML = html;
 }
 
 
-// Displays the relief pack items and budget
 export function renderPOSRegister(container, packerState) {
+  // TODO: Render POS register showing subtotal, budget cap, <progress> bar, and item list with remove buttons.
 
-  // Get the data from the packer
   const items = packerState.items;
   const total = packerState.total;
   const budgetCap = packerState.budgetCap;
 
-  // This will store the item list
   let itemsHTML = '';
 
-  // Check if there are no items
   if (!items || items.length === 0) {
     itemsHTML = '<p>No items yet.</p>';
 
   } else {
 
-    // Go through each item
     for (let i = 0; i < items.length; i++) {
 
       const item = items[i];
 
-      // Make the item name safe
       const safeName = sanitizeHTML(item.name);
 
-      // Create the item list
       itemsHTML += `
         <li>
           ${safeName} - $${item.price.toFixed(2)}
@@ -86,7 +73,6 @@ export function renderPOSRegister(container, packerState) {
     }
   }
 
-  // Display the total, budget, progress bar, and items
   container.innerHTML = `
     <div class="pos-register">
       <p>
@@ -104,37 +90,18 @@ export function renderPOSRegister(container, packerState) {
 }
 
 
-// Handles button clicks
 export function setupActionDelegation(rootElement, actionMap) {
-
-  // Add one click listener to the parent element
+  // TODO: Implement event delegation on rootElement for elements with [data-action].
   rootElement.addEventListener('click', (event) => {
-
-    // Find the button that was clicked
     const actionElement = event.target.closest('[data-action]');
-
-    // Stop if the click was not on an action button
     if (!actionElement) return;
 
-    // Get the action from the button
     const action = actionElement.dataset.action;
-
-    // Get the resident ID if available
-    const id = actionElement.dataset.id;
-
-    // Get the item index if available
-    const index = actionElement.dataset.index;
-
-    // Find the function that handles the action
     const handler = actionMap[action];
 
-    // Run the function if it exists
     if (typeof handler === 'function') {
-      handler(id !== undefined ? id : index);
-
+      handler(actionElement); // pass the element itself
     } else {
-
-      // Show a warning if no function was found
       console.warn(`No handler found for action: "${action}"`);
     }
   });
