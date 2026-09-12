@@ -2,127 +2,144 @@
  * [INTEGRATION] Main Entrypoint Module - Student Starter Template
  */
 
-import { evaluateAyudaEligibility, createReliefPacker } from './engine.js';
-
-// ASSUMED exports from dom.js — please confirm/correct:
-import {
-  renderProvinceDropdown,
-  renderCityDropdown,
-  renderEligibilityResult,
-  renderPackerState,
-  getFormValues,
-} from './dom.js';
-
-// ASSUMED exports from async.js — please confirm/correct:
+import { evaluateAyudaEligibility, createReliefPacker } from './modules/engine.js';
+import { renderResidentCards, renderPOSRegister, setupActionDelegation } from './modules/dom.js';
 import {
   fetchProvinces,
-  fetchCitiesByProvince,
-  loadQueueFromStorage,
-  saveQueueToStorage,
-} from './async.js';
-
-const STORAGE_KEY = 'ayuda_queue'; // ASSUMPTION: confirm actual key name
-
-let packer = createReliefPacker(1000); // ASSUMPTION: default budget cap
-let citizenQueue = [];
+  fetchCitiesMunicipalities,
+  getOfflineQueue,
+  saveToOfflineQueue,
+  removeFromOfflineQueue
+} from './modules/async.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
-  console.log("e-Barangay Starter Kit Initialized. Happy Coding!");
+  console.log('e-Barangay Starter Kit Initialized. Happy Coding!');
 
-  // 1. Load persisted queue from LocalStorage
-  try {
-    citizenQueue = loadQueueFromStorage(STORAGE_KEY) ?? [];
-  } catch (err) {
-    console.error('Failed to load queue from storage:', err);
-    citizenQueue = [];
-  }
+  // --- DOM references (matched to actual index.html) ---
+  const ayudaForm = document.getElementById('ayuda-form');
+  const nameInput = document.getElementById('name');
+  const provSelect = document.getElementById('prov-select');
+  const citySelect = document.getElementById('city-select');
+  const incomeInput = document.getElementById('monthly-income');
+  const isSeniorCheckbox = document.getElementById('is-senior');
+  const isPwdCheckbox = document.getElementById('is-pwd');
+  const dependentCountInput = document.getElementById('dependent-count');
 
-  // 2. Fetch provinces and populate dropdown
-  try {
-    const provinces = await fetchProvinces();
-    renderProvinceDropdown(provinces);
-  } catch (err) {
-    console.error('Failed to fetch provinces:', err);
-  }
+  const posContainer = document.getElementById('pos-container');
+  const itemNameInput = document.getElementById('item-name');
+  const itemPriceInput = document.getElementById('item-price');
+  const addItemBtn = document.getElementById('add-item-btn');
 
-  // 3. Cascading province -> city dropdown
-  const provinceSelect = document.getElementById('province-select'); // ASSUMPTION: element id
-  if (provinceSelect) {
-    provinceSelect.addEventListener('change', async (e) => {
-      const provinceCode = e.target.value;
-      try {
-        const cities = await fetchCitiesByProvince(provinceCode);
-        renderCityDropdown(cities);
-      } catch (err) {
-        console.error('Failed to fetch cities:', err);
-      }
-    });
-  }
+  const queueContainer = document.getElementById('queue-container');
 
-  // 4. Eligibility form submission
-  const eligibilityForm = document.getElementById('eligibility-form'); // ASSUMPTION: element id
-  if (eligibilityForm) {
-    eligibilityForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const citizen = getFormValues(eligibilityForm); // ASSUMPTION: returns { isSenior, isPWD, monthlyIncome, dependentCount, ... }
-      const result = evaluateAyudaEligibility(citizen);
+  const actionRoot = document.getElementById('app');
 
-      renderEligibilityResult(result);
+  // --- State ---
+  let residents = getOfflineQueue(); // pre-load anything saved offline
+  const packer = createReliefPacker(1000);
 
-      if (result.approved) {
-        citizenQueue.push({ ...citizen, ...result });
-        saveQueueToStorage(STORAGE_KEY, citizenQueue);
-      }
-    });
-  }
+  // --- Initial renders ---
+  renderResidentCards(queueContainer, residents);
+  renderPOSRegister(posContainer, {
+    items: packer.getItems(),
+    subtotal: packer.getTotal(),
+    budgetCap: packer.getBudgetCap()
+  });
 
-  // 5. Relief goods packer (POS-style) setup
-  const packerForm = document.getElementById('packer-form'); // ASSUMPTION: element id
-  if (packerForm) {
-    packerForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const nameInput = document.getElementById('item-name');
-      const priceInput = document.getElementById('item-price');
-      const name = nameInput?.value?.trim();
-      const price = parseFloat(priceInput?.value);
+  // --- Load provinces (async, offline-fallback aware) ---
+  const provinces = await fetchProvinces();
+  provSelect.innerHTML =
+    `<option value="">Select Province...</option>` +
+    provinces.map(p => `<option value="${p.code}">${p.name}</option>`).join('');
 
-      const result = packer.addItem(name, price);
-      if (!result.success) {
-        console.warn('Could not add item:', result.reason);
-      }
-
-      renderPackerState({
-        items: packer.getItems(),
-        total: packer.getTotal(),
-        cap: packer.getBudgetCap(),
-      });
-
-      packerForm.reset();
-    });
-  }
-
-  // 6. Action delegation (e.g. remove item, remove queue entry) via a single listener
-  document.addEventListener('click', (e) => {
-    const removeItemBtn = e.target.closest('[data-action="remove-item"]'); // ASSUMPTION: data attribute contract
-    if (removeItemBtn) {
-      const index = Number(removeItemBtn.dataset.index);
-      const result = packer.removeItem(index);
-      if (result.success) {
-        renderPackerState({
-          items: packer.getItems(),
-          total: packer.getTotal(),
-          cap: packer.getBudgetCap(),
-        });
-      }
+  // --- Cascading province -> city dropdown ---
+  provSelect.addEventListener('change', async () => {
+    if (!provSelect.value) {
+      citySelect.innerHTML = `<option value="">Select City/Municipality...</option>`;
       return;
     }
 
-    const removeQueueBtn = e.target.closest('[data-action="remove-queue-entry"]'); // ASSUMPTION
-    if (removeQueueBtn) {
-      const index = Number(removeQueueBtn.dataset.index);
-      citizenQueue.splice(index, 1);
-      saveQueueToStorage(STORAGE_KEY, citizenQueue);
-      // re-render queue if there's a dedicated render function — not yet imported
+    citySelect.disabled = true;
+    citySelect.innerHTML = `<option>Loading...</option>`;
+
+    const cities = await fetchCitiesMunicipalities(provSelect.value);
+
+    citySelect.innerHTML =
+      `<option value="">Select City/Municipality...</option>` +
+      cities.map(c => `<option value="${c.code}">${c.name}</option>`).join('');
+    citySelect.disabled = false;
+  });
+
+  // --- Resident form submission ---
+  ayudaForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+
+    const citizen = {
+      isSenior: isSeniorCheckbox.checked,
+      isPWD: isPwdCheckbox.checked,
+      monthlyIncome: Number(incomeInput.value) || 0,
+      dependents: Number(dependentCountInput.value) || 0
+    };
+
+    const evaluation = evaluateAyudaEligibility(citizen);
+
+    const application = {
+      id: Date.now().toString(),
+      name: nameInput.value.trim(),
+      province: provSelect.value,
+      city: citySelect.value,
+      ...evaluation
+    };
+
+    residents.push(application);
+    saveToOfflineQueue(application);
+    renderResidentCards(queueContainer, residents);
+
+    ayudaForm.reset();
+    citySelect.innerHTML = `<option value="">Select City/Municipality...</option>`;
+  });
+
+  // --- POS packer: add item ---
+  addItemBtn.addEventListener('click', () => {
+    const name = itemNameInput.value.trim();
+    const price = Number(itemPriceInput.value) || 0;
+
+    if (!name || price <= 0) return;
+
+    const result = packer.addItem(name, price);
+
+    if (!result.success) {
+      alert(result.reason);
+      return;
+    }
+
+    renderPOSRegister(posContainer, {
+      items: packer.getItems(),
+      subtotal: packer.getTotal(),
+      budgetCap: packer.getBudgetCap()
+    });
+
+    itemNameInput.value = '';
+    itemPriceInput.value = '';
+  });
+
+  // --- Action delegation: handles remove-resident and remove-item clicks ---
+  setupActionDelegation(actionRoot, {
+    'remove-resident': (dataset) => {
+      residents = residents.filter(r => r.id !== dataset.id);
+      removeFromOfflineQueue(dataset.id);
+      renderResidentCards(queueContainer, residents);
+    },
+    'remove-item': (dataset) => {
+      const index = packer.getItems().findIndex((_, i) => i.toString() === dataset.id);
+      if (index !== -1) {
+        packer.removeItem(index);
+        renderPOSRegister(posContainer, {
+          items: packer.getItems(),
+          subtotal: packer.getTotal(),
+          budgetCap: packer.getBudgetCap()
+        });
+      }
     }
   });
 });
