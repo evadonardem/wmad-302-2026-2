@@ -10,6 +10,17 @@ export function initSariSariPOS() {
     const btn = e.target.closest('button');
     if (!btn) return;
 
+    const action = btn.getAttribute('data-action');
+
+    if(action === 'add'){
+      const amount = Number(btn.getAttribute('data-amount'));
+      currentTotal = currentTotal + amount;
+    }else if(action === 'clear'){
+      currentTotal = 0;
+    }
+
+    billTotalEl.textContent = '₱' + currentTotal.toFixed(2);
+
     // TODO:
     // 1. Read btn.dataset.action ('add' or 'clear')
     // 2. Update currentTotal state
