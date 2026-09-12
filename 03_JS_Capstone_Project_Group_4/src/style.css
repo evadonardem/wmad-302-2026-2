@@ -136,9 +136,9 @@ body {
   color: var(--ink-muted);
 }
 
-.form-group input[type="text"],
-.form-group input[type="number"],
-.form-group select {
+input[type="text"],
+input[type="number"],
+select {
   width: 100%;
   padding: 0.7rem 0.8rem;
   border: 1px solid var(--rule);
@@ -150,12 +150,17 @@ body {
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
-.form-group input[type="text"]:focus,
-.form-group input[type="number"]:focus,
-.form-group select:focus {
+input[type="text"]:focus,
+input[type="number"]:focus,
+select:focus {
   outline: none;
   border-color: var(--seal);
   box-shadow: 0 0 0 3px var(--seal-soft);
+}
+
+input[type="text"]::placeholder,
+input[type="number"]::placeholder {
+  color: var(--ink-faint);
 }
 
 .checkbox-group {
@@ -216,6 +221,22 @@ select:focus-visible,
 button:focus-visible {
   outline: 2px solid var(--seal);
   outline-offset: 2px;
+}
+
+/* ---------- POS controls row (Add Item form) ---------- */
+
+.pos-controls {
+  border-top: 1px dashed var(--rule);
+  padding-top: 1rem;
+}
+
+.pos-controls input {
+  min-width: 0;
+}
+
+.pos-controls .btn {
+  padding: 0.75rem 1.1rem;
+  white-space: nowrap;
 }
 
 /* =====================================================
