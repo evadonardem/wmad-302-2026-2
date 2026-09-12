@@ -6,7 +6,7 @@
   --primary-color: #9b72cf;
   --primary-hover: #7953a8;
 
-  --bg-color: #f7f3fa;
+  --bg-color: #f7f0fb;
   --card-bg: #fffdfb;
 
   --text-main: #493853;
@@ -23,7 +23,7 @@
 
 
 /* =========================================
-   BODY
+   BODY - ENCHANTED FAIRYCORE BACKGROUND
 ========================================= */
 
 body {
@@ -34,14 +34,119 @@ body {
 
   color: var(--text-main);
 
+  min-height: 100vh;
+
   background:
-    radial-gradient(circle at 10% 10%,
-      rgba(188, 153, 214, 0.18),
-      transparent 25%),
-    radial-gradient(circle at 90% 80%,
-      rgba(157, 192, 166, 0.16),
-      transparent 25%),
-    var(--bg-color);
+    /* Purple fairy glow */
+    radial-gradient(circle at 8% 12%,
+      rgba(218, 184, 245, 0.65) 0,
+      rgba(218, 184, 245, 0.25) 12%,
+      transparent 28%),
+
+    /* Mint fairy glow */
+    radial-gradient(circle at 92% 18%,
+      rgba(190, 226, 205, 0.6) 0,
+      rgba(190, 226, 205, 0.22) 13%,
+      transparent 30%),
+
+    /* Pink magical glow */
+    radial-gradient(circle at 50% 100%,
+      rgba(245, 202, 226, 0.55) 0,
+      rgba(245, 202, 226, 0.18) 18%,
+      transparent 38%),
+
+    /* Small fairy lights */
+    radial-gradient(circle at 25% 40%,
+      rgba(255, 255, 255, 0.9) 0 3px,
+      transparent 4px),
+
+    radial-gradient(circle at 75% 55%,
+      rgba(255, 255, 255, 0.85) 0 3px,
+      transparent 4px),
+
+    radial-gradient(circle at 90% 75%,
+      rgba(255, 255, 255, 0.8) 0 2px,
+      transparent 3px),
+
+    radial-gradient(circle at 12% 80%,
+      rgba(255, 255, 255, 0.75) 0 2px,
+      transparent 3px),
+
+    /* Main fairycore background */
+    linear-gradient(135deg,
+      #f7f0fb 0%,
+      #f5eef9 28%,
+      #eef7f2 58%,
+      #f9eef6 82%,
+      #f4edf9 100%);
+
+  background-attachment: fixed;
+
+  background-size:
+    auto,
+    auto,
+    auto,
+    180px 180px,
+    240px 240px,
+    300px 300px;
+}
+
+
+/* =========================================
+   FLOATING FAIRY SPARKLES
+========================================= */
+
+body::before {
+  content: "✦     ✧          ⋆       ✦             ✧";
+
+  position: fixed;
+
+  top: 8%;
+  left: 0;
+
+  width: 100%;
+  height: 100%;
+
+  pointer-events: none;
+
+  z-index: -1;
+
+  color: rgba(164, 122, 190, 0.28);
+
+  font-size: 18px;
+
+  letter-spacing: 18px;
+
+  line-height: 100px;
+
+  transform: rotate(-8deg);
+}
+
+
+body::after {
+  content: "✧          ⋆      ✦          ✧      ⋆";
+
+  position: fixed;
+
+  bottom: 5%;
+  right: 0;
+
+  width: 100%;
+  height: 100%;
+
+  pointer-events: none;
+
+  z-index: -1;
+
+  color: rgba(124, 165, 139, 0.25);
+
+  font-size: 15px;
+
+  letter-spacing: 22px;
+
+  line-height: 120px;
+
+  transform: rotate(7deg);
 }
 
 
@@ -132,7 +237,7 @@ body {
   border: 1px solid var(--border-color);
 
   /*
-     Asymmetric fairy-window shape
+    Asymmetric fairy-window shape
   */
   border-radius:
     28px 8px 28px 8px;
@@ -214,7 +319,6 @@ body {
 .form-group input[type="text"],
 .form-group input[type="number"],
 .form-group select {
-
   width: 100%;
 
   padding: 0.9rem 1rem;
@@ -222,7 +326,7 @@ body {
   border: 1px solid #dfd2e7;
 
   /*
-     Different shape from normal boxes
+    Fairy-inspired organic shape
   */
   border-radius:
     12px 20px 12px 20px;
@@ -242,7 +346,6 @@ body {
 
 .form-group input[type="text"]::placeholder,
 .form-group input[type="number"]::placeholder {
-
   color: #b3a5b9;
 }
 
@@ -250,7 +353,6 @@ body {
 .form-group input[type="text"]:hover,
 .form-group input[type="number"]:hover,
 .form-group select:hover {
-
   background: white;
 
   border-color: #c4a6d5;
@@ -262,7 +364,6 @@ body {
 .form-group input[type="text"]:focus,
 .form-group input[type="number"]:focus,
 .form-group select:focus {
-
   outline: none;
 
   background: white;
@@ -280,7 +381,6 @@ body {
 ========================================= */
 
 .checkbox-group {
-
   display: flex;
 
   gap: 1rem;
@@ -299,7 +399,7 @@ body {
   border: 1px solid #e2d7e8;
 
   /*
-     Layered shape
+    Layered fairy shape
   */
   border-radius:
     18px 7px 18px 7px;
@@ -310,7 +410,6 @@ body {
 
 
 .checkbox-group label {
-
   display: flex;
 
   align-items: center;
@@ -330,9 +429,7 @@ body {
 
 
 .checkbox-group label:hover {
-
   background: #f1e8f6;
-
 }
 
 
@@ -341,7 +438,6 @@ body {
 ========================================= */
 
 .btn {
-
   background:
     linear-gradient(135deg,
       #9670b9,
@@ -371,7 +467,6 @@ body {
 
 
 .btn:hover {
-
   background:
     linear-gradient(135deg,
       #835fa9,
@@ -386,7 +481,6 @@ body {
 
 
 .btn:active {
-
   transform: translateY(2px);
 
   box-shadow:
@@ -399,7 +493,6 @@ body {
 ========================================= */
 
 .resident-card {
-
   background:
     linear-gradient(135deg,
       #ffffff,
@@ -409,7 +502,7 @@ body {
   border: 1px solid #e2d7e8;
 
   /*
-     More organic shape
+    Organic fairy shape
   */
   border-radius:
     22px 8px 22px 8px;
@@ -419,7 +512,7 @@ body {
   margin-bottom: 1rem;
 
   /*
-     Fairy accent instead of ordinary border
+    Fairy accent
   */
   border-left: 6px solid #a77bc9;
 
@@ -438,7 +531,6 @@ body {
 /* Decorative fairy circle */
 
 .resident-card::before {
-
   content: "";
 
   position: absolute;
@@ -459,7 +551,6 @@ body {
 /* Sparkle */
 
 .resident-card::after {
-
   content: "✧";
 
   position: absolute;
@@ -476,7 +567,6 @@ body {
 
 
 .resident-card:hover {
-
   transform:
     translateY(-4px) rotate(0.2deg);
 
@@ -493,7 +583,6 @@ body {
 ========================================= */
 
 .badge {
-
   padding: 0.4rem 0.8rem;
 
   border-radius: 50px;
@@ -516,19 +605,16 @@ body {
 
 
 .badge.critical {
-
   background: var(--critical-color);
 }
 
 
 .badge.high {
-
   background: var(--high-color);
 }
 
 
 .badge.low {
-
   background: var(--low-color);
 }
 
@@ -538,7 +624,6 @@ body {
 ========================================= */
 
 .empty-state {
-
   color: var(--text-muted);
 
   text-align: center;
@@ -559,6 +644,26 @@ body {
   box-shadow:
     5px 5px 0 rgba(210, 190, 220, 0.15);
 
+  position: relative;
+
+  overflow: hidden;
+}
+
+
+/* Empty-state fairy decoration */
+
+.empty-state::before {
+  content: "✦  ✧  ⋆  ✦  ✧";
+
+  display: block;
+
+  margin-bottom: 0.8rem;
+
+  color: #c6a8d8;
+
+  font-size: 18px;
+
+  letter-spacing: 8px;
 }
 
 
@@ -582,7 +687,7 @@ body {
 
   .checkbox-group {
     flex-direction: column;
+
     align-items: flex-start;
   }
-
 }
