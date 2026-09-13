@@ -7,6 +7,15 @@ export function evaluateAyudaEligibility(citizen) {
 export function computeJollibeeBill(rawPrice, isSeniorOrPWD) {
   if(isNaN(rawPrice) || rawPrice <= 0) {
     return 0;
+  }
+  
+  let total;
+  if (isSeniorOrPWD) {
+    total = rawPrice * 0.8; // 20% discount
+  } else {
+    total = rawPrice * 1.12; // 12% VAT
+  }
+  return Number(total.toFixed(2));
 }
 
 export function runFundamentalsTests() {
