@@ -2,6 +2,16 @@ import console from 'node:console';
 
 export function summarizeSariSariSales(transactions) {
   // TODO: Filter out 'voided'/'refunded' and reduce by category
+  const initialSales = { snacks: 0, drinks: 0, canned: 0 };
+
+  return transactions
+    .filter(tx => tx.status !== 'voided' && tx.status !== 'refunded')
+    .reduce((acc, tx) => {
+      if (tx.category in acc) {
+        acc[tx.category] += tx.amount;
+      }
+      return acc;
+    }, initialSales);
 }
 
 export function extractUniqueBarangays(riders) {
