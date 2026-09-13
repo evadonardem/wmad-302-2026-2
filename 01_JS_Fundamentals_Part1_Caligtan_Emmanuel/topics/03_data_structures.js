@@ -16,6 +16,8 @@ export function summarizeSariSariSales(transactions) {
 
 export function extractUniqueBarangays(riders) {
   // TODO: Extract all barangays, deduplicate via Set, and sort alphabetically
+  const barangays = riders.flatMap(rider => rider.coveredBarangays);
+  return Array.from(new Set(barangays)).sort();
 }
 
 export function runDataStructuresTests() {
