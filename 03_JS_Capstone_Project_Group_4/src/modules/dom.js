@@ -192,6 +192,7 @@ export function setupActionDelegation(rootElement, actionMap) {
 
   rootElement.addEventListener('click', (e) => {
     const target = e.target.closest('[data-action]');
+    console.log(target);
     if (!target || !rootElement.contains(target)) return;
 
     const action = target.dataset.action;
