@@ -7,18 +7,25 @@ export function initRouteStatusMonitor() {
   if (!syncBtn) return;
 
   syncBtn.addEventListener('click', () => {
-    let activeCount = 0;
-    let delayedCount = 0;
+      let activeCount = 0;
+      let delayedCount = 0;
 
-    routeList.forEach((r) => {
-      if (r.getAttribute('data-status') === 'active') {
-        activeCount++;
-      } else {
-        delayedCount++;
+      // Loop through each route element
+      routeList.forEach((item) => {
+        const status = item.dataset.status;
+        if (status === 'active') {
+          activeCount++;
+        } else if (status === 'delayed') {
+          delayedCount++;
+        }
+      });
+
+      // Update text content in #stats-panel
+      if (activeStat) {
+        activeStat.textContent = `Active Routes: ${activeCount}`;
+      }
+      if (delayedStat) {
+        delayedStat.textContent = `Delayed/Full: ${delayedCount}`;
       }
     });
-
-    activeStat.textContent = 'Active Routes: ' + activeCount;
-    delayedStat.textContent = 'Delayed/Full: ' + delayedCount;
-  });
 }
