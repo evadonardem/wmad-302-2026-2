@@ -2,10 +2,19 @@ import console from 'node:console';
 
 export function evaluateAyudaEligibility(citizen) {
   // TODO: Task 1 - Evaluate Ayuda Eligibility using ?? and logical operators
+  const dependentCount = citizen.dependentCount ?? 0;
+  return citizen.isSeniorPWD || (citizen.isLowIncome && dependentCount >= 3);
 }
 
 export function computeJollibeeBill(rawPrice, isSeniorOrPWD) {
   // TODO: Task 2 - Compute bill returning rounded Number (e.g., Number(total.toFixed(2)))
+  const price = Number(rawPrice);
+  if (!Number.isFinite(price) || price <= 0) {
+    return 0;
+  }
+
+  const total = isSeniorOrPWD ? price * 0.8 : price * 1.12;
+  return Number(total.toFixed(2));
 }
 
 export function runFundamentalsTests() {

@@ -2,10 +2,33 @@ import console from 'node:console';
 
 export function memoize(fn) {
   // TODO: Cache evaluation results in a local object closure
+  const cache = new Map();
+
+  return function (...args) {
+    const key = JSON.stringify(args);
+    if (cache.has(key)) {
+      return cache.get(key);
+    }
+
+    const result = fn(...args);
+    cache.set(key, result);
+    return result;
+  };
 }
 
 export function createJeepneyFareCalculator(baseFare = 13, discountRate = 0.20) {
   // TODO: Return closure (distanceKm, isStudentOrSenior) calculating fare
+  return function (distanceKm, isStudentOrSenior) {
+    if (typeof distanceKm !== 'number' || !Number.isFinite(distanceKm) || distanceKm <= 0) {
+      return 0;
+    }
+
+    let fare = baseFare + Math.max(0, distanceKm - 4) * 1.75;
+    if (isStudentOrSenior === true) {
+      fare *= 1 - discountRate;
+    }
+    return Number(fare.toFixed(2));
+  };
 }
 
 export function runAdvancedFunctionsTests() {

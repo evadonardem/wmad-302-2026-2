@@ -3,25 +3,17 @@ import console from 'node:console';
 export function evaluateAyudaEligibility(citizen) {
   // TODO: Task 1 - Evaluate Ayuda Eligibility using ?? and logical operators
   const dependentCount = citizen.dependentCount ?? 0;
-  return citizen.isSeniorPWD === true || citizen.isLowIncome === true && dependentCount >= 3
+  return citizen.isSeniorPWD === true || (citizen.isLowIncome === true && dependentCount >= 3);
 }
 
 
 export function computeJollibeeBill(rawPrice, isSeniorOrPWD) {
   // TODO: Task 2 - Compute bill returning rounded Number (e.g., Number(total.toFixed(2)))
-  if (
-    typeof rawPrice !== "number" || Number.isNaN(rawPrice) || rawPrice <= 0) {
+  if (typeof rawPrice !== 'number' || !Number.isFinite(rawPrice) || rawPrice <= 0) {
     return 0;
   }
 
-  let total;
-
-  if (isSeniorOrPWD === true) {
-    total = rawPrice * 0.80;
-  } else {
-    total = rawPrice * 1.12;
-  }
-
+  const total = isSeniorOrPWD === true ? rawPrice * 0.8 : rawPrice * 1.12;
   return Number(total.toFixed(2));
 }
 

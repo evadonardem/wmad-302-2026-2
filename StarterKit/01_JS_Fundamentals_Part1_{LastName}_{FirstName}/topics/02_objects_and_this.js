@@ -5,10 +5,35 @@ export function GCashAccount(accountName, initialBalance = 0) {
   this.balance = initialBalance;
 
   // TODO: Implement cashIn(amount), sendMoney(amount, recipient), and getBalance()
+  const fee = 15;
+
+  this.cashIn = function (amount) {
+    if (typeof amount !== 'number' || !Number.isFinite(amount) || amount <= 0) {
+      throw new Error('Invalid cash-in amount');
+    }
+    this.balance += amount;
+    return this;
+  };
+
+  this.sendMoney = function (amount, recipient) {
+    if (typeof amount !== 'number' || !Number.isFinite(amount) || amount <= 0) {
+      throw new Error('Invalid send amount');
+    }
+    if (this.balance < amount + fee) {
+      throw new Error('Insufficient GCash Balance');
+    }
+    this.balance -= amount + fee;
+    return this;
+  };
+
+  this.getBalance = function () {
+    return `₱${this.balance.toFixed(2)}`;
+  };
 }
 
 export function getBarangayName(resident) {
   // TODO: Use optional chaining resident?.address?.barangay?.name
+  return resident?.address?.barangay?.name ?? 'Unregistered Barangay';
 }
 
 export function runObjectsTests() {
