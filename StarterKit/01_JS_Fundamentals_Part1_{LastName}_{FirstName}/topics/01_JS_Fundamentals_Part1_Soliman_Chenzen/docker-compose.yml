@@ -1,0 +1,7 @@
+services:
+  ep01-runner:
+    build: .docker compose down
+    volumes:
+      - .:/app
+    stdin_open: true
+    tty: true
