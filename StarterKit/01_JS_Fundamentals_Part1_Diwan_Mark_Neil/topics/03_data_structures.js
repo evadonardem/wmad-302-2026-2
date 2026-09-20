@@ -1,13 +1,19 @@
 import console from 'node:console';
-
+ 
 export function summarizeSariSariSales(transactions) {
-  // TODO: Filter out 'voided'/'refunded' and reduce by category
+  return transactions
+    .filter(t => t.status !== 'voided' && t.status !== 'refunded')
+    .reduce((acc, t) => {
+      acc[t.category] = (acc[t.category] ?? 0) + t.amount;
+      return acc;
+    }, { snacks: 0, drinks: 0, canned: 0 });
 }
-
+ 
 export function extractUniqueBarangays(riders) {
-  // TODO: Extract all barangays, deduplicate via Set, and sort alphabetically
+  const all = riders.flatMap(r => r.coveredBarangays);
+  return [...new Set(all)].sort((a, b) => a.localeCompare(b));
 }
-
+ 
 export function runDataStructuresTests() {
   const txs = [
     { category: 'snacks', amount: 50, status: 'completed' },
@@ -17,7 +23,7 @@ export function runDataStructuresTests() {
   ];
   const summary = summarizeSariSariSales(txs);
   console.assert(summary.snacks === 50 && summary.drinks === 30 && summary.canned === 40, 'Sales summarized correctly');
-
+ 
   const riders = [
     { id: 1, coveredBarangays: ['Irisan', 'Loakan'] },
     { id: 2, coveredBarangays: ['Loakan', 'Bakakeng'] }
