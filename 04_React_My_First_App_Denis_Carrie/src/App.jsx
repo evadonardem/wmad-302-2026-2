@@ -8,7 +8,8 @@ import GeneralSettings from './components/GeneralSettings';
 // TODO 13 [Dynamic Themes]: Complete the theme creation arrow function.
 // It should accept a 'mode' string parameter ('light' or 'dark') and generate an MUI theme object configuration mapping that mode.
 const theme = (mode = 'light') => createTheme({
-  // [Your code here]
+
+  // [Your code here] 
 });
 
 function App() {
