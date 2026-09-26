@@ -64,8 +64,13 @@ export default function QuoteOfTheDay() {
                 - Render an MUI <Chip /> with a unique key
                 - Apply color="success" if 'selectedTag' matches 't', otherwise color="secondary"
                 - Bind label={t} and set custom style margins sx={{ mr: 0.25 }} */}
-            {quote.tags?.map((tag) => (
-              <Chip key ={tag} color='secondary' label={tag} sx={{mr:0.5}} />
+            {quote.tags?.map((t) => (
+              <Chip 
+                key ={t} 
+                color={selectedTag === t ? 'success' : 'secondary'} 
+                label={t} 
+                sx={{mr:0.25}} 
+              />
             ))}
           </Box>
 
