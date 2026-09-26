@@ -1,38 +1,71 @@
-import { Container, createTheme, CssBaseline, SpeedDial, SpeedDialAction, SpeedDialIcon, TextField, ThemeProvider } from '@mui/material'
+import { Container, createTheme, CssBaseline, ThemeProvider } from '@mui/material'
 import './App.css'
 import QuoteOfTheDay from './components/QuoteOfTheDay'
-import { DarkMode, LightMode, Palette, Print, Save, Settings, Share } from '@mui/icons-material';
+import { DarkMode, LightMode, Palette, Print, Share } from '@mui/icons-material';
 import { useState } from 'react';
 import GeneralSettings from './components/GeneralSettings';
 
-// TODO 13 [Dynamic Themes]: Complete the theme creation arrow function.
-// It should accept a 'mode' string parameter ('light' or 'dark') and generate an MUI theme object configuration mapping that mode.
 const theme = (mode = 'light') => createTheme({
-  // [Your code here]
+  palette: {
+    mode,
+    primary: {
+      main: mode === 'dark' ? '#90caf9' : '#1976d2',
+    },
+    background: {
+      default: mode === 'dark' ? '#121212' : '#f5f5f5',
+      paper: mode === 'dark' ? '#1e1e1e' : '#ffffff',
+    },
+  },
 });
 
 function App() {
-  // TODO 14 [State Management]: Initialize a boolean React state hook variable named 'isDarkMode' defaulting to false.
-  // [Your code here]
+  const [isDarkMode, setIsDarkMode] = useState(false);
 
-  // TODO 15 [Data Actions Mapping]: Populate the 'actions' configuration array below.
-  // Ensure the first action toggle object displays a <LightMode /> icon if 'isDarkMode' is true, or a <DarkMode /> icon if false.
-  // The 'onClick' function must invert the current boolean state value of 'isDarkMode' upon execution.
+  const handleThemeToggle = () => {
+    setIsDarkMode((current) => !current);
+  };
+
+  const handlePrint = () => {
+    window.print();
+  };
+
+  const handleShare = async () => {
+    const shareData = {
+      title: 'Quote of the Day',
+      text: 'Check out this quote app!',
+      url: window.location.href,
+    };
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+        return;
+      } catch {
+        // If the user cancels, do nothing and fall back below.
+      }
+    }
+
+    if (navigator.clipboard) {
+      await navigator.clipboard.writeText(`${shareData.title} - ${shareData.url}`);
+      return;
+    }
+
+    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareData.url)}`, '_blank', 'noopener,noreferrer,width=600,height=400');
+  };
+
   const actions = [
     {
-      name: 'Light Mode' , // isDarkMode ? 'Light Mode' : 'Dark Mode',
-      // [Your code here: Add dynamic icon and state-toggling onClick function]
+      name: isDarkMode ? 'Light Mode' : 'Dark Mode',
+      icon: isDarkMode ? <LightMode /> : <DarkMode />,
+      onClick: handleThemeToggle,
     },
-    { icon: <Palette />, name: 'Theme' },
-    { icon: <Print />, name: 'Print' },
-    { icon: <Share />, name: 'Share' },
+    { icon: <Palette />, name: 'Theme', onClick: handleThemeToggle },
+    { icon: <Print />, name: 'Print', onClick: handlePrint },
+    { icon: <Share />, name: 'Share', onClick: handleShare },
   ];
 
   return (
-    // TODO 16 [Theme Binding Layout]: Wrap the children inside a dynamic ThemeProvider passing the calculated theme mode.
-    // Configure the layout context matching: mode should resolve to 'dark' if 'isDarkMode' is true, otherwise 'light'.
-    <>
-      {/* [Your ThemeProvider wrapper structure here] */}
+    <ThemeProvider theme={theme(isDarkMode ? 'dark' : 'light')}>
       <CssBaseline />
       <Container sx={{
         display: 'flex',
@@ -45,7 +78,7 @@ function App() {
         <QuoteOfTheDay />
         <GeneralSettings actions={actions} />
       </Container>
-    </>
+    </ThemeProvider>
   )
 }
 
