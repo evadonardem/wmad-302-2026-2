@@ -47,11 +47,19 @@ export default function QuoteOfTheDay() {
             color="text.secondary"
             sx={{ letterSpacing: 2, textAlign: 'center' }}
           >
-            Quote of the Day
+            <h3>Quote of the Day</h3>
           </Typography>
 
-          <Box> 
-            textAlign: 'center', mb: 1, display: 'flex', justifyContent: 'center', flexWrap: 'wrap'
+          <Box
+          
+            sx={{
+              display: 'flex',
+              justifyContent: 'center',
+              flexWrap: 'wrap',
+              gap: 0.5,
+            }}
+          >
+
             {quote.tags?.map((t) => (
               <Chip
                 key={t}
