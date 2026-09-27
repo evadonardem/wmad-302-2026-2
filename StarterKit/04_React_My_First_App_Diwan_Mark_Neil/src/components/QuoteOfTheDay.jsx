@@ -1,103 +1,216 @@
 import { useEffect, useRef, useState } from 'react';
 import { Card, CardContent, Typography, Stack, Divider, Button, Chip, Box, Select, MenuItem } from '@mui/material';
-import { Refresh } from '@mui/icons-material';
+import {
+  Refresh, FormatQuote, Favorite, WbSunny, Spa, Psychology, Bolt,
+  EmojiEvents, Shield, EmojiEmotions, Lightbulb, DirectionsRun, Groups,
+  MenuBook, Mood, Autorenew, NightsStay, AutoAwesome, HourglassEmpty,
+  VolunteerActivism, School, Flight, Explore, Work, FitnessCenter,
+  TrendingUp, AccessTime, SelfImprovement,
+} from '@mui/icons-material';
 import { getRandomQuote, getTags } from '../services/quoteService';
 
-export default function QuoteOfTheDay() {
-  // TODO 1 [State Initialization]: Define local state variables for:
-  // - 'quote': Stores the current quote object (default: empty object)
-  // - 'tags': Stores an array of all available category tags (default: empty array)
-  // - 'selectedTag': Tracks the string name of the active filter tag (default: null)
-  // [Your code here]
+const TAG_ICONS = {
+  love: Favorite,
+  hope: WbSunny,
+  life: Spa,
+  wisdom: Psychology,
+  motivation: Bolt,
+  inspiration: Lightbulb,
+  success: EmojiEvents,
+  courage: Shield,
+  happiness: EmojiEmotions,
+  perseverance: DirectionsRun,
+  leadership: Groups,
+  friendship: Groups,
+  philosophy: MenuBook,
+  humor: Mood,
+  failure: Autorenew,
+  change: Autorenew,
+  dreams: NightsStay,
+  faith: AutoAwesome,
+  patience: HourglassEmpty,
+  gratitude: VolunteerActivism,
+  knowledge: School,
+  education: School,
+  freedom: Flight,
+  adventure: Explore,
+  work: Work,
+  discipline: FitnessCenter,
+  strength: FitnessCenter,
+  growth: TrendingUp,
+  time: AccessTime,
+  peace: SelfImprovement,
+};
 
-  // TODO 2 [Reference Hook]: Create a React mutable reference named 'selectTagRef' to capture the Select element value
-  // [Your code here]
+function getTagIcon(tag) {
+  const Icon = TAG_ICONS[tag?.toLowerCase()] || FormatQuote;
+  return <Icon sx={{ fontSize: '1rem !important' }} />;
+}
+
+export default function QuoteOfTheDay() {
+  const [quote, setQuote] = useState({});
+  const [tags, setTags] = useState([]);
+  const [selectedTag, setSelectedTag] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const selectTagRef = useRef(null);
 
   const loadRandomQuote = async () => {
-    // TODO 3 [Async Request Handler]: 
-    // a. Retrieve the current value from 'selectTagRef' (fallback to empty string if undefined)
-    // b. Call 'getRandomQuote(tag)' asynchronously with that tag value
-    // c. Update both your 'quote' state and 'selectedTag' state with the returned values
-    // [Your code here]
+    setIsLoading(true);
+    const tag = selectTagRef.current?.value || '';
+    const data = await getRandomQuote(tag);
+    setQuote(data);
+    setSelectedTag(tag || null);
+    setIsLoading(false);
   };
 
   const loadTags = async () => {
-    // TODO 4 [Async List Population]: Fetch tags asynchronously using 'getTags()' and store them into your tags state array
-    // [Your code here]
+    const data = await getTags();
+    setTags(data);
   };
 
   useEffect(() => {
-    // TODO 5 [Component Lifecycle]: Execute both 'loadRandomQuote' and 'loadTags' when the component mounts
-    // [Your code here]
+    loadRandomQuote();
+    loadTags();
   }, []);
 
   return (
-    <Card
-      variant="elevation"
-      elevation={5}
-      sx={{
-        maxWidth: 500,
-        width: '100%',
-        borderRadius: 3
-      }}
-    >
-      <CardContent sx={{ p: 4 }}>
-        <Stack spacing={3}>
-          <Typography variant="overline" color="text.secondary" letterSpacing={2} textAlign="center">
-            Quote of the Day
-          </Typography>
+    <Box sx={{ position: 'relative', maxWidth: 520, width: '100%', mt: 3 }}>
+      {/* Ribbon tab */}
+      <Box sx={{
+        position: 'absolute',
+        top: -14,
+        left: 28,
+        bgcolor: 'primary.main',
+        color: 'primary.contrastText',
+        px: 2,
+        py: 0.6,
+        borderRadius: '4px 4px 10px 10px',
+        fontSize: '0.72rem',
+        fontWeight: 600,
+        letterSpacing: 0.3,
+        boxShadow: 3,
+        zIndex: 2,
+      }}>
+        Quote of the day
+      </Box>
 
-          <Box>
-            {/* TODO 6 [Conditional Chip List]: Map through 'quote.tags'. For each tag 't':
-                - Render an MUI <Chip /> with a unique key
-                - Apply color="success" if 'selectedTag' matches 't', otherwise color="secondary"
-                - Bind label={t} and set custom style margins sx={{ mr: 0.25 }} */}
-            {/* [Your code here] */}
-          </Box>
+      <Card
+        variant="elevation"
+        elevation={5}
+        sx={{
+          width: '100%',
+          borderRadius: 3,
+          position: 'relative',
+          overflow: 'hidden',
+          border: '1px solid',
+          borderColor: 'rgba(92, 18, 17, 0.15)',
+        }}
+      >
+        {/* Decorative oversized quotation mark */}
+        <Typography
+          aria-hidden="true"
+          sx={{
+            position: 'absolute',
+            top: -55,
+            right: 4,
+            fontFamily: "'Lora', serif",
+            fontSize: 220,
+            fontWeight: 600,
+            color: 'error.main',
+            opacity: 0.08,
+            lineHeight: 1,
+            userSelect: 'none',
+            pointerEvents: 'none',
+          }}
+        >
+          "
+        </Typography>
 
-          {/* TODO 7 [Text Content Mapping]: Bind 'quote.text' directly inside the quotation marks below */}
-          <Typography
-            variant="h5"
-            component="p"
-            fontStyle="italic"
-            textAlign="center"
-            sx={{ fontWeight: '400', lineHeight: 1.5 }}
-          >
-            ""
-          </Typography>
+        <CardContent sx={{ p: 4, pt: 5, position: 'relative', zIndex: 1 }}>
+          <Stack spacing={3} sx={{ minHeight: 220, justifyContent: isLoading ? 'center' : 'flex-start' }}>
+            {isLoading ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', py: 4 }}>
+                <Box className="quote-loader" role="status" aria-label="Loading quote">
+                  <Box className="orbit-icon top" sx={{ color: '#A6302E' }}>
+                    <FormatQuote sx={{ fontSize: 32 }} />
+                  </Box>
+                  <Box className="orbit-icon bottom" sx={{ color: '#14283C' }}>
+                    <FormatQuote sx={{ fontSize: 32 }} />
+                  </Box>
+                </Box>
+              </Box>
+            ) : (
+              <>
+                <Box>
+                  {quote.tags?.map((t) => (
+                    <Chip
+                key={t}
+                icon={getTagIcon(t)}
+                variant={selectedTag === t ? 'filled' : 'outlined'}
+                color={selectedTag === t ? 'success' : 'secondary'}
+                label={t}
+                sx={{ mr: 0.5, mb: 0.5 }}
+              />
+                  ))}
+                </Box>
 
-          {/* TODO 8 [Author Content Mapping]: Bind 'quote.author' after the long dash separator symbol */}
-          <Typography variant="subtitle1" textAlign="right" color="text.secondary">
-            — 
-          </Typography>
+                <Typography
+                  variant="h5"
+                  component="p"
+                  textAlign="center"
+                  sx={{
+                    fontFamily: "'Lora', serif",
+                    fontStyle: 'italic',
+                    fontWeight: 500,
+                    lineHeight: 1.55,
+                    color: 'text.primary',
+                  }}
+                >
+                  "{quote.text}"
+                </Typography>
 
-          <Divider />
+                <Typography
+                  variant="subtitle1"
+                  textAlign="right"
+                  sx={{ fontFamily: "'Lora', serif", fontWeight: 600, color: 'secondary.main' }}
+                >
+                  — {quote.author}
+                </Typography>
+              </>
+            )}
 
-          <Stack direction="row" spacing={0.5} justifyContent="space-between" alignItems="center">
-            {/* TODO 9 [Controlled Input Integration]: Attach your input reference 'selectTagRef' to this select component */}
-            <Select
-              fullWidth
-              displayEmpty
-              size="small"
-            >
-              <MenuItem value={null}><em>any</em></MenuItem>
-              {/* TODO 10 [Select Option Generation]: Map through your 'tags' state array to render a <MenuItem> element for each tag 't' */}
-              {/* [Your code here] */}
-            </Select>
-            
-            {/* TODO 11 [Action Trigger Binding]: Attach an interaction listener to trigger 'loadRandomQuote' upon click events */}
-            <Button
-              fullWidth
-              variant="contained"
-              startIcon={<Refresh />}
-              sx={{ borderRadius: 2, textTransform: 'none' }}
-            >
-              Next Quote
-            </Button>
+            <Divider />
+
+            <Stack direction="row" spacing={1} justifyContent="space-between" alignItems="center">
+              <Select
+                fullWidth
+                displayEmpty
+                size="small"
+                defaultValue=""
+                inputRef={selectTagRef}
+                sx={{ borderRadius: 2 }}
+              >
+                <MenuItem value={null}><em>any</em></MenuItem>
+                {tags.map((t) => (
+                  <MenuItem key={t} value={t}>{t}</MenuItem>
+                ))}
+              </Select>
+
+              <Button
+                fullWidth
+                variant="contained"
+                startIcon={<Refresh />}
+                onClick={loadRandomQuote}
+                disabled={isLoading}
+                sx={{ borderRadius: 999, textTransform: 'none', px: 3 }}
+              >
+                Next Quote
+              </Button>
+            </Stack>
           </Stack>
-
-        </Stack>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </Box>
   );
 }
