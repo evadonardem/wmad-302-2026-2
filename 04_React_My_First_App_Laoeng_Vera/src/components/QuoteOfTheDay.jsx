@@ -42,7 +42,7 @@ export default function QuoteOfTheDay() {
   return ( 
     <Card
       variant="elevation"
-      elevation={5}
+      elevation={4}
       sx={{
         maxWidth: 500,
         width: '100%',
@@ -51,7 +51,10 @@ export default function QuoteOfTheDay() {
     >
       <CardContent sx={{ p: 4 }}>
         <Stack spacing={3}>
-          <Typography variant="overline" color="text.secondary" letterSpacing={2} textAlign="center">
+          <Typography variant="overline" 
+          color="text.secondary" 
+          letterSpacing={2} 
+          textAlign="justify">
             Quote of the Day
           </Typography>
 
@@ -62,7 +65,7 @@ export default function QuoteOfTheDay() {
                 key={tag}
                 label={tag}
                 color={selectedTag === tag ? 'success' : 'secondary'}
-                sx={{ mr: 0.25 }}
+                sx={{ mr: 0.5, mb: 0.5 }}
               />
             ))}
           </Box>
@@ -72,20 +75,25 @@ export default function QuoteOfTheDay() {
             variant="h5"
             component="p"
             fontStyle="italic"
-            textAlign="center"
+            textAlign="justify"
             sx={{ fontWeight: '400', lineHeight: 1.5 }}
           >
             "{quote.text}"
           </Typography> 
 
           {/* TODO 8 [Author Content Mapping] */}
-          <Typography variant="subtitle1" textAlign="right" color="text.secondary">
+          <Typography variant="subtitle1" 
+          textAlign="right" 
+          color="text.secondary">
             — {quote.author}
           </Typography>
           
           <Divider />
            
-          <Stack direction="row" spacing={0.5} justifyContent="space-between" alignItems="center">
+          <Stack direction="row" 
+          spacing={1} 
+          justifyContent="space-between" 
+          alignItems="center">
             {/* TODO 9 [Controlled Input Integration] */}
             <Select
               inputRef={selectTagRef}
