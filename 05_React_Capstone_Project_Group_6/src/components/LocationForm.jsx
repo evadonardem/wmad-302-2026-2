@@ -47,11 +47,29 @@ export default function LocationForm({ onSearch }) {
     }
   };
 
+  // Turquoise input styling (colors come from the variables set in App.jsx)
+  const oceanInputStyle = {
+    '& .MuiInputLabel-root': { color: 'var(--text-muted)' },
+    '& .MuiInputLabel-root.Mui-focused': { color: 'var(--accent)' },
+    '& .MuiSelect-select': { color: 'var(--text)' },
+    '& .MuiOutlinedInput-root': {
+      borderRadius: 2,
+      '& fieldset': { borderColor: 'var(--border)' },
+      '&:hover fieldset': { borderColor: 'var(--accent)' },
+      '&.Mui-focused fieldset': {
+        borderColor: 'var(--accent)',
+        boxShadow: '0 0 10px var(--glow)',
+      },
+    },
+    '& .MuiSelect-icon': { color: 'var(--accent)' },
+  };
+
   return (
-    <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%', mb: 4 }}>
+    <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%', mb: 2 }}>
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} justifyContent="center">
-        
-        <FormControl fullWidth size="small">
+
+        {/* Region Dropdown */}
+        <FormControl fullWidth size="small" sx={oceanInputStyle}>
           <InputLabel id="region-label">Select Region</InputLabel>
           <Select
             labelId="region-label"
@@ -67,7 +85,8 @@ export default function LocationForm({ onSearch }) {
           </Select>
         </FormControl>
 
-        <FormControl fullWidth size="small" disabled={!selectedRegion}>
+        {/* City Dropdown */}
+        <FormControl fullWidth size="small" disabled={!selectedRegion} sx={oceanInputStyle}>
           <InputLabel id="city-label">Select City / Municipality</InputLabel>
           <Select
             labelId="city-label"
@@ -83,12 +102,37 @@ export default function LocationForm({ onSearch }) {
           </Select>
         </FormControl>
 
+        {/* Sunset Search Button */}
         <Button
           type="submit"
           variant="contained"
           startIcon={<Search />}
           disabled={!selectedCityName}
-          sx={{ textTransform: 'none', px: 4 }}
+          sx={{
+            textTransform: 'none',
+            px: 5,
+            py: 1,
+            fontWeight: '900',
+            fontSize: '1rem',
+            letterSpacing: 1,
+            borderRadius: 2,
+            background: 'var(--cta)',
+            color: 'var(--cta-text)',
+            boxShadow: '0 0 20px var(--cta-glow)',
+            border: '1px solid rgba(255, 255, 255, 0.35)',
+            transition: 'all 0.3s ease',
+            '&:hover': {
+              background: 'var(--cta-hover)',
+              boxShadow: '0 0 30px var(--cta-glow)',
+              transform: 'scale(1.03)',
+            },
+            '&.Mui-disabled': {
+              background: 'var(--accent-soft)',
+              color: 'var(--text-muted)',
+              border: '1px solid var(--border)',
+              boxShadow: 'none',
+            },
+          }}
         >
           Search
         </Button>

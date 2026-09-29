@@ -1,70 +1,107 @@
 import React from 'react';
-import { Box, Grid, Card, CardMedia, CardContent, Typography, Link, Skeleton } from '@mui/material';
+import { Box, Card, CardMedia, CardContent, Typography, Link, Skeleton } from '@mui/material';
+
+const CARD_WIDTH = { xs: '100%', sm: 340 };
+const IMAGE_HEIGHT = 240;
+
+const cardSx = {
+  width: CARD_WIDTH,
+  flex: 'none',
+  display: 'flex',
+  flexDirection: 'column',
+  borderRadius: 3,
+  background: 'var(--card-bg)',
+  overflow: 'hidden',
+};
+
+const rowSx = {
+  display: 'flex',
+  flexWrap: 'wrap',
+  justifyContent: 'center',
+  gap: 3,
+};
 
 export default function MediaGallery({ photos, loading }) {
-  // 1. Loading State (Shows skeleton placeholders while searching)
   if (loading) {
     return (
-      <Grid container spacing={3}>
-        {Array.from(new Array(6)).map((_, index) => (
-          <Grid item xs={12} sm={6} md={4} key={index}>
-            <Card elevation={3} sx={{ height: '100%', display: 'flex', flexDirection: 'column', borderRadius: 2 }}>
-              <Skeleton variant="rectangular" height={200} />
-              <CardContent sx={{ flexGrow: 1, p: 2 }}>
-                <Skeleton variant="text" width="40%" height={20} />
-                <Skeleton variant="text" width="70%" height={24} />
-              </CardContent>
-            </Card>
-          </Grid>
+      <Box sx={rowSx}>
+        {Array.from({ length: 6 }).map((_, index) => (
+          <Card key={index} elevation={6} sx={{ ...cardSx, border: '1px solid var(--border)' }}>
+            <Skeleton variant="rectangular" height={IMAGE_HEIGHT} sx={{ bgcolor: 'var(--accent-soft)' }} />
+            <CardContent sx={{ p: 2.5 }}>
+              <Skeleton variant="text" width="40%" sx={{ mx: 'auto', bgcolor: 'var(--accent-soft)' }} />
+              <Skeleton variant="text" width="70%" sx={{ mx: 'auto', bgcolor: 'var(--accent-soft)' }} />
+            </CardContent>
+          </Card>
         ))}
-      </Grid>
+      </Box>
     );
   }
 
-  // 2. Empty State (Before searching or if no photos found)
   if (!photos || photos.length === 0) {
     return (
       <Box sx={{ textAlign: 'center', py: 6 }}>
-        <Typography variant="h6" color="text.secondary">
+        <Typography variant="h6" sx={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>
           No tourist spots found for this area yet.
         </Typography>
       </Box>
     );
   }
 
-  // 3. Photos Result Grid (Loops photos properly)
   return (
-    <Grid container spacing={3}>
+    <Box sx={rowSx}>
       {photos.map((photo, index) => (
-        <Grid item xs={12} sm={6} md={4} key={photo.id || index}>
-          <Card elevation={3} sx={{ height: '100%', display: 'flex', flexDirection: 'column', borderRadius: 2 }}>
-            
-            <CardMedia
-              component="img"
-              height="200"
-              image={photo.imageUrl}
-              alt={photo.altText || 'Tourist spot photo'}
-              sx={{ objectFit: 'cover' }}
-            />
+        <Card
+          key={photo.id || index}
+          elevation={6}
+          sx={{
+            ...cardSx,
+            border: '1.5px solid var(--border)',
+            transition: 'all 0.35s ease',
+            '&:hover': {
+              transform: 'translateY(-8px)',
+              borderColor: 'var(--accent)',
+              boxShadow: '0 0 25px var(--glow)',
+            },
+          }}
+        >
+          <CardMedia
+            component="img"
+            image={photo.imageUrl}
+            alt={photo.altText || 'Tourist spot photo'}
+            sx={{
+              width: '100%',
+              height: IMAGE_HEIGHT,
+              objectFit: 'cover',
+              objectPosition: 'center',
+            }}
+          />
 
-            <CardContent sx={{ flexGrow: 1, p: 2 }}>
-              <Typography variant="caption" display="block" color="text.secondary">
-                📸 Captured by:
-              </Typography>
-              <Link
-                href={photo.photographerUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                underline="hover"
-                variant="body2"
-              >
-                {photo.photographer}
-              </Link>
-            </CardContent>
-
-          </Card>
-        </Grid>
+          <CardContent sx={{ flexGrow: 1, p: 2.5, textAlign: 'center' }}>
+            <Typography
+              variant="caption"
+              display="block"
+              sx={{ color: 'var(--text-muted)', mb: 0.5, fontWeight: 'bold' }}
+            >
+              📸 Captured by:
+            </Typography>
+            <Link
+              href={photo.photographerUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              underline="hover"
+              sx={{
+                color: 'var(--accent-strong)',
+                fontWeight: 'bold',
+                fontSize: '0.95rem',
+                '&:hover': { color: '#FF7A45' },
+              }}
+            >
+              {photo.photographer}
+            </Link>
+          </CardContent>
+        </Card>
       ))}
-    </Grid>
+    </Box>
   );
 }
