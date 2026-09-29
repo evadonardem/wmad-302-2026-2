@@ -1,7 +1,7 @@
 import { Container, createTheme, CssBaseline, ThemeProvider } from '@mui/material'
 import './App.css'
 import QuoteOfTheDay from './components/QuoteOfTheDay'
-import { DarkMode, LightMode, Palette, Print, Share } from '@mui/icons-material';
+import { DarkMode, LightMode, Print, Share } from '@mui/icons-material';
 import { useState } from 'react';
 import GeneralSettings from './components/GeneralSettings';
 
@@ -59,7 +59,6 @@ function App() {
       icon: isDarkMode ? <LightMode /> : <DarkMode />,
       onClick: handleThemeToggle,
     },
-    { icon: <Palette />, name: 'Theme', onClick: handleThemeToggle },
     { icon: <Print />, name: 'Print', onClick: handlePrint },
     { icon: <Share />, name: 'Share', onClick: handleShare },
   ];

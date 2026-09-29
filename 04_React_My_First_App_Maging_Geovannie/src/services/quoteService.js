@@ -2,6 +2,7 @@ import axios from 'axios';
 
 const API_URL = 'https://quoteslate.vercel.app/api';
 
+
 const fallbackQuotes = [
     { text: 'A calm mind brings inner strength and self-confidence.', author: 'Fallback Quote', tags: ['wisdom'] },
     { text: 'Success is the sum of small efforts, repeated day in and day out.', author: 'Fallback Quote', tags: ['success'] },

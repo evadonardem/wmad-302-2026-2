@@ -1,0 +1,28 @@
+@media print {
+	body * {
+		visibility: hidden;
+	}
+
+	#quote-card,
+	#quote-card * {
+		visibility: visible;
+	}
+
+	#quote-card {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		max-width: none;
+		box-shadow: none;
+	}
+
+	#quote-card .print-controls,
+	#quote-card .print-controls * {
+		display: none;
+	}
+
+	.MuiSpeedDial-root {
+		display: none;
+	}
+}
