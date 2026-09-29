@@ -10,7 +10,13 @@ export const getRegions = async () => {
   // TODO 1.2 [Regions Retrieval]: Fetch the full array of regions from the PSGC host.
   // Perform an asynchronous GET request using axios, catch errors smoothly, and return the dataset array.
   // Targeted Path Format: `${PSGC_BASE_URL}/regions/`
-  // [Your code here]
+  try {
+    const response = await axios.get(`${PSGC_BASE_URL}/regions/`);
+    return response.data;
+  } catch (error) {
+    console.error('Failed to fetch regions:', error);
+    return [];
+  }
 };
 
 export const getCitiesMunicipalitiesByRegion = async (regionCode) => {
@@ -18,7 +24,17 @@ export const getCitiesMunicipalitiesByRegion = async (regionCode) => {
   // Validate that a truthy regionCode parameter is provided prior to generating network requests.
   // Execute an async GET request hitting the exact trailing-slash path directory.
   // Targeted Path Format: `${PSGC_BASE_URL}/regions/{regionCode}/cities-municipalities/`
-  // [Your code here]
+  if (!regionCode) return [];
+ 
+  try {
+    const response = await axios.get(
+      `${PSGC_BASE_URL}/regions/${regionCode}/cities-municipalities/`
+    );
+    return response.data;
+  } catch (error) {
+    console.error(`Failed to fetch cities/municipalities for region ${regionCode}:`, error);
+    return [];
+  }
 };
 
 export const searchPhotosByLocation = async (locationName) => {
@@ -29,5 +45,32 @@ export const searchPhotosByLocation = async (locationName) => {
   // d. Map through the resulting array and return streamlined objects styled exactly like: 
   //    { id, imageUrl: [large image src URL], photographer, photographerUrl, altText }
   // e. Provide a backup structural object array inside your catch layer shield to handle error edge cases.
-  // [Your code here]
+  const keyword = `${locationName} tourist spot`;
+  const url = `https://api.pexels.com/v1/search?query=${encodeURIComponent(keyword)}&per_page=12`;
+ 
+  try {
+    const response = await axios.get(url, {
+      headers: { Authorization: PEXELS_API_KEY },
+    });
+ 
+    return response.data.photos.map((photo) => ({
+      id: photo.id,
+      imageUrl: photo.src.large,
+      photographer: photo.photographer,
+      photographerUrl: photo.photographer_url,
+      altText: photo.alt || `${locationName} tourist spot`,
+    }));
+  } catch (error) {
+    console.error(`Failed to fetch photos for ${locationName}:`, error);
+    // Backup array so the UI still has something to render
+    return [
+      {
+        id: 'fallback-1',
+        imageUrl: 'https://via.placeholder.com/800x600?text=Photo+Unavailable',
+        photographer: 'Unknown',
+        photographerUrl: 'https://www.pexels.com',
+        altText: `No photo available for ${locationName}`,
+      },
+    ];
+  }
 };

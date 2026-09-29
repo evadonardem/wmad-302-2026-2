@@ -11,7 +11,9 @@ export default function App() {
   // TODO 3.7 [Global Search Coordination]: Instantiate matching dynamic local state trackers here:
   // - 'photos': Tracks array results fetched from the Pexels service handler (default: empty array)
   // - 'loading': Toggles boolean state workflows during operations (default: false)
-  // [Your code here]
+    const [photos, setPhotos] = useState([]);
+  const [loading, setLoading] = useState(false);
+
 
   // Dynamic Theme Creator configuration
   const theme = createTheme({
@@ -26,7 +28,16 @@ export default function App() {
     // b. Fire the async handler function 'searchPhotosByLocation(locationName)' inside an await statement.
     // c. Capture resulting photo dataset arrays inside the local state 'photos'.
     // d. Toggle the operation state status trackers 'loading' back to false inside an executive safety wrapper execution tier.
-    // [Your code here]
+      setLoading(true);
+    try {
+      const results = await searchPhotosByLocation(locationName);
+      setPhotos(results || []);
+    } catch (error) {
+      console.error('Error fetching photos by location:', error);
+      setPhotos([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
