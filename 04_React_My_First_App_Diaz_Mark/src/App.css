@@ -1,0 +1,21 @@
+#root {
+  min-height: 100vh;
+}
+
+body {
+  margin: 0;
+  font-family: 'Roboto', 'Segoe UI', sans-serif;
+  transition: background 0.3s ease;
+}
+
+.app-shell {
+  transition: background 0.3s ease;
+}
+
+.MuiCard-root {
+  background: rgba(255, 255, 255, 0.75);
+}
+
+.MuiSpeedDialAction-fab {
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+}
