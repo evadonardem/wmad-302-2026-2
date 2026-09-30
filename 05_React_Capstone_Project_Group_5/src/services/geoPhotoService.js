@@ -29,7 +29,7 @@ export const getCitiesMunicipalitiesByRegion = async (regionCode) => {
   }
 };
 
-export const searchPhotosByLocation = async (locationName) => {
+export const searchPhotosByLocation = async (locationName, locationContext) => {
   if (!locationName?.trim() || !PEXELS_API_KEY) {
     if (!PEXELS_API_KEY) {
       console.error('Missing VITE_PEXELS_API_KEY. Add it to .env.local and restart Vite.');
@@ -38,9 +38,18 @@ export const searchPhotosByLocation = async (locationName) => {
   }
 
   try {
+    const query = [
+      locationName.trim(),
+      locationContext?.trim(),
+      locationContext ? 'Philippines' : null,
+      'tourist spot',
+    ]
+      .filter(Boolean)
+      .join(' ');
+
     const { data } = await axios.get('https://api.pexels.com/v1/search', {
       params: {
-        query: `${locationName.trim()} tourist spot`,
+        query,
         per_page: 12,
       },
       headers: {

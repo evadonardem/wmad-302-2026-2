@@ -79,6 +79,7 @@ const featuredDestinations = [
     name: 'Siargao Island',
     region: 'Surigao del Norte',
     islandGroup: 'Mindanao',
+    photoKeywords: ['Siargao', 'General Luna', 'Cloud 9'],
     description: 'Surf breaks, lagoons, and palm-lined roads',
     accent: '#38736E',
   },
@@ -86,6 +87,7 @@ const featuredDestinations = [
     name: 'Camiguin Island',
     region: 'Camiguin',
     islandGroup: 'Mindanao',
+    photoKeywords: ['Camiguin'],
     description: 'Volcanic peaks, hot springs, and White Island',
     accent: '#52704F',
   },
@@ -93,6 +95,7 @@ const featuredDestinations = [
     name: 'Mount Apo',
     region: 'Davao Region',
     islandGroup: 'Mindanao',
+    photoKeywords: ['Mount Apo', 'Mt. Apo'],
     description: 'The country’s highest peak and surrounding forests',
     accent: '#5A6546',
   },
@@ -100,6 +103,7 @@ const featuredDestinations = [
     name: 'Tinago Falls',
     region: 'Lanao del Norte',
     islandGroup: 'Mindanao',
+    photoKeywords: ['Tinago Falls', 'Tinago', 'Iligan'],
     description: 'A hidden waterfall flowing into a blue lagoon',
     accent: '#286A7A',
   },
@@ -126,8 +130,13 @@ export default function App() {
     const loadFeaturedPhotos = async () => {
       const destinationsWithPhotos = await Promise.all(
         featuredDestinations.map(async (destination) => {
-          const results = await searchPhotosByLocation(destination.name);
-          return { ...destination, photo: results[0] || null };
+          const results = await searchPhotosByLocation(destination.name, destination.region);
+          const photoKeywords = destination.photoKeywords || [destination.name];
+          const photo = results.find((result) =>
+            photoKeywords.some((keyword) => result.altText.toLowerCase().includes(keyword.toLowerCase()))
+          );
+
+          return { ...destination, photo: photo || null };
         })
       );
 
