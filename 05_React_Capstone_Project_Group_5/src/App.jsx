@@ -13,7 +13,7 @@ import {
   Typography,
   createTheme,
 } from '@mui/material';
-import { LightMode, DarkMode } from '@mui/icons-material';
+import { DarkMode, ImageNotSupportedOutlined, LightMode } from '@mui/icons-material';
 import LocationForm from './components/LocationForm';
 import MediaGallery from './components/MediaGallery';
 import { searchPhotosByLocation } from './services/geoPhotoService';
@@ -23,56 +23,48 @@ const featuredDestinations = [
     name: 'El Nido',
     region: 'Palawan',
     islandGroup: 'Luzon',
-    description: 'Limestone cliffs and hidden lagoons',
     accent: '#176B78',
   },
   {
     name: 'Banaue Rice Terraces',
     region: 'Ifugao',
     islandGroup: 'Luzon',
-    description: 'Mountain terraces shaped over generations',
     accent: '#4B7256',
   },
   {
     name: 'Mayon Volcano',
     region: 'Albay',
     islandGroup: 'Luzon',
-    description: 'A striking, near-symmetrical volcano',
     accent: '#8A5546',
   },
   {
     name: 'Intramuros',
     region: 'Manila',
     islandGroup: 'Luzon',
-    description: 'Historic streets inside the old walled city',
     accent: '#75634B',
   },
   {
     name: 'Boracay',
     region: 'Aklan',
     islandGroup: 'Visayas',
-    description: 'White Beach and island sunsets',
     accent: '#A75B3D',
   },
   {
     name: 'Chocolate Hills',
     region: 'Bohol',
     islandGroup: 'Visayas',
-    description: 'A landscape of more than a thousand hills',
     accent: '#657444',
   },
   {
     name: 'Kawasan Falls',
     region: 'Cebu',
     islandGroup: 'Visayas',
-    description: 'Turquoise cascades in the mountains of Badian',
     accent: '#287A78',
   },
   {
     name: 'Cambugahay Falls',
     region: 'Siquijor',
     islandGroup: 'Visayas',
-    description: 'Tiered pools tucked into a tropical forest',
     accent: '#4F8068',
   },
   {
@@ -80,7 +72,6 @@ const featuredDestinations = [
     region: 'Surigao del Norte',
     islandGroup: 'Mindanao',
     photoKeywords: ['Siargao', 'General Luna', 'Cloud 9'],
-    description: 'Surf breaks, lagoons, and palm-lined roads',
     accent: '#38736E',
   },
   {
@@ -88,7 +79,6 @@ const featuredDestinations = [
     region: 'Camiguin',
     islandGroup: 'Mindanao',
     photoKeywords: ['Camiguin'],
-    description: 'Volcanic peaks, hot springs, and White Island',
     accent: '#52704F',
   },
   {
@@ -96,7 +86,6 @@ const featuredDestinations = [
     region: 'Davao Region',
     islandGroup: 'Mindanao',
     photoKeywords: ['Mount Apo', 'Mt. Apo'],
-    description: 'The country’s highest peak and surrounding forests',
     accent: '#5A6546',
   },
   {
@@ -104,7 +93,6 @@ const featuredDestinations = [
     region: 'Lanao del Norte',
     islandGroup: 'Mindanao',
     photoKeywords: ['Tinago Falls', 'Tinago', 'Iligan'],
-    description: 'A hidden waterfall flowing into a blue lagoon',
     accent: '#286A7A',
   },
 ];
@@ -261,11 +249,8 @@ export default function App() {
             <Box component="section" aria-labelledby="featured-destinations-title" sx={{ pb: 3 }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 2, mb: 2, flexWrap: 'wrap' }}>
                 <Box>
-                  <Typography variant="overline" color="primary.main" sx={{ fontWeight: 700 }}>
-                    FEATURED PLACES
-                  </Typography>
                   <Typography id="featured-destinations-title" variant="h2" component="h2" sx={{ fontSize: { xs: '1.8rem', md: '2.25rem' } }}>
-                    Famous destinations
+                    FEATURED PLACES
                   </Typography>
                 </Box>
               </Box>
@@ -311,7 +296,30 @@ export default function App() {
                               sx={{ height: '100%', objectFit: 'cover' }}
                             />
                           ) : (
-                            <Box aria-hidden="true" sx={{ height: '100%', bgcolor: destination.accent }} />
+                            <Box
+                              role="img"
+                              aria-label={`No matching photo found for ${destination.name}`}
+                              sx={{
+                                height: '100%',
+                                px: 2,
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: 0.75,
+                                textAlign: 'center',
+                                bgcolor: '#52675f',
+                                color: 'common.white',
+                              }}
+                            >
+                              <ImageNotSupportedOutlined aria-hidden="true" />
+                              <Typography variant="body2" fontWeight={700}>
+                                Photo unavailable
+                              </Typography>
+                              <Typography variant="caption">
+                                No matching image was found.
+                              </Typography>
+                            </Box>
                           )}
                           <Box
                             sx={{
@@ -329,9 +337,6 @@ export default function App() {
                             </Typography>
                             <Typography variant="h6" component="h4" sx={{ color: 'common.white', fontWeight: 700 }}>
                               {destination.name}
-                            </Typography>
-                            <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                              {destination.description}
                             </Typography>
                             {destination.photo?.photographer && (
                               <Typography variant="caption" sx={{ mt: 0.75 }}>
