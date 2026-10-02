@@ -200,13 +200,29 @@ export default function App() {
               borderColor: 'divider',
             }}
           >
-            <Box>
-              <Typography sx={{ fontWeight: 700, fontSize: '1.2rem', lineHeight: 1.2 }}>
-                Lakbay <Box component="span" sx={{ color: 'primary.main' }}>PH</Box>
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                Philippines travel finder
-              </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+              <Box
+                component="img"
+                src={Logo}
+                alt="Lakbay PH logo"
+                sx={{
+                  width: 68,
+                  height: 68,
+                  objectFit: 'contain',
+                  borderRadius: 2,
+                  boxShadow: '0 10px 24px rgba(20, 39, 48, 0.12)',
+                  background: 'rgba(255,255,255,0.18)',
+                  p: 0.5,
+                }}
+              />
+              <Box>
+                <Typography sx={{ fontWeight: 700, fontSize: '1.2rem', lineHeight: 1.2 }}>
+                  Lakbay <Box component="span" sx={{ color: 'primary.main' }}>PH</Box>
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  Philippines travel finder
+                </Typography>
+              </Box>
             </Box>
             <button
               type="button"
