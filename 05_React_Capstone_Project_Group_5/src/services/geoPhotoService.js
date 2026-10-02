@@ -15,12 +15,26 @@ export const getRegions = async () => {
   }
 };
 
-export const getCitiesMunicipalitiesByRegion = async (regionCode) => {
+export const getProvincesByRegion = async (regionCode) => {
   if (!regionCode) return [];
 
   try {
     const { data } = await axios.get(
-      `${PSGC_BASE_URL}regions/${encodeURIComponent(regionCode)}/cities-municipalities/`
+      `${PSGC_BASE_URL}regions/${encodeURIComponent(regionCode)}/provinces/`
+    );
+    return Array.isArray(data) ? data : [];
+  } catch (error) {
+    console.error('Unable to load provinces:', error);
+    return [];
+  }
+};
+
+export const getCitiesMunicipalitiesByProvince = async (provinceCode) => {
+  if (!provinceCode) return [];
+
+  try {
+    const { data } = await axios.get(
+      `${PSGC_BASE_URL}provinces/${encodeURIComponent(provinceCode)}/cities-municipalities/`
     );
     return Array.isArray(data) ? data : [];
   } catch (error) {

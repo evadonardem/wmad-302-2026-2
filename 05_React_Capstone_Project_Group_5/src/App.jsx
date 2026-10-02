@@ -153,11 +153,11 @@ export default function App() {
     },
   });
 
-  const handleSearchSubmit = async (locationName) => {
+  const handleSearchSubmit = async (locationName, provinceName) => {
     setHasSearched(true);
     setLoading(true);
     try {
-      const photoResults = await searchPhotosByLocation(locationName);
+      const photoResults = await searchPhotosByLocation(locationName, provinceName);
       setPhotos(photoResults);
     } catch (error) {
       console.error('Unable to complete photo search:', error);
@@ -221,7 +221,7 @@ export default function App() {
               Find a place to remember.
             </Typography>
             <Typography color="text.secondary">
-              Choose a region and city to discover places across the islands.
+              Choose a region, province, and city or municipality to discover places across the islands.
             </Typography>
           </Box>
 
