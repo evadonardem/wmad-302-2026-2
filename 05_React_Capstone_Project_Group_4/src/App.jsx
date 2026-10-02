@@ -1,59 +1,137 @@
 import React, { useState } from 'react';
 import { Container, CssBaseline, ThemeProvider, createTheme, Typography, Box, IconButton, Paper } from '@mui/material';
-import { LightMode, DarkMode } from '@mui/icons-material';
+import { LightMode, DarkMode, TravelExplore } from '@mui/icons-material';
 import LocationForm from './components/LocationForm';
 import MediaGallery from './components/MediaGallery';
 import { searchPhotosByLocation } from './services/geoPhotoService';
 
+// Philippine flag palette, used as accents only (Option B: light & minimalist)
+const PH_BLUE = '#0038A8';
+const PH_RED = '#CE1126';
+const PH_GOLD = '#FCD116';
+
 export default function App() {
   const [isDarkMode, setIsDarkMode] = useState(false);
-  
-  // TODO 3.7 [Global Search Coordination]: Instantiate matching dynamic local state trackers here:
-  // - 'photos': Tracks array results fetched from the Pexels service handler (default: empty array)
-  // - 'loading': Toggles boolean state workflows during operations (default: false)
-  // [Your code here]
+  const [photos, setPhotos] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [searchedLocation, setSearchedLocation] = useState('');
+  const mode = isDarkMode ? 'dark' : 'light';
 
-  // Dynamic Theme Creator configuration
   const theme = createTheme({
     palette: {
-      mode: isDarkMode ? 'dark' : 'light',
+      mode,
+      primary: { main: PH_BLUE },
+      secondary: { main: PH_RED },
+      warning: { main: PH_GOLD },
+      background: {
+        default: mode === 'light' ? '#F4F7FC' : '#0A1430',
+        paper: mode === 'light' ? '#FFFFFF' : '#101B3D',
+      },
     },
+    typography: {
+      fontFamily: "'Inter', system-ui, sans-serif",
+      h3: { fontFamily: "'Poppins', sans-serif", fontWeight: 800 },
+    },
+    shape: { borderRadius: 14 },
   });
 
   const handleSearchSubmit = async (locationName) => {
-    // TODO 3.8 [Operational Async Glue Engine]: 
-    // a. Shift local state property configuration 'loading' to true.
-    // b. Fire the async handler function 'searchPhotosByLocation(locationName)' inside an await statement.
-    // c. Capture resulting photo dataset arrays inside the local state 'photos'.
-    // d. Toggle the operation state status trackers 'loading' back to false inside an executive safety wrapper execution tier.
-    // [Your code here]
+    setSearchedLocation(locationName);
+    setLoading(true);
+    try {
+      const data = await searchPhotosByLocation(locationName);
+      setPhotos(data);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Container maxWidth="lg" sx={{ minHeight: '100vh', py: 4 }}>
-        <Paper elevation={0} sx={{ p: 4, borderRadius: 3, textAlign: 'center', mb: 3 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
-            <IconButton onClick={() => setIsDarkMode(!isDarkMode)} color="inherit">
-              {isDarkMode ? <LightMode /> : <DarkMode />}
-            </IconButton>
-          </Box>
+      <Box sx={{
+        minHeight: '100vh',
+        background: mode === 'light'
+          ? `linear-gradient(180deg, ${PH_BLUE}14 0%, #F4F7FC 320px)`
+          : `linear-gradient(180deg, ${PH_BLUE}33 0%, #0A1430 320px)`,
+      }}>
+        <Container maxWidth="lg" sx={{ py: 5 }}>
+          <Paper
+            elevation={0}
+            sx={{
+              p: { xs: 3, md: 5 },
+              borderRadius: 4,
+              textAlign: 'center',
+              mb: 4,
+              position: 'relative',
+              overflow: 'hidden',
+              border: '1px solid',
+              borderColor: mode === 'light' ? 'rgba(0,56,168,0.12)' : 'rgba(255,255,255,0.08)',
+            }}
+          >
+            <Box sx={{
+              position: 'absolute',
+              top: -40,
+              right: -40,
+              width: 160,
+              height: 160,
+              borderRadius: '50%',
+              background: `radial-gradient(circle, ${PH_GOLD}55 0%, transparent 70%)`,
+              pointerEvents: 'none',
+            }} />
 
-          <Typography variant="h3" component="h1" fontWeight="bold" gutterBottom>
-            🇵🇭 Lakbay PH
-          </Typography>
-          <Typography variant="subtitle1" color="text.secondary" sx={{ mb: 4 }}>
-            Explore tourist spots across regions, cities, and municipalities in the Philippines
-          </Typography>
+            <Box sx={{
+              position: 'absolute',
+              top: 0, left: 0, right: 0,
+              height: 4,
+              background: `linear-gradient(90deg, ${PH_BLUE} 33%, ${PH_RED} 33% 66%, ${PH_GOLD} 66%)`,
+            }} />
 
-          {/* Connect the location selection input modules */}
-          <LocationForm onSearch={handleSearchSubmit} />
-        </Paper>
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1 }}>
+              <IconButton onClick={() => setIsDarkMode(!isDarkMode)} color="inherit">
+                {isDarkMode ? <LightMode /> : <DarkMode />}
+              </IconButton>
+            </Box>
 
-        {/* Connect presentation display layout nodes passing state parameters downstream */}
-        <MediaGallery photos={photos} loading={loading} />
-      </Container>
+            {/* Logo badge: sun-ring behind the compass, instead of a bare icon */}
+            <Box sx={{ display: 'flex', justifyContent: 'center', mb: 1 }}>
+              <Box sx={{
+                width: 64,
+                height: 64,
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: `conic-gradient(${PH_GOLD}, ${PH_BLUE}, ${PH_RED}, ${PH_GOLD})`,
+                p: '3px',
+              }}>
+                <Box sx={{
+                  width: '100%',
+                  height: '100%',
+                  borderRadius: '50%',
+                  bgcolor: 'background.paper',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}>
+                  <TravelExplore sx={{ fontSize: 32, color: 'secondary.main' }} />
+                </Box>
+              </Box>
+            </Box>
+
+            <Typography variant="h3" component="h1" color="primary.main" sx={{ mb: 1 }}>
+              Lakbay PH
+            </Typography>
+            <Typography variant="subtitle1" color="text.secondary" sx={{ mb: 4, maxWidth: 520, mx: 'auto' }}>
+              Explore tourist spots across regions, cities, and municipalities in the Philippines
+            </Typography>
+
+            <LocationForm onSearch={handleSearchSubmit} />
+          </Paper>
+
+          <MediaGallery photos={photos} loading={loading} searchedLocation={searchedLocation} />
+        </Container>
+      </Box>
     </ThemeProvider>
   );
 }

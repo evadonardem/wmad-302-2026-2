@@ -1,80 +1,122 @@
 import React, { useEffect, useState } from 'react';
-import { Box, FormControl, InputLabel, Select, MenuItem, Button, Stack } from '@mui/material';
-import { Search } from '@mui/icons-material';
+import { Box, FormControl, InputLabel, Select, MenuItem, Button, Stack, InputAdornment, Snackbar, Alert } from '@mui/material';
+import { Search, Map, LocationCity } from '@mui/icons-material';
 import { getRegions, getCitiesMunicipalitiesByRegion } from '../services/geoPhotoService';
 
+const pillSx = {
+  '& .MuiOutlinedInput-notchedOutline': { borderRadius: 999 },
+};
+
 export default function LocationForm({ onSearch }) {
-  // TODO 2.1 [State Trackers]: Initialize four separate local state layers:
-  // - 'regions': Stores array of all regions (default: empty array)
-  // - 'cities': Stores array of filtered sub-municipalities (default: empty array)
-  // - 'selectedRegion': String tracking the chosen active region code (default: empty string)
-  // - 'selectedCityName': String tracking the actual chosen city text name to feed the search keyword engine (default: empty string)
-  // [Your code here]
+  const [regions, setRegions] = useState([]);
+  const [cities, setCities] = useState([]);
+  const [selectedRegion, setSelectedRegion] = useState('');
+  const [selectedCityName, setSelectedCityName] = useState('');
+  const [toast, setToast] = useState({ open: false, message: '' });
 
   useEffect(() => {
-    // TODO 2.2 [Initial Data Populate]: Invoke the 'getRegions' service function asynchronously inside a mounting side-effect.
-    // Set the returned collection smoothly into your local regions state layer.
-    // [Your code here]
+    const loadRegions = async () => {
+      const data = await getRegions();
+      setRegions(data);
+    };
+    loadRegions();
   }, []);
 
   useEffect(() => {
-    // TODO 2.3 [Reactive Cascading Refresh]: Trigger an asynchronous refresh whenever 'selectedRegion' changes.
-    // If selectedRegion is a valid code, call 'getCitiesMunicipalitiesByRegion(selectedRegion)' and load the cities list state.
-    // CRITICAL: Reset your 'selectedCityName' tracking states back to an empty string to keep inputs contextually clean!
-    // [Your code here]
+    const loadCities = async () => {
+      setSelectedCityName('');
+
+      if (!selectedRegion) {
+        setCities([]);
+        return;
+      }
+
+      const data = await getCitiesMunicipalitiesByRegion(selectedRegion);
+      setCities(data);
+
+      const regionName = regions.find((r) => r.code === selectedRegion)?.name;
+      if (regionName) {
+        setToast({ open: true, message: `Region updated to ${regionName}` });
+      }
+    };
+    loadCities();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedRegion]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // TODO 2.4 [Form Submit Bubble]: Trigger the structural context parent callback routine 'onSearch' 
-    // passing through your active 'selectedCityName' value string.
-    // [Your code here]
+    setToast({ open: true, message: `Searching for spots in ${selectedCityName}...` });
+    onSearch(selectedCityName);
   };
 
   return (
-    <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%', mb: 4 }}>
-      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} justifyContent="center">
-        
-        <FormControl fullWidth size="small">
+    <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%' }}>
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} justifyContent="center" alignItems="stretch">
+
+        <FormControl fullWidth size="small" sx={pillSx}>
           <InputLabel id="region-label">Select Region</InputLabel>
-          {/* TODO 2.5 [Controlled Parent Select]: Bind the Select component value to your region state.
-              Implement an onChange handler to update your 'selectedRegion' with 'e.target.value'. */}
           <Select
             labelId="region-label"
             label="Select Region"
-            // [Your props here]
+            value={selectedRegion}
+            onChange={(e) => setSelectedRegion(e.target.value)}
+            startAdornment={
+              <InputAdornment position="start" sx={{ ml: 1 }}>
+                <Map fontSize="small" color="primary" />
+              </InputAdornment>
+            }
           >
-            {/* TODO 2.6 [Region Menu Map]: Dynamically map through your local regions array state layer 
-                to output item choice options. Use region.code as the structural value and region.name for text displays. */}
-            {/* [Your code here] */}
+            {regions.map((region) => (
+              <MenuItem key={region.code} value={region.code}>
+                {region.name}
+              </MenuItem>
+            ))}
           </Select>
         </FormControl>
 
-        <FormControl fullWidth size="small" disabled={!selectedRegion}>
+        <FormControl fullWidth size="small" disabled={!selectedRegion} sx={pillSx}>
           <InputLabel id="city-label">Select City / Municipality</InputLabel>
-          {/* TODO 2.7 [Controlled Child Select]: Bind the Select value to your city state property layout tracker.
-              Capture 'e.target.value' into 'selectedCityName' inside your execution handler block. */}
           <Select
             labelId="city-label"
             label="Select City / Municipality"
-            // [Your props here]
+            value={selectedCityName}
+            onChange={(e) => setSelectedCityName(e.target.value)}
+            startAdornment={
+              <InputAdornment position="start" sx={{ ml: 1 }}>
+                <LocationCity fontSize="small" color="primary" />
+              </InputAdornment>
+            }
           >
-            {/* TODO 2.8 [City Menu Map]: Map through your internal cities array state dynamically.
-                Use city.code/id for selection key tracking and map city.name directly for option layout configurations. */}
-            {/* [Your code here] */}
+            {cities.map((city) => (
+              <MenuItem key={city.code} value={city.name}>
+                {city.name}
+              </MenuItem>
+            ))}
           </Select>
         </FormControl>
 
         <Button
           type="submit"
           variant="contained"
+          color="secondary"
           startIcon={<Search />}
           disabled={!selectedCityName}
-          sx={{ textTransform: 'none', px: 4 }}
+          sx={{ textTransform: 'none', px: 4, borderRadius: 999, whiteSpace: 'nowrap' }}
         >
           Search
         </Button>
       </Stack>
+
+      <Snackbar
+        open={toast.open}
+        autoHideDuration={2500}
+        onClose={() => setToast({ ...toast, open: false })}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert severity="info" variant="filled" onClose={() => setToast({ ...toast, open: false })}>
+          {toast.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }
