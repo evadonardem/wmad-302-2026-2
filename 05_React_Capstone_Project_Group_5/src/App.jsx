@@ -14,6 +14,7 @@ import {
 } from '@mui/material';
 import { DarkMode, ImageNotSupportedOutlined, LightMode } from '@mui/icons-material';
 import './App.css';
+import Logo from '../assets/images/Logo.png';
 import LocationForm from './components/LocationForm';
 import MediaGallery from './components/MediaGallery';
 import { searchPhotosByLocation } from './services/geoPhotoService';
