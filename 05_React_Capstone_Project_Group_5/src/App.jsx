@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import {
   Box,
+  Button,
   Card,
   CardMedia,
   Container,
@@ -109,6 +110,7 @@ export default function App() {
   const [photos, setPhotos] = useState([]);
   const [loading, setLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+  const [searchSummary, setSearchSummary] = useState('');
   const [featuredItems, setFeaturedItems] = useState(featuredDestinations);
 
   useEffect(() => {
@@ -163,10 +165,17 @@ export default function App() {
   });
 
   const handleSearchSubmit = async (locationName, provinceName) => {
+    const resolvedLocation = locationName?.trim();
+    const resolvedContext = provinceName?.trim();
+
     setHasSearched(true);
     setLoading(true);
+    setSearchSummary(
+      resolvedLocation && resolvedContext ? `${resolvedLocation}, ${resolvedContext}` : resolvedLocation || 'Selected location'
+    );
+
     try {
-      const photoResults = await searchPhotosByLocation(locationName, provinceName);
+      const photoResults = await searchPhotosByLocation(resolvedLocation, resolvedContext);
       setPhotos(photoResults);
     } catch (error) {
       console.error('Unable to complete photo search:', error);
@@ -174,6 +183,13 @@ export default function App() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleResetSearch = () => {
+    setHasSearched(false);
+    setSearchSummary('');
+    setPhotos([]);
+    setLoading(false);
   };
 
   return (
@@ -284,7 +300,41 @@ export default function App() {
           </Paper>
 
           {hasSearched ? (
-            <MediaGallery photos={photos} loading={loading} />
+            <Box sx={{ mb: 3 }}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  gap: 2,
+                  flexWrap: 'wrap',
+                  mb: 2,
+                }}
+              >
+                <Box>
+                  <Typography variant="overline" color="primary.main" sx={{ fontWeight: 700, letterSpacing: 1.5 }}>
+                    SEARCH RESULTS
+                  </Typography>
+                  <Typography variant="h5" component="h2" sx={{ fontWeight: 700 }}>
+                    {searchSummary || 'Your selected location'}
+                  </Typography>
+                </Box>
+
+                <Button
+                  variant="text"
+                  onClick={handleResetSearch}
+                  sx={{
+                    color: 'text.primary',
+                    fontWeight: 700,
+                    textTransform: 'none',
+                  }}
+                >
+                  Back to featured places
+                </Button>
+              </Box>
+
+              <MediaGallery photos={photos} loading={loading} locationName={searchSummary} />
+            </Box>
           ) : (
             <Box component="section" aria-labelledby="featured-destinations-title" sx={{ pb: 3 }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 2, mb: 2, flexWrap: 'wrap' }}>
@@ -325,8 +375,13 @@ export default function App() {
                             borderRadius: 1,
                             color: 'common.white',
                             bgcolor: destination.accent,
-                            transition: 'box-shadow 180ms ease',
-                            '&:hover': { boxShadow: 5 },
+                            transition: 'transform 0.28s ease, box-shadow 0.28s ease, filter 0.28s ease',
+                            transformOrigin: 'center',
+                            '&:hover': {
+                              boxShadow: 6,
+                              transform: 'translateY(-4px) scale(1.01)',
+                              filter: 'saturate(1.06)',
+                            },
                           }}
                         >
                           {destination.photo ? (
