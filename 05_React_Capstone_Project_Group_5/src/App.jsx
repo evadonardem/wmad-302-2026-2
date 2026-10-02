@@ -6,7 +6,6 @@ import {
   Container,
   CssBaseline,
   Grid,
-  IconButton,
   Link,
   Paper,
   ThemeProvider,
@@ -14,6 +13,7 @@ import {
   createTheme,
 } from '@mui/material';
 import { DarkMode, ImageNotSupportedOutlined, LightMode } from '@mui/icons-material';
+import './App.css';
 import LocationForm from './components/LocationForm';
 import MediaGallery from './components/MediaGallery';
 import { searchPhotosByLocation } from './services/geoPhotoService';
@@ -144,6 +144,14 @@ export default function App() {
       mode: isDarkMode ? 'dark' : 'light',
       primary: { main: '#28675a' },
       secondary: { main: '#a95f43' },
+      background: {
+        default: isDarkMode ? '#1a120d' : '#d9b08a',
+        paper: isDarkMode ? '#261d1b' : '#c98d62',
+      },
+      text: {
+        primary: isDarkMode ? '#f7efe8' : '#2a1d17',
+        secondary: isDarkMode ? '#d7c0ab' : '#624f43',
+      },
     },
     shape: { borderRadius: 8 },
     typography: {
@@ -172,9 +180,11 @@ export default function App() {
       <CssBaseline />
       <Box
         component="main"
+        className={isDarkMode ? 'app-shell dark' : 'app-shell light'}
         sx={{
           minHeight: '100vh',
-          backgroundColor: isDarkMode ? '#172321' : '#f6f8f5',
+          background: 'transparent',
+          color: 'text.primary',
         }}
       >
         <Container maxWidth="lg" sx={{ minHeight: '100vh', py: { xs: 2, md: 3 } }}>
@@ -198,46 +208,59 @@ export default function App() {
                 Philippines travel finder
               </Typography>
             </Box>
-            <IconButton
+            <button
+              type="button"
+              className={`theme-toggle ${isDarkMode ? 'dark' : 'light'}`}
               onClick={() => setIsDarkMode(!isDarkMode)}
               aria-label={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
               title={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
-              color="inherit"
             >
-              {isDarkMode ? <LightMode /> : <DarkMode />}
-            </IconButton>
+              <span className="theme-toggle__label">{isDarkMode ? 'Light' : 'Dark'}</span>
+              <span className="theme-toggle__icon">
+                {isDarkMode ? <LightMode fontSize="small" /> : <DarkMode fontSize="small" />}
+              </span>
+            </button>
           </Box>
 
           <Box component="section" aria-labelledby="page-title" sx={{ mb: 3 }}>
-            <Typography variant="overline" color="primary.main" sx={{ fontWeight: 700 }}>
+            <Typography variant="overline" className="hero-badge" color="primary.main" sx={{ fontWeight: 700, letterSpacing: 1.5 }}>
               EXPLORE THE PHILIPPINES
             </Typography>
             <Typography
               id="page-title"
               component="h1"
               variant="h1"
-              sx={{ fontSize: { xs: '2.1rem', md: '2.8rem' }, lineHeight: 1.15, mb: 0.75 }}
+              className="hero-title"
+              sx={{
+                fontSize: { xs: '2.4rem', md: '3.6rem' },
+                lineHeight: 1.04,
+                letterSpacing: '-0.04em',
+                mb: 1,
+                maxWidth: '620px',
+              }}
             >
               Find a place to remember.
             </Typography>
-            <Typography color="text.secondary">
+            <Typography color="text.secondary" sx={{ maxWidth: '640px', fontSize: { xs: '1rem', md: '1.08rem' } }}>
               Choose a region, province, and city or municipality to discover places across the islands.
             </Typography>
+
           </Box>
 
           <Paper
             component="section"
             aria-label="Choose a location to explore"
             elevation={0}
+            className="search-panel"
             sx={{
               p: { xs: 2, md: 2.5 },
               mb: 4,
-              borderRadius: 1,
+              borderRadius: 2,
               border: '1px solid',
               borderColor: 'divider',
             }}
           >
-            <Typography variant="subtitle2" sx={{ mb: 1.5, fontWeight: 700 }}>
+            <Typography variant="subtitle2" sx={{ mb: 1.5, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
               Search by location
             </Typography>
             <LocationForm onSearch={handleSearchSubmit} />
@@ -267,7 +290,8 @@ export default function App() {
                       id={`${group.name.toLowerCase()}-destinations-title`}
                       component="h3"
                       variant="h5"
-                      sx={{ fontSize: '1.35rem' }}
+                      className="region-title"
+                      sx={{ fontSize: '1.35rem', fontWeight: 700, letterSpacing: '0.02em' }}
                     >
                       {group.name}
                     </Typography>
