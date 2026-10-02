@@ -1,5 +1,9 @@
-import React from 'react';
-import { Box, Card, CardMedia, CardContent, Typography, Link, Skeleton } from '@mui/material';
+import React, { useState } from 'react';
+import {
+  Box, Card, CardMedia, CardContent, CardActionArea, Typography, Link, Skeleton,
+  Dialog, IconButton,
+} from '@mui/material';
+import { Close } from '@mui/icons-material';
 
 const CARD_WIDTH = { xs: '100%', sm: 340 };
 const IMAGE_HEIGHT = 240;
@@ -22,6 +26,9 @@ const rowSx = {
 };
 
 export default function MediaGallery({ photos, loading }) {
+  // Must stay above the early returns (hooks can't be called conditionally)
+  const [selectedPhoto, setSelectedPhoto] = useState(null);
+
   if (loading) {
     return (
       <Box sx={rowSx}>
@@ -49,59 +56,126 @@ export default function MediaGallery({ photos, loading }) {
   }
 
   return (
-    <Box sx={rowSx}>
-      {photos.map((photo, index) => (
-        <Card
-          key={photo.id || index}
-          elevation={6}
-          sx={{
-            ...cardSx,
+    <>
+      <Box sx={rowSx}>
+        {photos.map((photo, index) => (
+          <Card
+            key={photo.id || index}
+            elevation={6}
+            sx={{
+              ...cardSx,
+              border: '1.5px solid var(--border)',
+              transition: 'all 0.35s ease',
+              '&:hover': {
+                transform: 'translateY(-8px)',
+                borderColor: 'var(--accent)',
+                boxShadow: '0 0 25px var(--glow)',
+              },
+            }}
+          >
+            {/* Only the image is clickable; the photographer link below stays separate */}
+            <CardActionArea onClick={() => setSelectedPhoto(photo)}>
+              <CardMedia
+                component="img"
+                image={photo.imageUrl}
+                alt={photo.altText || 'Tourist spot photo'}
+                sx={{
+                  width: '100%',
+                  height: IMAGE_HEIGHT,
+                  objectFit: 'cover',
+                  objectPosition: 'center',
+                }}
+              />
+            </CardActionArea>
+
+            <CardContent sx={{ flexGrow: 1, p: 2.5, textAlign: 'center' }}>
+              <Typography
+                variant="caption"
+                display="block"
+                sx={{ color: 'var(--text-muted)', mb: 0.5, fontWeight: 'bold' }}
+              >
+                📸 Captured by:
+              </Typography>
+              <Link
+                href={photo.photographerUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                underline="hover"
+                sx={{
+                  color: 'var(--accent-strong)',
+                  fontWeight: 'bold',
+                  fontSize: '0.95rem',
+                  '&:hover': { color: '#FF7A45' },
+                }}
+              >
+                {photo.photographer}
+              </Link>
+            </CardContent>
+          </Card>
+        ))}
+      </Box>
+
+      {/* Lightbox: open whenever a photo is selected */}
+      <Dialog
+        open={Boolean(selectedPhoto)}
+        onClose={() => setSelectedPhoto(null)}
+        maxWidth="lg"
+        PaperProps={{
+          sx: {
+            background: 'var(--card-bg)',
             border: '1.5px solid var(--border)',
-            transition: 'all 0.35s ease',
-            '&:hover': {
-              transform: 'translateY(-8px)',
-              borderColor: 'var(--accent)',
-              boxShadow: '0 0 25px var(--glow)',
-            },
+            borderRadius: 3,
+            overflow: 'hidden',
+            m: 2,
+          },
+        }}
+      >
+        <IconButton
+          onClick={() => setSelectedPhoto(null)}
+          aria-label="Close"
+          sx={{
+            position: 'absolute',
+            top: 8,
+            right: 8,
+            color: '#fff',
+            background: 'rgba(0,0,0,0.5)',
+            '&:hover': { background: 'rgba(0,0,0,0.75)' },
           }}
         >
-          <CardMedia
-            component="img"
-            image={photo.imageUrl}
-            alt={photo.altText || 'Tourist spot photo'}
-            sx={{
-              width: '100%',
-              height: IMAGE_HEIGHT,
-              objectFit: 'cover',
-              objectPosition: 'center',
-            }}
-          />
+          <Close />
+        </IconButton>
 
-          <CardContent sx={{ flexGrow: 1, p: 2.5, textAlign: 'center' }}>
-            <Typography
-              variant="caption"
-              display="block"
-              sx={{ color: 'var(--text-muted)', mb: 0.5, fontWeight: 'bold' }}
-            >
-              📸 Captured by:
-            </Typography>
-            <Link
-              href={photo.photographerUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              underline="hover"
+        {selectedPhoto && (
+          <>
+            <Box
+              component="img"
+              src={selectedPhoto.fullImageUrl || selectedPhoto.imageUrl}
+              alt={selectedPhoto.altText}
               sx={{
-                color: 'var(--accent-strong)',
-                fontWeight: 'bold',
-                fontSize: '0.95rem',
-                '&:hover': { color: '#FF7A45' },
+                display: 'block',
+                maxWidth: '100%',
+                maxHeight: '80vh',   // keeps tall photos from overflowing the screen
+                objectFit: 'contain',
+                mx: 'auto',
               }}
-            >
-              {photo.photographer}
-            </Link>
-          </CardContent>
-        </Card>
-      ))}
-    </Box>
+            />
+            <Box sx={{ p: 2, textAlign: 'center' }}>
+              <Typography variant="caption" sx={{ color: 'var(--text-muted)', fontWeight: 'bold' }}>
+                📸 Captured by:{' '}
+              </Typography>
+              <Link
+                href={selectedPhoto.photographerUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                underline="hover"
+                sx={{ color: 'var(--accent-strong)', fontWeight: 'bold' }}
+              >
+                {selectedPhoto.photographer}
+              </Link>
+            </Box>
+          </>
+        )}
+      </Dialog>
+    </>
   );
 }

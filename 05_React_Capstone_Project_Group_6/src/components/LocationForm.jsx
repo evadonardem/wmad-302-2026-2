@@ -43,7 +43,10 @@ export default function LocationForm({ onSearch }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (onSearch && selectedCityName) {
-      onSearch(selectedCityName);
+
+      const regionName = regions.find((r) => r.code === selectedRegion)?.name;;
+
+      onSearch(regionName ? `${selectedCityName}, ${regionName}` : selectedCityName);
     }
   };
 

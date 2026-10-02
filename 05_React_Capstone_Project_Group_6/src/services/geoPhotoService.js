@@ -45,7 +45,7 @@ export const searchPhotosByLocation = async (locationName) => {
   // d. Map through the resulting array and return streamlined objects styled exactly like: 
   //    { id, imageUrl: [large image src URL], photographer, photographerUrl, altText }
   // e. Provide a backup structural object array inside your catch layer shield to handle error edge cases.
-  const keyword = `${locationName} tourist spot`;
+  const keyword = `${locationName} Philippines tourist spot`;
   const url = `https://api.pexels.com/v1/search?query=${encodeURIComponent(keyword)}&per_page=12`;
  
   try {
@@ -56,11 +56,13 @@ export const searchPhotosByLocation = async (locationName) => {
     return response.data.photos.map((photo) => ({
       id: photo.id,
       imageUrl: photo.src.large,
+      fullImageUrl: photo.src.large2x || photo.src.large,
       photographer: photo.photographer,
       photographerUrl: photo.photographer_url,
       altText: photo.alt || `${locationName} tourist spot`,
     }));
   } catch (error) {
+
     console.error(`Failed to fetch photos for ${locationName}:`, error);
     // Backup array so the UI still has something to render
     return [
