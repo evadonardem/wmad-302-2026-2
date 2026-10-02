@@ -25,6 +25,11 @@ const rowSx = {
   gap: 3,
 };
 
+const preloadImage = (url) => {
+  const img = new Image();
+  img.src = url;
+}
+
 export default function MediaGallery({ photos, loading }) {
   // Must stay above the early returns (hooks can't be called conditionally)
   const [selectedPhoto, setSelectedPhoto] = useState(null);
@@ -74,18 +79,21 @@ export default function MediaGallery({ photos, loading }) {
             }}
           >
             {/* Only the image is clickable; the photographer link below stays separate */}
-            <CardActionArea onClick={() => setSelectedPhoto(photo)}>
-              <CardMedia
-                component="img"
-                image={photo.imageUrl}
-                alt={photo.altText || 'Tourist spot photo'}
-                sx={{
-                  width: '100%',
-                  height: IMAGE_HEIGHT,
-                  objectFit: 'cover',
-                  objectPosition: 'center',
-                }}
-              />
+            <CardActionArea 
+              onClick={() => setSelectedPhoto(photo)}
+              onMouseEnter={() => preloadImage(photo.fullImageUrl || photo.imageUrl)}
+              >
+                <CardMedia
+                  component="img"
+                  image={photo.imageUrl}
+                  alt={photo.altText || 'Tourist spot photo'}
+                  sx={{
+                    width: '100%',
+                    height: IMAGE_HEIGHT,
+                    objectFit: 'cover',
+                    objectPosition: 'center',
+                  }}
+                />
             </CardActionArea>
 
             <CardContent sx={{ flexGrow: 1, p: 2.5, textAlign: 'center' }}>
