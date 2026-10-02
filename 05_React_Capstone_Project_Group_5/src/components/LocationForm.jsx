@@ -7,6 +7,8 @@ import {
   getCitiesMunicipalitiesByProvince,
 } from '../services/geoPhotoService';
 
+const ALL_CITIES = '__all_cities__';
+
 export default function LocationForm({ onSearch }) {
   const [regions, setRegions] = useState([]);
   const [provinces, setProvinces] = useState([]);
@@ -68,7 +70,12 @@ export default function LocationForm({ onSearch }) {
     e.preventDefault();
     if (selectedCityName) {
       const selectedProvinceName = provinces.find((province) => province.code === selectedProvince)?.name;
-      onSearch(selectedCityName, selectedProvinceName);
+      if (selectedCityName === ALL_CITIES) {
+        const selectedRegionName = regions.find((region) => region.code === selectedRegion)?.name;
+        onSearch(selectedProvinceName, selectedRegionName);
+      } else {
+        onSearch(selectedCityName, selectedProvinceName);
+      }
     }
   };
 
@@ -98,6 +105,7 @@ export default function LocationForm({ onSearch }) {
             value={selectedRegion}
             onChange={handleRegionChange}
           >
+            <MenuItem value="">Clear selection</MenuItem>
             {regions.map((region) => (
               <MenuItem key={region.code} value={region.code}>
                 {region.name}
@@ -114,6 +122,7 @@ export default function LocationForm({ onSearch }) {
             value={selectedProvince}
             onChange={handleProvinceChange}
           >
+            <MenuItem value="">Clear selection</MenuItem>
             {provinces.map((province) => (
               <MenuItem key={province.code} value={province.code}>
                 {province.name}
@@ -130,6 +139,8 @@ export default function LocationForm({ onSearch }) {
             value={selectedCityName}
             onChange={(event) => setSelectedCityName(event.target.value)}
           >
+            <MenuItem value="">Clear selection</MenuItem>
+            <MenuItem value={ALL_CITIES}>All Cities / Municipalities</MenuItem>
             {cities.map((city) => (
               <MenuItem key={city.code || city.id} value={city.name}>
                 {city.name}
