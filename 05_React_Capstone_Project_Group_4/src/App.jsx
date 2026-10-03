@@ -5,7 +5,6 @@ import LocationForm from './components/LocationForm';
 import MediaGallery from './components/MediaGallery';
 import { searchPhotosByLocation } from './services/geoPhotoService';
 
-// Philippine flag palette, used as accents only (Option B: light & minimalist)
 const PH_BLUE = '#0038A8';
 const PH_RED = '#CE1126';
 const PH_GOLD = '#FCD116';
@@ -20,27 +19,27 @@ export default function App() {
   const theme = createTheme({
     palette: {
       mode,
-      primary: { main: PH_BLUE },
+      primary: { main: isDarkMode ? '#7FA3FF' : PH_BLUE },
       secondary: { main: PH_RED },
       warning: { main: PH_GOLD },
       background: {
-        default: mode === 'light' ? '#F4F7FC' : '#0A1430',
-        paper: mode === 'light' ? '#FFFFFF' : '#101B3D',
+        default: isDarkMode ? '#070E26' : '#F5F8FF',
+        paper: isDarkMode ? '#0F1A3D' : '#FFFFFF',
       },
     },
     typography: {
-      fontFamily: "'Inter', system-ui, sans-serif",
-      h3: { fontFamily: "'Poppins', sans-serif", fontWeight: 800 },
+      fontFamily: "'DM Sans', system-ui, sans-serif",
+      h1: { fontFamily: "'Bricolage Grotesque', sans-serif", fontWeight: 800, letterSpacing: '-0.03em' },
+      h4: { fontFamily: "'Bricolage Grotesque', sans-serif", fontWeight: 800, letterSpacing: '-0.02em' },
     },
-    shape: { borderRadius: 14 },
+    shape: { borderRadius: 16 },
   });
 
   const handleSearchSubmit = async (locationName) => {
     setSearchedLocation(locationName);
     setLoading(true);
     try {
-      const data = await searchPhotosByLocation(locationName);
-      setPhotos(data);
+      setPhotos(await searchPhotosByLocation(locationName));
     } finally {
       setLoading(false);
     }
@@ -49,83 +48,113 @@ export default function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Box sx={{
-        minHeight: '100vh',
-        background: mode === 'light'
-          ? `linear-gradient(180deg, ${PH_BLUE}14 0%, #F4F7FC 320px)`
-          : `linear-gradient(180deg, ${PH_BLUE}33 0%, #0A1430 320px)`,
-      }}>
-        <Container maxWidth="lg" sx={{ py: 5 }}>
-          <Paper
-            elevation={0}
+      <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
+        {/* HERO */}
+        <Box
+          component="header"
+          sx={{
+            position: 'relative',
+            overflow: 'hidden',
+            color: '#fff',
+            pt: { xs: 3, md: 4 },
+            pb: { xs: 14, md: 18 },
+            background: isDarkMode
+              ? 'linear-gradient(160deg, #0A1A5C 0%, #050C26 100%)'
+              : `linear-gradient(160deg, ${PH_BLUE} 0%, #001A66 100%)`,
+          }}
+        >
+          {/* Eight-ray sun, slowly turning */}
+          <Box
+            aria-hidden
             sx={{
-              p: { xs: 3, md: 5 },
-              borderRadius: 4,
-              textAlign: 'center',
-              mb: 4,
-              position: 'relative',
-              overflow: 'hidden',
-              border: '1px solid',
-              borderColor: mode === 'light' ? 'rgba(0,56,168,0.12)' : 'rgba(255,255,255,0.08)',
-            }}
-          >
-            <Box sx={{
               position: 'absolute',
-              top: -40,
-              right: -40,
-              width: 160,
-              height: 160,
+              top: { xs: -260, md: -300 },
+              right: { xs: -260, md: -180 },
+              width: { xs: 560, md: 760 },
+              height: { xs: 560, md: 760 },
               borderRadius: '50%',
-              background: `radial-gradient(circle, ${PH_GOLD}55 0%, transparent 70%)`,
-              pointerEvents: 'none',
-            }} />
-
-            <Box sx={{
+              background: `repeating-conic-gradient(from 0deg, ${PH_GOLD} 0deg 9deg, transparent 9deg 45deg)`,
+              WebkitMaskImage: 'radial-gradient(circle, #000 18%, transparent 68%)',
+              maskImage: 'radial-gradient(circle, #000 18%, transparent 68%)',
+              opacity: 0.55,
+              animation: 'sunTurn 160s linear infinite',
+              '@keyframes sunTurn': { to: { transform: 'rotate(360deg)' } },
+              '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
+            }}
+          />
+          <Box
+            aria-hidden
+            sx={{
               position: 'absolute',
-              top: 0, left: 0, right: 0,
-              height: 4,
-              background: `linear-gradient(90deg, ${PH_BLUE} 33%, ${PH_RED} 33% 66%, ${PH_GOLD} 66%)`,
-            }} />
+              top: { xs: -60, md: -90 },
+              right: { xs: -60, md: 20 },
+              width: { xs: 180, md: 260 },
+              height: { xs: 180, md: 260 },
+              borderRadius: '50%',
+              background: `radial-gradient(circle at 35% 35%, #FFE680, ${PH_GOLD} 60%, #F5A800)`,
+              boxShadow: `0 0 120px 20px ${PH_GOLD}66`,
+            }}
+          />
 
-            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1 }}>
-              <IconButton onClick={() => setIsDarkMode(!isDarkMode)} color="inherit">
-                {isDarkMode ? <LightMode /> : <DarkMode />}
-              </IconButton>
-            </Box>
-
-            {/* Logo badge: sun-ring behind the compass, instead of a bare icon */}
-            <Box sx={{ display: 'flex', justifyContent: 'center', mb: 1 }}>
-              <Box sx={{
-                width: 64,
-                height: 64,
-                borderRadius: '50%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                background: `conic-gradient(${PH_GOLD}, ${PH_BLUE}, ${PH_RED}, ${PH_GOLD})`,
-                p: '3px',
-              }}>
-                <Box sx={{
-                  width: '100%',
-                  height: '100%',
-                  borderRadius: '50%',
-                  bgcolor: 'background.paper',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}>
-                  <TravelExplore sx={{ fontSize: 32, color: 'secondary.main' }} />
-                </Box>
+          <Container maxWidth="lg" sx={{ position: 'relative' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: { xs: 6, md: 10 } }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <IconButton
+                  onClick={() => setIsDarkMode(!isDarkMode)}
+                  aria-label="Toggle dark mode"
+                  sx={{ color: '#fff', bgcolor: 'rgba(255,255,255,0.12)', '&:hover': { bgcolor: 'rgba(255,255,255,0.22)' } }}
+                >
+                  {isDarkMode ? <LightMode /> : <DarkMode />}
+                </IconButton>
+                <TravelExplore sx={{ color: PH_GOLD }} />
+                <Typography sx={{ fontWeight: 700 }}>Lakbay PH</Typography>
               </Box>
             </Box>
 
-            <Typography variant="h3" component="h1" color="primary.main" sx={{ mb: 1 }}>
-              Lakbay PH
+            <Typography
+              variant="h1"
+              sx={{ fontSize: { xs: '3.2rem', sm: '5rem', md: '7rem' }, lineHeight: 0.95, maxWidth: 760 }}
+            >
+              Wander all
+              <br />
+              7,641 islands.
             </Typography>
-            <Typography variant="subtitle1" color="text.secondary" sx={{ mb: 4, maxWidth: 520, mx: 'auto' }}>
-              Explore tourist spots across regions, cities, and municipalities in the Philippines
+            <Typography sx={{ mt: 3, maxWidth: 480, fontSize: { xs: '1rem', md: '1.2rem' }, color: 'rgba(255,255,255,0.85)' }}>
+              Find tourist spots in any region, city, or municipality, from Batanes to Tawi-Tawi.
             </Typography>
+          </Container>
 
+          {/* Flag-color stripe */}
+          <Box
+            aria-hidden
+            sx={{
+              position: 'absolute',
+              left: 0, right: 0, bottom: 0,
+              height: 8,
+              background: `linear-gradient(90deg, ${PH_BLUE} 33.3%, ${PH_RED} 33.3% 66.6%, ${PH_GOLD} 66.6%)`,
+            }}
+          />
+        </Box>
+
+        <Container maxWidth="lg" sx={{ pb: 8 }}>
+          {/* Search card floating over the hero edge */}
+          <Paper
+            elevation={0}
+            sx={{
+              position: 'relative',
+              mt: { xs: -9, md: -11 },
+              mb: 6,
+              p: { xs: 2.5, md: 3.5 },
+              borderRadius: 5,
+              boxShadow: isDarkMode ? '0 24px 60px rgba(0,0,0,0.5)' : '0 24px 60px rgba(0,56,168,0.22)',
+            }}
+          >
+            <Typography variant="h4" sx={{ fontSize: { xs: '1.4rem', md: '1.75rem' }, mb: 0.5 }}>
+              Where to?
+            </Typography>
+            <Typography color="text.secondary" sx={{ mb: 2.5 }}>
+              Choose a region, then a city or municipality.
+            </Typography>
             <LocationForm onSearch={handleSearchSubmit} />
           </Paper>
 

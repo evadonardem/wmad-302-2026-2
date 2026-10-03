@@ -165,75 +165,81 @@ export default function MediaGallery({ photos, loading, searchedLocation }) {
   }
 
   return (
-    <Grid container spacing={3}>
-      {photos.map((photo, index) => (
-        <Grow in key={photo.id} timeout={300 + index * 100}>
-          <Grid item xs={12} sm={6} md={4}>
-            <Card
-              elevation={3}
-              sx={{
-                height: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                borderRadius: 3,
-                overflow: 'hidden',
-                position: 'relative',
-                transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-                '&:hover': { transform: 'translateY(-4px)', boxShadow: 6 },
-                '&:hover .gallery-img': { transform: 'scale(1.06)' },
-              }}
-            >
-              <IconButton
-                onClick={() => toggleFavorite(photo.id)}
-                sx={{
-                  position: 'absolute',
-                  top: 8,
-                  right: 8,
-                  zIndex: 1,
-                  bgcolor: 'rgba(255,255,255,0.85)',
-                  '&:hover': { bgcolor: 'rgba(255,255,255,1)' },
-                }}
-                size="small"
-              >
-                {favorites.has(photo.id)
-                  ? <Favorite fontSize="small" color="secondary" />
-                  : <FavoriteBorder fontSize="small" color="secondary" />}
-              </IconButton>
+    <>
+      <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1.5, mb: 3, flexWrap: 'wrap' }}>
+        <Typography variant="h4" sx={{ fontSize: { xs: '1.6rem', md: '2.2rem' } }}>
+          Spots in {searchedLocation}
+        </Typography>
+        <Typography color="text.secondary">{photos.length} photos</Typography>
+      </Box>
 
-              <Box sx={{ overflow: 'hidden' }}>
+      <Grid container spacing={3}>
+        {photos.map((photo, index) => (
+          <Grow in key={photo.id} timeout={300 + index * 100}>
+            <Grid item xs={12} sm={6} md={4}>
+              <Card
+                elevation={0}
+                sx={{
+                  position: 'relative',
+                  aspectRatio: '4 / 5',
+                  borderRadius: 4,
+                  overflow: 'hidden',
+                  boxShadow: '0 10px 30px rgba(0,30,100,0.18)',
+                  transition: 'transform 0.25s ease, box-shadow 0.25s ease',
+                  '&:hover': { transform: 'translateY(-6px)', boxShadow: '0 18px 40px rgba(0,30,100,0.3)' },
+                  '&:hover .gallery-img': { transform: 'scale(1.07)' },
+                }}
+              >
                 <CardMedia
                   component="img"
                   className="gallery-img"
-                  height="200"
                   image={photo.imageUrl}
                   alt={photo.altText}
-                  sx={{ transition: 'transform 0.4s ease' }}
+                  sx={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.6s ease' }}
                 />
-              </Box>
 
-              <CardContent sx={{ flexGrow: 1, p: 2 }}>
-                <Chip
-                  size="small"
-                  icon={<CameraAlt sx={{ fontSize: '0.9rem !important' }} />}
-                  label={
-                    <Link
-                      href={photo.photographerUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      color="inherit"
-                      underline="hover"
-                    >
-                      {photo.photographer}
-                    </Link>
-                  }
-                  variant="outlined"
-                  color="primary"
+                <Box
+                  aria-hidden
+                  sx={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 55%, rgba(0,10,50,0.85) 100%)' }}
                 />
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grow>
-      ))}
-    </Grid>
+
+                <IconButton
+                  onClick={() => toggleFavorite(photo.id)}
+                  aria-label={favorites.has(photo.id) ? 'Remove from favorites' : 'Add to favorites'}
+                  size="small"
+                  sx={{
+                    position: 'absolute', top: 12, right: 12, zIndex: 1,
+                    bgcolor: 'rgba(255,255,255,0.92)',
+                    '&:hover': { bgcolor: '#fff' },
+                  }}
+                >
+                  {favorites.has(photo.id)
+                    ? <Favorite fontSize="small" color="secondary" />
+                    : <FavoriteBorder fontSize="small" color="secondary" />}
+                </IconButton>
+
+                <Box sx={{ position: 'absolute', left: 0, right: 0, bottom: 0, p: 2, color: '#fff' }}>
+                  {photo.altText && (
+                    <Typography sx={{ fontWeight: 600, lineHeight: 1.3, mb: 1, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                      {photo.altText}
+                    </Typography>
+                  )}
+                  <Chip
+                    size="small"
+                    icon={<CameraAlt sx={{ fontSize: '0.9rem !important', color: '#FCD116 !important' }} />}
+                    label={
+                      <Link href={photo.photographerUrl} target="_blank" rel="noopener noreferrer" color="inherit" underline="hover">
+                        {photo.photographer}
+                      </Link>
+                    }
+                    sx={{ color: '#fff', bgcolor: 'rgba(255,255,255,0.16)', backdropFilter: 'blur(6px)' }}
+                  />
+                </Box>
+              </Card>
+            </Grid>
+          </Grow>
+        ))}
+      </Grid>
+    </>
   );
 }
