@@ -1,9 +1,9 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Container, CssBaseline, ThemeProvider, createTheme, GlobalStyles,
-  Typography, Box, IconButton, Button, Chip,
+  Typography, Box, IconButton, Button, Chip, Fab,
 } from '@mui/material';
-import { LightMode, DarkMode } from '@mui/icons-material';
+import { LightMode, DarkMode, Shuffle, KeyboardArrowUp } from '@mui/icons-material';
 import LocationForm from './components/LocationForm';
 import MediaGallery from './components/MediaGallery';
 import ThemeBackdrop from './components/ThemeBackdrop';
@@ -13,6 +13,89 @@ const FAV_KEY = 'lakbay-ph-favorites';
 const THEME_KEY = 'lakbay-ph-theme';
 const RECENT_KEY = 'lakbay-ph-recent';
 const MAX_RECENT = 5;
+
+// ---- Strict municipality matching ----
+const normalize = (text) =>
+  String(text || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '') // ñ -> n, etc.
+    .toLowerCase()
+    .replace(/\(.*?\)/g, ' ')
+    .replace(/[^a-z0-9 ]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+// "Baguio City, Cordillera ..." -> "baguio"; "City of Manila" -> "manila"
+const placeKey = (place) =>
+  normalize(String(place).split(',')[0])
+    .replace(/^(city of|municipality of)\s+/, '')
+    .replace(/\s+(city|municipality)$/, '')
+    .trim();
+
+// Keeps a photo only if its own text (caption, tags, location...) names the municipality
+const matchesPlace = (photo, place) => {
+  const key = placeKey(place);
+  if (!key) return true;
+  const text = Object.entries(photo)
+    .filter(([k]) => !/url|place|photographer/i.test(k))
+    .map(([, v]) => (Array.isArray(v) ? v.join(' ') : typeof v === 'string' ? v : ''))
+    .join(' ');
+  return (' ' + normalize(text) + ' ').includes(' ' + key + ' ');
+};
+
+// "Surprise me" picks one of these (format: "City, Region")
+const SURPRISE_SPOTS = [
+  'Baguio City, Cordillera Administrative Region',
+  'Vigan City, Ilocos Region',
+  'Legazpi City, Bicol Region',
+  'Puerto Princesa City, MIMAROPA Region',
+  'El Nido, MIMAROPA Region',
+  'Tagbilaran City, Central Visayas',
+  'Cebu City, Central Visayas',
+  'Dumaguete City, Central Visayas',
+  'Davao City, Davao Region',
+  'Banaue, Cordillera Administrative Region',
+];
+
+// 🌴 Flat 2D palm tree (inline SVG: solid colors, no gradients, no shadows).
+// Size it with fontSize, same as before (the icon is 1em x 1em).
+const PalmEmoji = ({ sx, ...props }) => (
+  <Box
+    component="svg"
+    viewBox="0 0 64 64"
+    role="img"
+    aria-label="Palm Tree"
+    sx={{
+      display: 'inline-block',
+      width: '1em',
+      height: '1em',
+      flexShrink: 0,
+      userSelect: 'none',
+      ...sx,
+    }}
+    {...props}
+  >
+    {/* trunk */}
+    <path
+      d="M30 61 C30 46 34 34 36 23"
+      fill="none"
+      stroke="#8B5A2B"
+      strokeWidth="4.5"
+      strokeLinecap="round"
+    />
+    {/* fronds */}
+    <g fill="#2E9E5B">
+      <path d="M36 22 C26 12 12 14 5 25 C16 18 26 20 36 22Z" />
+      <path d="M36 22 C28 8 16 5 7 10 C18 10 28 14 36 22Z" />
+      <path d="M36 22 C46 12 60 14 59 26 C50 18 42 20 36 22Z" />
+      <path d="M36 22 C44 8 56 5 61 12 C50 10 42 14 36 22Z" />
+      <path d="M36 22 C33 12 35 4 40 2 C41 10 39 16 36 22Z" />
+    </g>
+    {/* coconuts */}
+    <circle cx="34.5" cy="25" r="2.6" fill="#6B4423" />
+    <circle cx="39" cy="25.5" r="2.6" fill="#6B4423" />
+  </Box>
+);
 
 const readStored = (key, fallback) => {
   try {
@@ -31,12 +114,15 @@ const writeStored = (key, value) => {
   }
 };
 
-// 🌴 RESTORED ORIGINAL PHILIPPINE TOURIST PALETTE
+// 🌴 PHILIPPINE TOURIST PALETTE
 const palettes = {
   dark: {
     '--page-bg': 'radial-gradient(ellipse at top, #0f4c5c 0%, #04161f 75%)',
     '--panel-bg': '#0a2a3a',
     '--card-bg': '#08202e',
+    '--text-shadow': '0 0 6px rgba(4, 22, 31, 0.95), 0 1px 3px rgba(4, 22, 31, 0.9)',
+    '--field-bg': 'transparent',
+    '--chip-bg': 'rgba(10, 42, 58, 0.9)',
     '--accent': '#2DD4CF',
     '--accent-strong': '#7CF0EB',
     '--accent-soft': 'rgba(45, 212, 207, 0.15)',
@@ -55,7 +141,11 @@ const palettes = {
     '--page-bg': 'radial-gradient(ellipse at top, #CFF3EF 0%, #FFF8EC 75%)',
     '--panel-bg': '#ffffff',
     '--card-bg': '#ffffff',
-    '--accent': '#0E9AA7',
+    '--text-shadow':
+      '-1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff, 0 0 6px #fff, 0 0 12px rgba(255, 255, 255, 0.9)',
+    '--field-bg': 'rgba(255, 255, 255, 0.92)',
+    '--chip-bg': 'rgba(255, 255, 255, 0.95)',
+    '--accent': '#066872',
     '--accent-strong': '#0B6F7A',
     '--accent-soft': 'rgba(14, 154, 167, 0.15)',
     '--border': 'rgba(14, 154, 167, 0.35)',
@@ -64,7 +154,7 @@ const palettes = {
     '--text': '#040707',
     '--text-muted': '#1a3134',
     '--title-gradient': 'linear-gradient(135deg, #041c51 0%, #207d86 60%, #063621 100%)',
-    '--cta': 'linear-gradient(135deg, #402f09 0%, #61310d 50%, #F0503C 100%)',
+    '--cta': 'linear-gradient(135deg, #FFD36B 0%, #FF9A4D 50%, #F0503C 100%)',
     '--cta-hover': 'linear-gradient(135deg, #FFE29A 0%, #FFB066 50%, #FF6A55 100%)',
     '--cta-text': '#2b0f00',
     '--cta-glow': 'rgba(255, 122, 69, 0.45)',
@@ -90,10 +180,21 @@ export default function App() {
   const [hasMore, setHasMore] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const requestRef = useRef(0);
+  const resultsRef = useRef(null);
+  const [sortAz, setSortAz] = useState(false);
+  const [searchError, setSearchError] = useState(false);
+  const [showTop, setShowTop] = useState(false);
 
   useEffect(() => writeStored(FAV_KEY, favorites), [favorites]);
   useEffect(() => writeStored(THEME_KEY, isDarkMode), [isDarkMode]);
   useEffect(() => writeStored(RECENT_KEY, recent), [recent]);
+
+  // Show the back-to-top button after scrolling down a bit
+  useEffect(() => {
+    const onScroll = () => setShowTop(window.scrollY > 600);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   const toggleFavorite = (photo) => {
     setFavorites((prev) =>
@@ -129,7 +230,9 @@ export default function App() {
   const handleSearchSubmit = async (locationName) => {
     const requestId = ++requestRef.current;
     setShowFavorites(false);
+    setSearchError(false);
     setLoading(true);
+    resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     setSearchTerm(locationName);
     setPage(1);
     setHasMore(false);
@@ -140,11 +243,14 @@ export default function App() {
     try {
       const results = (await searchPhotosByLocation(locationName, 1)) || [];
       if (requestId !== requestRef.current) return;
-      setPhotos(results);
+      setPhotos(results.map((p) => ({ ...p, place: locationName })));
       setHasMore(results.length >= PHOTOS_PER_PAGE);
     } catch (error) {
       console.error('Error fetching photos by location:', error);
-      if (requestId === requestRef.current) setPhotos([]);
+      if (requestId === requestRef.current) {
+        setPhotos([]);
+        setSearchError(true);
+      }
     } finally {
       if (requestId === requestRef.current) setLoading(false);
     }
@@ -160,7 +266,10 @@ export default function App() {
       if (requestId !== requestRef.current) return;
       setPhotos((prev) => {
         const seen = new Set(prev.map((p) => p.id));
-        return [...prev, ...results.filter((p) => !seen.has(p.id))];
+        return [
+          ...prev,
+          ...results.filter((p) => !seen.has(p.id)).map((p) => ({ ...p, place: searchTerm })),
+        ];
       });
       setPage(nextPage);
       setHasMore(results.length >= PHOTOS_PER_PAGE);
@@ -171,13 +280,35 @@ export default function App() {
 
   const removeRecent = (name) => setRecent((prev) => prev.filter((n) => n !== name));
 
+  const handleSurprise = () => {
+    const options = SURPRISE_SPOTS.filter((n) => n !== searchTerm);
+    handleSearchSubmit(options[Math.floor(Math.random() * options.length)]);
+  };
+
+  const clearFavorites = () => {
+    if (window.confirm('Remove all saved favorites?')) setFavorites([]);
+  };
+
+  // Photos on screen: current tab, optionally sorted by photographer A-Z
+  const matched = useMemo(
+    () => (searchTerm ? photos.filter((p) => matchesPlace(p, searchTerm)) : photos),
+    [searchTerm, photos]
+  );
+
+  const displayed = useMemo(() => {
+    const list = showFavorites ? favorites : matched;
+    return sortAz
+      ? [...list].sort((a, b) => (a.photographer || '').localeCompare(b.photographer || ''))
+      : list;
+  }, [showFavorites, favorites, matched, sortAz]);
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <GlobalStyles styles={{ ':root': colors }} />
+      <GlobalStyles styles={{ ':root': colors, 'button, .MuiChip-root': { textShadow: 'none' } }} />
 
-      <Box sx={{ minHeight: '100vh', background: 'var(--page-bg)', color: 'var(--text)' }}>
-        {/* Animated backdrop kept intact */}
+      <Box sx={{ minHeight: '100vh', background: 'var(--page-bg)', color: 'var(--text)', textShadow: 'var(--text-shadow)' }}>
+        {/* Animated backdrop */}
         <ThemeBackdrop isDarkMode={isDarkMode} />
 
         {/* ============================================================ */}
@@ -193,26 +324,23 @@ export default function App() {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            backdropFilter: 'blur(10px)',
           }}
         >
-          {/* Logo Monogram */}
+          {/* Logo with flat palm tree emoji */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
             <Box
               sx={{
-                width: 34,
-                height: 34,
+                width: 36,
+                height: 36,
                 borderRadius: '50%',
-                border: '1.5px solid var(--accent)',
+                border: '1.5px solid var(--border-strong)',
+                background: 'var(--accent-soft)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontWeight: 900,
-                fontSize: '0.85rem',
-                color: 'var(--accent)',
               }}
             >
-              PH
+              <PalmEmoji sx={{ fontSize: '1.25rem' }} />
             </Box>
             <Typography
               variant="caption"
@@ -228,7 +356,6 @@ export default function App() {
             </Typography>
           </Box>
 
-         
           <Typography
             variant="caption"
             sx={{
@@ -249,6 +376,7 @@ export default function App() {
           {/* Theme Toggle Button */}
           <IconButton
             onClick={() => setIsDarkMode(!isDarkMode)}
+            aria-label="Toggle light/dark mode"
             size="small"
             sx={{
               border: '1px solid var(--border)',
@@ -262,40 +390,18 @@ export default function App() {
         </Box>
 
         {/* ============================================================ */}
-        {/* 🖋️ 2. FULL-WIDTH HERO SECTION (Title: "Lakbay.")              */}
+        {/* 🖋️ 2. FULL-WIDTH HERO SECTION (Title: "🌴 Lakbay.")          */}
         {/* ============================================================ */}
         <Box
           sx={{
             position: 'relative',
             zIndex: 1,
             px: { xs: 3, sm: 6, md: 8, lg: 10 },
-            pt: { xs: 6, sm: 8, md: 9 },
-            pb: { xs: 5, md: 7 },
+            pt: { xs: 4, sm: 5, md: 5 },
+            pb: { xs: 4, md: 5 },
             overflow: 'hidden',
           }}
         >
-          {/* Faint Background Watermark */}
-          <Typography
-            aria-hidden="true"
-            sx={{
-              position: 'absolute',
-              right: { xs: -20, md: -40 },
-              top: '5%',
-              fontSize: { xs: '8rem', sm: '14rem', md: '20rem' },
-              fontWeight: 900,
-              color: 'var(--accent)',
-              opacity: isDarkMode ? 0.04 : 0.05,
-              letterSpacing: 15,
-              userSelect: 'none',
-              pointerEvents: 'none',
-              lineHeight: 0.8,
-              fontFamily: '"Playfair Display", "Georgia", serif',
-              fontStyle: 'italic',
-            }}
-          >
-            LAKBAY
-          </Typography>
-
           <Box
             sx={{
               display: 'flex',
@@ -303,11 +409,26 @@ export default function App() {
               justifyContent: 'space-between',
               alignItems: { xs: 'flex-start', md: 'center' },
               gap: 4,
-              mb: 5,
+              mb: 2,
             }}
           >
-            {/* Main Headline: "Lakbay." */}
-            <Box sx={{ maxWidth: 720 }}>
+            {/* Main Headline: flat palm emoji placed right beside the "L" of Lakbay */}
+            <Box
+              sx={{
+                maxWidth: 720,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: { xs: 1, sm: 1.5 },
+              }}
+            >
+              <PalmEmoji
+                sx={{
+                  fontSize: { xs: '2.8rem', sm: '4.2rem', md: '5.2rem' },
+                  transform: 'translateY(-6px)',
+                  flexShrink: 0,
+                }}
+              />
+
               <Typography
                 component="h1"
                 sx={{
@@ -315,88 +436,72 @@ export default function App() {
                   fontStyle: 'italic',
                   fontWeight: 600,
                   fontSize: { xs: '3.2rem', sm: '5rem', md: '6.2rem' },
-                  lineHeight: 1,
+                  display: 'inline-block',
+                  lineHeight: 1.25,
+                  pb: '0.12em',
+                  pr: '0.15em',
                   letterSpacing: -1,
-                  mb: 2,
+                  mb: 0,
                   background: 'var(--title-gradient)',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
+                  textShadow: 'none',
                 }}
               >
                 Lakbay.
               </Typography>
-
-              <Typography
-                variant="body1"
-                sx={{
-                  color: 'var(--text-muted)',
-                  lineHeight: 1.8,
-                  fontSize: { xs: '0.9rem', sm: '1rem' },
-                  maxWidth: 520,
-                  mb: 3,
-                }}
-              >
-                Explore the Philippines like never before. Search any region or city to discover
-              </Typography>
-  
-              
-            </Box>
-
-            {/* Right Circular Showcase Badge */}
-            <Box
-              sx={{
-                display: { xs: 'none', md: 'flex' },
-                alignItems: 'center',
-                gap: 2.5,
-                alignSelf: 'center',
-                pr: { md: 4, lg: 8 },
-              }}
-            >
-              <Box
-                sx={{
-                  width: 72,
-                  height: 72,
-                  borderRadius: '50%',
-                  border: '1.5px solid var(--border-strong)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  transition: 'all 0.3s ease',
-                  '&:hover': {
-                    borderColor: 'var(--accent)',
-                    boxShadow: '0 0 20px var(--glow)',
-                    transform: 'scale(1.06)',
-                  },
-                }}
-              >
-                <Box
-                  sx={{
-                    width: 0,
-                    height: 0,
-                    borderTop: '7px solid transparent',
-                    borderBottom: '7px solid transparent',
-                    borderLeft: '11px solid var(--accent)',
-                    ml: 0.5,
-                  }}
-                />
-              
-                <Typography variant="caption" sx={{ color: 'var(--text-muted)', fontSize: '0.68rem', letterSpacing: 1 }}>
-                  7,641 ISLANDS • 82 PROVINCES
-                </Typography>
-              </Box>
             </Box>
           </Box>
 
           {/* Integrated Location Search Form */}
-          <Box sx={{ maxWidth: 860, mb: 3 }}>
+          <Box sx={{ maxWidth: 860, mb: 2 }}>
             <LocationForm onSearch={handleSearchSubmit} />
+            <Button
+              onClick={handleSurprise}
+              startIcon={<Shuffle />}
+              sx={{
+                mt: 1.5,
+                textTransform: 'none',
+                px: 5,
+                py: 1,
+                fontWeight: '900',
+                fontSize: '1rem',
+                letterSpacing: 1,
+                borderRadius: 2,
+                background: 'var(--cta)',
+                color: 'var(--cta-text)',
+                boxShadow: '0 0 20px var(--cta-glow)',
+                border: '1px solid rgba(255, 255, 255, 0.35)',
+                transition: 'all 0.3s ease',
+                '&:hover': {
+                  background: 'var(--cta-hover)',
+                  boxShadow: '0 0 30px var(--cta-glow)',
+                  transform: 'scale(1.03)',
+                },
+              }}
+            >
+              Surprise me
+            </Button>
           </Box>
 
           {/* Recent Searches Chips */}
           {recent.length > 0 && (
             <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 1.5, mt: 1 }}>
-              <Typography variant="caption" sx={{ color: 'var(--text-muted)', fontWeight: 800, letterSpacing: 1.5 }}>
-                RECENT:
+              <Typography
+                variant="caption"
+                sx={{
+                  color: 'var(--accent)',
+                  fontWeight: 800,
+                  letterSpacing: 1.5,
+                  textShadow: 'none',
+                  background: 'var(--chip-bg)',
+                  border: '1px solid var(--border-strong)',
+                  borderRadius: 5,
+                  px: 1.5,
+                  py: 0.4,
+                }}
+              >
+                RECENT
               </Typography>
               {recent.map((name) => (
                 <Chip
@@ -408,12 +513,13 @@ export default function App() {
                   onDelete={() => removeRecent(name)}
                   sx={{
                     color: 'var(--text)',
-                    background: 'var(--accent-soft)',
-                    border: '1px solid var(--border)',
+                    background: 'var(--chip-bg)',
+                    border: '1px solid var(--border-strong)',
                     borderRadius: 1,
-                    fontSize: '0.72rem',
-                    '&:hover': { borderColor: 'var(--accent)' },
-                    '& .MuiChip-deleteIcon': { color: 'var(--text-muted)' },
+                    fontSize: '0.78rem',
+                    fontWeight: 700,
+                    '&:hover': { background: 'var(--chip-bg)', borderColor: 'var(--accent)', boxShadow: '0 0 10px var(--glow)' },
+                    '& .MuiChip-deleteIcon': { color: 'var(--text)', opacity: 0.7, '&:hover': { opacity: 1 } },
                   }}
                 />
               ))}
@@ -425,6 +531,7 @@ export default function App() {
         {/* 🖼️ 3. "OUR ARCHIVE" DIVIDER BAR                              */}
         {/* ============================================================ */}
         <Box
+          ref={resultsRef}
           sx={{
             position: 'relative',
             zIndex: 1,
@@ -450,7 +557,11 @@ export default function App() {
               color: 'var(--text)',
             }}
           >
-            OUR ARCHIVE / DESTINATIONS
+            {showFavorites
+              ? 'YOUR FAVORITES'
+              : searchTerm
+                ? `DESTINATIONS · ${searchTerm.toUpperCase()}`
+                : 'DESTINATIONS'}
           </Typography>
 
           {/* Filter Categories / Favorites Toggle */}
@@ -467,7 +578,7 @@ export default function App() {
                 pb: 0.5,
               }}
             >
-              ALL ({photos.length})
+              ALL ({matched.length})
             </Typography>
 
             <Typography
@@ -484,21 +595,61 @@ export default function App() {
             >
               FAVORITES ({favorites.length})
             </Typography>
+
+            <Typography
+              onClick={() => setSortAz((v) => !v)}
+              variant="caption"
+              title="Sort by photographer name"
+              sx={{
+                fontWeight: 800,
+                letterSpacing: 2,
+                cursor: 'pointer',
+                color: sortAz ? 'var(--accent)' : 'var(--text-muted)',
+                borderBottom: sortAz ? '2px solid var(--accent)' : 'none',
+                pb: 0.5,
+              }}
+            >
+              SORT A–Z
+            </Typography>
+
+            {showFavorites && favorites.length > 0 && (
+              <Typography
+                onClick={clearFavorites}
+                variant="caption"
+                sx={{ fontWeight: 800, letterSpacing: 2, cursor: 'pointer', color: '#FF4D6D', pb: 0.5 }}
+              >
+                CLEAR ALL
+              </Typography>
+            )}
           </Box>
         </Box>
 
         {/* ============================================================ */}
         {/* 📸 4. FULL-WIDTH MEDIA GALLERY                               */}
         {/* ============================================================ */}
-        <Box sx={{ position: 'relative', zIndex: 1, px: { xs: 3, sm: 6, md: 8, lg: 10 }, pb: 8 }}>
+        <Box
+          sx={{
+            position: 'relative',
+            zIndex: 1,
+            px: { xs: 3, sm: 6, md: 8, lg: 10 },
+            pt: 4,
+            pb: 8,
+          }}
+        >
           <MediaGallery
-            photos={showFavorites ? favorites : photos}
+            photos={displayed}
             loading={showFavorites ? false : loading}
             favorites={favorites}
             onToggleFavorite={toggleFavorite}
             emptyMessage={
               showFavorites
                 ? 'No favorites saved yet. Tap the heart on any photo.'
+                : photos.length > 0 && matched.length === 0
+                ? `No photos are connected to ${searchTerm.split(',')[0]} yet. Try a nearby city or municipality.`
+                : searchTerm && !loading && photos.length === 0
+                ? searchError
+                  ? 'Something went wrong while loading photos. Please check your connection and try again.'
+                  : `No photos found for ${searchTerm.split(',')[0]} yet. Try a nearby city or municipality.`
                 : 'Search any region or city above to populate the archive.'
             }
           />
@@ -521,6 +672,7 @@ export default function App() {
                   color: 'var(--cta-text)',
                   boxShadow: '0 0 20px var(--cta-glow)',
                   '&:hover': { background: 'var(--cta-hover)' },
+                  '&.Mui-disabled': { background: 'var(--accent-soft)', color: 'var(--text-muted)' },
                 }}
               >
                 {loadingMore ? 'LOADING…' : 'LOAD MORE PHOTOS ›'}
@@ -528,6 +680,26 @@ export default function App() {
             </Box>
           )}
         </Box>
+
+        {/* Back to top */}
+        {showTop && (
+          <Fab
+            size="small"
+            aria-label="Back to top"
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            sx={{
+              position: 'fixed',
+              right: 24,
+              bottom: 24,
+              zIndex: 5,
+              background: 'var(--cta)',
+              color: 'var(--cta-text)',
+              '&:hover': { background: 'var(--cta-hover)' },
+            }}
+          >
+            <KeyboardArrowUp />
+          </Fab>
+        )}
       </Box>
     </ThemeProvider>
   );

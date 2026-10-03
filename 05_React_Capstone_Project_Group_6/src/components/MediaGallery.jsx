@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Box, Card, CardMedia, CardContent, CardActionArea, Typography, Link, Skeleton,
-  Dialog, IconButton,
+  Dialog, IconButton, Menu, MenuItem, ListItemText,
 } from '@mui/material';
 import { Close, Download, Favorite, FavoriteBorder } from '@mui/icons-material';
 
@@ -31,16 +31,48 @@ const preloadImage = (url) => {
   img.src = url;
 };
 
-// Saves the full-size photo; if the browser blocks that, opens it in a new tab instead
-const downloadPhoto = async (photo) => {
+// Download size choices (width in pixels; null = untouched original file)
+const DOWNLOAD_SIZES = [
+  { label: 'Small', note: '640 px wide', width: 640 },
+  { label: 'Medium', note: '1280 px wide', width: 1280 },
+  { label: 'Large', note: '1920 px wide', width: 1920 },
+  { label: 'Original', note: 'Full size', width: null },
+];
+
+// Scales an image blob down to `width` (never enlarges) and returns a JPEG blob
+const resizeBlob = (blob, width) =>
+  new Promise((resolve, reject) => {
+    const img = new Image();
+    const src = URL.createObjectURL(blob);
+    img.onload = () => {
+      URL.revokeObjectURL(src);
+      const w = Math.min(width, img.naturalWidth);
+      const h = Math.round(img.naturalHeight * (w / img.naturalWidth));
+      const canvas = document.createElement('canvas');
+      canvas.width = w;
+      canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      canvas.toBlob(
+        (out) => (out ? resolve(out) : reject(new Error('Resize failed'))),
+        'image/jpeg',
+        0.92
+      );
+    };
+    img.onerror = reject;
+    img.src = src;
+  });
+
+// Saves the photo at the chosen size; if the browser blocks it, opens the image in a new tab
+const downloadPhoto = async (photo, size) => {
   const url = photo.fullImageUrl || photo.imageUrl;
   try {
     const res = await fetch(url);
-    const blob = await res.blob();
+    let blob = await res.blob();
+    if (size.width) blob = await resizeBlob(blob, size.width);
     const objectUrl = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = objectUrl;
-    link.download = `lakbay-ph-${photo.id}.jpg`;
+    link.download = `lakbay-ph-${photo.id}-${size.label.toLowerCase()}.jpg`;
     document.body.appendChild(link);
     link.click();
     link.remove();
@@ -48,6 +80,36 @@ const downloadPhoto = async (photo) => {
   } catch {
     window.open(url, '_blank', 'noopener,noreferrer');
   }
+};
+
+const formatBytes = (bytes) =>
+  bytes >= 1024 * 1024 ? `${(bytes / 1024 / 1024).toFixed(1)} MB` : `${Math.max(1, Math.round(bytes / 1024))} KB`;
+
+// ---- Place descriptions (from Wikipedia) ----
+const placeCache = new Map();
+const fetchPlaceInfo = async (place) => {
+  if (placeCache.has(place)) return placeCache.get(place);
+  const [city, region] = place.split(',').map((s) => s.trim());
+  let info = null;
+  try {
+    const q = encodeURIComponent(`${city} ${region || ''} Philippines`);
+    const found = await fetch(
+      `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${q}&srlimit=1&format=json&origin=*`
+    ).then((r) => r.json());
+    const title = found?.query?.search?.[0]?.title;
+    if (title) {
+      const data = await fetch(
+        `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`
+      ).then((r) => r.json());
+      if (data.extract && data.type !== 'disambiguation') {
+        info = { title: data.title, text: data.extract, url: data.content_urls?.desktop?.page };
+      }
+    }
+  } catch {
+    /* offline or blocked: fall through to "no description" */
+  }
+  if (info) placeCache.set(place, info);
+  return info;
 };
 
 // Round dark button that sits on top of a photo
@@ -65,6 +127,50 @@ export default function MediaGallery({
 }) {
   // Must stay above the early returns (hooks can't be called conditionally)
   const [selectedPhoto, setSelectedPhoto] = useState(null);
+  const [sizeAnchor, setSizeAnchor] = useState(null);
+  const [dims, setDims] = useState(null); // real pixel size of the open photo
+  const [origBytes, setOrigBytes] = useState(null); // real file size, when the host reports it
+  const [placeInfo, setPlaceInfo] = useState(null); // undefined = loading, null = none
+
+  // New photo opened: reset sizes and load the place description
+  useEffect(() => {
+    setDims(null);
+    setOrigBytes(null);
+    if (!selectedPhoto?.place) {
+      setPlaceInfo(null);
+      return undefined;
+    }
+    setPlaceInfo(undefined);
+    let cancelled = false;
+    fetchPlaceInfo(selectedPhoto.place).then((info) => {
+      if (!cancelled) setPlaceInfo(info);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedPhoto]);
+
+  // Size menu opened: ask the host for the real file size (header only, no download)
+  useEffect(() => {
+    if (!sizeAnchor || !selectedPhoto) return;
+    const url = selectedPhoto.fullImageUrl || selectedPhoto.imageUrl;
+    fetch(url, { method: 'HEAD' })
+      .then((r) => {
+        const n = Number(r.headers.get('content-length'));
+        if (n > 0) setOrigBytes(n);
+      })
+      .catch(() => {});
+  }, [sizeAnchor, selectedPhoto]);
+
+  // What each size will be, shown BEFORE anything is downloaded
+  const sizeInfo = (size) => {
+    if (!dims) return size.note;
+    const w = size.width ? Math.min(size.width, dims.w) : dims.w;
+    const h = Math.round(dims.h * (w / dims.w));
+    const exact = !size.width && origBytes;
+    const bytes = exact ? origBytes : w * h * 0.3;
+    return `${w} × ${h} px · ${exact ? '' : '~'}${formatBytes(bytes)}`;
+  };
 
   const isFavorite = (photo) => favorites.some((f) => f.id === photo.id);
 
@@ -188,7 +294,7 @@ export default function MediaGallery({
             background: 'var(--card-bg)',
             border: '1.5px solid var(--border)',
             borderRadius: 3,
-            overflow: 'hidden',
+            overflowY: 'auto',
             m: 2,
           },
         }}
@@ -201,21 +307,63 @@ export default function MediaGallery({
           <Close />
         </IconButton>
 
+        {/* Download: opens a menu to pick the size */}
         {selectedPhoto && (
-          <IconButton
-            onClick={() => downloadPhoto(selectedPhoto)}
-            aria-label="Download photo"
-            sx={{
-              ...overlayButtonSx,
-              position: 'absolute',
-              top: 8,
-              right: onToggleFavorite ? 104 : 56,
-              zIndex: 2,
-              color: '#fff',
-            }}
-          >
-            <Download />
-          </IconButton>
+          <>
+            <IconButton
+              onClick={(e) => setSizeAnchor(e.currentTarget)}
+              aria-label="Download photo"
+              aria-haspopup="true"
+              sx={{
+                ...overlayButtonSx,
+                position: 'absolute',
+                top: 8,
+                right: onToggleFavorite ? 104 : 56,
+                zIndex: 2,
+                color: '#fff',
+              }}
+            >
+              <Download />
+            </IconButton>
+
+            <Menu
+              anchorEl={sizeAnchor}
+              open={Boolean(sizeAnchor)}
+              onClose={() => setSizeAnchor(null)}
+              slotProps={{
+                paper: {
+                  sx: {
+                    background: 'var(--card-bg)',
+                    border: '1px solid var(--border)',
+                    color: 'var(--text)',
+                  },
+                },
+              }}
+            >
+              <Typography
+                variant="caption"
+                sx={{ display: 'block', px: 2, py: 0.5, fontWeight: 800, letterSpacing: 1.5, color: 'var(--text-muted)' }}
+              >
+                CHOOSE SIZE · NOTHING DOWNLOADS UNTIL YOU PICK
+              </Typography>
+              {DOWNLOAD_SIZES.filter((s) => !s.width || !dims || s.width < dims.w).map((size) => (
+                <MenuItem
+                  key={size.label}
+                  onClick={() => {
+                    setSizeAnchor(null);
+                    downloadPhoto(selectedPhoto, size);
+                  }}
+                >
+                  <ListItemText
+                    primary={size.label}
+                    secondary={sizeInfo(size)}
+                    primaryTypographyProps={{ fontWeight: 700, sx: { color: 'var(--text)' } }}
+                    secondaryTypographyProps={{ sx: { color: 'var(--text-muted)' } }}
+                  />
+                </MenuItem>
+              ))}
+            </Menu>
+          </>
         )}
 
         {selectedPhoto && onToggleFavorite && (
@@ -241,10 +389,11 @@ export default function MediaGallery({
               component="img"
               src={selectedPhoto.fullImageUrl || selectedPhoto.imageUrl}
               alt={selectedPhoto.altText}
+              onLoad={(e) => setDims({ w: e.currentTarget.naturalWidth, h: e.currentTarget.naturalHeight })}
               sx={{
                 display: 'block',
                 maxWidth: '100%',
-                maxHeight: '80vh', // keeps tall photos from overflowing the screen
+                maxHeight: '60vh', // leaves room for the description below
                 objectFit: 'contain',
                 mx: 'auto',
               }}
@@ -263,6 +412,45 @@ export default function MediaGallery({
                 {selectedPhoto.photographer}
               </Link>
             </Box>
+
+            {/* About this place */}
+            {selectedPhoto.place && (
+              <Box sx={{ px: { xs: 2.5, sm: 4 }, pb: 3, maxWidth: 760, mx: 'auto', textAlign: 'left' }}>
+                <Typography
+                  sx={{ fontWeight: 800, letterSpacing: 2, fontSize: '0.75rem', color: 'var(--accent)', mb: 1 }}
+                >
+                  ABOUT {selectedPhoto.place.split(',')[0].toUpperCase()}
+                </Typography>
+                {placeInfo === undefined ? (
+                  <>
+                    <Skeleton variant="text" sx={{ bgcolor: 'var(--accent-soft)' }} />
+                    <Skeleton variant="text" sx={{ bgcolor: 'var(--accent-soft)' }} />
+                    <Skeleton variant="text" width="60%" sx={{ bgcolor: 'var(--accent-soft)' }} />
+                  </>
+                ) : placeInfo ? (
+                  <>
+                    <Typography sx={{ color: 'var(--text)', fontSize: '1.02rem', lineHeight: 1.8 }}>
+                      {placeInfo.text}
+                    </Typography>
+                    {placeInfo.url && (
+                      <Link
+                        href={placeInfo.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        underline="hover"
+                        sx={{ display: 'inline-block', mt: 1.5, color: 'var(--accent-strong)', fontWeight: 'bold' }}
+                      >
+                        Read more on Wikipedia ›
+                      </Link>
+                    )}
+                  </>
+                ) : (
+                  <Typography sx={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>
+                    No description available for this place yet.
+                  </Typography>
+                )}
+              </Box>
+            )}
           </>
         )}
       </Dialog>
