@@ -1,9 +1,9 @@
-import React, { memo, useMemo, useState } from 'react';
+import React, { memo, useEffect, useMemo, useState } from 'react';
 import {
   Container, CssBaseline, ThemeProvider, createTheme, GlobalStyles,
-  Typography, Box, IconButton, Paper,
+  Typography, Box, IconButton, Paper, Button,
 } from '@mui/material';
-import { LightMode, DarkMode } from '@mui/icons-material';
+import { LightMode, DarkMode, Favorite, FavoriteBorder } from '@mui/icons-material';
 import LocationForm from './components/LocationForm';
 import MediaGallery from './components/MediaGallery';
 import { searchPhotosByLocation } from './services/geoPhotoService';
@@ -325,6 +325,17 @@ function ThemeBackdrop({ isDarkMode }) {
 
 const MemoBackdrop = memo(ThemeBackdrop);
 
+// ❤️ Favorites are saved in the browser so they survive a refresh
+const FAV_KEY = 'lakbay-ph-favorites';
+const loadFavorites = () => {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(FAV_KEY) || '[]');
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+};
+
 // 🌴 Philippine tourist palette: lagoon turquoise, deep sea navy, sunset orange, sand
 const palettes = {
   dark: {
@@ -371,6 +382,24 @@ export default function App() {
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [photos, setPhotos] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [favorites, setFavorites] = useState(loadFavorites);
+  const [showFavorites, setShowFavorites] = useState(false);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(FAV_KEY, JSON.stringify(favorites));
+    } catch {
+      /* storage unavailable (private mode / full): favorites just won't persist */
+    }
+  }, [favorites]);
+
+  const toggleFavorite = (photo) => {
+    setFavorites((prev) =>
+      prev.some((f) => f.id === photo.id)
+        ? prev.filter((f) => f.id !== photo.id)
+        : [photo, ...prev]
+    );
+  };
 
   const mode = isDarkMode ? 'dark' : 'light';
   const colors = palettes[mode];
@@ -396,6 +425,7 @@ export default function App() {
   );
 
   const handleSearchSubmit = async (locationName) => {
+    setShowFavorites(false); // a new search always goes back to results
     setLoading(true);
     try {
       const results = await searchPhotosByLocation(locationName);
@@ -487,7 +517,41 @@ export default function App() {
             <LocationForm onSearch={handleSearchSubmit} />
           </Paper>
 
-          <MediaGallery photos={photos} loading={loading} />
+          {/* Switch between search results and saved favorites */}
+          <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
+            <Button
+              onClick={() => setShowFavorites((v) => !v)}
+              startIcon={showFavorites ? <Favorite /> : <FavoriteBorder />}
+              variant={showFavorites ? 'contained' : 'outlined'}
+              sx={{
+                textTransform: 'none',
+                fontWeight: 700,
+                borderRadius: 2,
+                px: 3,
+                color: showFavorites ? 'var(--cta-text)' : 'var(--accent-strong)',
+                borderColor: 'var(--border-strong)',
+                background: showFavorites ? 'var(--cta)' : 'var(--panel-bg)',
+                '&:hover': {
+                  background: showFavorites ? 'var(--cta-hover)' : 'var(--accent-soft)',
+                  borderColor: 'var(--accent)',
+                },
+              }}
+            >
+              {showFavorites ? 'Back to search results' : `My Favorites (${favorites.length})`}
+            </Button>
+          </Box>
+
+          <MediaGallery
+            photos={showFavorites ? favorites : photos}
+            loading={showFavorites ? false : loading}
+            favorites={favorites}
+            onToggleFavorite={toggleFavorite}
+            emptyMessage={
+              showFavorites
+                ? 'No favorites yet. Tap the heart on a photo to save it here.'
+                : 'No tourist spots found for this area yet.'
+            }
+          />
         </Container>
       </Box>
     </ThemeProvider>

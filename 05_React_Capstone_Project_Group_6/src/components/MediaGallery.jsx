@@ -3,12 +3,13 @@ import {
   Box, Card, CardMedia, CardContent, CardActionArea, Typography, Link, Skeleton,
   Dialog, IconButton,
 } from '@mui/material';
-import { Close } from '@mui/icons-material';
+import { Close, Favorite, FavoriteBorder } from '@mui/icons-material';
 
 const CARD_WIDTH = { xs: '100%', sm: 340 };
 const IMAGE_HEIGHT = 240;
 
 const cardSx = {
+  position: 'relative',
   width: CARD_WIDTH,
   flex: 'none',
   display: 'flex',
@@ -28,11 +29,25 @@ const rowSx = {
 const preloadImage = (url) => {
   const img = new Image();
   img.src = url;
-}
+};
 
-export default function MediaGallery({ photos, loading }) {
+// Round dark button that sits on top of a photo
+const overlayButtonSx = {
+  background: 'rgba(0,0,0,0.5)',
+  '&:hover': { background: 'rgba(0,0,0,0.75)' },
+};
+
+export default function MediaGallery({
+  photos,
+  loading,
+  favorites = [],
+  onToggleFavorite,
+  emptyMessage = 'No tourist spots found for this area yet.',
+}) {
   // Must stay above the early returns (hooks can't be called conditionally)
   const [selectedPhoto, setSelectedPhoto] = useState(null);
+
+  const isFavorite = (photo) => favorites.some((f) => f.id === photo.id);
 
   if (loading) {
     return (
@@ -54,7 +69,7 @@ export default function MediaGallery({ photos, loading }) {
     return (
       <Box sx={{ textAlign: 'center', py: 6 }}>
         <Typography variant="h6" sx={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>
-          No tourist spots found for this area yet.
+          {emptyMessage}
         </Typography>
       </Box>
     );
@@ -63,25 +78,45 @@ export default function MediaGallery({ photos, loading }) {
   return (
     <>
       <Box sx={rowSx}>
-        {photos.map((photo, index) => (
-          <Card
-            key={photo.id || index}
-            elevation={6}
-            sx={{
-              ...cardSx,
-              border: '1.5px solid var(--border)',
-              transition: 'all 0.35s ease',
-              '&:hover': {
-                transform: 'translateY(-8px)',
-                borderColor: 'var(--accent)',
-                boxShadow: '0 0 25px var(--glow)',
-              },
-            }}
-          >
-            {/* Only the image is clickable; the photographer link below stays separate */}
-            <CardActionArea 
-              onClick={() => setSelectedPhoto(photo)}
-              onMouseEnter={() => preloadImage(photo.fullImageUrl || photo.imageUrl)}
+        {photos.map((photo, index) => {
+          const fav = isFavorite(photo);
+          return (
+            <Card
+              key={photo.id || index}
+              elevation={6}
+              sx={{
+                ...cardSx,
+                border: '1.5px solid var(--border)',
+                transition: 'all 0.35s ease',
+                '&:hover': {
+                  transform: 'translateY(-8px)',
+                  borderColor: 'var(--accent)',
+                  boxShadow: '0 0 25px var(--glow)',
+                },
+              }}
+            >
+              {/* Heart: saves / removes this photo from Favorites */}
+              {onToggleFavorite && (
+                <IconButton
+                  onClick={() => onToggleFavorite(photo)}
+                  aria-label={fav ? 'Remove from favorites' : 'Add to favorites'}
+                  sx={{
+                    ...overlayButtonSx,
+                    position: 'absolute',
+                    top: 8,
+                    right: 8,
+                    zIndex: 2,
+                    color: fav ? '#FF4D6D' : '#fff',
+                  }}
+                >
+                  {fav ? <Favorite /> : <FavoriteBorder />}
+                </IconButton>
+              )}
+
+              {/* Only the image is clickable; the photographer link below stays separate */}
+              <CardActionArea
+                onClick={() => setSelectedPhoto(photo)}
+                onMouseEnter={() => preloadImage(photo.fullImageUrl || photo.imageUrl)}
               >
                 <CardMedia
                   component="img"
@@ -94,33 +129,34 @@ export default function MediaGallery({ photos, loading }) {
                     objectPosition: 'center',
                   }}
                 />
-            </CardActionArea>
+              </CardActionArea>
 
-            <CardContent sx={{ flexGrow: 1, p: 2.5, textAlign: 'center' }}>
-              <Typography
-                variant="caption"
-                display="block"
-                sx={{ color: 'var(--text-muted)', mb: 0.5, fontWeight: 'bold' }}
-              >
-                📸 Captured by:
-              </Typography>
-              <Link
-                href={photo.photographerUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                underline="hover"
-                sx={{
-                  color: 'var(--accent-strong)',
-                  fontWeight: 'bold',
-                  fontSize: '0.95rem',
-                  '&:hover': { color: '#FF7A45' },
-                }}
-              >
-                {photo.photographer}
-              </Link>
-            </CardContent>
-          </Card>
-        ))}
+              <CardContent sx={{ flexGrow: 1, p: 2.5, textAlign: 'center' }}>
+                <Typography
+                  variant="caption"
+                  display="block"
+                  sx={{ color: 'var(--text-muted)', mb: 0.5, fontWeight: 'bold' }}
+                >
+                  📸 Captured by:
+                </Typography>
+                <Link
+                  href={photo.photographerUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  underline="hover"
+                  sx={{
+                    color: 'var(--accent-strong)',
+                    fontWeight: 'bold',
+                    fontSize: '0.95rem',
+                    '&:hover': { color: '#FF7A45' },
+                  }}
+                >
+                  {photo.photographer}
+                </Link>
+              </CardContent>
+            </Card>
+          );
+        })}
       </Box>
 
       {/* Lightbox: open whenever a photo is selected */}
@@ -141,17 +177,27 @@ export default function MediaGallery({ photos, loading }) {
         <IconButton
           onClick={() => setSelectedPhoto(null)}
           aria-label="Close"
-          sx={{
-            position: 'absolute',
-            top: 8,
-            right: 8,
-            color: '#fff',
-            background: 'rgba(0,0,0,0.5)',
-            '&:hover': { background: 'rgba(0,0,0,0.75)' },
-          }}
+          sx={{ ...overlayButtonSx, position: 'absolute', top: 8, right: 8, zIndex: 2, color: '#fff' }}
         >
           <Close />
         </IconButton>
+
+        {selectedPhoto && onToggleFavorite && (
+          <IconButton
+            onClick={() => onToggleFavorite(selectedPhoto)}
+            aria-label={isFavorite(selectedPhoto) ? 'Remove from favorites' : 'Add to favorites'}
+            sx={{
+              ...overlayButtonSx,
+              position: 'absolute',
+              top: 8,
+              right: 56,
+              zIndex: 2,
+              color: isFavorite(selectedPhoto) ? '#FF4D6D' : '#fff',
+            }}
+          >
+            {isFavorite(selectedPhoto) ? <Favorite /> : <FavoriteBorder />}
+          </IconButton>
+        )}
 
         {selectedPhoto && (
           <>
@@ -162,7 +208,7 @@ export default function MediaGallery({ photos, loading }) {
               sx={{
                 display: 'block',
                 maxWidth: '100%',
-                maxHeight: '80vh',   // keeps tall photos from overflowing the screen
+                maxHeight: '80vh', // keeps tall photos from overflowing the screen
                 objectFit: 'contain',
                 mx: 'auto',
               }}
