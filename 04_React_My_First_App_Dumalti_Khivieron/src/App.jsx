@@ -9,23 +9,32 @@ import GeneralSettings from './components/GeneralSettings';
 // It should accept a 'mode' string parameter ('light' or 'dark') and generate an MUI theme object configuration mapping that mode.
 const theme = (mode = 'light') => createTheme({
   // [Your code here]
+  palette:{
+    mode : mode,
+  }
 });
 
 function App() {
   // TODO 14 [State Management]: Initialize a boolean React state hook variable named 'isDarkMode' defaulting to false.
   // [Your code here]
+  const [isDarkMode, setIsDarkMode] = useState(false);
 
   // TODO 15 [Data Actions Mapping]: Populate the 'actions' configuration array below.
   // Ensure the first action toggle object displays a <LightMode /> icon if 'isDarkMode' is true, or a <DarkMode /> icon if false.
   // The 'onClick' function must invert the current boolean state value of 'isDarkMode' upon execution.
+
+
   const actions = [
     {
-      name: 'Light Mode' , // isDarkMode ? 'Light Mode' : 'Dark Mode',
+      icon: isDarkMode ? <LightMode /> : <DarkMode />,
+      name: isDarkMode ? 'Light Mode' : 'Dark Mode',
+       // isDarkMode ? 'Light Mode' : 'Dark Mode',
       // [Your code here: Add dynamic icon and state-toggling onClick function]
+      onClick: () => setIsDarkMode((prev) => !prev),
     },
-    { icon: <Palette />, name: 'Theme' },
-    { icon: <Print />, name: 'Print' },
-    { icon: <Share />, name: 'Share' },
+    { icon: <Palette />, name: 'Theme'},
+    { icon: <Print />, name: 'Print'},
+    { icon: <Share />, name: 'Share'},
   ];
 
   return (
@@ -33,18 +42,24 @@ function App() {
     // Configure the layout context matching: mode should resolve to 'dark' if 'isDarkMode' is true, otherwise 'light'.
     <>
       {/* [Your ThemeProvider wrapper structure here] */}
-      <CssBaseline />
-      <Container sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center',
-        alignItems: 'center',
-        minHeight: '95vh',
-        width: '100vw',
-      }}>
-        <QuoteOfTheDay />
-        <GeneralSettings actions={actions} />
-      </Container>
+      <ThemeProvider theme = {theme(isDarkMode ? 'dark' : 'light')}>
+
+        <CssBaseline />
+        <Container sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignItems: 'center',
+          minHeight: '95vh',
+          width: '100vw',
+        }}>
+          <QuoteOfTheDay />
+          <GeneralSettings actions={actions} />
+        </Container>
+        
+      </ThemeProvider>
+
+
     </>
   )
 }
