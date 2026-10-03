@@ -25,3 +25,18 @@ To achieve full credit, your application must successfully execute the following
 | **4. Asynchronous Service Operations** | **10 pts** | Correct runtime string interpolation, execution of asynchronous GET operations via Axios, and resilient catch fallback block triggers. |
 | **5. Core Layout & Theme Toggling Logic** | **08 pts** | Integration of a theme state listener configuring light/dark style contexts dynamically across child modules. |
 | **Total Marks** | **50 pts** | **A fully operational application meeting all architectural and behavioral evaluation metrics.** |
+
+## Run the app
+
+Install the dependencies and start the Vite development server from this directory:
+
+```sh
+npm install
+npm run dev
+```
+
+The quote card loads a random quote and categories from the Quotable API. If the
+quote endpoint is unavailable, the app displays an offline quote; if the
+category endpoint is unavailable, the category filter remains available as
+"Any category." The settings menu provides dark mode, accent color, print, and
+share actions.
