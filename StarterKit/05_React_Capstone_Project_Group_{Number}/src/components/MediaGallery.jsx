@@ -2,8 +2,6 @@ import React from 'react';
 import { Box, Grid, Card, CardMedia, CardContent, Typography, Link, Skeleton } from '@mui/material';
 
 export default function MediaGallery({ photos, loading }) {
-  // TODO 3.1 [Loading Skeletal Feedbacks]: If 'loading' prop parameters evaluate true, return a visual helper feedback container.
-  // Pro Tip: Loop a standard array wrapper or mock layout blocks to show a clean visual waiting feedback (e.g. Loading indicator or Skeletons).
  if (loading) {
   return (
     <Grid container spacing={3}>
