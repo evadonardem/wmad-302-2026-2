@@ -12,7 +12,8 @@ export default function App() {
   // - 'photos': Tracks array results fetched from the Pexels service handler (default: empty array)
   // - 'loading': Toggles boolean state workflows during operations (default: false)
   // [Your code here]
-
+  const [photos, setPhotos] = useState([]);
+  const [loading, setLoading] = useState(false);
   // Dynamic Theme Creator configuration
   const theme = createTheme({
     palette: {
@@ -27,6 +28,14 @@ export default function App() {
     // c. Capture resulting photo dataset arrays inside the local state 'photos'.
     // d. Toggle the operation state status trackers 'loading' back to false inside an executive safety wrapper execution tier.
     // [Your code here]
+    setLoading(true);
+      try {
+        const results = await searchPhotosByLocation(locationName);
+        setPhotos(results);
+      } finally {
+        setLoading(false);
+      }
+
   };
 
   return (
