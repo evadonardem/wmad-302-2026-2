@@ -239,9 +239,6 @@ export default function LocationForm({ onSearch }) {
         </Button>
       </Stack>
 
-      <Box sx={{ mt: 1.5, color: 'text.secondary', fontSize: '0.8rem' }}>
-        Choose a region, province, and city to begin.
-      </Box>
     </Box>
   );
 }
