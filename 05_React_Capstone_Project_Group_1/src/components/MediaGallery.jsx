@@ -1,21 +1,31 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Box, Grid, Card, CardMedia, CardContent, Typography, Link,
-  Skeleton, Dialog, DialogContent, IconButton
+  Skeleton, Dialog, DialogContent, IconButton, Pagination
 } from '@mui/material';
-import { Close } from '@mui/icons-material';
+import { Close, Favorite, FavoriteBorder } from '@mui/icons-material'; // heart icons
 import { getPlaceDescription } from '../services/geoPhotoService';
+import PhotoActions from './PhotoActions'; // Download + Share buttons
 
-export default function MediaGallery({ photos, loading, locationName }) {
+const PAGE_SIZE = 50; // photos per page
+
+export default function MediaGallery({ photos, loading, locationName, favoritePhotos = [], onToggleFavorite }) {
   const [selectedPhoto, setSelectedPhoto] = useState(null);
   const [description, setDescription] = useState(undefined); // undefined = loading, null = not found
+  const [page, setPage] = useState(1); // current page of results
+  const topRef = useRef(null); // used to scroll back to the top of the gallery when the page changes
 
-  // Fetch a short description of the searched place (once per search)
+  // A new place needs a new description
   useEffect(() => {
-    let cancelled = false;
     setDescription(undefined);
-    if (!locationName) return;
+  }, [locationName]);
 
+  // Fetch the short description of the place only when a photo is opened
+  // (it is cached, so opening more photos of the same place is instant)
+  useEffect(() => {
+    if (!selectedPhoto || !locationName || description !== undefined) return;
+
+    let cancelled = false;
     getPlaceDescription(locationName).then((result) => {
       if (!cancelled) setDescription(result);
     });
@@ -23,6 +33,11 @@ export default function MediaGallery({ photos, loading, locationName }) {
     return () => {
       cancelled = true;
     };
+  }, [selectedPhoto, locationName, description]);
+
+  // Go back to page 1 for a new place (more photos arriving for the same place keep the current page)
+  useEffect(() => {
+    setPage(1);
   }, [locationName]);
 
   // TODO 3.1 [Loading Skeletal Feedbacks]: If 'loading' prop parameters evaluate true, return a visual helper feedback container.
@@ -31,7 +46,7 @@ export default function MediaGallery({ photos, loading, locationName }) {
     return (
       <Grid container spacing={3}>
         {Array.from(new Array(6)).map((_, index) => (
-          <Grid item xs={12} sm={6} md={4} key={index}>
+          <Grid size={{ xs: 12, sm: 6, md: 4 }} key={index}>
             <Card elevation={3} sx={{ borderRadius: 2 }}>
               <Skeleton variant="rectangular" height={220} />
               <CardContent>
@@ -59,49 +74,104 @@ export default function MediaGallery({ photos, loading, locationName }) {
     );
   }
 
+  // Pagination: only the photos of the current page are shown
+  const pageCount = Math.ceil(photos.length / PAGE_SIZE);
+  const currentPage = Math.min(page, pageCount);
+  const startIndex = (currentPage - 1) * PAGE_SIZE;
+  const pagePhotos = photos.slice(startIndex, startIndex + PAGE_SIZE);
+
+  const handlePageChange = (_, value) => {
+    setPage(value);
+    topRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
   return (
-    <Box>
+    <Box ref={topRef} sx={{ scrollMarginTop: 16 }}>
       {locationName && (
         <Typography className="location-title" variant="h5">
           Tourist spots in {locationName}
         </Typography>
       )}
-      <Grid container spacing={3}>
-        {photos.map((photo) => (
-          <Grid item xs={12} sm={6} md={4} key={photo.id}>
-            <Card
-              className="photo-card"
-              elevation={4}
-              onClick={() => setSelectedPhoto(photo)}
-              sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}
-            >
-              <CardMedia
-                component="img"
-                height="220"
-                image={photo.imageUrl}
-                alt={photo.altText}
-                sx={{ objectFit: 'cover' }}
-              />
 
-              <CardContent sx={{ flexGrow: 1, p: 2 }}>
-                <Typography variant="caption" display="block" color="text.secondary">
-                  📸 Captured by:
-                </Typography>
-                <Link
-                  href={photo.photographerUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  underline="hover"
-                  variant="body2"
-                  onClick={(e) => e.stopPropagation()}
+      {/* Which photos are being shown, e.g. "Showing 1-50 of 123 photos" */}
+      <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', mb: 3, mt: -2 }}>
+        Showing {startIndex + 1}-{startIndex + pagePhotos.length} of {photos.length} photos
+      </Typography>
+
+      <Grid container spacing={3}>
+        {pagePhotos.map((photo) => {
+          const isFavorite = favoritePhotos.some((p) => p.id === photo.id);
+          return (
+            <Grid size={{ xs: 12, sm: 6, md: 4 }} key={photo.id}>
+              <Card
+                className="photo-card"
+                elevation={4}
+                onClick={() => setSelectedPhoto(photo)}
+                sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}
+              >
+                {/* Heart button (stopPropagation so it doesn't open the dialog) */}
+                <IconButton
+                  className="favorite-btn"
+                  aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onToggleFavorite?.(photo, locationName);
+                  }}
                 >
-                  {photo.photographer}
-                </Link>
-              </CardContent>
-            </Card>
-          </Grid>
-        ))}
+                  {isFavorite ? <Favorite sx={{ color: '#ce1126' }} /> : <FavoriteBorder />}
+                </IconButton>
+
+                {/* Download + Share icon buttons on the top-right of the card */}
+                <Box sx={{ position: 'absolute', top: 10, right: 10, zIndex: 2 }}>
+                  <PhotoActions compact photo={photo} title={locationName} />
+                </Box>
+
+                {/* Small thumbnail, loaded only when the card is near the screen */}
+                <CardMedia
+                  component="img"
+                  height="220"
+                  image={photo.thumbUrl || photo.imageUrl}
+                  alt={photo.altText}
+                  loading="lazy"
+                  decoding="async"
+                  sx={{ objectFit: 'cover' }}
+                />
+
+                <CardContent sx={{ flexGrow: 1, p: 2 }}>
+                  <Typography variant="caption" display="block" color="text.secondary">
+                    📸 Captured by:
+                  </Typography>
+                  <Link
+                    href={photo.photographerUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    underline="hover"
+                    variant="body2"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {photo.photographer}
+                  </Link>
+                </CardContent>
+              </Card>
+            </Grid>
+          );
+        })}
       </Grid>
+
+      {/* Page buttons (only shown when there is more than one page) */}
+      {pageCount > 1 && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+          <Pagination
+            count={pageCount}
+            page={currentPage}
+            onChange={handlePageChange}
+            color="primary"
+            size="large"
+            showFirstButton
+            showLastButton
+          />
+        </Box>
+      )}
 
       {/* Enlarged Photo Modal */}
       <Dialog
@@ -121,8 +191,9 @@ export default function MediaGallery({ photos, loading, locationName }) {
           {selectedPhoto && (
             <>
               <img
-                src={selectedPhoto.imageUrl.replace('large', 'large2x') || selectedPhoto.imageUrl}
+                src={selectedPhoto.imageUrl}
                 alt={selectedPhoto.altText}
+                decoding="async"
                 style={{ width: '100%', borderRadius: 8, display: 'block' }}
               />
 
@@ -151,14 +222,14 @@ export default function MediaGallery({ photos, loading, locationName }) {
                       {description.text}
                     </Typography>
                     {description.url && (
-                    <Link
-                      className="photo-info-source"
-                      href={description.url}
-                      target="_blank"
-                    rel="noopener noreferrer"
-                    >
-                      Read more on Wikipedia →
-                    </Link>
+                      <Link
+                        className="photo-info-source"
+                        href={description.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Read more on Wikipedia →
+                      </Link>
                     )}
                   </>
                 )}
@@ -175,6 +246,9 @@ export default function MediaGallery({ photos, loading, locationName }) {
                     {selectedPhoto.photographer}
                   </Link>
                 </Typography>
+
+                {/* Download (with size options) + Share buttons */}
+                <PhotoActions photo={selectedPhoto} title={locationName} />
               </Box>
             </>
           )}

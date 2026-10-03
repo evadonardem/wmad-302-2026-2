@@ -223,7 +223,7 @@ body.dark .app-title {
 }
 
 .flag-logo {
-  height: 48px;
+  height: 88px;
   width: auto;
   object-fit: contain;
   flex-shrink: 0;
@@ -360,9 +360,9 @@ body.dark .header-paper .MuiButton-contained.Mui-disabled {
 
 /* ========== Favorites + featured search ========== */
 
-/* Search field above the featured cards */
+/* Search field above the featured cards (wider to fit the placeholder text) */
 .featured-search {
-  max-width: 420px;
+  max-width: 560px;
   margin: 0 auto 28px;
 }
 .featured-search .MuiOutlinedInput-root {
@@ -385,4 +385,51 @@ body.dark .header-paper .MuiButton-contained.Mui-disabled {
 }
 .favorite-btn:hover {
   transform: scale(1.15);
+}
+/* ========== Performance ========== */
+
+/* The page background now lives on a fixed layer instead of "background-attachment: fixed",
+   which made scrolling lag because the browser repainted it on every scroll */
+body {
+  background-image: none !important;
+  background-attachment: scroll !important;
+}
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: var(--page-bg);
+}
+
+/* Floating circles: no blur filter (costly on big animated shapes), moved by the GPU instead */
+.decor-circle {
+  filter: none;
+  will-change: transform;
+}
+
+/* Soft placeholder color while a photo is still loading */
+.photo-card .MuiCardMedia-root {
+  background-color: rgba(128, 128, 128, 0.15);
+}
+
+/* ========== Surprise me button ========== */
+.surprise-btn {
+  border-radius: 14px !important;
+  font-weight: 700 !important;
+  background-color: var(--accent) !important;
+  background-image: none !important;
+  color: #1a1a1a !important;
+  box-shadow: 0 6px 16px rgba(252, 209, 22, 0.35) !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.surprise-btn:hover {
+  background-color: #e6bc00 !important;
+  transform: translateY(-2px);
+}
+.surprise-btn.Mui-disabled {
+  background-color: rgba(128, 128, 128, 0.25) !important;
+  color: rgba(128, 128, 128, 0.8) !important;
+  box-shadow: none !important;
 }

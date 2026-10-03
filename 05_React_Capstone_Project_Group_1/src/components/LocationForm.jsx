@@ -53,7 +53,7 @@ export default function LocationForm({ onSearch, loading }) {
 
   return (
     <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%', mb: 4 }}>
-      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} justifyContent="center">
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ justifyContent: 'center' }}>
         
         <FormControl fullWidth size="small">
           <InputLabel id="region-label">Select Region</InputLabel>
