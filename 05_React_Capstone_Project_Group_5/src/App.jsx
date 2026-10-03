@@ -369,6 +369,8 @@ export default function App() {
                     {featuredItems.filter((destination) => destination.islandGroup === group.name).map((destination) => (
                       <Grid key={destination.name} size={{ xs: 12, sm: 6, md: 3 }}>
                         <Card
+                          key={`${destination.name}-${destination.photo?.imageUrl ?? 'no-image'}`}
+                          className="featured-card"
                           sx={{
                             height: { xs: 220, md: 240 },
                             position: 'relative',
@@ -388,6 +390,7 @@ export default function App() {
                           {destination.photo ? (
                             <CardMedia
                               component="img"
+                              className="featured-card__media"
                               image={destination.photo.imageUrl}
                               alt={destination.photo.altText}
                               sx={{ height: '100%', objectFit: 'cover' }}
@@ -419,6 +422,7 @@ export default function App() {
                             </Box>
                           )}
                           <Box
+                            className="featured-card__details"
                             sx={{
                               position: 'absolute',
                               inset: 0,

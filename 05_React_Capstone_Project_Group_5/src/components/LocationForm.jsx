@@ -1,12 +1,19 @@
 import { useEffect, useState } from 'react';
 import { Box, FormControl, InputLabel, Select, MenuItem, Button, Stack } from '@mui/material';
 import { ClearRounded, Search } from '@mui/icons-material';
-import { getRegions, getCitiesMunicipalitiesByRegion } from '../services/geoPhotoService';
+import {
+  getRegions,
+  getProvincesByRegion,
+  getCitiesMunicipalitiesByProvince,
+  getCitiesMunicipalitiesByRegion,
+} from '../services/geoPhotoService';
 
 export default function LocationForm({ onSearch }) {
   const [regions, setRegions] = useState([]);
+  const [provinces, setProvinces] = useState([]);
   const [cities, setCities] = useState([]);
   const [selectedRegion, setSelectedRegion] = useState('');
+  const [selectedProvince, setSelectedProvince] = useState('');
   const [selectedCityName, setSelectedCityName] = useState('');
 
   useEffect(() => {
@@ -28,13 +35,51 @@ export default function LocationForm({ onSearch }) {
     let isCurrent = true;
 
     if (!selectedRegion) {
+      setProvinces([]);
+      setSelectedProvince('');
+      setCities([]);
+      setSelectedCityName('');
+      return undefined;
+    }
+
+    const loadProvinces = async () => {
+      const provinceResults = await getProvincesByRegion(selectedRegion);
+
+      if (!isCurrent) return;
+
+      setProvinces(provinceResults);
+      setSelectedProvince('');
+      setSelectedCityName('');
+
+      if (provinceResults.length === 0) {
+        const regionCities = await getCitiesMunicipalitiesByRegion(selectedRegion);
+        if (isCurrent) {
+          setCities(regionCities);
+        }
+        return;
+      }
+
+      setCities([]);
+    };
+
+    void loadProvinces();
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [selectedRegion]);
+
+  useEffect(() => {
+    let isCurrent = true;
+
+    if (!selectedProvince) {
       setCities([]);
       setSelectedCityName('');
       return undefined;
     }
 
     const loadCities = async () => {
-      const cityResults = await getCitiesMunicipalitiesByRegion(selectedRegion);
+      const cityResults = await getCitiesMunicipalitiesByProvince(selectedProvince);
       if (isCurrent) {
         setCities(cityResults);
         setSelectedCityName('');
@@ -46,24 +91,34 @@ export default function LocationForm({ onSearch }) {
     return () => {
       isCurrent = false;
     };
-  }, [selectedRegion]);
+  }, [selectedProvince]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!selectedCityName) return;
 
     const selectedRegionName = regions.find((region) => region.code === selectedRegion)?.name;
-    onSearch(selectedCityName, selectedRegionName);
+    const selectedProvinceName = provinces.find((province) => province.code === selectedProvince)?.name;
+    onSearch(selectedCityName, selectedProvinceName || selectedRegionName);
   };
 
   const handleRegionChange = (event) => {
     setSelectedRegion(event.target.value);
+    setSelectedProvince('');
+    setCities([]);
+    setSelectedCityName('');
+  };
+
+  const handleProvinceChange = (event) => {
+    setSelectedProvince(event.target.value);
     setCities([]);
     setSelectedCityName('');
   };
 
   const handleClearSelection = () => {
     setSelectedRegion('');
+    setSelectedProvince('');
+    setProvinces([]);
     setCities([]);
     setSelectedCityName('');
   };
@@ -102,6 +157,34 @@ export default function LocationForm({ onSearch }) {
           fullWidth
           size="small"
           disabled={!selectedRegion}
+          sx={{
+            '& .MuiOutlinedInput-root': {
+              borderRadius: 2,
+              backgroundColor: 'rgba(255,255,255,0.08)',
+            },
+          }}
+        >
+          <InputLabel id="province-label">Select Province</InputLabel>
+          <Select
+            labelId="province-label"
+            label="Select Province"
+            value={selectedProvince}
+            onChange={handleProvinceChange}
+            sx={{ '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(89, 50, 30, 0.28)' } }}
+          >
+            <MenuItem value="">Clear selection</MenuItem>
+            {provinces.map((province) => (
+              <MenuItem key={province.code || province.id} value={province.code}>
+                {province.name}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+
+        <FormControl
+          fullWidth
+          size="small"
+          disabled={!(selectedRegion && (selectedProvince || provinces.length === 0))}
           sx={{
             '& .MuiOutlinedInput-root': {
               borderRadius: 2,
@@ -176,7 +259,6 @@ export default function LocationForm({ onSearch }) {
           Search
         </Button>
       </Stack>
-
     </Box>
   );
 }
