@@ -3,7 +3,7 @@ import {
   Box, Card, CardMedia, CardContent, CardActionArea, Typography, Link, Skeleton,
   Dialog, IconButton,
 } from '@mui/material';
-import { Close, Favorite, FavoriteBorder } from '@mui/icons-material';
+import { Close, Download, Favorite, FavoriteBorder } from '@mui/icons-material';
 
 const CARD_WIDTH = { xs: '100%', sm: 340 };
 const IMAGE_HEIGHT = 240;
@@ -29,6 +29,25 @@ const rowSx = {
 const preloadImage = (url) => {
   const img = new Image();
   img.src = url;
+};
+
+// Saves the full-size photo; if the browser blocks that, opens it in a new tab instead
+const downloadPhoto = async (photo) => {
+  const url = photo.fullImageUrl || photo.imageUrl;
+  try {
+    const res = await fetch(url);
+    const blob = await res.blob();
+    const objectUrl = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = objectUrl;
+    link.download = `lakbay-ph-${photo.id}.jpg`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(objectUrl);
+  } catch {
+    window.open(url, '_blank', 'noopener,noreferrer');
+  }
 };
 
 // Round dark button that sits on top of a photo
@@ -181,6 +200,23 @@ export default function MediaGallery({
         >
           <Close />
         </IconButton>
+
+        {selectedPhoto && (
+          <IconButton
+            onClick={() => downloadPhoto(selectedPhoto)}
+            aria-label="Download photo"
+            sx={{
+              ...overlayButtonSx,
+              position: 'absolute',
+              top: 8,
+              right: onToggleFavorite ? 104 : 56,
+              zIndex: 2,
+              color: '#fff',
+            }}
+          >
+            <Download />
+          </IconButton>
+        )}
 
         {selectedPhoto && onToggleFavorite && (
           <IconButton

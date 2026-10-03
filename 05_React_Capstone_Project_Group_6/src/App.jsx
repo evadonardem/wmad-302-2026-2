@@ -1,12 +1,12 @@
-import React, { memo, useEffect, useMemo, useState } from 'react';
+import React, { memo, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Container, CssBaseline, ThemeProvider, createTheme, GlobalStyles,
-  Typography, Box, IconButton, Paper, Button,
+  Typography, Box, IconButton, Paper, Button, Chip,
 } from '@mui/material';
 import { LightMode, DarkMode, Favorite, FavoriteBorder } from '@mui/icons-material';
 import LocationForm from './components/LocationForm';
 import MediaGallery from './components/MediaGallery';
-import { searchPhotosByLocation } from './services/geoPhotoService';
+import { searchPhotosByLocation, PHOTOS_PER_PAGE } from './services/geoPhotoService';
 
 /* ------------------------------------------------------------------ */
 /*  Fish constellations (dark mode)                                    */
@@ -325,14 +325,26 @@ function ThemeBackdrop({ isDarkMode }) {
 
 const MemoBackdrop = memo(ThemeBackdrop);
 
-// ❤️ Favorites are saved in the browser so they survive a refresh
+// 💾 Saved in the browser so they survive a refresh
 const FAV_KEY = 'lakbay-ph-favorites';
-const loadFavorites = () => {
+const THEME_KEY = 'lakbay-ph-theme';
+const RECENT_KEY = 'lakbay-ph-recent';
+const MAX_RECENT = 5;
+
+const readStored = (key, fallback) => {
   try {
-    const parsed = JSON.parse(localStorage.getItem(FAV_KEY) || '[]');
-    return Array.isArray(parsed) ? parsed : [];
+    const raw = localStorage.getItem(key);
+    return raw === null ? fallback : JSON.parse(raw);
   } catch {
-    return [];
+    return fallback;
+  }
+};
+
+const writeStored = (key, value) => {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    /* storage unavailable (private mode / full): it just won't persist */
   }
 };
 
@@ -379,19 +391,29 @@ const palettes = {
 };
 
 export default function App() {
-  const [isDarkMode, setIsDarkMode] = useState(true);
+  const [isDarkMode, setIsDarkMode] = useState(() => readStored(THEME_KEY, true) !== false);
   const [photos, setPhotos] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [favorites, setFavorites] = useState(loadFavorites);
+  const [favorites, setFavorites] = useState(() => {
+    const saved = readStored(FAV_KEY, []);
+    return Array.isArray(saved) ? saved : [];
+  });
   const [showFavorites, setShowFavorites] = useState(false);
 
-  useEffect(() => {
-    try {
-      localStorage.setItem(FAV_KEY, JSON.stringify(favorites));
-    } catch {
-      /* storage unavailable (private mode / full): favorites just won't persist */
-    }
-  }, [favorites]);
+  // Recent searches + "Load more" tracking
+  const [recent, setRecent] = useState(() => {
+    const saved = readStored(RECENT_KEY, []);
+    return Array.isArray(saved) ? saved.slice(0, MAX_RECENT) : [];
+  });
+  const [searchTerm, setSearchTerm] = useState('');
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const requestRef = useRef(0); // lets us ignore answers from outdated searches
+
+  useEffect(() => writeStored(FAV_KEY, favorites), [favorites]);
+  useEffect(() => writeStored(THEME_KEY, isDarkMode), [isDarkMode]);
+  useEffect(() => writeStored(RECENT_KEY, recent), [recent]);
 
   const toggleFavorite = (photo) => {
     setFavorites((prev) =>
@@ -425,18 +447,49 @@ export default function App() {
   );
 
   const handleSearchSubmit = async (locationName) => {
+    const requestId = ++requestRef.current;
     setShowFavorites(false); // a new search always goes back to results
     setLoading(true);
+    setSearchTerm(locationName);
+    setPage(1);
+    setHasMore(false);
+    setRecent((prev) =>
+      [locationName, ...prev.filter((n) => n !== locationName)].slice(0, MAX_RECENT)
+    );
+
     try {
-      const results = await searchPhotosByLocation(locationName);
-      setPhotos(results || []);
+      const results = (await searchPhotosByLocation(locationName, 1)) || [];
+      if (requestId !== requestRef.current) return; // a newer search took over
+      setPhotos(results);
+      setHasMore(results.length >= PHOTOS_PER_PAGE);
     } catch (error) {
       console.error('Error fetching photos by location:', error);
-      setPhotos([]);
+      if (requestId === requestRef.current) setPhotos([]);
     } finally {
-      setLoading(false);
+      if (requestId === requestRef.current) setLoading(false);
     }
   };
+
+  const handleLoadMore = async () => {
+    if (loadingMore || !searchTerm) return;
+    const requestId = requestRef.current;
+    const nextPage = page + 1;
+    setLoadingMore(true);
+    try {
+      const results = (await searchPhotosByLocation(searchTerm, nextPage)) || [];
+      if (requestId !== requestRef.current) return; // user searched something else meanwhile
+      setPhotos((prev) => {
+        const seen = new Set(prev.map((p) => p.id));
+        return [...prev, ...results.filter((p) => !seen.has(p.id))];
+      });
+      setPage(nextPage);
+      setHasMore(results.length >= PHOTOS_PER_PAGE);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
+  const removeRecent = (name) => setRecent((prev) => prev.filter((n) => n !== name));
 
   return (
     <ThemeProvider theme={theme}>
@@ -515,6 +568,42 @@ export default function App() {
             </Typography>
 
             <LocationForm onSearch={handleSearchSubmit} />
+
+            {/* Quick re-search: click a chip to search again, x to forget it */}
+            {recent.length > 0 && (
+              <Box
+                sx={{
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 1,
+                  mt: 2,
+                }}
+              >
+                <Typography variant="caption" sx={{ color: 'var(--text-muted)', fontWeight: 700 }}>
+                  🕘 Recent:
+                </Typography>
+                {recent.map((name) => (
+                  <Chip
+                    key={name}
+                    size="small"
+                    label={name.split(',')[0]}
+                    title={name}
+                    onClick={() => handleSearchSubmit(name)}
+                    onDelete={() => removeRecent(name)}
+                    sx={{
+                      color: 'var(--text)',
+                      background: 'var(--accent-soft)',
+                      border: '1px solid var(--border)',
+                      fontWeight: 600,
+                      '&:hover': { background: 'var(--glow)' },
+                      '& .MuiChip-deleteIcon': { color: 'var(--text-muted)' },
+                    }}
+                  />
+                ))}
+              </Box>
+            )}
           </Paper>
 
           {/* Switch between search results and saved favorites */}
@@ -552,6 +641,31 @@ export default function App() {
                 : 'No tourist spots found for this area yet.'
             }
           />
+
+          {/* Fetch the next page of results for the same search */}
+          {!showFavorites && !loading && hasMore && photos.length > 0 && (
+            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+              <Button
+                onClick={handleLoadMore}
+                disabled={loadingMore}
+                sx={{
+                  textTransform: 'none',
+                  px: 5,
+                  py: 1,
+                  fontWeight: 900,
+                  fontSize: '1rem',
+                  borderRadius: 2,
+                  background: 'var(--cta)',
+                  color: 'var(--cta-text)',
+                  boxShadow: '0 0 20px var(--cta-glow)',
+                  '&:hover': { background: 'var(--cta-hover)' },
+                  '&.Mui-disabled': { background: 'var(--accent-soft)', color: 'var(--text-muted)' },
+                }}
+              >
+                {loadingMore ? 'Loading…' : 'Load more photos'}
+              </Button>
+            </Box>
+          )}
         </Container>
       </Box>
     </ThemeProvider>
