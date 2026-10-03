@@ -1,6 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
  
 
+
 *,
 *::before,
 *::after {
@@ -97,6 +98,7 @@ body .MuiContainer-root form {
   margin-bottom: 0;
 }
 
+
 body .MuiContainer-root .MuiOutlinedInput-root {
   border-radius: 12px;
   transition: box-shadow 0.2s ease;
@@ -144,6 +146,7 @@ body .MuiContainer-root form .MuiButton-root.Mui-disabled {
   box-shadow: none;
 }
  
+
 
  
 body .MuiMenu-paper {
@@ -203,6 +206,7 @@ body .MuiCardContent-root .MuiLink-root:hover {
   text-decoration: underline;
 }
 
+
  
 body .MuiSkeleton-root {
   border-radius: 12px;
@@ -213,6 +217,7 @@ body .MuiContainer-root > .MuiBox-root {
   border-radius: 20px;
 }
  
+
 
  
 a:focus-visible,
@@ -232,6 +237,7 @@ button:focus-visible {
     animation: none !important;
   }
 }
+
 
 @media (max-width: 900px) {
   body .MuiCardMedia-root {
@@ -254,4 +260,3 @@ button:focus-visible {
     height: 200px;
   }
 }
- 

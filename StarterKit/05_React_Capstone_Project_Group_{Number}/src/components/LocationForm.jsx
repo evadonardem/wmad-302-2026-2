@@ -3,17 +3,20 @@ import { Box, FormControl, InputLabel, Select, MenuItem, Button, Stack } from '@
 import { Search } from '@mui/icons-material';
 import { getRegions, getCitiesMunicipalitiesByRegion } from '../services/geoPhotoService';
 
+
 export default function LocationForm({ onSearch }) {
   const [regions, setRegions] = useState([]);
   const [cities, setCities] = useState([]);
   const [selectedRegion, setSelectedRegion] = useState('');
   const [selectedCityName, setSelectedCityName] = useState('');
 
+
   useEffect(() => {
     let ignore = false;
     getRegions().then((data) => { if (!ignore) setRegions(data); });
     return () => { ignore = true; };
   }, []);
+
 
   useEffect(() => {
     let ignore = false;
@@ -26,15 +29,18 @@ export default function LocationForm({ onSearch }) {
     return () => { ignore = true; };
   }, [selectedRegion]);
 
+
   const handleSubmit = (e) => {
-    e.preventDefault();
-    onSearch(selectedCityName);
-  };
+  e.preventDefault();
+  const regionName = regions.find((r) => r.code === selectedRegion)?.name || '';
+  onSearch(selectedCityName, regionName);
+};
+
 
   return (
     <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%', mb: 4 }}>
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} justifyContent="center">
-        
+       
         <FormControl fullWidth size="small">
   <InputLabel id="region-label">Select Region</InputLabel>
   <Select
@@ -49,6 +55,7 @@ export default function LocationForm({ onSearch }) {
   </Select>
 </FormControl>
 
+
 <FormControl fullWidth size="small" disabled={!selectedRegion}>
   <InputLabel id="city-label">Select City / Municipality</InputLabel>
   <Select
@@ -62,6 +69,7 @@ export default function LocationForm({ onSearch }) {
     ))}
   </Select>
 </FormControl>
+
 
         <Button
           type="submit"

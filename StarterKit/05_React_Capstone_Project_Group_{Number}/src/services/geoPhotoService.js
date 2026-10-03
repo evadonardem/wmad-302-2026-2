@@ -29,20 +29,33 @@ export const getCitiesMunicipalitiesByRegion = async (regionCode) => {
   }
 };
 
-export const searchPhotosByLocation = async (locationName) => {
+export const searchPhotosByLocation = async (locationName, regionName = '') => {
   if (!locationName) return [];
+
+  // "City of Vigan" / "Laoag City" -> "Vigan" / "Laoag"
+  const cleanName = locationName
+    .replace(/^City of\s+/i, '')
+    .replace(/\s+City$/i, '')
+    .trim();
+
   try {
-    const { data } = await axios.get('https://api.pexels.com/v1/search?query=...&per_page=12', {
+    const { data } = await axios.get('https://api.pexels.com/v1/search', {
       headers: { Authorization: PEXELS_API_KEY },
-      params: { query: `${locationName} tourist spot`, per_page: 12 },
+      params: { query: `${cleanName} ${regionName} Philippines`, per_page: 40 },
     });
-    return (data.photos ?? []).map((p) => ({
-      id: p.id,
-      imageUrl: p.src.large,
-      photographer: p.photographer,
-      photographerUrl: p.photographer_url,
-      altText: p.alt || `${locationName} tourist spot`,
-    }));
+
+    const nameLower = cleanName.toLowerCase();
+
+    return (data.photos ?? [])
+      .filter((p) => (p.alt || '').toLowerCase().includes(nameLower))
+      .slice(0, 12)
+      .map((p) => ({
+        id: p.id,
+        imageUrl: p.src.large,
+        photographer: p.photographer,
+        photographerUrl: p.photographer_url,
+        altText: p.alt || `${cleanName} tourist spot`,
+      }));
   } catch (error) {
     console.error('Pexels search failed:', error);
     return [];

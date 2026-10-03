@@ -1,6 +1,7 @@
 import React from 'react';
 import { Box, Grid, Card, CardMedia, CardContent, Typography, Link, Skeleton } from '@mui/material';
 
+
 export default function MediaGallery({ photos, loading }) {
  if (loading) {
   return (
@@ -15,6 +16,7 @@ export default function MediaGallery({ photos, loading }) {
   );
 }
 
+
 if (!photos || photos.length === 0) {
   return (
     <Box sx={{ textAlign: 'center', py: 6 }}>
@@ -24,6 +26,7 @@ if (!photos || photos.length === 0) {
     </Box>
   );
 }
+
 
 return (
   <Grid container spacing={3}>
