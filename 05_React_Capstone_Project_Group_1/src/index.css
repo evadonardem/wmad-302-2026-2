@@ -1,0 +1,81 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&display=swap');
+
+:root {
+  --ph-blue: #0038a8;
+  --ph-red: #ce1126;
+  --ph-yellow: #fcd116;
+  --ph-gradient: linear-gradient(135deg, #0038a8 0%, #ce1126 55%, #fcd116 100%);
+
+  /* Light theme tokens */
+  --page-bg:
+    radial-gradient(1100px 600px at 8% -10%, rgba(0, 56, 168, 0.12), transparent 60%),
+    radial-gradient(900px 500px at 100% 0%, rgba(252, 209, 22, 0.18), transparent 55%),
+    radial-gradient(800px 500px at 50% 115%, rgba(206, 17, 38, 0.09), transparent 60%),
+    linear-gradient(180deg, #f7f9ff 0%, #fffaf2 100%);
+  --surface: rgba(255, 255, 255, 0.78);
+  --surface-solid: #ffffff;
+  --surface-border: rgba(0, 56, 168, 0.12);
+  --title-color: var(--ph-blue);
+  --btn-gradient: linear-gradient(135deg, #0038a8, #1d5fd6);
+  --shadow-sm: 0 2px 10px rgba(0, 30, 90, 0.08);
+  --shadow-lg: 0 18px 40px rgba(0, 30, 90, 0.18);
+}
+
+body.dark {
+  --page-bg:
+    radial-gradient(1100px 600px at 8% -10%, rgba(0, 56, 168, 0.35), transparent 60%),
+    radial-gradient(900px 500px at 100% 0%, rgba(252, 209, 22, 0.10), transparent 55%),
+    radial-gradient(800px 500px at 50% 115%, rgba(206, 17, 38, 0.20), transparent 60%),
+    linear-gradient(180deg, #0d0e1a 0%, #151729 100%);
+  --surface: rgba(28, 30, 46, 0.72);
+  --surface-solid: #1c1e2e;
+  --surface-border: rgba(255, 255, 255, 0.09);
+  --title-color: var(--ph-yellow);
+  --btn-gradient: linear-gradient(135deg, #fcd116, #f2a900);
+  --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 18px 40px rgba(0, 0, 0, 0.6);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  min-height: 100vh;
+  background: var(--page-bg) !important;
+  background-attachment: fixed !important;
+}
+
+::selection {
+  background: var(--ph-yellow);
+  color: #111;
+}
+
+/* Slim scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--ph-blue);
+  border-radius: 10px;
+}
+body.dark ::-webkit-scrollbar-thumb {
+  background: var(--ph-yellow);
+}
+/* ===== Yellow-only page glow ===== */
+:root {
+  --page-bg:
+    radial-gradient(1100px 600px at 50% -15%, rgba(252, 209, 22, 0.22), transparent 60%),
+    linear-gradient(180deg, #fbfcff 0%, #fffdf5 100%);
+}
+
+body.dark {
+  --page-bg:
+    radial-gradient(1100px 600px at 50% -15%, rgba(252, 209, 22, 0.12), transparent 60%),
+    linear-gradient(180deg, #0d0e1a 0%, #151729 100%);
+}
+
+::-webkit-scrollbar-thumb,
+body.dark ::-webkit-scrollbar-thumb {
+  background: var(--ph-yellow);
+}
