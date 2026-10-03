@@ -1,20 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
  
-/* =====================================================================
-   Lakbay PH: global styles (src/index.css)
- 
-   RULE FOR THIS FILE: never hardcode text/background colors for MUI
-   components. MUI's theme (light/dark) already controls those. Only use
-   neutral semi-transparent colors (rgba(128,128,128,x)) and colored
-   glows, which look right on BOTH white and dark backgrounds.
- 
-   Selectors start with "body" or ".MuiContainer-root" so they beat
-   MUI's own single-class styles WITHOUT needing !important.
-   ===================================================================== */
- 
- 
-/* ---------- Base ---------- */
- 
+
 *,
 *::before,
 *::after {
@@ -44,7 +30,6 @@ body {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
  
-/* MUI components ignore the body font, so apply it explicitly */
 body .MuiTypography-root,
 body .MuiButton-root,
 body .MuiInputBase-root,
@@ -59,7 +44,6 @@ img {
 }
  
  
-/* ---------- Header card ---------- */
  
 body .MuiContainer-root > .MuiPaper-root {
   position: relative;
@@ -71,7 +55,6 @@ body .MuiContainer-root > .MuiPaper-root {
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
 }
  
-/* Flag-colored stripe: blue, red, yellow */
 body .MuiContainer-root > .MuiPaper-root::before {
   content: '';
   position: absolute;
@@ -94,7 +77,6 @@ body .MuiContainer-root > .MuiPaper-root h1 {
   line-height: 1.1;
 }
  
-/* Subtitle */
 body .MuiContainer-root > .MuiPaper-root h1 + h6,
 body .MuiContainer-root > .MuiPaper-root h1 + p {
   max-width: 560px;
@@ -105,7 +87,6 @@ body .MuiContainer-root > .MuiPaper-root h1 + p {
   line-height: 1.6;
 }
  
-/* Dark/Light toggle button */
 body .MuiContainer-root > .MuiPaper-root .MuiIconButton-root {
   border: 1px solid rgba(128, 128, 128, 0.35);
   transition: transform 0.25s ease, background-color 0.2s ease;
@@ -115,14 +96,10 @@ body .MuiContainer-root > .MuiPaper-root .MuiIconButton-root:hover {
   transform: rotate(18deg);
 }
  
- 
-/* ---------- Form (selects + button) ---------- */
- 
 body .MuiContainer-root form {
   margin-bottom: 0;
 }
- 
-/* Rounded inputs with a neutral border that works in both modes */
+
 body .MuiContainer-root .MuiOutlinedInput-root {
   border-radius: 12px;
   transition: box-shadow 0.2s ease;
@@ -140,7 +117,6 @@ body .MuiContainer-root .MuiOutlinedInput-root.Mui-focused {
   box-shadow: 0 0 0 4px rgba(25, 118, 210, 0.18);
 }
  
-/* Taller (48px) selects; the label offset is adjusted to stay centered */
 body .MuiContainer-root .MuiSelect-select.MuiSelect-outlined {
   padding-top: 12.5px;
   padding-bottom: 12.5px;
@@ -151,7 +127,6 @@ body .MuiContainer-root .MuiInputLabel-sizeSmall:not(.MuiInputLabel-shrink) {
   transform: translate(14px, 13px) scale(1);
 }
  
-/* Search button */
 body .MuiContainer-root form .MuiButton-root {
   min-height: 48px;
   padding-left: 28px;
@@ -172,8 +147,7 @@ body .MuiContainer-root form .MuiButton-root.Mui-disabled {
   box-shadow: none;
 }
  
- 
-/* ---------- Dropdown menus (rendered outside #root) ---------- */
+
  
 body .MuiMenu-paper {
   max-height: 320px;
@@ -191,7 +165,6 @@ body .MuiMenu-paper .MuiMenuItem-root {
 }
  
  
-/* ---------- Gallery cards ---------- */
  
 body .MuiGrid-container .MuiCard-root {
   overflow: hidden;
@@ -232,15 +205,11 @@ body .MuiCardContent-root .MuiLink-root {
 body .MuiCardContent-root .MuiLink-root:hover {
   text-decoration: underline;
 }
- 
- 
-/* ---------- Loading and empty states ---------- */
+
  
 body .MuiSkeleton-root {
   border-radius: 12px;
 }
- 
-/* Empty-state box ("No tourist spots found...") */
 body .MuiContainer-root > .MuiBox-root {
   padding: 56px 24px;
   border: 2px dashed rgba(128, 128, 128, 0.35);
@@ -267,10 +236,7 @@ button:focus-visible {
     animation: none !important;
   }
 }
- 
- 
-/* ---------- Responsive ---------- */
- 
+
 @media (max-width: 900px) {
   body .MuiCardMedia-root {
     height: 210px;
