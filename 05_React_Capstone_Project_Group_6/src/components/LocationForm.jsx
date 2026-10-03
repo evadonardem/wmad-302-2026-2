@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Box, FormControl, InputLabel, Select, MenuItem, Button, Stack } from '@mui/material';
+import { Box, Autocomplete, TextField, Button, Stack } from '@mui/material';
 import { Search } from '@mui/icons-material';
 import { getRegions, getCitiesMunicipalitiesByRegion } from '../services/geoPhotoService';
 
@@ -14,7 +14,6 @@ export default function LocationForm({ onSearch }) {
     const fetchRegions = async () => {
       try {
         const data = await getRegions();
-        // 🔤 Sort regions from A to Z
         const sortedRegions = (data || []).sort((a, b) => a.name.localeCompare(b.name));
         setRegions(sortedRegions);
       } catch (error) {
@@ -24,7 +23,7 @@ export default function LocationForm({ onSearch }) {
     fetchRegions();
   }, []);
 
-  // 2. Fetch and sort Cities alphabetically (A-Z)
+  // 2. Fetch and sort Cities alphabetically (A-Z) on region change
   useEffect(() => {
     setSelectedCityName('');
 
@@ -32,7 +31,6 @@ export default function LocationForm({ onSearch }) {
       const fetchCities = async () => {
         try {
           const data = await getCitiesMunicipalitiesByRegion(selectedRegion);
-          // 🔤 Sort cities/municipalities from A to Z
           const sortedCities = (data || []).sort((a, b) => a.name.localeCompare(b.name));
           setCities(sortedCities);
         } catch (error) {
@@ -54,13 +52,13 @@ export default function LocationForm({ onSearch }) {
     }
   };
 
-  // Turquoise input styling (colors come from the variables set in App.jsx)
+  // Lagoon Turquoise styling for Autocomplete input and dropdown popup
   const oceanInputStyle = {
     '& .MuiInputLabel-root': { color: 'var(--text-muted)' },
     '& .MuiInputLabel-root.Mui-focused': { color: 'var(--accent)' },
-    '& .MuiSelect-select': { color: 'var(--text)' },
     '& .MuiOutlinedInput-root': {
       borderRadius: 2,
+      color: 'var(--text)',
       '& fieldset': { borderColor: 'var(--border)' },
       '&:hover fieldset': { borderColor: 'var(--accent)' },
       '&.Mui-focused fieldset': {
@@ -68,46 +66,72 @@ export default function LocationForm({ onSearch }) {
         boxShadow: '0 0 10px var(--glow)',
       },
     },
-    '& .MuiSelect-icon': { color: 'var(--accent)' },
+    '& .MuiSvgIcon-root': { color: 'var(--accent)' },
+  };
+
+  const popupStyle = {
+    sx: {
+      background: 'var(--panel-bg)',
+      color: 'var(--text)',
+      border: '1.5px solid var(--border)',
+      borderRadius: 2,
+      mt: 1,
+      boxShadow: 'var(--panel-shadow)',
+      '& .MuiAutocomplete-option': {
+        '&:hover': { background: 'var(--accent-soft)' },
+        '&[aria-selected="true"]': { background: 'var(--accent-soft)', color: 'var(--accent-strong)' },
+      },
+    },
   };
 
   return (
     <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%', mb: 2 }}>
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} justifyContent="center">
 
-        {/* Region Dropdown */}
-        <FormControl fullWidth size="small" sx={oceanInputStyle}>
-          <InputLabel id="region-label">Select Region</InputLabel>
-          <Select
-            labelId="region-label"
-            label="Select Region"
-            value={selectedRegion}
-            onChange={(e) => setSelectedRegion(e.target.value)}
-          >
-            {regions.map((region) => (
-              <MenuItem key={region.code} value={region.code}>
-                {region.name}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+        {/* 🔍 SEARCHABLE REGION AUTOCOMPLETE */}
+        <Autocomplete
+          fullWidth
+          size="small"
+          options={regions}
+          getOptionLabel={(option) => option.name || ''}
+          isOptionEqualToValue={(option, value) => option.code === value.code}
+          value={regions.find((r) => r.code === selectedRegion) || null}
+          onChange={(event, newValue) => {
+            setSelectedRegion(newValue ? newValue.code : '');
+          }}
+          slotProps={{ paper: popupStyle }}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              label="Select / Type Region"
+              placeholder="e.g. Ilocos, Bicol, Western Visayas..."
+              sx={oceanInputStyle}
+            />
+          )}
+        />
 
-        {/* City Dropdown */}
-        <FormControl fullWidth size="small" disabled={!selectedRegion} sx={oceanInputStyle}>
-          <InputLabel id="city-label">Select City / Municipality</InputLabel>
-          <Select
-            labelId="city-label"
-            label="Select City / Municipality"
-            value={selectedCityName}
-            onChange={(e) => setSelectedCityName(e.target.value)}
-          >
-            {cities.map((city) => (
-              <MenuItem key={city.code || city.id} value={city.name}>
-                {city.name}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+        {/* 🔍 SEARCHABLE CITY / MUNICIPALITY AUTOCOMPLETE */}
+        <Autocomplete
+          fullWidth
+          size="small"
+          disabled={!selectedRegion}
+          options={cities}
+          getOptionLabel={(option) => option.name || ''}
+          isOptionEqualToValue={(option, value) => option.name === value.name}
+          value={cities.find((c) => c.name === selectedCityName) || null}
+          onChange={(event, newValue) => {
+            setSelectedCityName(newValue ? newValue.name : '');
+          }}
+          slotProps={{ paper: popupStyle }}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              label="Select / Type City / Municipality"
+              placeholder={selectedRegion ? 'e.g. Baguio, Vigan, Iloilo...' : 'Select a region first'}
+              sx={oceanInputStyle}
+            />
+          )}
+        />
 
         {/* Sunset Search Button */}
         <Button
@@ -123,6 +147,7 @@ export default function LocationForm({ onSearch }) {
             fontSize: '1rem',
             letterSpacing: 1,
             borderRadius: 2,
+            whiteSpace: 'nowrap',
             background: 'var(--cta)',
             color: 'var(--cta-text)',
             boxShadow: '0 0 20px var(--cta-glow)',
