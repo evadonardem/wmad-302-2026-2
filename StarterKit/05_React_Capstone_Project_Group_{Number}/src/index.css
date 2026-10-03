@@ -18,8 +18,6 @@ body {
   font-family: 'Plus Jakarta Sans', 'Roboto', 'Segoe UI', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
  
-  /* Soft Philippine-flag-colored glows. Layered over the theme's own
-     background color, so it adapts to light and dark mode automatically. */
   background-image:
     radial-gradient(900px 420px at 15% -5%, rgba(0, 56, 168, 0.16), transparent 70%),
     radial-gradient(700px 380px at 95% 0%, rgba(252, 209, 22, 0.12), transparent 70%),
@@ -68,7 +66,6 @@ body .MuiContainer-root > .MuiPaper-root::before {
   );
 }
  
-/* Title */
 body .MuiContainer-root > .MuiPaper-root h1 {
   margin: 0 0 8px;
   font-size: clamp(2rem, 5vw, 3rem);
@@ -216,8 +213,7 @@ body .MuiContainer-root > .MuiBox-root {
   border-radius: 20px;
 }
  
- 
-/* ---------- Accessibility ---------- */
+
  
 a:focus-visible,
 button:focus-visible {
