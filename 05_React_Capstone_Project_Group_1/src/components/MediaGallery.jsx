@@ -150,14 +150,16 @@ export default function MediaGallery({ photos, loading, locationName }) {
                     <Typography className="photo-info-text" variant="body2">
                       {description.text}
                     </Typography>
+                    {description.url && (
                     <Link
                       className="photo-info-source"
                       href={description.url}
                       target="_blank"
-                      rel="noopener noreferrer"
+                    rel="noopener noreferrer"
                     >
                       Read more on Wikipedia →
                     </Link>
+                    )}
                   </>
                 )}
 

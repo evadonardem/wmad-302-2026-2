@@ -19,6 +19,10 @@ export const getRegions = async () => {
   }
 };
 
+// Remembers the cities/municipalities of the most recently loaded region, so the
+// description lookup can find the province and type (city or municipality) by name
+let cityIndex = {};
+
 export const getCitiesMunicipalitiesByRegion = async (regionCode) => {
   // TODO 1.3 [Chained Location Population]: Complete the dynamic lookup using string interpolation.
   // Validate that a truthy regionCode parameter is provided prior to generating network requests.
@@ -30,6 +34,12 @@ export const getCitiesMunicipalitiesByRegion = async (regionCode) => {
     const response = await axios.get(
       `${PSGC_BASE_URL}/regions/${regionCode}/cities-municipalities/`
     );
+
+    cityIndex = {};
+    response.data.forEach((city) => {
+      cityIndex[city.name] = city;
+    });
+
     return response.data;
   } catch (error) {
     console.error(`Error fetching cities for region ${regionCode}:`, error);
@@ -110,43 +120,154 @@ export const searchPhotosByLocation = async (locationName) => {
   }
 };
 
-// Fetches a short Wikipedia summary (location + history) for the chosen place
+// ---------- Place description (Wikipedia first, PSGC-based fallback) ----------
+
+const WIKI_API = 'https://en.wikipedia.org/w/api.php';
+
+// Removes bracketed parts like "National Capital Region (NCR)" -> "National Capital Region"
+const cleanName = (name) => (name || '').replace(/\s*\(.*?\)\s*/g, ' ').trim() || null;
+
+// Looks up a province or region name from PSGC (cached)
+const psgcNameCache = {};
+const getPsgcName = async (path) => {
+  if (psgcNameCache[path]) return psgcNameCache[path];
+  try {
+    const response = await axios.get(`${PSGC_BASE_URL}/${path}/`);
+    psgcNameCache[path] = response.data.name;
+    return response.data.name;
+  } catch (error) {
+    console.error(`Error fetching ${path}:`, error);
+    return null;
+  }
+};
+
+// Fetches Wikipedia page summaries (by exact title or by search)
+const fetchWikiPages = async (params) => {
+  const response = await axios.get(WIKI_API, {
+    params: {
+      action: 'query',
+      prop: 'extracts|pageprops',
+      ppprop: 'disambiguation',
+      exintro: 1,
+      explaintext: 1,
+      exsentences: 4,
+      exlimit: 'max',
+      redirects: 1,
+      format: 'json',
+      origin: '*',
+      ...params,
+    },
+  });
+  return Object.values(response.data?.query?.pages || {});
+};
+
+// A page is usable if it exists, is not a disambiguation page, and is about the Philippines
+const isUsablePage = (page, province) =>
+  page &&
+  !('missing' in page) &&
+  page.extract &&
+  !page.pageprops?.disambiguation &&
+  (/philippines/i.test(page.extract) ||
+    (province && normalize(page.extract).includes(normalize(province))));
+
+const toDescription = (page) => ({
+  title: page.title,
+  text: page.extract,
+  url: `https://en.wikipedia.org/?curid=${page.pageid}`,
+});
+
 export const getPlaceDescription = async (locationName) => {
   if (!locationName) return null;
 
-  const shortName = getShortName(locationName);
+  const shortName = cleanName(getShortName(locationName)) || locationName;
+  const place = cityIndex[locationName]; // PSGC record of the selected place, if known
+
+  // Province (or region for NCR) from PSGC, used for exact Wikipedia titles
+  let province = null;
+  let regionName = null;
+  if (place?.provinceCode) {
+    province = cleanName(await getPsgcName(`provinces/${place.provinceCode}`));
+  }
+  if (!province && place?.regionCode) {
+    regionName = cleanName(await getPsgcName(`regions/${place.regionCode}`));
+  }
+
+  // 1. Try exact Wikipedia titles ("Sablan, Benguet", "Baguio", "Cebu City")
+  const candidates = [
+    province && `${shortName}, ${province}`,
+    shortName,
+    (!place || place.isCity) && `${shortName} City`,
+  ].filter(Boolean);
+
+  for (const title of candidates) {
+    try {
+      const [page] = await fetchWikiPages({ titles: title });
+      if (isUsablePage(page, province)) return toDescription(page);
+    } catch (error) {
+      console.error(`Wikipedia lookup failed for "${title}":`, error);
+    }
+  }
+
+  // 2. Search Wikipedia and pick the best matching result
+  try {
+    const searchText = `${shortName} ${province || ''} Philippines`.replace(/\s+/g, ' ').trim();
+    const pages = await fetchWikiPages({
+      generator: 'search',
+      gsrsearch: searchText,
+      gsrlimit: 5,
+    });
+    pages.sort((a, b) => a.index - b.index);
+    const match = pages.find(
+      (page) =>
+        isUsablePage(page, province) &&
+        normalize(page.title).startsWith(normalize(shortName))
+    );
+    if (match) return toDescription(match);
+  } catch (error) {
+    console.error('Error searching Wikipedia:', error);
+  }
+
+  // 3. Fallback: build a short description from PSGC data
+  const kind = place ? (place.isCity ? 'city' : 'municipality') : 'place';
+  let where = 'in the Philippines';
+  if (province) where = `in the province of ${province}, Philippines`;
+  else if (regionName) where = `in the ${regionName}, Philippines`;
+
+  return {
+    title: shortName,
+    text: `${shortName} is a ${kind} ${where}. A detailed history of this place is not available yet.`,
+    url: null,
+  };
+};
+
+// ---------- Featured spot photos (one photo per spot, cached) ----------
+
+const featuredPhotoCache = {};
+
+export const getFeaturedPhoto = async (query) => {
+  if (query in featuredPhotoCache) return featuredPhotoCache[query];
 
   try {
-    const response = await axios.get('https://en.wikipedia.org/w/api.php', {
-      params: {
-        action: 'query',
-        generator: 'search',
-        gsrsearch: `${shortName} Philippines`,
-        gsrlimit: 1,
-        prop: 'extracts',
-        exintro: 1,
-        explaintext: 1,
-        exsentences: 4,
-        format: 'json',
-        origin: '*',
-      },
+    const response = await axios.get('https://api.pexels.com/v1/search', {
+      params: { query, per_page: 1, orientation: 'landscape' },
+      headers: { Authorization: PEXELS_API_KEY },
     });
 
-    const pages = response.data?.query?.pages;
-    if (!pages) return null;
+    const photo = response.data.photos[0];
+    const result = photo
+      ? {
+          id: photo.id,
+          imageUrl: photo.src.large,
+          photographer: photo.photographer,
+          photographerUrl: photo.photographer_url,
+          altText: photo.alt,
+        }
+      : null;
 
-    const page = Object.values(pages)[0];
-
-    // Reject results that aren't about the Philippines
-    if (!page?.extract || !/philippines/i.test(page.extract)) return null;
-
-    return {
-      title: page.title,
-      text: page.extract,
-      url: `https://en.wikipedia.org/?curid=${page.pageid}`,
-    };
+    featuredPhotoCache[query] = result;
+    return result;
   } catch (error) {
-    console.error('Error fetching place description:', error);
-    return null;
+    console.error(`Error fetching featured photo for "${query}":`, error);
+    return null; // not cached, so it can retry later
   }
 };

@@ -1,0 +1,58 @@
+// Curated lists (not live rankings). Edit freely.
+// `query` is what we send to Pexels to find a photo.
+export const FEATURED_CATEGORIES = [
+  {
+    key: 'popular',
+    label: 'Most Popular',
+    spots: [
+      { name: 'Boracay', location: 'Malay, Aklan', query: 'Boracay White Beach Philippines',
+        description: 'Famous for its powdery white sand, clear water, and lively sunsets along White Beach.' },
+      { name: 'Chocolate Hills', location: 'Bohol', query: 'Chocolate Hills Bohol',
+        description: 'Over a thousand cone-shaped hills that turn chocolate brown in the dry season.' },
+      { name: 'Mayon Volcano', location: 'Albay', query: 'Mayon Volcano Albay',
+        description: 'Known for its almost perfectly symmetrical cone, one of the most photographed sights in the country.' },
+      { name: 'Vigan Historic City', location: 'Ilocos Sur', query: 'Vigan Calle Crisologo',
+        description: 'A UNESCO World Heritage Site with cobblestone streets and Spanish colonial architecture.' },
+      { name: 'Taal Volcano', location: 'Batangas', query: 'Taal Volcano Tagaytay',
+        description: 'A volcano island sitting inside a lake, best viewed from the ridge in Tagaytay.' },
+      { name: 'Intramuros', location: 'Manila', query: 'Intramuros Manila',
+        description: 'The walled city of old Manila, with centuries-old churches, fortresses, and plazas.' },
+    ],
+  },
+  {
+    key: 'visited',
+    label: 'Most Visited',
+    spots: [
+      { name: 'Rizal Park', location: 'Manila', query: 'Rizal Park Luneta Manila',
+        description: 'A large urban park and national landmark, home to the Rizal Monument.' },
+      { name: 'Intramuros', location: 'Manila', query: 'Intramuros Fort Santiago',
+        description: 'A top stop for history lovers, with Fort Santiago and San Agustin Church nearby.' },
+      { name: 'Boracay', location: 'Malay, Aklan', query: 'Boracay island beach',
+        description: 'A long-time favorite for local and foreign beachgoers all year round.' },
+      { name: 'Burnham Park', location: 'Baguio City', query: 'Burnham Park Baguio',
+        description: 'The heart of Baguio, with a lake for boating and cool mountain air.' },
+      { name: 'Basilica del Santo Niño', location: 'Cebu City', query: 'Basilica del Santo Nino Cebu',
+        description: 'One of the oldest Roman Catholic churches in the country and a major pilgrimage site.' },
+      { name: 'Puerto Princesa Underground River', location: 'Palawan', query: 'Puerto Princesa Underground River',
+        description: 'A UNESCO World Heritage Site with a navigable river running through a cave.' },
+    ],
+  },
+  {
+    key: 'beautiful',
+    label: 'Most Beautiful',
+    spots: [
+      { name: 'El Nido', location: 'Palawan', query: 'El Nido Palawan lagoon',
+        description: 'Limestone cliffs, hidden lagoons, and turquoise water made for island hopping.' },
+      { name: 'Coron', location: 'Palawan', query: 'Coron Kayangan Lake',
+        description: 'Home to Kayangan Lake and clear waters popular with divers and snorkelers.' },
+      { name: 'Banaue Rice Terraces', location: 'Ifugao', query: 'Banaue Rice Terraces',
+        description: 'Ancient terraces carved into the mountains by the Ifugao people over generations.' },
+      { name: 'Siargao', location: 'Surigao del Norte', query: 'Siargao Cloud 9 Philippines',
+        description: 'The surfing capital of the Philippines, with palm-lined islands and tidal pools.' },
+      { name: 'Hundred Islands', location: 'Alaminos, Pangasinan', query: 'Hundred Islands Pangasinan',
+        description: 'Scattered small islands that are great for kayaking and island hopping.' },
+      { name: 'Siquijor', location: 'Siquijor', query: 'Siquijor Philippines beach',
+        description: 'A quiet island known for waterfalls, white beaches, and old balete trees.' },
+    ],
+  },
+];
