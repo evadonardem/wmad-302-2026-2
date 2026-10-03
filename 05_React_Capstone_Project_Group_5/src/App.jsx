@@ -244,8 +244,9 @@ export default function App() {
             <button
               type="button"
               className={`theme-toggle ${isDarkMode ? 'dark' : 'light'}`}
-              onClick={() => setIsDarkMode(!isDarkMode)}
+              onClick={() => setIsDarkMode((darkMode) => !darkMode)}
               aria-label={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+              aria-pressed={isDarkMode}
               title={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
             >
               <span className="theme-toggle__label">{isDarkMode ? 'Light' : 'Dark'}</span>
@@ -256,7 +257,7 @@ export default function App() {
           </Box>
 
           <Box component="section" aria-labelledby="page-title" sx={{ mb: 3 }}>
-            <Typography variant="overline" className="hero-badge" color="primary.main" sx={{ fontWeight: 700, letterSpacing: 1.5 }}>
+            <Typography variant="overline" color="primary.main" sx={{ fontWeight: 700, letterSpacing: 1.5 }}>
               EXPLORE THE PHILIPPINES
             </Typography>
             <Typography

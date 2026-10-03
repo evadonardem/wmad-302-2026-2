@@ -13,7 +13,6 @@
     radial-gradient(circle at bottom right, rgba(98, 63, 45, 0.12), transparent 22%),
     var(--page-bg);
   color: var(--text-color);
-  transition: background 0.25s ease, color 0.25s ease;
 }
 
 .app-shell.dark {
@@ -38,14 +37,6 @@
   border: 1px solid var(--panel-border);
   box-shadow: var(--shadow-soft);
   color: var(--text-color) !important;
-}
-
-.hero-badge {
-  display: inline-block;
-  padding: 0.35rem 0.75rem;
-  border-radius: 999px;
-  background: rgba(169, 95, 67, 0.12);
-  border: 1px solid rgba(169, 95, 67, 0.22);
 }
 
 .hero-title {
@@ -116,25 +107,9 @@
   border-color: rgba(96, 62, 41, 0.38);
 }
 
-.theme-toggle__icon {
-  transition: transform 0.35s ease, background-color 0.35s ease, box-shadow 0.35s ease;
-}
-
-.theme-toggle:active .theme-toggle__icon {
-  transform: scale(0.94);
-}
-
 .theme-toggle:focus-visible {
   outline: 2px solid rgba(89, 50, 30, 0.55);
   outline-offset: 2px;
-}
-
-.theme-toggle__label {
-  font-size: 0.8rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  opacity: 0.9;
 }
 
 .theme-toggle__icon {
@@ -153,6 +128,18 @@
   font-size: 1rem;
 }
 
+.theme-toggle__label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  opacity: 0.9;
+}
+
+.theme-toggle:active .theme-toggle__icon {
+  transform: scale(0.94);
+}
+
 @media (max-width: 600px) {
   .theme-toggle {
     padding: 0.3rem 0.55rem 0.3rem 0.4rem;
@@ -162,3 +149,4 @@
     font-size: 0.72rem;
   }
 }
+
