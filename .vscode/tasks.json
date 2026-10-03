@@ -1,0 +1,12 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Start Vite dev server",
+			"type": "shell",
+			"command": "cd 05_React_Capstone_Project_Group_5 && npm run dev",
+			"isBackground": true,
+			"problemMatcher": []
+		}
+	]
+}

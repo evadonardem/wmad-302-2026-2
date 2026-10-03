@@ -29,6 +29,20 @@ export const getProvincesByRegion = async (regionCode) => {
   }
 };
 
+export const getCitiesMunicipalitiesByRegion = async (regionCode) => {
+  if (!regionCode) return [];
+
+  try {
+    const { data } = await axios.get(
+      `${PSGC_BASE_URL}regions/${encodeURIComponent(regionCode)}/cities-municipalities/`
+    );
+    return Array.isArray(data) ? data : [];
+  } catch (error) {
+    console.error('Unable to load cities and municipalities:', error);
+    return [];
+  }
+};
+
 export const getCitiesMunicipalitiesByProvince = async (provinceCode) => {
   if (!provinceCode) return [];
 

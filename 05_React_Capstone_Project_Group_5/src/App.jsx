@@ -275,7 +275,7 @@ export default function App() {
               Find a place to remember.
             </Typography>
             <Typography color="text.secondary" sx={{ maxWidth: '640px', fontSize: { xs: '1rem', md: '1.08rem' } }}>
-              Choose a region, province, and city or municipality to discover places across the islands.
+              Choose a region and city or municipality to discover places across the islands.
             </Typography>
 
           </Box>

@@ -163,6 +163,6 @@ To assist with testing and structuring data mappings, refer to the verified sign
 
 ### 2. Pexels Media Search API
 
-* **Endpoint:** `GET https://pexels.com{keyword}&per_page=12`
+* **Endpoint:** `GET https://api.pexels.com/v1/search?query={keyword}&per_page=12`
 * **Required Headers:** `Authorization: YOUR_API_KEY`
-* **Example Query:** `GET https://pexels.comBaguio%20City%20tourist%20spot&per_page=12`
+* **Example Query:** `GET https://api.pexels.com/v1/search?query=Baguio%20City%20tourist%20spot&per_page=12`
