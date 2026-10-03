@@ -9,11 +9,14 @@ export default function LocationForm({ onSearch }) {
   const [selectedRegion, setSelectedRegion] = useState('');
   const [selectedCityName, setSelectedCityName] = useState('');
 
+  // 1. Fetch and sort Regions alphabetically (A-Z)
   useEffect(() => {
     const fetchRegions = async () => {
       try {
         const data = await getRegions();
-        setRegions(data || []);
+        // 🔤 Sort regions from A to Z
+        const sortedRegions = (data || []).sort((a, b) => a.name.localeCompare(b.name));
+        setRegions(sortedRegions);
       } catch (error) {
         console.error('Failed to fetch regions:', error);
       }
@@ -21,6 +24,7 @@ export default function LocationForm({ onSearch }) {
     fetchRegions();
   }, []);
 
+  // 2. Fetch and sort Cities alphabetically (A-Z)
   useEffect(() => {
     setSelectedCityName('');
 
@@ -28,7 +32,9 @@ export default function LocationForm({ onSearch }) {
       const fetchCities = async () => {
         try {
           const data = await getCitiesMunicipalitiesByRegion(selectedRegion);
-          setCities(data || []);
+          // 🔤 Sort cities/municipalities from A to Z
+          const sortedCities = (data || []).sort((a, b) => a.name.localeCompare(b.name));
+          setCities(sortedCities);
         } catch (error) {
           console.error('Failed to fetch cities/municipalities:', error);
           setCities([]);
@@ -43,9 +49,7 @@ export default function LocationForm({ onSearch }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (onSearch && selectedCityName) {
-
-      const regionName = regions.find((r) => r.code === selectedRegion)?.name;;
-
+      const regionName = regions.find((r) => r.code === selectedRegion)?.name;
       onSearch(regionName ? `${selectedCityName}, ${regionName}` : selectedCityName);
     }
   };
