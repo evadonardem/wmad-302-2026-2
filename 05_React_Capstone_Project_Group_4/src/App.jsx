@@ -1,9 +1,21 @@
-import React, { useState } from 'react';
-import { Container, CssBaseline, ThemeProvider, createTheme, Typography, Box, IconButton, Paper } from '@mui/material';
-import { LightMode, DarkMode, TravelExplore } from '@mui/icons-material';
+import React, { useEffect, useState } from 'react';
+import {
+  Container,
+  CssBaseline,
+  ThemeProvider,
+  createTheme,
+  Typography,
+  Box,
+  IconButton,
+  Paper,
+  Button,
+} from '@mui/material';
+import { LightMode, DarkMode, TravelExplore, Favorite } from '@mui/icons-material';
 import LocationForm from './components/LocationForm';
 import MediaGallery from './components/MediaGallery';
+import FavoritePlacesPage from './components/FavoritePlacesPage';
 import { searchPhotosByLocation } from './services/geoPhotoService';
+import { readFavorites, saveFavorites } from './utils/favorites';
 
 const PH_BLUE = '#0038A8';
 const PH_RED = '#CE1126';
@@ -14,6 +26,8 @@ export default function App() {
   const [photos, setPhotos] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchedLocation, setSearchedLocation] = useState('');
+  const [currentView, setCurrentView] = useState('explore');
+  const [favoritePhotos, setFavoritePhotos] = useState(() => readFavorites());
   const mode = isDarkMode ? 'dark' : 'light';
 
   const theme = createTheme({
@@ -35,8 +49,13 @@ export default function App() {
     shape: { borderRadius: 16 },
   });
 
+  useEffect(() => {
+    saveFavorites(favoritePhotos);
+  }, [favoritePhotos]);
+
   const handleSearchSubmit = async (locationName) => {
     setSearchedLocation(locationName);
+    setCurrentView('explore');
     setLoading(true);
     try {
       setPhotos(await searchPhotosByLocation(locationName));
@@ -45,11 +64,26 @@ export default function App() {
     }
   };
 
+  const toggleFavorite = (photo) => {
+    const toSave = photo && typeof photo === 'object' ? { ...photo, id: String(photo.id) } : null;
+    if (!toSave) return;
+
+    setFavoritePhotos((prev) => {
+      const exists = prev.some((item) => String(item.id) === String(toSave.id));
+      if (exists) {
+        return prev.filter((item) => String(item.id) !== String(toSave.id));
+      }
+
+      return [...prev, toSave];
+    });
+  };
+
+  const isFavorite = (id) => favoritePhotos.some((favorite) => String(favorite.id) === String(id));
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
-        {/* HERO */}
         <Box
           component="header"
           sx={{
@@ -63,7 +97,6 @@ export default function App() {
               : `linear-gradient(160deg, ${PH_BLUE} 0%, #001A66 100%)`,
           }}
         >
-          {/* Eight-ray sun, slowly turning */}
           <Box
             aria-hidden
             sx={{
@@ -97,8 +130,8 @@ export default function App() {
           />
 
           <Container maxWidth="lg" sx={{ position: 'relative' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: { xs: 6, md: 10 } }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2, mb: { xs: 6, md: 10 } }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
                 <IconButton
                   onClick={() => setIsDarkMode(!isDarkMode)}
                   aria-label="Toggle dark mode"
@@ -106,8 +139,44 @@ export default function App() {
                 >
                   {isDarkMode ? <LightMode /> : <DarkMode />}
                 </IconButton>
-                <TravelExplore sx={{ color: PH_GOLD }} />
-                <Typography sx={{ fontWeight: 700 }}>Lakbay PH</Typography>
+
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <TravelExplore sx={{ color: PH_GOLD }} />
+                  <Typography sx={{ fontWeight: 700 }}>Lakbay PH</Typography>
+                </Box>
+
+                <Button
+                  variant={currentView === 'explore' ? 'contained' : 'outlined'}
+                  color="warning"
+                  onClick={() => setCurrentView('explore')}
+                  sx={{
+                    color: currentView === 'explore' ? '#0B1D52' : '#fff',
+                    borderColor: 'rgba(255,255,255,0.35)',
+                    textTransform: 'none',
+                    ml: 0.5,
+                  }}
+                >
+                  Explore
+                </Button>
+
+                <Button
+                  variant={currentView === 'favorites' ? 'contained' : 'outlined'}
+                  color="warning"
+                  onClick={() => setCurrentView('favorites')}
+                  startIcon={<Favorite />}
+                  sx={{
+                    color: currentView === 'favorites' ? '#0B1D52' : '#fff',
+                    borderColor: 'rgba(255,255,255,0.35)',
+                    textTransform: 'none',
+                  }}
+                >
+                  Favorites
+                  {favoritePhotos.length > 0 && (
+                    <Box component="span" sx={{ ml: 1, px: 0.75, py: 0.15, borderRadius: 999, bgcolor: 'rgba(11,29,82,0.15)', fontSize: '0.75rem' }}>
+                      {favoritePhotos.length}
+                    </Box>
+                  )}
+                </Button>
               </Box>
             </Box>
 
@@ -120,11 +189,10 @@ export default function App() {
               7,641 islands.
             </Typography>
             <Typography sx={{ mt: 3, maxWidth: 480, fontSize: { xs: '1rem', md: '1.2rem' }, color: 'rgba(255,255,255,0.85)' }}>
-              Find tourist spots in any region, city, or municipality, from Batanes to Tawi-Tawi.
+              Find tourist spots in any region, city, or municipality!
             </Typography>
           </Container>
 
-          {/* Flag-color stripe */}
           <Box
             aria-hidden
             sx={{
@@ -137,28 +205,44 @@ export default function App() {
         </Box>
 
         <Container maxWidth="lg" sx={{ pb: 8 }}>
-          {/* Search card floating over the hero edge */}
-          <Paper
-            elevation={0}
-            sx={{
-              position: 'relative',
-              mt: { xs: -9, md: -11 },
-              mb: 6,
-              p: { xs: 2.5, md: 3.5 },
-              borderRadius: 5,
-              boxShadow: isDarkMode ? '0 24px 60px rgba(0,0,0,0.5)' : '0 24px 60px rgba(0,56,168,0.22)',
-            }}
-          >
-            <Typography variant="h4" sx={{ fontSize: { xs: '1.4rem', md: '1.75rem' }, mb: 0.5 }}>
-              Where to?
-            </Typography>
-            <Typography color="text.secondary" sx={{ mb: 2.5 }}>
-              Choose a region, then a city or municipality.
-            </Typography>
-            <LocationForm onSearch={handleSearchSubmit} />
-          </Paper>
+          {currentView === 'favorites' ? (
+            <FavoritePlacesPage
+              favorites={favoritePhotos}
+              onToggleFavorite={toggleFavorite}
+              onBackToExplore={() => setCurrentView('explore')}
+            />
+          ) : (
+            <>
+              <Paper
+                elevation={0}
+                sx={{
+                  position: 'relative',
+                  mt: { xs: -9, md: -11 },
+                  mb: 6,
+                  p: { xs: 2.5, md: 3.5 },
+                  borderRadius: 5,
+                  boxShadow: isDarkMode ? '0 24px 60px rgba(0,0,0,0.5)' : '0 24px 60px rgba(0,56,168,0.22)',
+                }}
+              >
+                <Typography variant="h4" sx={{ fontSize: { xs: '1.4rem', md: '1.75rem' }, mb: 0.5 }}>
+                  Where to?
+                </Typography>
+                <Typography color="text.secondary" sx={{ mb: 2.5 }}>
+                  Choose a region, then a city or municipality.
+                </Typography>
+                <LocationForm onSearch={handleSearchSubmit} />
+              </Paper>
 
-          <MediaGallery photos={photos} loading={loading} searchedLocation={searchedLocation} />
+              <MediaGallery
+                photos={photos}
+                loading={loading}
+                searchedLocation={searchedLocation}
+                favorites={favoritePhotos}
+                onToggleFavorite={toggleFavorite}
+                isFavorite={isFavorite}
+              />
+            </>
+          )}
         </Container>
       </Box>
     </ThemeProvider>

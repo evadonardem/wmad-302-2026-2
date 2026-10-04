@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
-  Box, Grid, Card, CardMedia, CardContent, Typography, Link, Skeleton, Chip,
+  Box, Grid, Card, CardMedia, Typography, Link, Skeleton, Chip,
   Grow, IconButton, Button, Dialog, DialogTitle, DialogContent, DialogActions,
   TextField, Snackbar, Alert,
 } from '@mui/material';
@@ -30,40 +30,42 @@ function getTrivia(locationName) {
   return GENERIC_TRIVIA[Math.floor(Math.random() * GENERIC_TRIVIA.length)];
 }
 
-function readFavorites() {
-  try {
-    return new Set(JSON.parse(localStorage.getItem('favoriteSpots') || '[]'));
-  } catch {
-    return new Set();
-  }
+function createPlaceholderPhoto(label = 'Tourist Spot') {
+  const safeLabel = String(label)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1500" viewBox="0 0 1200 1500">
+      <defs>
+        <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+          <stop offset="0%" stop-color="#0038A8" />
+          <stop offset="55%" stop-color="#0B57D0" />
+          <stop offset="100%" stop-color="#FCD116" />
+        </linearGradient>
+      </defs>
+      <rect width="1200" height="1500" fill="url(#bg)" />
+      <circle cx="950" cy="220" r="140" fill="rgba(255,255,255,0.2)" />
+      <circle cx="150" cy="1200" r="180" fill="rgba(255,255,255,0.12)" />
+      <path d="M0 1120 C220 980, 440 990, 620 1090 S960 1210, 1200 1030 L1200 1500 L0 1500 Z" fill="rgba(255,255,255,0.18)"/>
+      <text x="600" y="720" text-anchor="middle" fill="white" font-size="72" font-family="Arial, sans-serif" font-weight="700">${safeLabel}</text>
+      <text x="600" y="830" text-anchor="middle" fill="rgba(255,255,255,0.9)" font-size="28" font-family="Arial, sans-serif">Philippines</text>
+    </svg>
+  `;
+
+  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
 }
 
-function saveFavorites(set) {
-  try {
-    localStorage.setItem('favoriteSpots', JSON.stringify([...set]));
-  } catch {
-    // ignore storage errors (e.g. private browsing)
-  }
-}
-
-export default function MediaGallery({ photos, loading, searchedLocation }) {
-  const [favorites, setFavorites] = useState(() => readFavorites());
+export default function MediaGallery({ photos, loading, searchedLocation, favorites = [], onToggleFavorite, isFavorite = () => false }) {
   const [suggestOpen, setSuggestOpen] = useState(false);
   const [suggestName, setSuggestName] = useState('');
   const [suggestNote, setSuggestNote] = useState('');
   const [thanksOpen, setThanksOpen] = useState(false);
 
-  useEffect(() => {
-    saveFavorites(favorites);
-  }, [favorites]);
-
-  const toggleFavorite = (id) => {
-    setFavorites((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
+  const toggleFavorite = (photo) => {
+    onToggleFavorite(photo);
   };
 
   const handleSuggestSubmit = () => {
@@ -84,7 +86,7 @@ export default function MediaGallery({ photos, loading, searchedLocation }) {
     return (
       <Grid container spacing={3}>
         {[1, 2, 3].map((i) => (
-          <Grid item xs={12} sm={6} md={4} key={i}>
+          <Grid key={i} size={{ xs: 12, sm: 6, md: 4 }}>
             <Skeleton variant="rectangular" height={200} sx={{ borderRadius: 3 }} />
             <Skeleton sx={{ mt: 1 }} />
             <Skeleton width="60%" />
@@ -176,7 +178,7 @@ export default function MediaGallery({ photos, loading, searchedLocation }) {
       <Grid container spacing={3}>
         {photos.map((photo, index) => (
           <Grow in key={photo.id} timeout={300 + index * 100}>
-            <Grid item xs={12} sm={6} md={4}>
+            <Grid size={{ xs: 12, sm: 6, md: 4 }}>
               <Card
                 elevation={0}
                 sx={{
@@ -193,8 +195,12 @@ export default function MediaGallery({ photos, loading, searchedLocation }) {
                 <CardMedia
                   component="img"
                   className="gallery-img"
-                  image={photo.imageUrl}
+                  src={photo.imageUrl || createPlaceholderPhoto(photo.altText || searchedLocation || 'Tourist Spot')}
                   alt={photo.altText}
+                  onError={(event) => {
+                    event.currentTarget.onerror = null;
+                    event.currentTarget.src = createPlaceholderPhoto(photo.altText || searchedLocation || 'Tourist Spot');
+                  }}
                   sx={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.6s ease' }}
                 />
 
@@ -204,8 +210,8 @@ export default function MediaGallery({ photos, loading, searchedLocation }) {
                 />
 
                 <IconButton
-                  onClick={() => toggleFavorite(photo.id)}
-                  aria-label={favorites.has(photo.id) ? 'Remove from favorites' : 'Add to favorites'}
+                  onClick={() => toggleFavorite(photo)}
+                  aria-label={isFavorite(photo.id) ? 'Remove from favorites' : 'Add to favorites'}
                   size="small"
                   sx={{
                     position: 'absolute', top: 12, right: 12, zIndex: 1,
@@ -213,7 +219,7 @@ export default function MediaGallery({ photos, loading, searchedLocation }) {
                     '&:hover': { bgcolor: '#fff' },
                   }}
                 >
-                  {favorites.has(photo.id)
+                  {isFavorite(photo.id)
                     ? <Favorite fontSize="small" color="secondary" />
                     : <FavoriteBorder fontSize="small" color="secondary" />}
                 </IconButton>
