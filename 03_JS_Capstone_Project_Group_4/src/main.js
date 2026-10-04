@@ -125,13 +125,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // --- Action delegation: handles remove-resident and remove-item clicks ---
   setupActionDelegation(actionRoot, {
-    'remove-resident': (dataset) => {
-      residents = residents.filter(r => r.id !== dataset.id);
-      removeFromOfflineQueue(dataset.id);
+    'remove-resident': (element) => {
+      const id = element.dataset.id;
+      residents = residents.filter(r => r.id !== id);
+      removeFromOfflineQueue(id);
       renderResidentCards(queueContainer, residents);
     },
-    'remove-item': (dataset) => {
-      const index = packer.getItems().findIndex((_, i) => i.toString() === dataset.id);
+    'remove-item': (element) => {
+      const index = packer.getItems().findIndex((_, i) => i.toString() === element.dataset.id);
       if (index !== -1) {
         packer.removeItem(index);
         renderPOSRegister(posContainer, {
