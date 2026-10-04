@@ -1,93 +1,56 @@
+import { Container, createTheme, CssBaseline, prerelease, SpeedDial, SpeedDialAction, SpeedDialIcon, TextField, ThemeProvider } from '@mui/material'
+import './App.css'
+import QuoteOfTheDay from './components/QuoteOfTheDay'
+import { DarkMode, LightMode, Palette, Print, Save, Settings, Share } from '@mui/icons-material';
 import { useState } from 'react';
-import {
-  DarkMode,
-  LightMode,
-  Palette,
-  Print,
-  Share,
-} from '@mui/icons-material';
-import { Container, createTheme, CssBaseline, ThemeProvider } from '@mui/material';
-import './App.css';
 import GeneralSettings from './components/GeneralSettings';
-import QuoteOfTheDay from './components/QuoteOfTheDay';
 
-const primaryColors = ['#6750a4', '#006c5b', '#9c4146', '#315e91'];
-
-const theme = (mode, primaryColor) => createTheme({
+// TODO 13 [Dynamic Themes]: Complete the theme creation arrow function.
   palette: {
     mode,
-    primary: { main: primaryColor },
-  },
+    primary: {
+      main: '#87CEEB'
+    }
+  }
 });
 
 function App() {
+  // TODO 14 [State Management]: Initialize a boolean React state hook variable named 'isDarkMode' defaulting to false.
   const [isDarkMode, setIsDarkMode] = useState(false);
-  const [primaryColorIndex, setPrimaryColorIndex] = useState(0);
-  const mode = isDarkMode ? 'dark' : 'light';
 
+  // TODO 15 [Data Actions Mapping]: Populate the 'actions' configuration array below.
   const actions = [
     {
       icon: isDarkMode ? <LightMode /> : <DarkMode />,
       name: isDarkMode ? 'Light Mode' : 'Dark Mode',
-      onClick: () => setIsDarkMode((currentMode) => !currentMode),
+      onClick: () => setIsDarkMode(prevMode => !prevMode)
     },
-    {
-      icon: <Palette />,
-      name: 'Change accent color',
-      onClick: () => setPrimaryColorIndex((index) => (index + 1) % primaryColors.length),
-    },
-    {
-      icon: <Print />,
-      name: 'Print',
-      onClick: () => window.print(),
-    },
-    {
-      icon: <Share />,
-      name: 'Share',
-      onClick: async () => {
-        const shareData = {
-          title: 'Quote of the Day',
-          text: 'Check out this quote of the day.',
-          url: window.location.href,
-        };
-
-        try {
-          if (navigator.share) {
-            await navigator.share(shareData);
-          } else if (navigator.clipboard?.writeText) {
-            await navigator.clipboard.writeText(shareData.url);
-          } else {
-            throw new Error('Sharing and clipboard access are not available in this browser.');
-          }
-        } catch (error) {
-          if (error.name !== 'AbortError') {
-            console.error('Unable to share the quote generator.', error);
-            window.alert('Unable to share from this browser. Please copy the page URL to share it.');
-          }
-        }
-      },
-    },
+    { icon: <Palette />, name: 'Theme' },
+    { icon: <Print />, name: 'Print' },
+    { icon: <Share />, name: 'Share' },
   ];
 
   return (
-    <ThemeProvider theme={theme(mode, primaryColors[primaryColorIndex])}>
-      <CssBaseline />
-      <Container
-        sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          alignItems: 'center',
-          minHeight: '100vh',
-          width: '100%',
-          py: 4,
-        }}
-      >
+    // TODO 16 [Theme Binding Layout]: Wrap the children inside a dynamic ThemeProvider passing the calculated theme mode.
+    <>
+      {/* [Your ThemeProvider wrapper structure here] */}
+      <ThemeProvider theme={theme(isDarkMode ? 'dark' : 'light')}> 
+        <CssBaseline />
+          <Container sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+           alignItems: 'center',
+           minHeight: '95vh',
+           width: '100vw',
+      }}>
         <QuoteOfTheDay />
-        <GeneralSettings actions={actions} />
-      </Container>
-    </ThemeProvider>
-  );
+          <GeneralSettings actions={actions} />
+        </Container>
+      </ThemeProvider>
+     
+    </>
+  )
 }
 
-export default App;
+export default App

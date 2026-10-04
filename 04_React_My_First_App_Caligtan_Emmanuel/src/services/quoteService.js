@@ -1,42 +1,39 @@
 import axios from 'axios';
 
-const API_URL = 'https://quoteslate.vercel.app';
+const API_URL = 'https://quoteslate.vercel.app/api';
 
 export const getRandomQuote = async (selectedTag = null) => {
-    // TODO 17 [Dynamic Endpoint Interpolation]
-    const endpoint = selectedTag
-        ? `${API_URL}/quotes/random?tags=${selectedTag}`
-        : `${API_URL}/quotes/random`;
+    // TODO 17 [Dynamic Endpoint Interpolation]: Formulate the dynamic target endpoint string URL.
+    const queryParam = selectedTag ? `?tags=${selectedTag}` : '';
+    const endpoint = `${API_URL}/quotes/random${queryParam}`;
 
     try {
-        // TODO 18 [Asynchronous Request Handling]
+        // TODO 18 [Asynchronous Request Handling]:
         const response = await axios.get(endpoint);
-        
-        // Extract quote, author, and tags properties from the response payload
-        const { quote, author, tags } = response.data;
-
+        const { quote: text, author, tags } = response.data;
         return {
-            text: quote,
-            author: author,
-            tags: tags || []
+            text,
+            author,
+            tags
         };
 
-    } catch (error) {
-        // TODO 19 [Resilient System Fallbacks]
+    } catch {
+        // TODO 19 [Resilient System Fallbacks]: Return a hardcoded fallback quote object with custom placeholder messages if an unexpected API or network timeout exception is encountered.
         return {
-            text: "The more you know, the more you know you don't know.",
-            author: "Aristotle",
-            tags: ["philosophy", "wisdom"]
+            text: ' ',
+            author: ' ',
+            tags: []
         };
     }
 };
 
 export const getTags = async () => {
-    // TODO 20 [Asynchronous List Retrieval]
+    // TODO 20 [Asynchronous List Retrieval]:
+    const endpoint = `${API_URL}/tags`;
     try {
-        const response = await axios.get(`${API_URL}/tags`);
+        const response = await axios.get(endpoint);
         return response.data;
-    } catch (error) {
+    } catch {
         return [];
     }
-};
+}
