@@ -535,8 +535,6 @@ export default function App() {
           sx={{
             position: 'relative',
             zIndex: 1,
-            borderTop: '1px solid var(--border)',
-            borderBottom: '1px solid var(--border)',
             px: { xs: 3, sm: 6, md: 8, lg: 10 },
             py: 2.2,
             mb: 5,
@@ -547,35 +545,72 @@ export default function App() {
             gap: 2,
           }}
         >
-          <Typography
-            variant="caption"
-            sx={{
-              fontWeight: 800,
-              letterSpacing: 3,
-              textTransform: 'uppercase',
-              fontSize: '0.75rem',
-              color: 'var(--text)',
-            }}
-          >
-            {showFavorites
-              ? 'YOUR FAVORITES'
-              : searchTerm
-                ? `DESTINATIONS · ${searchTerm.toUpperCase()}`
-                : 'DESTINATIONS'}
-          </Typography>
+          {/* Left: label pill + place pill (was one long dotted string) */}
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, minWidth: 0 }}>
+            <Typography
+              variant="caption"
+              sx={{
+                fontWeight: 800,
+                fontSize: '0.75rem',
+                letterSpacing: 2,
+                textTransform: 'uppercase',
+                textShadow: 'none',
+                color: 'var(--accent-strong)',
+                background: 'linear-gradient(var(--accent-soft), var(--accent-soft)), var(--chip-bg)',
+                border: '1px solid var(--border-strong)',
+                borderRadius: 5,
+                px: 2,
+                py: 0.5,
+              }}
+            >
+              {showFavorites ? 'YOUR FAVORITES' : 'DESTINATIONS'}
+            </Typography>
 
-          {/* Filter Categories / Favorites Toggle */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+            {!showFavorites && searchTerm && (
+              <Typography
+                variant="caption"
+                sx={{
+                  fontWeight: 800,
+                  fontSize: '0.75rem',
+                  letterSpacing: 2,
+                  textTransform: 'uppercase',
+                  textShadow: 'none',
+                  color: 'var(--accent-strong)',
+                  background: 'linear-gradient(var(--accent-soft), var(--accent-soft)), var(--chip-bg)',
+                  border: '1px solid var(--border)',
+                  borderRadius: 5,
+                  px: 2,
+                  py: 0.5,
+                }}
+              >
+                {searchTerm}
+              </Typography>
+            )}
+          </Box>
+
+          {/* Right: filters, same pill style */}
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 1 }}>
             <Typography
               onClick={() => setShowFavorites(false)}
               variant="caption"
               sx={{
                 fontWeight: 800,
+                fontSize: '0.75rem',
                 letterSpacing: 2,
                 cursor: 'pointer',
-                color: !showFavorites ? 'var(--accent)' : 'var(--text-muted)',
-                borderBottom: !showFavorites ? '2px solid var(--accent)' : 'none',
-                pb: 0.5,
+                textShadow: 'none',
+                color: 'var(--accent-strong)',
+                background: !showFavorites
+                  ? 'linear-gradient(var(--accent-soft), var(--accent-soft)), linear-gradient(var(--accent-soft), var(--accent-soft)), var(--chip-bg)'
+                  : 'linear-gradient(var(--accent-soft), var(--accent-soft)), var(--chip-bg)',
+                border: '1px solid',
+                borderColor: !showFavorites ? 'var(--border-strong)' : 'var(--border)',
+                boxShadow: !showFavorites ? '0 0 12px var(--glow)' : 'none',
+                borderRadius: 5,
+                px: 2,
+                py: 0.5,
+                transition: 'all 0.25s ease',
+                '&:hover': { borderColor: 'var(--accent)', boxShadow: '0 0 12px var(--glow)' },
               }}
             >
               ALL ({matched.length})
@@ -586,11 +621,22 @@ export default function App() {
               variant="caption"
               sx={{
                 fontWeight: 800,
+                fontSize: '0.75rem',
                 letterSpacing: 2,
                 cursor: 'pointer',
-                color: showFavorites ? 'var(--accent)' : 'var(--text-muted)',
-                borderBottom: showFavorites ? '2px solid var(--accent)' : 'none',
-                pb: 0.5,
+                textShadow: 'none',
+                color: 'var(--accent-strong)',
+                background: showFavorites
+                  ? 'linear-gradient(var(--accent-soft), var(--accent-soft)), linear-gradient(var(--accent-soft), var(--accent-soft)), var(--chip-bg)'
+                  : 'linear-gradient(var(--accent-soft), var(--accent-soft)), var(--chip-bg)',
+                border: '1px solid',
+                borderColor: showFavorites ? 'var(--border-strong)' : 'var(--border)',
+                boxShadow: showFavorites ? '0 0 12px var(--glow)' : 'none',
+                borderRadius: 5,
+                px: 2,
+                py: 0.5,
+                transition: 'all 0.25s ease',
+                '&:hover': { borderColor: 'var(--accent)', boxShadow: '0 0 12px var(--glow)' },
               }}
             >
               FAVORITES ({favorites.length})
@@ -602,11 +648,22 @@ export default function App() {
               title="Sort by photographer name"
               sx={{
                 fontWeight: 800,
+                fontSize: '0.75rem',
                 letterSpacing: 2,
                 cursor: 'pointer',
-                color: sortAz ? 'var(--accent)' : 'var(--text-muted)',
-                borderBottom: sortAz ? '2px solid var(--accent)' : 'none',
-                pb: 0.5,
+                textShadow: 'none',
+                color: 'var(--accent-strong)',
+                background: sortAz
+                  ? 'linear-gradient(var(--accent-soft), var(--accent-soft)), linear-gradient(var(--accent-soft), var(--accent-soft)), var(--chip-bg)'
+                  : 'linear-gradient(var(--accent-soft), var(--accent-soft)), var(--chip-bg)',
+                border: '1px solid',
+                borderColor: sortAz ? 'var(--border-strong)' : 'var(--border)',
+                boxShadow: sortAz ? '0 0 12px var(--glow)' : 'none',
+                borderRadius: 5,
+                px: 2,
+                py: 0.5,
+                transition: 'all 0.25s ease',
+                '&:hover': { borderColor: 'var(--accent)', boxShadow: '0 0 12px var(--glow)' },
               }}
             >
               SORT A–Z
@@ -616,7 +673,19 @@ export default function App() {
               <Typography
                 onClick={clearFavorites}
                 variant="caption"
-                sx={{ fontWeight: 800, letterSpacing: 2, cursor: 'pointer', color: '#FF4D6D', pb: 0.5 }}
+                sx={{
+                  fontWeight: 800,
+                  fontSize: '0.75rem',
+                  letterSpacing: 2,
+                  cursor: 'pointer',
+                  textShadow: 'none',
+                  color: '#FF4D6D',
+                  background: 'var(--chip-bg)',
+                  border: '1px solid #FF4D6D',
+                  borderRadius: 5,
+                  px: 2,
+                  py: 0.5,
+                }}
               >
                 CLEAR ALL
               </Typography>
