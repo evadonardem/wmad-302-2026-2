@@ -46,7 +46,7 @@ export default function QuoteOfTheDay() {
         borderRadius: 3
       }}
     >
-      <CardContent sx={{ p: 4 , backgroundColor: '#c2dde7', color: '#000'}}>
+      <CardContent sx={{ p: 4 , backgroundColor: '#fe86ee', color: '#000'}}>
         <Stack spacing={3}>
           <Typography variant="overline" color="text.secondary" letterSpacing={2} textAlign="center">
             Quote of the Day
@@ -55,7 +55,7 @@ export default function QuoteOfTheDay() {
           <Box>
             {/* TODO 6 [Conditional Chip List]: Map through 'quote.tags'. For each tag 't': */}
             {quote.tags?.map((tag) => (
-              <Chip key={tag} label={tag} sx={{ mr: 0.5,backgroundColor: '#87CEEB',color: '#000'}}
+              <Chip key={tag} label={tag} sx={{ mr: 0.5,backgroundColor: '#ff7cac',color: '#000'}}
               />
             ))}
           </Box>
@@ -97,7 +97,7 @@ export default function QuoteOfTheDay() {
               fullWidth
               variant="contained"
               startIcon={<Refresh />}
-              sx={{ borderRadius: 2, textTransform: 'none', color: '#050505', backgroundColor: '#87CEEB' }}
+              sx={{ borderRadius: 2, textTransform: 'none', color: '#050505', backgroundColor: '#fe84c5' }}
               onClick={loadRandomQuote}
             >
               Next Quote

@@ -10,7 +10,7 @@ import GeneralSettings from './components/GeneralSettings';
   palette: {
     mode,
     primary: {
-      main: '#87CEEB'
+      main: '#ac74b6'
     }
   }
 });
