@@ -6,6 +6,7 @@ import { useState } from 'react';
 import GeneralSettings from './components/GeneralSettings';
 
 // TODO 13 [Dynamic Themes]: Complete the theme creation arrow function.
+  const theme = (mode = 'light') => createTheme({
   palette: {
     mode,
     primary: {
