@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Box, FormControl, InputLabel, Select, MenuItem, Button, Stack } from '@mui/material';
 import { Search } from '@mui/icons-material';
-import { getRegions, getCitiesMunicipalitiesByRegion } from '../services/geoPhotoService';
+import { getLocalRegions, getLocalProvincesByRegion } from '../services/geoPhotoService';
 
 export default function LocationForm({ onSearch }) {
   // TODO 2.1 [State Trackers]: Initialize four separate local state layers:
@@ -9,68 +9,94 @@ export default function LocationForm({ onSearch }) {
   // - 'cities': Stores array of filtered sub-municipalities (default: empty array)
   // - 'selectedRegion': String tracking the chosen active region code (default: empty string)
   // - 'selectedCityName': String tracking the actual chosen city text name to feed the search keyword engine (default: empty string)
-  // [Your code here]
+  // CHANGED: the second level is now provinces, so 'cities' = 'provinces' and 'selectedCityName' = 'selectedProvinceName'.
+  // CHANGED: 'selectedRegion' now holds the region name (from the group's own list), not a PSGC code.
+  const [regions, setRegions] = useState([]);
+  const [provinces, setProvinces] = useState([]);
+  const [selectedRegion, setSelectedRegion] = useState('');
+  const [selectedProvinceName, setSelectedProvinceName] = useState('');
 
   useEffect(() => {
     // TODO 2.2 [Initial Data Populate]: Invoke the 'getRegions' service function asynchronously inside a mounting side-effect.
     // Set the returned collection smoothly into your local regions state layer.
-    // [Your code here]
+    // CHANGED: loads the group's own list of regions with 'getLocalRegions' instead of the PSGC API.
+    setRegions(getLocalRegions());
   }, []);
 
   useEffect(() => {
     // TODO 2.3 [Reactive Cascading Refresh]: Trigger an asynchronous refresh whenever 'selectedRegion' changes.
     // If selectedRegion is a valid code, call 'getCitiesMunicipalitiesByRegion(selectedRegion)' and load the cities list state.
     // CRITICAL: Reset your 'selectedCityName' tracking states back to an empty string to keep inputs contextually clean!
-    // [Your code here]
+    // CHANGED: loads that region's provinces with 'getLocalProvincesByRegion' and resets 'selectedProvinceName'.
+    // The list is local, so there is no network request and no race condition.
+    setSelectedProvinceName('');
+    setProvinces(selectedRegion ? getLocalProvincesByRegion(selectedRegion) : []);
   }, [selectedRegion]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     // TODO 2.4 [Form Submit Bubble]: Trigger the structural context parent callback routine 'onSearch' 
     // passing through your active 'selectedCityName' value string.
-    // [Your code here]
+    // CHANGED: passes the active 'selectedProvinceName'.
+    if (selectedProvinceName) onSearch(selectedProvinceName);
   };
 
   return (
-    <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%', mb: 4 }}>
+    <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%', mb: 0 }}>
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} justifyContent="center">
         
-        <FormControl fullWidth size="small">
+        <FormControl fullWidth size="small" sx={{ bgcolor: 'background.paper', borderRadius: 1 }}>
           <InputLabel id="region-label">Select Region</InputLabel>
           {/* TODO 2.5 [Controlled Parent Select]: Bind the Select component value to your region state.
               Implement an onChange handler to update your 'selectedRegion' with 'e.target.value'. */}
           <Select
             labelId="region-label"
             label="Select Region"
-            // [Your props here]
+            value={selectedRegion}
+            onChange={(e) => setSelectedRegion(e.target.value)}
+            MenuProps={{ PaperProps: { sx: { maxHeight: 360 } } }}
           >
             {/* TODO 2.6 [Region Menu Map]: Dynamically map through your local regions array state layer 
                 to output item choice options. Use region.code as the structural value and region.name for text displays. */}
-            {/* [Your code here] */}
+            {/* CHANGED: each region is now a plain text name, so the name is used for both the value and the text. */}
+            {regions.map((region) => (
+              <MenuItem key={region} value={region}>
+                {region}
+              </MenuItem>
+            ))}
           </Select>
         </FormControl>
 
-        <FormControl fullWidth size="small" disabled={!selectedRegion}>
-          <InputLabel id="city-label">Select City / Municipality</InputLabel>
+        <FormControl fullWidth size="small" disabled={!selectedRegion} sx={{ bgcolor: 'background.paper', borderRadius: 1 }}>
+          <InputLabel id="province-label">Select Province</InputLabel>
           {/* TODO 2.7 [Controlled Child Select]: Bind the Select value to your city state property layout tracker.
               Capture 'e.target.value' into 'selectedCityName' inside your execution handler block. */}
+          {/* CHANGED: bound to 'selectedProvinceName'. */}
           <Select
-            labelId="city-label"
-            label="Select City / Municipality"
-            // [Your props here]
+            labelId="province-label"
+            label="Select Province"
+            value={selectedProvinceName}
+            onChange={(e) => setSelectedProvinceName(e.target.value)}
+            MenuProps={{ PaperProps: { sx: { maxHeight: 360 } } }}
           >
             {/* TODO 2.8 [City Menu Map]: Map through your internal cities array state dynamically.
                 Use city.code/id for selection key tracking and map city.name directly for option layout configurations. */}
-            {/* [Your code here] */}
+            {/* CHANGED: maps the provinces array (province name used as the key and the text). */}
+            {provinces.map((province) => (
+              <MenuItem key={province} value={province}>
+                {province}
+              </MenuItem>
+            ))}
           </Select>
         </FormControl>
 
         <Button
           type="submit"
           variant="contained"
+          color="secondary"
           startIcon={<Search />}
-          disabled={!selectedCityName}
-          sx={{ textTransform: 'none', px: 4 }}
+          disabled={!selectedProvinceName}
+          sx={{ textTransform: 'none', px: 4, borderRadius: 2, fontWeight: 600 }}
         >
           Search
         </Button>
