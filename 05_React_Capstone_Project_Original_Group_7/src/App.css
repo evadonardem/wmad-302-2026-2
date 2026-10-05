@@ -1,0 +1,611 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
+ 
+:root {
+  --ph-blue: #0038a8;
+  --ph-blue-light: #2f6bff;
+  --ph-red: #ce1126;
+  --ph-yellow: #fcd116;
+  --sky: #38bdf8;
+  --radius: 20px;
+  --border: 1px solid rgba(128, 128, 128, 0.28);
+  --shadow-soft: 0 10px 28px rgba(0, 0, 0, 0.16);
+  --shadow-lift: 0 24px 50px rgba(0, 0, 0, 0.32);
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+ 
+/* ---------- Base ---------- */
+html {
+  scroll-behavior: smooth;
+}
+ 
+body {
+  min-height: 100vh;
+  font-family: 'Poppins', 'Roboto', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+ 
+  background-image:
+    radial-gradient(rgba(128, 128, 128, 0.16) 1.2px, transparent 1.2px),
+    radial-gradient(900px circle at 8% 5%, rgba(47, 107, 255, 0.48), transparent 60%),
+    radial-gradient(800px circle at 95% 10%, rgba(252, 209, 22, 0.48), transparent 60%),
+    radial-gradient(900px circle at 85% 95%, rgba(206, 17, 38, 0.38), transparent 60%),
+    radial-gradient(800px circle at 5% 90%, rgba(56, 189, 248, 0.42), transparent 60%) !important;
+  background-size: 26px 26px, auto, auto, auto, auto !important;
+  background-attachment: fixed !important;
+  background-repeat: repeat, no-repeat, no-repeat, no-repeat, no-repeat !important;
+  transition: background-color 0.4s ease, color 0.4s ease;
+}
+ 
+.MuiTypography-root,
+.MuiButton-root,
+.MuiInputBase-root,
+.MuiMenuItem-root,
+.MuiInputLabel-root {
+  font-family: inherit !important;
+}
+ 
+::selection {
+  background: rgba(252, 209, 22, 0.6);
+  color: #000;
+}
+ 
+/* Slim gradient scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(var(--ph-blue), var(--ph-red));
+  border-radius: 10px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(128, 128, 128, 0.12);
+}
+ 
+/* Visible keyboard focus */
+:focus-visible {
+  outline: 3px solid var(--ph-yellow);
+  outline-offset: 3px;
+}
+ 
+/* ---------- Header panel (frosted glass) ---------- */
+.MuiPaper-root.MuiPaper-elevation0 {
+  position: relative;
+  overflow: hidden;
+  border: var(--border);
+  border-radius: 30px !important;
+  background-color: rgba(128, 128, 128, 0.14) !important;
+  background-image:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.14), transparent 40%) !important;
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  box-shadow: var(--shadow-soft), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  animation: fadeUp 0.7s var(--ease) both;
+}
+ 
+/* Tricolor accent bar */
+.MuiPaper-root.MuiPaper-elevation0::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 8px;
+  background: linear-gradient(90deg, var(--ph-blue) 0 33.3%, var(--ph-yellow) 33.3% 66.6%, var(--ph-red) 66.6% 100%);
+}
+ 
+/* ---------- Title, logo icon & subtitle ---------- */
+h1.MuiTypography-h3 {
+  font-weight: 800 !important;
+  letter-spacing: -1px;
+  background: linear-gradient(90deg, var(--ph-blue-light), var(--ph-red) 60%, #f59e0b);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.18));
+}
+ 
+/* Map-pin icon next to "Lakbay": static, reacts only on hover */
+h1.MuiTypography-h3 svg {
+  flex-shrink: 0;
+  -webkit-text-fill-color: initial;
+  filter: drop-shadow(0 4px 6px rgba(206, 17, 38, 0.45));
+  transition: transform 0.3s var(--ease);
+}
+ 
+h1.MuiTypography-h3 svg:hover {
+  transform: scale(1.15) rotate(-8deg);
+}
+ 
+.MuiTypography-subtitle1 {
+  max-width: 580px;
+  margin-inline: auto !important;
+  line-height: 1.75;
+}
+ 
+/* ---------- Section headings ("Featured spots", "My favorites") ---------- */
+.MuiContainer-root > .MuiTypography-h5 {
+  display: block;
+  width: fit-content;
+  max-width: 100%;
+  margin-inline: auto !important;
+  padding: 12px 32px 10px;
+  border: var(--border);
+  border-radius: 999px;
+  background-color: rgba(128, 128, 128, 0.18);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: var(--shadow-soft), inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  font-weight: 700 !important;
+  animation: fadeUp 0.6s var(--ease) both;
+  scroll-margin-top: 24px;
+}
+ 
+.MuiContainer-root > .MuiTypography-h5::after {
+  content: '';
+  display: block;
+  height: 3px;
+  margin: 7px auto 0;
+  width: 60%;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--ph-blue), var(--ph-yellow), var(--ph-red));
+}
+ 
+/* ==========================================================
+   BUTTONS
+   ========================================================== */
+ 
+/* ---------- Search button: glossy gradient pill ---------- */
+.MuiButton-contained {
+  position: relative;
+  overflow: hidden;
+  min-height: 42px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  font-weight: 700;
+  font-size: 0.95rem;
+  letter-spacing: 0.6px;
+  color: #fff !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.28) 0%, rgba(255, 255, 255, 0) 55%),
+    linear-gradient(135deg, var(--ph-blue) 0%, var(--ph-blue-light) 55%, var(--sky) 100%);
+  box-shadow:
+    0 8px 20px rgba(0, 56, 168, 0.45),
+    0 2px 0 rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  transition:
+    transform 0.3s var(--ease),
+    box-shadow 0.3s var(--ease),
+    filter 0.3s ease;
+}
+ 
+/* Light sweep (hover only) */
+.MuiButton-contained::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -80%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.6), transparent);
+  transform: skewX(-20deg);
+  pointer-events: none;
+}
+ 
+.MuiButton-contained:hover {
+  transform: translateY(-3px) scale(1.03);
+  filter: brightness(1.08) saturate(1.1);
+  box-shadow:
+    0 14px 30px rgba(0, 56, 168, 0.55),
+    0 0 0 4px rgba(47, 107, 255, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.65);
+}
+ 
+.MuiButton-contained:hover::after {
+  left: 140%;
+  transition: left 0.8s ease;
+}
+ 
+.MuiButton-contained:active {
+  transform: translateY(1px) scale(0.97);
+  box-shadow:
+    0 4px 10px rgba(0, 56, 168, 0.4),
+    inset 0 2px 4px rgba(0, 0, 0, 0.25);
+}
+ 
+/* Search icon pops on hover */
+.MuiButton-startIcon {
+  transition: transform 0.35s var(--ease);
+}
+ 
+.MuiButton-contained:hover .MuiButton-startIcon {
+  transform: scale(1.25) rotate(-12deg);
+}
+ 
+/* Disabled: soft glass, clearly inactive */
+.MuiButton-contained.Mui-disabled {
+  color: rgba(128, 128, 128, 0.85) !important;
+  text-shadow: none;
+  background: rgba(128, 128, 128, 0.16);
+  border: 1px dashed rgba(128, 128, 128, 0.5);
+  box-shadow: none;
+  filter: none;
+  transform: none;
+}
+ 
+.MuiButton-contained.Mui-disabled::after {
+  display: none;
+}
+ 
+/* ---------- Light/Dark toggle: round glass button with ring ---------- */
+.MuiIconButton-root {
+  width: 46px;
+  height: 46px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.22), transparent 60%),
+    rgba(128, 128, 128, 0.18) !important;
+  box-shadow:
+    0 6px 16px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition:
+    transform 0.35s var(--ease),
+    box-shadow 0.35s var(--ease),
+    background-color 0.3s ease;
+}
+ 
+.MuiIconButton-root .MuiSvgIcon-root {
+  transition: transform 0.5s var(--ease), color 0.3s ease;
+}
+ 
+.MuiIconButton-root:hover {
+  transform: translateY(-2px) scale(1.08);
+  box-shadow:
+    0 10px 22px rgba(0, 0, 0, 0.28),
+    0 0 0 4px rgba(252, 209, 22, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+ 
+.MuiIconButton-root:hover .MuiSvgIcon-root {
+  transform: rotate(35deg) scale(1.1);
+  color: var(--ph-yellow);
+}
+ 
+.MuiIconButton-root:active {
+  transform: scale(0.94);
+}
+ 
+/* ---------- Favorite heart (on photo cards) ---------- */
+.MuiIconButton-root.fav-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2; /* above the hover gradient on the photo */
+  width: 42px;
+  height: 42px;
+  color: #fff;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.22), transparent 60%),
+    rgba(0, 0, 0, 0.35) !important;
+}
+ 
+.MuiIconButton-root.fav-btn:hover .MuiSvgIcon-root {
+  transform: scale(1.2);
+  color: var(--ph-red);
+}
+ 
+.MuiIconButton-root.fav-btn.is-active .MuiSvgIcon-root {
+  color: var(--ph-red);
+  animation: heartPop 0.45s var(--ease);
+}
+ 
+@keyframes heartPop {
+  0%   { transform: scale(0.6); }
+  60%  { transform: scale(1.35); }
+  100% { transform: scale(1); }
+}
+ 
+/* ---------- Favorite toggle (inside the enlarged view) ---------- */
+.MuiButton-contained.fav-toggle.is-active {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.28) 0%, rgba(255, 255, 255, 0) 55%),
+    linear-gradient(135deg, #9b0d1d 0%, var(--ph-red) 55%, #ff5a6e 100%);
+  box-shadow:
+    0 8px 20px rgba(206, 17, 38, 0.45),
+    0 2px 0 rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.55);
+}
+ 
+.MuiButton-contained.fav-toggle.is-active:hover {
+  box-shadow:
+    0 14px 30px rgba(206, 17, 38, 0.55),
+    0 0 0 4px rgba(206, 17, 38, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.65);
+}
+ 
+/* ---------- Form fields ---------- */
+.MuiOutlinedInput-root {
+  border-radius: 16px !important;
+  background-color: rgba(128, 128, 128, 0.12);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.08);
+  transition: box-shadow 0.3s var(--ease), background-color 0.3s ease, transform 0.3s var(--ease);
+}
+ 
+.MuiOutlinedInput-root:hover {
+  background-color: rgba(128, 128, 128, 0.18);
+  box-shadow: 0 0 0 4px rgba(47, 107, 255, 0.16);
+}
+ 
+.MuiOutlinedInput-root.Mui-focused {
+  box-shadow: 0 0 0 4px rgba(47, 107, 255, 0.32);
+}
+ 
+.MuiOutlinedInput-root.Mui-disabled {
+  opacity: 0.6;
+}
+ 
+/* Dropdown menus (rendered in a portal) */
+.MuiMenu-paper {
+  border-radius: 16px !important;
+  border: var(--border);
+  margin-top: 8px;
+  box-shadow: var(--shadow-lift) !important;
+}
+ 
+.MuiMenuItem-root {
+  margin: 2px 8px;
+  border-radius: 10px;
+  transition: background-color 0.2s ease, padding-left 0.25s var(--ease);
+}
+ 
+.MuiMenuItem-root:hover {
+  padding-left: 22px;
+  background-color: rgba(47, 107, 255, 0.18);
+}
+ 
+.MuiMenuItem-root.Mui-selected {
+  background-color: rgba(47, 107, 255, 0.28) !important;
+  font-weight: 600;
+}
+ 
+/* ---------- Photo cards ---------- */
+.MuiCard-root {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius) !important;
+  border: var(--border);
+  box-shadow: var(--shadow-soft), inset 0 1px 0 rgba(255, 255, 255, 0.18) !important;
+  transition: transform 0.45s var(--ease), box-shadow 0.45s var(--ease);
+  /* "backwards" (not "both") so the hover lift below isn't overridden once the entrance ends */
+  animation: fadeUp 0.6s var(--ease) backwards;
+}
+ 
+.MuiCard-root:hover {
+  transform: translateY(-8px);
+  box-shadow: var(--shadow-lift) !important;
+}
+ 
+/* Soft dark gradient over the photo, fades in on hover */
+.MuiCard-root::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 220px; /* same as the photo height */
+  background: linear-gradient(180deg, transparent 45%, rgba(0, 0, 0, 0.45) 100%);
+  opacity: 0;
+  z-index: 1;
+  pointer-events: none;
+  transition: opacity 0.45s ease;
+}
+ 
+.MuiCard-root:hover::before {
+  opacity: 1;
+}
+ 
+/* Tricolor line growing along the bottom on hover */
+.MuiCard-root::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 5px;
+  width: 0;
+  background: linear-gradient(90deg, var(--ph-blue), var(--ph-yellow), var(--ph-red));
+  transition: width 0.55s var(--ease);
+}
+ 
+.MuiCard-root:hover::after {
+  width: 100%;
+}
+ 
+/* Clickable photo area: zoom-in cursor, no grey overlay over the image */
+.MuiCardActionArea-root {
+  cursor: zoom-in;
+}
+ 
+.MuiCardActionArea-root .MuiCardActionArea-focusHighlight {
+  display: none;
+}
+ 
+.MuiCardMedia-root {
+  transition: transform 0.8s var(--ease), filter 0.45s ease;
+}
+ 
+.MuiCard-root:hover .MuiCardMedia-root {
+  transform: scale(1.08);
+  filter: saturate(1.2) contrast(1.04);
+}
+ 
+.MuiCardContent-root {
+  padding: 16px 20px 20px !important;
+}
+ 
+/* Photographer link as a small pill */
+.MuiCardContent-root .MuiLink-root {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 4px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(47, 107, 255, 0.4);
+  background-color: rgba(47, 107, 255, 0.1);
+  font-weight: 600;
+  text-decoration: none !important;
+  transition: background-color 0.25s ease, transform 0.25s var(--ease), box-shadow 0.25s ease;
+}
+ 
+.MuiCardContent-root .MuiLink-root:hover {
+  background-color: rgba(47, 107, 255, 0.22);
+  transform: translateX(4px);
+  box-shadow: 0 4px 12px rgba(47, 107, 255, 0.25);
+}
+ 
+/* ---------- Enlarged photo dialog ---------- */
+.MuiDialog-root .MuiBackdrop-root {
+  background-color: rgba(0, 12, 48, 0.62);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+ 
+.MuiDialog-paper.photo-dialog {
+  position: relative;
+  overflow: hidden;
+  border: var(--border);
+  border-radius: 30px !important;
+  box-shadow: var(--shadow-lift) !important;
+}
+ 
+/* Same tricolor accent bar as the header panel */
+.photo-dialog::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 8px;
+  z-index: 3;
+  background: linear-gradient(90deg, var(--ph-blue) 0 33.3%, var(--ph-yellow) 33.3% 66.6%, var(--ph-red) 66.6% 100%);
+}
+ 
+.dialog-image-wrap {
+  display: flex;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.88);
+}
+ 
+.dialog-image {
+  display: block;
+  width: 100%;
+  max-height: 65vh;
+  object-fit: contain;
+}
+ 
+.MuiIconButton-root.dialog-close {
+  position: absolute;
+  top: 20px;
+  right: 16px;
+  z-index: 4;
+  width: 42px;
+  height: 42px;
+  color: #fff;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.22), transparent 60%),
+    rgba(0, 0, 0, 0.45) !important;
+}
+ 
+/* Photographer / Pexels links in the dialog, same pill style as the cards */
+.photo-dialog .dialog-link {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 4px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(47, 107, 255, 0.4);
+  background-color: rgba(47, 107, 255, 0.1);
+  font-weight: 600;
+  text-decoration: none !important;
+  transition: background-color 0.25s ease, transform 0.25s var(--ease), box-shadow 0.25s ease;
+}
+ 
+.photo-dialog .dialog-link:hover {
+  background-color: rgba(47, 107, 255, 0.22);
+  transform: translateX(4px);
+  box-shadow: 0 4px 12px rgba(47, 107, 255, 0.25);
+}
+ 
+/* ---------- Empty-state message ---------- */
+.MuiBox-root > .MuiTypography-h6 {
+  display: inline-block;
+  padding: 22px 34px;
+  border: 2px dashed rgba(128, 128, 128, 0.55);
+  border-radius: var(--radius);
+  background-color: rgba(128, 128, 128, 0.14);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+ 
+/* ---------- Skeleton loaders ---------- */
+.MuiSkeleton-root {
+  border-radius: 12px;
+}
+ 
+/* ---------- One-time entrance animation (cards stagger) ---------- */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+ 
+.MuiGrid-root > .MuiGrid-root:nth-child(2)  .MuiCard-root { animation-delay: 0.05s; }
+.MuiGrid-root > .MuiGrid-root:nth-child(3)  .MuiCard-root { animation-delay: 0.10s; }
+.MuiGrid-root > .MuiGrid-root:nth-child(4)  .MuiCard-root { animation-delay: 0.15s; }
+.MuiGrid-root > .MuiGrid-root:nth-child(5)  .MuiCard-root { animation-delay: 0.20s; }
+.MuiGrid-root > .MuiGrid-root:nth-child(6)  .MuiCard-root { animation-delay: 0.25s; }
+.MuiGrid-root > .MuiGrid-root:nth-child(7)  .MuiCard-root { animation-delay: 0.30s; }
+.MuiGrid-root > .MuiGrid-root:nth-child(8)  .MuiCard-root { animation-delay: 0.35s; }
+.MuiGrid-root > .MuiGrid-root:nth-child(9)  .MuiCard-root { animation-delay: 0.40s; }
+.MuiGrid-root > .MuiGrid-root:nth-child(10) .MuiCard-root { animation-delay: 0.45s; }
+.MuiGrid-root > .MuiGrid-root:nth-child(11) .MuiCard-root { animation-delay: 0.50s; }
+.MuiGrid-root > .MuiGrid-root:nth-child(12) .MuiCard-root { animation-delay: 0.55s; }
+ 
+/* ---------- Small screens ---------- */
+@media (max-width: 600px) {
+  h1.MuiTypography-h3 {
+    font-size: 2.3rem;
+  }
+ 
+  h1.MuiTypography-h3 svg {
+    width: 38px;
+    height: 38px;
+  }
+ 
+  .MuiPaper-root.MuiPaper-elevation0 {
+    border-radius: 22px !important;
+    padding: 24px 16px !important;
+  }
+ 
+  .MuiContainer-root > .MuiTypography-h5 {
+    font-size: 1.1rem;
+    padding: 10px 20px 8px;
+  }
+ 
+  .MuiDialog-paper.photo-dialog {
+    margin: 12px;
+    border-radius: 22px !important;
+  }
+ 
+  .dialog-image {
+    max-height: 50vh;
+  }
+ 
+  .MuiCard-root:hover,
+  .MuiButton-contained:hover {
+    transform: none;
+  }
+}
+ 
+/* ---------- Reduced motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
