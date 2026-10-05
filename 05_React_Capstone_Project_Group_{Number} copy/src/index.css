@@ -1,0 +1,15 @@
+/* Base reset – all visual tokens live in App.css */
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; scroll-padding-top: 72px; }
+html, body, #root { margin: 0; min-height: 100%; }
+
+img { max-width: 100%; display: block; }
+button { font: inherit; cursor: pointer; color: inherit; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+}
