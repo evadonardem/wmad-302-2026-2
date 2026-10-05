@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import {
   Box,
   Button,
+  ButtonBase,
   Card,
   CardMedia,
   Container,
@@ -18,6 +19,7 @@ import './App.css';
 import Logo from '../assets/images/Logo.png';
 import LocationForm from './components/LocationForm';
 import MediaGallery from './components/MediaGallery';
+import PhotoDetailDialog from './components/PhotoDetailDialog';
 import { searchPhotosByLocation } from './services/geoPhotoService';
 
 const featuredDestinations = [
@@ -112,6 +114,7 @@ export default function App() {
   const [hasSearched, setHasSearched] = useState(false);
   const [searchSummary, setSearchSummary] = useState('');
   const [featuredItems, setFeaturedItems] = useState(featuredDestinations);
+  const [selectedFeaturedPhoto, setSelectedFeaturedPhoto] = useState(null);
 
   useEffect(() => {
     if (!import.meta.env.VITE_PEXELS_API_KEY) return undefined;
@@ -123,11 +126,12 @@ export default function App() {
         featuredDestinations.map(async (destination) => {
           const results = await searchPhotosByLocation(destination.name, destination.region);
           const photoKeywords = destination.photoKeywords || [destination.name];
-          const photo = results.find((result) =>
+          const matchingPhoto = results.find((result) =>
             photoKeywords.some((keyword) => result.altText.toLowerCase().includes(keyword.toLowerCase()))
           );
+          const photo = matchingPhoto || results[0] || null;
 
-          return { ...destination, photo: photo || null };
+          return { ...destination, photo };
         })
       );
 
@@ -388,13 +392,31 @@ export default function App() {
                           }}
                         >
                           {destination.photo ? (
-                            <CardMedia
-                              component="img"
-                              className="featured-card__media"
-                              image={destination.photo.imageUrl}
-                              alt={destination.photo.altText}
-                              sx={{ height: '100%', objectFit: 'cover' }}
-                            />
+                            <ButtonBase
+                              onClick={() =>
+                                setSelectedFeaturedPhoto({
+                                  photo: destination.photo,
+                                  title: destination.name,
+                                  subtitle: `${destination.region}, ${destination.islandGroup}`,
+                                })
+                              }
+                              aria-label={`View photo details for ${destination.name}`}
+                              sx={{
+                                position: 'absolute',
+                                inset: 0,
+                                display: 'block',
+                                width: '100%',
+                                height: '100%',
+                              }}
+                            >
+                              <CardMedia
+                                component="img"
+                                className="featured-card__media"
+                                image={destination.photo.imageUrl}
+                                alt={destination.photo.altText}
+                                sx={{ height: '100%', objectFit: 'cover' }}
+                              />
+                            </ButtonBase>
                           ) : (
                             <Box
                               role="img"
@@ -430,6 +452,7 @@ export default function App() {
                               flexDirection: 'column',
                               justifyContent: 'flex-end',
                               p: 2,
+                              pointerEvents: 'none',
                               background: 'linear-gradient(180deg, transparent 10%, rgba(0, 0, 0, 0.78) 100%)',
                             }}
                           >
@@ -440,13 +463,14 @@ export default function App() {
                               {destination.name}
                             </Typography>
                             {destination.photo?.photographer && (
-                              <Typography variant="caption" sx={{ mt: 0.75 }}>
+                              <Typography variant="caption" sx={{ mt: 0.75, color: 'common.white' }}>
                                 Photo by{' '}
                                 <Link
                                   href={destination.photo.photographerUrl}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   color="inherit"
+                                  sx={{ color: 'common.white', textDecorationColor: 'currentColor', pointerEvents: 'auto' }}
                                 >
                                   {destination.photo.photographer}
                                 </Link>
@@ -461,6 +485,13 @@ export default function App() {
               ))}
             </Box>
           )}
+            <PhotoDetailDialog
+              open={Boolean(selectedFeaturedPhoto)}
+              photo={selectedFeaturedPhoto?.photo}
+              title={selectedFeaturedPhoto?.title}
+              subtitle={selectedFeaturedPhoto?.subtitle}
+              onClose={() => setSelectedFeaturedPhoto(null)}
+            />
         </Container>
       </Box>
     </ThemeProvider>

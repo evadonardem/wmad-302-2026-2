@@ -1,6 +1,10 @@
-import { Box, Grid, Card, CardMedia, CardContent, Typography, Link, Skeleton } from '@mui/material';
+import { useState } from 'react';
+import { Box, Grid, Card, CardMedia, CardContent, Typography, Link, Skeleton, ButtonBase } from '@mui/material';
+import PhotoDetailDialog from './PhotoDetailDialog';
 
 export default function MediaGallery({ photos, loading, locationName }) {
+  const [selectedPhoto, setSelectedPhoto] = useState(null);
+
   if (loading) {
     return (
       <Box aria-label="Loading photos" aria-busy="true">
@@ -48,14 +52,35 @@ export default function MediaGallery({ photos, loading, locationName }) {
       <Grid container spacing={3}>
         {photos.map((photo) => (
           <Grid key={photo.id} size={{ xs: 12, sm: 6, md: 4 }}>
-            <Card elevation={3} sx={{ height: '100%', display: 'flex', flexDirection: 'column', borderRadius: 1 }}>
-              <CardMedia
-                component="img"
-                height="220"
-                image={photo.imageUrl}
-                alt={photo.altText}
-                sx={{ objectFit: 'cover' }}
-              />
+            <Card
+              elevation={3}
+              sx={{
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                borderRadius: 1,
+                transition: 'transform 0.28s ease, box-shadow 0.28s ease, filter 0.28s ease',
+                transformOrigin: 'center',
+                '&:hover': {
+                  boxShadow: 6,
+                  transform: 'translateY(-4px) scale(1.01)',
+                  filter: 'saturate(1.06)',
+                },
+              }}
+            >
+              <ButtonBase
+                onClick={() => setSelectedPhoto(photo)}
+                aria-label={`View details for ${photo.altText || 'photo'}`}
+                sx={{ display: 'block', width: '100%', textAlign: 'left' }}
+              >
+                <CardMedia
+                  component="img"
+                  height="220"
+                  image={photo.imageUrl}
+                  alt={photo.altText}
+                  sx={{ objectFit: 'cover' }}
+                />
+              </ButtonBase>
 
               <CardContent sx={{ flexGrow: 1, p: 2 }}>
                 <Typography variant="caption" display="block" color="text.secondary">
@@ -74,6 +99,13 @@ export default function MediaGallery({ photos, loading, locationName }) {
           </Grid>
         ))}
       </Grid>
+      <PhotoDetailDialog
+        open={Boolean(selectedPhoto)}
+        photo={selectedPhoto}
+        title={selectedPhoto?.altText}
+        subtitle={locationName}
+        onClose={() => setSelectedPhoto(null)}
+      />
     </Box>
   );
 }
