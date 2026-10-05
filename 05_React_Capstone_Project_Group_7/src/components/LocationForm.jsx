@@ -9,7 +9,7 @@ export default function LocationForm({ onSearch }) {
   const [selectedRegion, setSelectedRegion] = useState('');
   const [selectedCityName, setSelectedCityName] = useState('');
 
-  // Load regions once on mount
+
   useEffect(() => {
     let cancelled = false;
 
@@ -24,11 +24,11 @@ export default function LocationForm({ onSearch }) {
     };
   }, []);
 
-  // Reload cities whenever the region changes
+
   useEffect(() => {
     let cancelled = false;
 
-    // Reset child state right away so inputs stay contextually clean
+
     setSelectedCityName('');
     setCities([]);
 
@@ -36,7 +36,7 @@ export default function LocationForm({ onSearch }) {
 
     const loadCities = async () => {
       const data = await getCitiesMunicipalitiesByRegion(selectedRegion);
-      // Ignore stale responses (prevents race conditions on quick region changes)
+
       if (!cancelled) setCities(data);
     };
     loadCities();

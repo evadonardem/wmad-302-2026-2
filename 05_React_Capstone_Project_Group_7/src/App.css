@@ -1,13 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
  
-/* ==========================================================
-   Lakbay PH - App.css (v6)
-   - Targets MUI v7 class names, so no component changes needed
-   - Nothing moves on its own: only one-time entrance fades and
-     effects that happen when you hover or click
-   - Colors are semi-transparent so light AND dark mode both work
-   ========================================================== */
- 
 :root {
   --ph-blue: #0038a8;
   --ph-blue-light: #2f6bff;
@@ -31,7 +23,6 @@ body {
   font-family: 'Poppins', 'Roboto', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
  
-  /* Layered colorful background (static) */
   background-image:
     radial-gradient(rgba(128, 128, 128, 0.16) 1.2px, transparent 1.2px),
     radial-gradient(900px circle at 8% 5%, rgba(47, 107, 255, 0.48), transparent 60%),
@@ -128,7 +119,7 @@ h1.MuiTypography-h3 svg:hover {
   line-height: 1.75;
 }
  
-/* ---------- "Featured spots" heading ---------- */
+/* ---------- Section headings ("Featured spots", "My favorites") ---------- */
 .MuiContainer-root > .MuiTypography-h5 {
   display: block;
   width: fit-content;
@@ -143,6 +134,7 @@ h1.MuiTypography-h3 svg:hover {
   box-shadow: var(--shadow-soft), inset 0 1px 0 rgba(255, 255, 255, 0.22);
   font-weight: 700 !important;
   animation: fadeUp 0.6s var(--ease) both;
+  scroll-margin-top: 24px;
 }
  
 .MuiContainer-root > .MuiTypography-h5::after {
@@ -282,6 +274,54 @@ h1.MuiTypography-h3 svg:hover {
   transform: scale(0.94);
 }
  
+/* ---------- Favorite heart (on photo cards) ---------- */
+.MuiIconButton-root.fav-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2; /* above the hover gradient on the photo */
+  width: 42px;
+  height: 42px;
+  color: #fff;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.22), transparent 60%),
+    rgba(0, 0, 0, 0.35) !important;
+}
+ 
+.MuiIconButton-root.fav-btn:hover .MuiSvgIcon-root {
+  transform: scale(1.2);
+  color: var(--ph-red);
+}
+ 
+.MuiIconButton-root.fav-btn.is-active .MuiSvgIcon-root {
+  color: var(--ph-red);
+  animation: heartPop 0.45s var(--ease);
+}
+ 
+@keyframes heartPop {
+  0%   { transform: scale(0.6); }
+  60%  { transform: scale(1.35); }
+  100% { transform: scale(1); }
+}
+ 
+/* ---------- Favorite toggle (inside the enlarged view) ---------- */
+.MuiButton-contained.fav-toggle.is-active {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.28) 0%, rgba(255, 255, 255, 0) 55%),
+    linear-gradient(135deg, #9b0d1d 0%, var(--ph-red) 55%, #ff5a6e 100%);
+  box-shadow:
+    0 8px 20px rgba(206, 17, 38, 0.45),
+    0 2px 0 rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.55);
+}
+ 
+.MuiButton-contained.fav-toggle.is-active:hover {
+  box-shadow:
+    0 14px 30px rgba(206, 17, 38, 0.55),
+    0 0 0 4px rgba(206, 17, 38, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.65);
+}
+ 
 /* ---------- Form fields ---------- */
 .MuiOutlinedInput-root {
   border-radius: 16px !important;
@@ -335,7 +375,8 @@ h1.MuiTypography-h3 svg:hover {
   border: var(--border);
   box-shadow: var(--shadow-soft), inset 0 1px 0 rgba(255, 255, 255, 0.18) !important;
   transition: transform 0.45s var(--ease), box-shadow 0.45s var(--ease);
-  animation: fadeUp 0.6s var(--ease) both;
+  /* "backwards" (not "both") so the hover lift below isn't overridden once the entrance ends */
+  animation: fadeUp 0.6s var(--ease) backwards;
 }
  
 .MuiCard-root:hover {
@@ -378,6 +419,15 @@ h1.MuiTypography-h3 svg:hover {
   width: 100%;
 }
  
+/* Clickable photo area: zoom-in cursor, no grey overlay over the image */
+.MuiCardActionArea-root {
+  cursor: zoom-in;
+}
+ 
+.MuiCardActionArea-root .MuiCardActionArea-focusHighlight {
+  display: none;
+}
+ 
 .MuiCardMedia-root {
   transition: transform 0.8s var(--ease), filter 0.45s ease;
 }
@@ -405,6 +455,76 @@ h1.MuiTypography-h3 svg:hover {
 }
  
 .MuiCardContent-root .MuiLink-root:hover {
+  background-color: rgba(47, 107, 255, 0.22);
+  transform: translateX(4px);
+  box-shadow: 0 4px 12px rgba(47, 107, 255, 0.25);
+}
+ 
+/* ---------- Enlarged photo dialog ---------- */
+.MuiDialog-root .MuiBackdrop-root {
+  background-color: rgba(0, 12, 48, 0.62);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+ 
+.MuiDialog-paper.photo-dialog {
+  position: relative;
+  overflow: hidden;
+  border: var(--border);
+  border-radius: 30px !important;
+  box-shadow: var(--shadow-lift) !important;
+}
+ 
+/* Same tricolor accent bar as the header panel */
+.photo-dialog::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 8px;
+  z-index: 3;
+  background: linear-gradient(90deg, var(--ph-blue) 0 33.3%, var(--ph-yellow) 33.3% 66.6%, var(--ph-red) 66.6% 100%);
+}
+ 
+.dialog-image-wrap {
+  display: flex;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.88);
+}
+ 
+.dialog-image {
+  display: block;
+  width: 100%;
+  max-height: 65vh;
+  object-fit: contain;
+}
+ 
+.MuiIconButton-root.dialog-close {
+  position: absolute;
+  top: 20px;
+  right: 16px;
+  z-index: 4;
+  width: 42px;
+  height: 42px;
+  color: #fff;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.22), transparent 60%),
+    rgba(0, 0, 0, 0.45) !important;
+}
+ 
+/* Photographer / Pexels links in the dialog, same pill style as the cards */
+.photo-dialog .dialog-link {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 4px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(47, 107, 255, 0.4);
+  background-color: rgba(47, 107, 255, 0.1);
+  font-weight: 600;
+  text-decoration: none !important;
+  transition: background-color 0.25s ease, transform 0.25s var(--ease), box-shadow 0.25s ease;
+}
+ 
+.photo-dialog .dialog-link:hover {
   background-color: rgba(47, 107, 255, 0.22);
   transform: translateX(4px);
   box-shadow: 0 4px 12px rgba(47, 107, 255, 0.25);
@@ -465,6 +585,15 @@ h1.MuiTypography-h3 svg:hover {
     padding: 10px 20px 8px;
   }
  
+  .MuiDialog-paper.photo-dialog {
+    margin: 12px;
+    border-radius: 22px !important;
+  }
+ 
+  .dialog-image {
+    max-height: 50vh;
+  }
+ 
   .MuiCard-root:hover,
   .MuiButton-contained:hover {
     transform: none;
@@ -480,4 +609,3 @@ h1.MuiTypography-h3 svg:hover {
     transition: none !important;
   }
 }
- 
