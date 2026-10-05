@@ -1,7 +1,24 @@
 import console from 'node:console';
 
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
 export async function retryGcashPayment(paymentFn, retries = 3, delayMs = 50) {
   // TODO: Execute paymentFn with retry loop and delay
+  let lastError;
+
+  // First attempt + up to `retries` retries
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      return await paymentFn();
+    } catch (error) {
+      lastError = error;
+      if (attempt < retries) {
+        await sleep(delayMs);
+      }
+    }
+  }
+
+  throw lastError;
 }
 
 export async function runAsyncTests() {
