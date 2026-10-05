@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Box, FormControl, InputLabel, Select, MenuItem, Button, Stack } from '@mui/material';
 import { ClearRounded, Search } from '@mui/icons-material';
 import {
@@ -18,6 +18,10 @@ export default function LocationForm({ onSearch }) {
   const [selectedRegion, setSelectedRegion] = useState('');
   const [selectedProvince, setSelectedProvince] = useState('');
   const [selectedCityName, setSelectedCityName] = useState('');
+
+  const sortedRegions = useMemo(() => sortByName(regions), [regions]);
+  const sortedProvinces = useMemo(() => sortByName(provinces), [provinces]);
+  const sortedCities = useMemo(() => sortByName(cities), [cities]);
 
   useEffect(() => {
     let isCurrent = true;
@@ -149,7 +153,7 @@ export default function LocationForm({ onSearch }) {
             sx={{ '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(89, 50, 30, 0.28)' } }}
           >
             <MenuItem value="">Clear selection</MenuItem>
-            {regions.map((region) => (
+            {sortedRegions.map((region) => (
               <MenuItem key={region.code} value={region.code}>
                 {region.name}
               </MenuItem>
@@ -177,7 +181,7 @@ export default function LocationForm({ onSearch }) {
             sx={{ '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(89, 50, 30, 0.28)' } }}
           >
             <MenuItem value="">Clear selection</MenuItem>
-            {provinces.map((province) => (
+            {sortedProvinces.map((province) => (
               <MenuItem key={province.code || province.id} value={province.code}>
                 {province.name}
               </MenuItem>
@@ -205,7 +209,7 @@ export default function LocationForm({ onSearch }) {
             sx={{ '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(89, 50, 30, 0.28)' } }}
           >
             <MenuItem value="">Clear selection</MenuItem>
-            {cities.map((city) => (
+            {sortedCities.map((city) => (
               <MenuItem key={city.code || city.id} value={city.name}>
                 {city.name}
               </MenuItem>
