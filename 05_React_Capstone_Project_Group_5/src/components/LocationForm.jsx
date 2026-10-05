@@ -8,6 +8,9 @@ import {
   getCitiesMunicipalitiesByRegion,
 } from '../services/geoPhotoService';
 
+const sortByName = (items = []) =>
+  [...items].sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
+
 export default function LocationForm({ onSearch }) {
   const [regions, setRegions] = useState([]);
   const [provinces, setProvinces] = useState([]);
@@ -21,7 +24,7 @@ export default function LocationForm({ onSearch }) {
 
     const loadRegions = async () => {
       const regionResults = await getRegions();
-      if (isCurrent) setRegions(regionResults);
+      if (isCurrent) setRegions(sortByName(regionResults));
     };
 
     void loadRegions();
@@ -44,17 +47,18 @@ export default function LocationForm({ onSearch }) {
 
     const loadProvinces = async () => {
       const provinceResults = await getProvincesByRegion(selectedRegion);
+      const sortedProvinceResults = sortByName(provinceResults);
 
       if (!isCurrent) return;
 
-      setProvinces(provinceResults);
+      setProvinces(sortedProvinceResults);
       setSelectedProvince('');
       setSelectedCityName('');
 
-      if (provinceResults.length === 0) {
+      if (sortedProvinceResults.length === 0) {
         const regionCities = await getCitiesMunicipalitiesByRegion(selectedRegion);
         if (isCurrent) {
-          setCities(regionCities);
+          setCities(sortByName(regionCities));
         }
         return;
       }
@@ -81,7 +85,7 @@ export default function LocationForm({ onSearch }) {
     const loadCities = async () => {
       const cityResults = await getCitiesMunicipalitiesByProvince(selectedProvince);
       if (isCurrent) {
-        setCities(cityResults);
+        setCities(sortByName(cityResults));
         setSelectedCityName('');
       }
     };
