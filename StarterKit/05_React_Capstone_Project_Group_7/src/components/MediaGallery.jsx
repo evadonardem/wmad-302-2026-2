@@ -1,13 +1,21 @@
 import React, { useState } from 'react';
 import {
-  Box, Card, CardMedia, Typography, Link, Skeleton, Dialog, IconButton, Grow, Chip,
+  Box, Card, CardMedia, Typography, Link, Skeleton, Dialog, IconButton, Grow, Chip, Tooltip,
 } from '@mui/material';
 import { keyframes } from '@mui/material/styles';
-import { Close } from '@mui/icons-material';
+import { Close, Favorite, FavoriteBorder } from '@mui/icons-material';
 
 const fadeUp = keyframes`
   from { opacity: 0; transform: translateY(40px) scale(0.95); filter: blur(8px); }
   to   { opacity: 1; transform: translateY(0) scale(1);       filter: blur(0); }
+`;
+
+// Little "pop" when a heart becomes filled
+const heartPop = keyframes`
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.5); }
+  70%  { transform: scale(0.9); }
+  100% { transform: scale(1); }
 `;
 
 const masonrySx = {
@@ -15,8 +23,43 @@ const masonrySx = {
   columnGap: '20px',
 };
 
-export default function MediaGallery({ photos, loading, locationName }) {
+function FavoriteButton({ active, onClick, sx }) {
+  return (
+    <Tooltip title={active ? 'Remove from favorites' : 'Add to favorites'}>
+      <IconButton
+        onClick={onClick}
+        aria-label={active ? 'Remove from favorites' : 'Add to favorites'}
+        sx={{
+          color: active ? '#ff4d6d' : '#fff',
+          bgcolor: 'rgba(0,0,0,0.45)',
+          backdropFilter: 'blur(6px)',
+          '&:hover': { bgcolor: 'rgba(0,0,0,0.7)' },
+          ...sx,
+        }}
+      >
+        {active ? (
+          <Favorite sx={{ animation: `${heartPop} 0.4s ease` }} />
+        ) : (
+          <FavoriteBorder />
+        )}
+      </IconButton>
+    </Tooltip>
+  );
+}
+
+export default function MediaGallery({
+  photos,
+  loading,
+  locationName,
+  favorites = [],
+  onToggleFavorite = () => {},
+  title,
+  emptyMessage = 'No tourist spots found for this area yet.',
+  emptyEmoji = '🧭',
+}) {
   const [selected, setSelected] = useState(null);
+
+  const isFavorite = (photo) => favorites.some((f) => f.id === photo.id);
 
   // TODO 3.1 [Loading Skeletal Feedbacks]
   if (loading) {
@@ -37,22 +80,22 @@ export default function MediaGallery({ photos, loading, locationName }) {
     return (
       <Grow in timeout={600}>
         <Box sx={{ textAlign: 'center', py: 8 }}>
-          <Typography variant="h2" component="div" sx={{ mb: 1 }}>🧭</Typography>
+          <Typography variant="h2" component="div" sx={{ mb: 1 }}>{emptyEmoji}</Typography>
           <Typography variant="h6" color="text.secondary">
-            No tourist spots found for this area yet.
+            {emptyMessage}
           </Typography>
         </Box>
       </Grow>
     );
   }
 
+  const heading = title || `Tourist spots${locationName ? ` in ${locationName}` : ''}`;
+
   return (
     <Box>
       {/* Heading */}
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3, flexWrap: 'wrap' }}>
-        <Typography variant="h5" fontWeight={700}>
-          Tourist spots{locationName ? ` in ${locationName}` : ''}
-        </Typography>
+        <Typography variant="h5" fontWeight={700}>{heading}</Typography>
         <Chip label={`${photos.length} photos`} color="primary" size="small" />
       </Box>
 
@@ -89,6 +132,16 @@ export default function MediaGallery({ photos, loading, locationName }) {
               sx={{ display: 'block', width: '100%', transition: 'transform 0.7s ease' }}
             />
 
+            {/* Favorite button (stopPropagation so it doesn't open the lightbox) */}
+            <FavoriteButton
+              active={isFavorite(photo)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleFavorite(photo);
+              }}
+              sx={{ position: 'absolute', top: 10, right: 10, zIndex: 2 }}
+            />
+
             {/* Hover overlay with attribution */}
             <Box
               className="overlay"
@@ -102,6 +155,7 @@ export default function MediaGallery({ photos, loading, locationName }) {
                 opacity: 0,
                 transform: 'translateY(20px)',
                 transition: 'opacity 0.4s ease, transform 0.4s ease',
+                pointerEvents: 'none',
               }}
             >
               <Typography variant="caption" display="block" sx={{ opacity: 0.8 }}>
@@ -135,6 +189,11 @@ export default function MediaGallery({ photos, loading, locationName }) {
             >
               <Close />
             </IconButton>
+            <FavoriteButton
+              active={isFavorite(selected)}
+              onClick={() => onToggleFavorite(selected)}
+              sx={{ position: 'absolute', top: 8, right: 56, zIndex: 1 }}
+            />
             <Box
               component="img"
               src={selected.imageUrl}
