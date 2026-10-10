@@ -75,31 +75,39 @@ document.addEventListener('DOMContentLoaded', async () => {
   residentForm.addEventListener('submit', (event) => {
     event.preventDefault();
 
-    const citizen = {
-      fullName: fullNameInput.value.trim(),
-      province: provinceSelect.options[provinceSelect.selectedIndex]?.text || '',
-      city: citySelect.options[citySelect.selectedIndex]?.text || '',
-      isSenior: isSeniorInput.checked,
-      isPWD: isPwdInput.checked,
-      monthlyIncome: Number(monthlyIncomeInput.value) || 0,
-      dependents: Number(dependentsInput.value) || 0,
-    };
+    const fullName = fullNameInput.value.trim();
+    const province = provinceSelect.options[provinceSelect.selectedIndex]?.text || '';
+    const city = citySelect.options[citySelect.selectedIndex]?.text || '';
+    const monthlyIncome = Number(monthlyIncomeInput.value) || 0;
+    const dependentCount = Number(dependentsInput.value) || 0;
 
-    if (!citizen.fullName) return;
+    if (!fullName) return;
 
-    const eligibility = evaluateAyudaEligibility(citizen);
-    const entry = saveToOfflineQueue({ ...citizen, ...eligibility });
+    const isEligible = evaluateAyudaEligibility({
+      isSeniorPWD: isSeniorInput.checked || isPwdInput.checked,
+      isLowIncome: monthlyIncome < 10000,
+      dependentCount
+    });
+
+    const entry = saveToOfflineQueue({
+      fullName,
+      province,
+      city,
+      monthlyIncome,
+      dependentCount,
+      approved: isEligible
+    });
 
     residents.push(entry);
     renderResidentCards(queueContainer, residents);
     residentForm.reset();
 
-    if (eligibility.approved) {
+    if (isEligible) {
       eligibilityNotice.style.display = 'none';
       posWrapper.style.display = 'block';
       refreshPOS();
     } else {
-      eligibilityNotice.textContent = `Not eligible for relief pack (Priority: ${eligibility.priority}, Score: ${eligibility.score}).`;
+      eligibilityNotice.textContent = 'Not eligible for relief pack.';
       eligibilityNotice.style.display = 'block';
       posWrapper.style.display = 'none';
     }

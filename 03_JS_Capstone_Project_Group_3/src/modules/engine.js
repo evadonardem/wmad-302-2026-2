@@ -15,28 +15,14 @@ export const RELIEF_GOODS_CATALOG = [
   { id: 'medkit',   name: 'First Aid Kit',          price: 220 },
 ];
 
-export function evaluateAyudaEligibility(citizen) {
-  let score = 0;
+export function evaluateAyudaEligibility({ isSeniorPWD, isLowIncome, dependentCount }) {
+  // Null/undefined dependentCount defaults to 0
+  const dependents = dependentCount ?? 0;
 
-  if (citizen.isSenior) score += 35;
-  if (citizen.isPWD) score += 35;
-  if (citizen.monthlyIncome < 5000) score += 20;
+  if (isSeniorPWD) return true;
+  if (isLowIncome && dependents > 0) return true;
 
-  const dependentPoints = Math.min((citizen.dependents || 0) * 3, 20);
-  score += dependentPoints;
-
-  let priority = 'LOW';
-  let approved = false;
-
-  if (score >= 70) {
-    priority = 'CRITICAL';
-    approved = true;
-  } else if (score >= 40) {
-    priority = 'HIGH';
-    approved = true;
-  }
-
-  return { priority, score, approved };
+  return false;
 }
 
 export function createReliefPacker(budgetCap = 1000) {

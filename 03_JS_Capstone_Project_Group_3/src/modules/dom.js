@@ -18,8 +18,7 @@ export function renderResidentCards(container, residents) {
     <div class="resident-card" data-id="${resident.id}">
       <h4>${sanitizeHTML(resident.fullName)}</h4>
       <p>${sanitizeHTML(resident.province)}, ${sanitizeHTML(resident.city)}</p>
-      <p>Priority: <strong>${sanitizeHTML(resident.priority)}</strong> (Score: ${resident.score})</p>
-      <p>Status: ${resident.approved ? 'Approved' : 'Not Approved'}</p>
+      <p>Status: ${resident.approved ? 'Eligible for relief' : 'Not eligible'}</p>
       <button data-action="remove-resident" data-id="${resident.id}">Remove</button>
     </div>
   `).join('');
