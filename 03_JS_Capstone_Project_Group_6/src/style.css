@@ -1,0 +1,786 @@
+/* =========================================
+   e-BARANGAY FAIRYCORE THEME
+========================================= */
+
+:root {
+  --primary-color: #9b72cf;
+  --primary-hover: #7953a8;
+
+  --bg-color: #f7f0fb;
+  --card-bg: #fffdfb;
+
+  --text-main: #493853;
+  --text-muted: #92819b;
+
+  --border-color: #e4d8eb;
+
+  --radius: 18px;
+
+  --critical-color: #d66f89;
+  --high-color: #d5a05c;
+  --low-color: #79a88c;
+}
+
+
+/* =========================================
+   BODY - ENCHANTED FAIRYCORE BACKGROUND
+========================================= */
+
+body {
+  font-family: system-ui, -apple-system, sans-serif;
+
+  margin: 0;
+  padding: 0;
+
+  color: var(--text-main);
+
+  min-height: 100vh;
+
+  background:
+    radial-gradient(circle at 8% 12%,
+      rgba(218, 184, 245, 0.65) 0,
+      rgba(218, 184, 245, 0.25) 12%,
+      transparent 28%),
+
+    radial-gradient(circle at 92% 18%,
+      rgba(190, 226, 205, 0.6) 0,
+      rgba(190, 226, 205, 0.22) 13%,
+      transparent 30%),
+
+    radial-gradient(circle at 50% 100%,
+      rgba(245, 202, 226, 0.55) 0,
+      rgba(245, 202, 226, 0.18) 18%,
+      transparent 38%),
+
+    radial-gradient(circle at 25% 40%,
+      rgba(255, 255, 255, 0.9) 0 3px,
+      transparent 4px),
+
+    radial-gradient(circle at 75% 55%,
+      rgba(255, 255, 255, 0.85) 0 3px,
+      transparent 4px),
+
+    radial-gradient(circle at 90% 75%,
+      rgba(255, 255, 255, 0.8) 0 2px,
+      transparent 3px),
+
+    radial-gradient(circle at 12% 80%,
+      rgba(255, 255, 255, 0.75) 0 2px,
+      transparent 3px),
+
+    linear-gradient(135deg,
+      #f7f0fb 0%,
+      #f5eef9 28%,
+      #eef7f2 58%,
+      #f9eef6 82%,
+      #f4edf9 100%);
+
+  background-attachment: fixed;
+
+  background-size:
+    auto,
+    auto,
+    auto,
+    180px 180px,
+    240px 240px,
+    300px 300px;
+}
+
+
+/* =========================================
+   FLOATING FAIRY SPARKLES
+========================================= */
+
+body::before {
+  content: "✦     ✧          ⋆       ✦             ✧";
+
+  position: fixed;
+
+  top: 8%;
+  left: 0;
+
+  width: 100%;
+  height: 100%;
+
+  pointer-events: none;
+
+  z-index: -1;
+
+  color: rgba(164, 122, 190, 0.28);
+
+  font-size: 18px;
+
+  letter-spacing: 18px;
+
+  line-height: 100px;
+
+  transform: rotate(-8deg);
+}
+
+
+body::after {
+  content: "✧          ⋆      ✦          ✧      ⋆";
+
+  position: fixed;
+
+  bottom: 5%;
+  right: 0;
+
+  width: 100%;
+  height: 100%;
+
+  pointer-events: none;
+
+  z-index: -1;
+
+  color: rgba(124, 165, 139, 0.25);
+
+  font-size: 15px;
+
+  letter-spacing: 22px;
+
+  line-height: 120px;
+
+  transform: rotate(7deg);
+}
+
+
+/* =========================================
+   HEADER
+========================================= */
+
+.header {
+  background:
+    linear-gradient(135deg,
+      #755596,
+      #a884c0 55%,
+      #91b29c);
+
+  color: white;
+
+  padding: 2.5rem 1rem;
+
+  text-align: center;
+
+  position: relative;
+
+  overflow: hidden;
+
+  box-shadow:
+    0 10px 30px rgba(100, 70, 120, 0.18);
+}
+
+
+/* Fairy decorations */
+
+.header::before {
+  content: "✦   ✧   ⋆";
+
+  position: absolute;
+
+  left: 8%;
+  top: 18px;
+
+  font-size: 24px;
+
+  letter-spacing: 12px;
+
+  color: rgba(255, 255, 255, 0.6);
+}
+
+
+.header::after {
+  content: "⋆   ✧   ✦";
+
+  position: absolute;
+
+  right: 8%;
+  bottom: 15px;
+
+  font-size: 23px;
+
+  letter-spacing: 12px;
+
+  color: rgba(255, 255, 255, 0.5);
+}
+
+
+/* =========================================
+   MAIN CONTAINER
+========================================= */
+
+.container {
+  max-width: 1200px;
+
+  margin: 2.5rem auto;
+
+  padding: 0 1rem;
+
+  display: grid;
+
+  gap: 2rem;
+}
+
+
+/* =========================================
+   MAIN CARD
+========================================= */
+
+.card {
+  background: var(--card-bg);
+
+  border: 1px solid var(--border-color);
+
+  border-radius:
+    28px 8px 28px 8px;
+
+  padding: 1.7rem;
+
+  position: relative;
+
+  overflow: hidden;
+
+  box-shadow:
+    0 12px 25px rgba(94, 69, 110, 0.08),
+    7px 7px 0 rgba(208, 186, 220, 0.22);
+
+  transition: 0.25s ease;
+}
+
+
+/* Decorative top layer */
+
+.card::before {
+  content: "";
+
+  position: absolute;
+
+  width: 110px;
+  height: 110px;
+
+  right: -40px;
+  top: -40px;
+
+  border-radius: 50%;
+
+  background:
+    rgba(185, 151, 210, 0.12);
+}
+
+
+/* Sparkle */
+
+.card::after {
+  content: "✦";
+
+  position: absolute;
+
+  right: 20px;
+  top: 15px;
+
+  font-size: 20px;
+
+  color: #c5a6d8;
+}
+
+
+/* =========================================
+   FORM GROUP
+========================================= */
+
+.form-group {
+  margin-bottom: 1.2rem;
+}
+
+
+.form-group label {
+  display: block;
+
+  margin-bottom: 0.5rem;
+
+  font-weight: 600;
+
+  color: #5d456b;
+}
+
+
+/* =========================================
+   INPUTS
+========================================= */
+
+input[type="text"],
+input[type="number"],
+select {
+  width: 100%;
+
+  padding: 0.9rem 1rem;
+
+  border: 1px solid #dfd2e7;
+
+  border-radius:
+    12px 20px 12px 20px;
+
+  box-sizing: border-box;
+
+  background: #fcf9ff;
+
+  color: var(--text-main);
+
+  font-family: inherit;
+
+  transition: all 0.25s ease;
+
+  box-shadow:
+    inset 0 2px 4px rgba(100, 70, 120, 0.03);
+}
+
+
+input[type="text"]::placeholder,
+input[type="number"]::placeholder {
+  color: #b3a5b9;
+}
+
+
+input[type="text"]:hover,
+input[type="number"]:hover,
+select:hover {
+  background: white;
+
+  border-color: #c4a6d5;
+
+  transform: translateY(-1px);
+}
+
+
+input[type="text"]:focus,
+input[type="number"]:focus,
+select:focus {
+  outline: none;
+
+  background: white;
+
+  border-color: var(--primary-color);
+
+  box-shadow:
+    0 0 0 4px rgba(155, 114, 207, 0.12),
+    0 6px 15px rgba(155, 114, 207, 0.08);
+}
+
+
+/* =========================================
+   CHECKBOX GROUP
+========================================= */
+
+.checkbox-group {
+  display: flex;
+
+  gap: 1rem;
+
+  align-items: center;
+
+  flex-wrap: wrap;
+
+  padding: 1rem;
+
+  background:
+    linear-gradient(135deg,
+      #fcf9ff,
+      #f8fcf9);
+
+  border: 1px solid #e2d7e8;
+
+  border-radius:
+    18px 7px 18px 7px;
+
+  box-shadow:
+    4px 4px 0 rgba(210, 190, 220, 0.15);
+}
+
+
+.checkbox-group label {
+  display: flex;
+
+  align-items: center;
+
+  gap: 0.5rem;
+
+  font-weight: normal;
+
+  cursor: pointer;
+
+  padding: 0.35rem 0.5rem;
+
+  border-radius: 10px;
+
+  transition: 0.2s ease;
+}
+
+
+.checkbox-group label:hover {
+  background: #f1e8f6;
+}
+
+
+/* =========================================
+   MAIN BUTTON
+========================================= */
+
+.btn {
+  background:
+    linear-gradient(135deg,
+      #9670b9,
+      #b18aca);
+
+  color: white;
+
+  border: none;
+
+  padding: 0.9rem 1.5rem;
+
+  border-radius:
+    18px 8px 18px 8px;
+
+  cursor: pointer;
+
+  font-weight: 700;
+
+  width: 100%;
+
+  transition: all 0.25s ease;
+
+  box-shadow:
+    0 6px 0 #79599a,
+    0 10px 20px rgba(126, 91, 158, 0.12);
+}
+
+
+.btn:hover {
+  background:
+    linear-gradient(135deg,
+      #835fa9,
+      #a478bf);
+
+  transform: translateY(-3px);
+
+  box-shadow:
+    0 8px 0 #79599a,
+    0 14px 25px rgba(126, 91, 158, 0.18);
+}
+
+
+.btn:active {
+  transform: translateY(2px);
+
+  box-shadow:
+    0 3px 0 #79599a;
+}
+
+
+/* =========================================
+   RESIDENT CARD
+========================================= */
+
+.resident-card {
+  background:
+    linear-gradient(135deg,
+      #ffffff,
+      #fdfaff 65%,
+      #f7fcf8);
+
+  border: 1px solid #e2d7e8;
+
+  border-radius:
+    22px 8px 22px 8px;
+
+  padding: 1.3rem;
+
+  margin-bottom: 1rem;
+
+  border-left: 6px solid #a77bc9;
+
+  position: relative;
+
+  overflow: hidden;
+
+  box-shadow:
+    5px 6px 0 rgba(207, 184, 220, 0.18),
+    0 7px 18px rgba(102, 76, 122, 0.06);
+
+  transition: all 0.25s ease;
+}
+
+
+/* Decorative fairy circle */
+
+.resident-card::before {
+  content: "";
+
+  position: absolute;
+
+  width: 65px;
+  height: 65px;
+
+  right: -25px;
+  top: -25px;
+
+  border-radius: 50%;
+
+  background:
+    rgba(173, 139, 197, 0.10);
+}
+
+
+/* Sparkle */
+
+.resident-card::after {
+  content: "✧";
+
+  position: absolute;
+
+  right: 18px;
+  bottom: 10px;
+
+  font-size: 24px;
+
+  color: #cbb0da;
+
+  opacity: 0.75;
+}
+
+
+.resident-card:hover {
+  transform:
+    translateY(-4px) rotate(0.2deg);
+
+  border-left-color: #815ca5;
+
+  box-shadow:
+    7px 9px 0 rgba(207, 184, 220, 0.22),
+    0 13px 25px rgba(102, 76, 122, 0.11);
+}
+
+
+/* =========================================
+   REMOVE BUTTON
+========================================= */
+
+.resident-card button,
+button:not(.btn) {
+  background:
+    linear-gradient(135deg,
+      #eadcf3,
+      #f3e6f0);
+
+  color: #6b4d78;
+
+  border: 1px solid #d8c4e2;
+
+  padding: 0.55rem 1rem;
+
+  border-radius:
+    12px 6px 12px 6px;
+
+  cursor: pointer;
+
+  font-family: inherit;
+
+  font-size: 0.85rem;
+
+  font-weight: 700;
+
+  transition: all 0.25s ease;
+
+  box-shadow:
+    3px 3px 0 rgba(207, 184, 220, 0.3);
+}
+
+
+.resident-card button:hover,
+button:not(.btn):hover {
+  background:
+    linear-gradient(135deg,
+      #dfcbe9,
+      #edd7e5);
+
+  color: #593b68;
+
+  border-color: #c5a6d5;
+
+  transform: translateY(-2px);
+
+  box-shadow:
+    4px 5px 0 rgba(207, 184, 220, 0.4);
+}
+
+
+.resident-card button:active,
+button:not(.btn):active {
+  transform: translateY(1px);
+
+  box-shadow:
+    1px 2px 0 rgba(207, 184, 220, 0.3);
+}
+
+
+/* =========================================
+   PROGRESS BAR
+========================================= */
+
+progress {
+  width: 100%;
+
+  height: 10px;
+
+  appearance: none;
+  -webkit-appearance: none;
+
+  border: none;
+
+  border-radius: 50px;
+
+  overflow: hidden;
+
+  background: #eadff0;
+}
+
+
+progress::-webkit-progress-bar {
+  background: #eadff0;
+
+  border-radius: 50px;
+}
+
+
+progress::-webkit-progress-value {
+  background:
+    linear-gradient(90deg,
+      #9b72cf,
+      #b895d3);
+
+  border-radius: 50px;
+}
+
+
+progress::-moz-progress-bar {
+  background:
+    linear-gradient(90deg,
+      #9b72cf,
+      #b895d3);
+
+  border-radius: 50px;
+}
+
+
+/* =========================================
+   BADGES
+========================================= */
+
+.badge {
+  padding: 0.4rem 0.8rem;
+
+  border-radius: 50px;
+
+  font-size: 0.7rem;
+
+  font-weight: 800;
+
+  color: white;
+
+  letter-spacing: 0.4px;
+
+  text-transform: uppercase;
+
+  display: inline-block;
+
+  box-shadow:
+    0 3px 7px rgba(80, 60, 90, 0.12);
+}
+
+
+.badge.critical {
+  background: var(--critical-color);
+}
+
+
+.badge.high {
+  background: var(--high-color);
+}
+
+
+.badge.low {
+  background: var(--low-color);
+}
+
+
+/* =========================================
+   EMPTY STATE
+========================================= */
+
+.empty-state {
+  color: var(--text-muted);
+
+  text-align: center;
+
+  padding: 2.5rem;
+
+  border:
+    2px dashed #d7c7e0;
+
+  border-radius:
+    28px 8px 28px 8px;
+
+  background:
+    linear-gradient(135deg,
+      #fcf9ff,
+      #f7fcf8);
+
+  box-shadow:
+    5px 5px 0 rgba(210, 190, 220, 0.15);
+
+  position: relative;
+
+  overflow: hidden;
+}
+
+
+/* Empty-state fairy decoration */
+
+.empty-state::before {
+  content: "✦  ✧  ⋆  ✦  ✧";
+
+  display: block;
+
+  margin-bottom: 0.8rem;
+
+  color: #c6a8d8;
+
+  font-size: 18px;
+
+  letter-spacing: 8px;
+}
+
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (max-width: 700px) {
+
+  .container {
+    margin-top: 1.5rem;
+  }
+
+  .header {
+    padding: 2rem 1rem;
+  }
+
+  .card {
+    padding: 1.3rem;
+  }
+
+  .checkbox-group {
+    flex-direction: column;
+
+    align-items: flex-start;
+  }
+}
