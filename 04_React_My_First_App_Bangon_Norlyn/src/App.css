@@ -1,0 +1,62 @@
+#root {
+  width: 100%;
+  min-height: 100vh;
+}
+
+
+.MuiCard-root.MuiPaper-root {
+  position: relative;
+  overflow: hidden;
+  color: #ffffff;
+  background-color: #1e88e5;
+  background-image:
+    
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Cg fill='%23ffc9de' fill-opacity='0.45'%3E%3Cpath transform='translate(8 8) scale(1.3)' d='M12 21C4 15 2 9 6 6c3-2 5 0 6 2 1-2 3-4 6-2 4 3 2 9-6 15z'/%3E%3Cpath transform='translate(46 44) scale(0.8)' d='M12 21C4 15 2 9 6 6c3-2 5 0 6 2 1-2 3-4 6-2 4 3 2 9-6 15z'/%3E%3C/g%3E%3C/svg%3E"),
+    linear-gradient(160deg, #42a5f5 0%, #1565c0 100%);
+  background-size: 80px 80px, auto;
+}
+
+.MuiCard-root .MuiTypography-root {
+  color: #ffffff;
+}
+
+.MuiCard-root .MuiTypography-overline {
+  color: #ffd9e8; 
+}
+
+.MuiCard-root .MuiDivider-root {
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+
+.MuiCard-root .MuiSelect-select {
+  color: #ffffff;
+}
+
+.MuiCard-root .MuiSelect-icon {
+  color: #ffffff;
+}
+
+.MuiCard-root .MuiOutlinedInput-notchedOutline {
+  border-color: rgba(255, 255, 255, 0.6);
+}
+
+.MuiCard-root .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
+  border-color: #ffc9de;
+}
+
+.MuiCard-root .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+  border-color: #ffc9de;
+}
+
+.MuiCard-root .MuiButton-contained {
+  background-color: #ffc9de;
+  color: #1565c0;
+  font-weight: 600;
+  box-shadow: none;
+}
+
+.MuiCard-root .MuiButton-contained:hover {
+  background-color: #ffb3d1;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
