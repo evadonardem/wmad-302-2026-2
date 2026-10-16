@@ -3,7 +3,7 @@
 - Rubric: StarterKit README — 6 sections = 100 pts
 - Verified via docker compose (localhost:800N) + headless Playwright harness
 - No late penalty (first/last student commits recorded for reference only)
-- Last evaluated: 2026-10-16T13:00:00+08:00
+- Last evaluated: 2026-10-16T14:08:18+08:00
 
 Grading notes (applied consistently to all groups):
 
@@ -27,6 +27,7 @@ Grading notes (applied consistently to all groups):
 | Group | A/20 | B/20 | C/20 | CSS/15 | Sys/15 | DQ/10 | Final/100 | First Commit | Last Commit | Notes |
 | --- | --: | --: | --: | --: | --: | --: | --: | --- | --- | --- |
 | 03_JS_Capstone_Project_Group_1 | 19 | 17 | 18 | 12 | 14 | 7 | **87** | 2026-09-11 | 2026-09-12 | Engine reads `dependents` instead of `dependentCount` (v4/v8 fail); no remaining-budget display; no province sorting; 399px overflow; thin history (2 commits) |
+| 03_JS_Capstone_Project_Group_2 | 15 | 12 | 18 | 7 | 13 | 7 | **72** | 2026-09-12 | 2026-09-12 | Engine low-income threshold `<5000` (spec `<10000`) + dependents wrong field (`dependents`) and rate (×3 not ×5) → 4/8 vectors; cards lack `data-priority` (no priority CSS); POS hidden until approved resident, catalog-only (no custom inputs); 446px overflow; no sorting; single squashed commit |
 | 03_JS_Capstone_Project_Group_3 | 7 | 12 | 18 | 7 | 12 | 6 | **62** | 2026-10-04 | 2026-10-04 | Engine returns boolean, no scoring/{priority,score,approved}; cards lack `data-priority`; POS has no custom-item inputs and hides when last resident ineligible; no priority CSS; single squashed commit |
 | 03_JS_Capstone_Project_Group_4 | 20 | 16 | 18 | 10 | 14 | 8 | **86** | 2026-09-12 | 2026-10-04 | v5 fails (`<= 12000` threshold); priorities lowercased on cards; priority CSS selectors target `.resident-card` but cards are `.resident-ticket` (no visual theming); 565px overflow; no sorting |
 | 03_JS_Capstone_Project_Group_5 | 20 | 19 | 20 | 12 | 14 | 7 | **92** | 2026-09-12 | 2026-09-12 | Best all-round; 564px mobile overflow; already sorted; thin history (2 commits) |
@@ -54,6 +55,28 @@ Grading notes (applied consistently to all groups):
 - `engine.v4`/`engine.v8`: field-name mismatch (`dependents` vs `dependentCount`) — the app is internally consistent (main.js passes the same key) but violates the documented engine contract; also no `??` usage.
 - `pos.remaining_budget`: README Role B requires remaining budget in `renderPOSRegister`; group shows only "% used".
 - `async.provinces_sorted_alpha`: PSGC list rendered in API order (first=Ilocos Norte).
+- `ui.cascade_barangayselect` ×3, `ui.register_creates_card`, `ui.remove_card_behavioral`: harness quirks (see preamble) — not docked.
+
+## 03_JS_Capstone_Project_Group_2
+
+- Commits: 1 student commit (first 2026-09-12, last 2026-09-12), method=--follow src/modules/engine.js
+- Evidence: `artifacts/wmad-302-2026-2-03_JS_Capstone_Project_Submissions/03_JS_Capstone_Project_Group_2/report.json`, `shots/` (copied to `Artifacts/03_JS_Capstone_Project_Group_2/`)
+- Docker: up/build ✅, HTTP 200 ✅, logs clean ✅
+
+### Section scores
+
+| Section | Earned | Key evidence |
+| --- | --: | --- |
+| 1. Role A Engine | 15/20 | v1,v3,v5,v7 ✅; v2/v6 ❌ low-income threshold `<5000` not `<10000`; v4/v8 ❌ `dependents` field + ×3 rate (spec `dependentCount ?? 0` ×5 cap 20); no `??`; shape ✅; packer all ✅ (raw 14.5 → 15) |
+| 2. Role B DOM/UI | 12/20 | sanitize escapes ✅; XSS clean ✅ (payload rendered as text); **cards lack `data-priority`** ❌ (dom.js:18) → priority-correct rows 0; delegation `closest('[data-action]')` exact ✅ (dom.js:78); remove→`removeFromOfflineQueue`+re-render ✅; POS catalog-add + subtotal + "Remaining: ₱1000.00" + progress present but **hidden when last resident ineligible** and no custom inputs → half (12.25 → 12) |
+| 3. Role C Async/Storage | 18/20 | 81 provinces ✅; fallback 2 mock provinces ✅; cascade ✅; key exact ✅; entries ✅; delete path ✅; **not sorted** ❌ |
+| 4. CSS | 7/15 | `:root` vars + 37 `var(--…)` ✅; flex/grid ✅; **no `[data-priority]` selectors** — badge classes only, and cards render no badges → 0 computed tiers ❌; **446px overflow at 375** ❌ |
+| 5. System | 13/15 | Named ES imports; submit→engine→storage→render; no errors ✅; modules import ✅; form reset ✅; global `createReliefPacker(1000)` + delegation map ✅; E2E half (no priority-CSS flow) |
+| 6. Docker & Quality | 7/10 | Clean build/run/logs ✅; readable (307 lines, 0 >160ch) ✅; no excluded tracked ✅; **1 commit / 6 words** (method=--follow) ❌ |
+
+### Remarks
+- Engine breaks two scoring rules at once: low-income boundary (`<5000`) and dependents (wrong field *and* rate) — Alpha Test shows Score 35/LOW where spec math gives 55/HIGH (screenshot 02).
+- POS gating design: wrapper hidden when the latest resident is ineligible — features verified in code/screenshot but not observable by harness at check time.
 - `ui.cascade_barangayselect` ×3, `ui.register_creates_card`, `ui.remove_card_behavioral`: harness quirks (see preamble) — not docked.
 
 ## 03_JS_Capstone_Project_Group_3
