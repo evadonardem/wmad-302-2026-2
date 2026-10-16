@@ -1,7 +1,0 @@
-{
-    "chat.promptFilesRecommendations": {
-        "tr": true
-    },
-    "chat.editing.autoAcceptDelay": 100,
-    "git.ignoreLimitWarning": true
-}
