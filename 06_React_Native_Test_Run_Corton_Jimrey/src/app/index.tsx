@@ -1,0 +1,19 @@
+import { StyleSheet, Text, View } from "react-native";
+
+export default function Index() {
+  const name = "Jimrey C";
+  return (
+    <View style={styles.container}>
+      <Text>Welcome {name} to React Native Expo!</Text>
+      <Text>Hello World!</Text>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+});
