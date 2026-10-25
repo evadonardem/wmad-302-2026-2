@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Stack } from 'expo-router';
 import { FavoritesProvider } from '@/favorites';
 import { ThemeModeProvider, ThemeProvider, createTheme, type ThemeMode } from '@/theme';
@@ -6,12 +7,12 @@ import { ThemeModeProvider, ThemeProvider, createTheme, type ThemeMode } from '@
 // It should accept a 'mode' string parameter ('light' or 'dark') and return
 // a theme object configuration mapping that mode (see src/theme.tsx for the shape).
 const theme = (mode: ThemeMode = 'light') => createTheme({
-  // [Your code here]
+  palette: { mode },
 });
 
 export default function RootLayout() {
   // TODO 14 [State Management]: Initialize a boolean React state hook variable named 'isDarkMode' defaulting to false.
-  // [Your code here]
+  const [isDarkMode, setIsDarkMode] = useState(false);
 
   return (
     // TODO 16 [Theme Binding Layout]: Wrap the <Stack /> inside BOTH providers below:
@@ -19,9 +20,13 @@ export default function RootLayout() {
     // b. <ThemeProvider theme={...}> passing the calculated theme object. Configure it matching: it
     //    should resolve to 'dark' if 'isDarkMode' is true, otherwise 'light'
     //    (i.e. theme(isDarkMode ? 'dark' : 'light')).
+    
     <FavoritesProvider>
-      {/* [Your ThemeModeProvider + ThemeProvider wrapper structure here] */}
-      <Stack screenOptions={{ headerShown: false }} />
+      <ThemeModeProvider value={{ isDarkMode, setIsDarkMode }}>
+        <ThemeProvider theme={theme(isDarkMode ? 'dark' : 'light')}>
+          <Stack screenOptions={{ headerShown: false }} />
+        </ThemeProvider>
+      </ThemeModeProvider>
     </FavoritesProvider>
   );
 }
