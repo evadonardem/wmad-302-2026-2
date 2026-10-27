@@ -2,7 +2,7 @@ import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/theme';
 
-// TODO 21 [Tab Bar Configuration]: ...
+// TODO 21 [Tab Bar Configuration]
 export default function TabsLayout() {
   const theme = useTheme();
 
@@ -18,6 +18,7 @@ export default function TabsLayout() {
         headerStyle: { backgroundColor: theme.colors.surface },
         headerTintColor: theme.colors.text,
         headerTitleStyle: { fontWeight: '700', color: theme.colors.text },
+        sceneStyle: { backgroundColor: theme.colors.background },
       }}
     >
       {/* TODO 22 [Tab Screen Registration] */}

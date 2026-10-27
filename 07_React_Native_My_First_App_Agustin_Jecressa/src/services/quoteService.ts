@@ -9,18 +9,18 @@ export type Quote = {
 };
 
 export const getRandomQuote = async (selectedTag: string | null = null): Promise<Quote> => {
-    // TODO 17
+    // TODO 17 [Dynamic Endpoint Interpolation]
     const endpoint = selectedTag
         ? `${API_URL}/quotes/random?tags=${encodeURIComponent(selectedTag)}`
         : `${API_URL}/quotes/random`;
 
     try {
-        // TODO 18
+        // TODO 18 [Asynchronous Request Handling]
         const response = await axios.get(endpoint);
         const { quote, author, tags } = response.data;
         return { text: quote, author, tags: tags ?? [] };
-    } catch (error) {
-        console.log('getRandomQuote failed:', error);
+    } catch {
+        // TODO 19 [Resilient System Fallbacks]
         return {
             text: 'Could not load a quote right now. Please check your connection and try again.',
             author: 'Quote Generator',
@@ -30,12 +30,11 @@ export const getRandomQuote = async (selectedTag: string | null = null): Promise
 };
 
 export const getTags = async (): Promise<string[]> => {
-    // TODO 20
+    // TODO 20 [Asynchronous List Retrieval]
     try {
         const response = await axios.get(`${API_URL}/tags`);
         return response.data;
-    } catch (error) {
-        console.log('getTags failed:', error);
+    } catch {
         return [];
     }
 };
