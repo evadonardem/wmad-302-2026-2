@@ -1,27 +1,49 @@
-import { Stack } from 'expo-router';
-import { FavoritesProvider } from '@/favorites';
-import { ThemeModeProvider, ThemeProvider, createTheme, type ThemeMode } from '@/theme';
+import { Tabs } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '@/theme';
 
-// TODO 13 [Dynamic Themes]: Complete the theme creation arrow function.
-// It should accept a 'mode' string parameter ('light' or 'dark') and return
-// a theme object configuration mapping that mode (see src/theme.tsx for the shape).
-const theme = (mode: ThemeMode = 'light') => createTheme({
-  // [Your code here]
-});
-
-export default function RootLayout() {
-  // TODO 14 [State Management]: Initialize a boolean React state hook variable named 'isDarkMode' defaulting to false.
-  // [Your code here]
+export default function TabsLayout() {
+  const theme = useTheme();
 
   return (
-    // TODO 16 [Theme Binding Layout]: Wrap the <Stack /> inside BOTH providers below:
-    // a. <ThemeModeProvider value={{ isDarkMode, setIsDarkMode }}> so screens can read and flip the mode.
-    // b. <ThemeProvider theme={...}> passing the calculated theme object. Configure it matching: it
-    //    should resolve to 'dark' if 'isDarkMode' is true, otherwise 'light'
-    //    (i.e. theme(isDarkMode ? 'dark' : 'light')).
-    <FavoritesProvider>
-      {/* [Your ThemeModeProvider + ThemeProvider wrapper structure here] */}
-      <Stack screenOptions={{ headerShown: false }} />
-    </FavoritesProvider>
+    <Tabs
+      screenOptions={{
+        tabBarActiveTintColor: theme.colors.primary,
+        tabBarInactiveTintColor: theme.colors.textSecondary,
+        tabBarStyle: {
+          backgroundColor: theme.colors.surface,
+          borderTopColor: theme.colors.border,
+        },
+        headerStyle: {
+          backgroundColor: theme.colors.background,
+        },
+        headerTitleStyle: {
+          color: theme.colors.text,
+          fontWeight: '700',
+        },
+      }}
+    >
+      <Tabs.Screen
+        name="index"
+        options={{
+          title: 'Home',
+          tabBarIcon: ({ color, size }) => <Ionicons name="home" size={size} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="favorites"
+        options={{
+          title: 'Favorites',
+          tabBarIcon: ({ color, size }) => <Ionicons name="heart" size={size} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="settings"
+        options={{
+          title: 'Settings',
+          tabBarIcon: ({ color, size }) => <Ionicons name="settings" size={size} color={color} />,
+        }}
+      />
+    </Tabs>
   );
 }
