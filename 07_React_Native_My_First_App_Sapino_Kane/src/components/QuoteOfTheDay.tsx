@@ -7,30 +7,25 @@ import { useFavorites } from '@/favorites';
 import { useTheme } from '@/theme';
 
 export default function QuoteOfTheDay() {
-  // TODO 1 [State Initialization]
   const [quote, setQuote] = useState<Partial<Quote>>({});
   const [tags, setTags] = useState<string[]>([]);
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
 
-  // TODO 2 [Reference Hook]
   const selectTagRef = useRef<string | null>(null);
 
   const theme = useTheme();
   const { toggleFavorite, isFavorite } = useFavorites();
 
   const loadRandomQuote = async () => {
-    // TODO 3 [Async Request Handler]
-    const currentTag = selectTagRef.current ?? null;
+    const currentTag = selectTagRef.current;
     const data = await getRandomQuote(currentTag);
     if (data) {
       setQuote(data);
-      // Fallback logic if the service doesn't return the matching tag context explicitly
       setSelectedTag(currentTag);
     }
   };
 
   const loadTags = async () => {
-    // TODO 4 [Async List Population]
     const data = await getTags();
     if (data) {
       setTags(data);
@@ -38,13 +33,16 @@ export default function QuoteOfTheDay() {
   };
 
   useEffect(() => {
-    // TODO 5 [Component Lifecycle]
     loadRandomQuote();
     loadTags();
   }, []);
 
-  // Check if current quote is actively inside favorites global context
   const favorited = quote.text ? isFavorite(quote as Quote) : false;
+
+  const handleSelectTag = (tag: string | null) => {
+    selectTagRef.current = tag;
+    setSelectedTag(tag);
+  };
 
   return (
     <View style={[styles.card, { backgroundColor: theme.colors.surface }]}>
@@ -53,7 +51,6 @@ export default function QuoteOfTheDay() {
       </Text>
 
       <View style={styles.tagRow}>
-        {/* TODO 6 [Conditional Chip List] */}
         {quote.tags?.map((t) => {
           const isActive = selectedTag === t;
           return (
@@ -70,12 +67,10 @@ export default function QuoteOfTheDay() {
         })}
       </View>
 
-      {/* TODO 7 [Text Content Mapping] */}
       <Text style={[styles.quoteText, { color: theme.colors.text }]}>
         {quote.text ? `"${quote.text}"` : '""'}
       </Text>
 
-      {/* TODO 8 [Author Content Mapping] */}
       <Text style={[styles.author, { color: theme.colors.textSecondary }]}>
         — {quote.author || 'Unknown'}
       </Text>
@@ -83,23 +78,17 @@ export default function QuoteOfTheDay() {
       <View style={[styles.divider, { backgroundColor: theme.colors.border }]} />
 
       <View style={styles.controlsRow}>
-        {/* TODO 9 [Reference-Fed Options] */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
-          {/* Base option: filtering by any tag. Wire its onPress so it clears the selection. */}
           <Pressable
             style={[
               styles.filterChip,
               selectedTag === null && { backgroundColor: theme.colors.border },
             ]}
-            onPress={() => {
-              selectTagRef.current = null;
-              setSelectedTag(null);
-            }}
+            onPress={() => handleSelectTag(null)}
           >
             <Text style={[styles.filterChipText, { color: theme.colors.text }]}>any</Text>
           </Pressable>
 
-          {/* TODO 10 [Select Option Generation] */}
           {tags.map((t) => (
             <Pressable
               key={t}
@@ -107,17 +96,13 @@ export default function QuoteOfTheDay() {
                 styles.filterChip,
                 selectedTag === t && { backgroundColor: theme.colors.border },
               ]}
-              onPress={() => {
-                selectTagRef.current = t;
-                setSelectedTag(t);
-              }}
+              onPress={() => handleSelectTag(t)}
             >
               <Text style={[styles.filterChipText, { color: theme.colors.text }]}>{t}</Text>
             </Pressable>
           ))}
         </ScrollView>
 
-        {/* TODO 11 [Action Trigger Binding] */}
         <Pressable
           style={[styles.refreshButton, { backgroundColor: theme.colors.primary }]}
           onPress={loadRandomQuote}
@@ -126,7 +111,6 @@ export default function QuoteOfTheDay() {
           <Text style={styles.refreshButtonText}>Next Quote</Text>
         </Pressable>
 
-        {/* TODO 24 [Favorite Action] */}
         {quote.text && (
           <Pressable
             style={styles.favoriteButton}
@@ -240,4 +224,3 @@ const styles = StyleSheet.create({
     borderRadius: 24,
   },
 });
-

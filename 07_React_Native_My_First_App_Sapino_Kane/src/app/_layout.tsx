@@ -3,11 +3,11 @@ import { Stack } from 'expo-router';
 import { FavoritesProvider } from '@/favorites';
 import { ThemeModeProvider, ThemeProvider, createTheme, type ThemeMode } from '@/theme';
 
-// TODO 13 [Dynamic Themes]: Complete the theme creation arrow function.
-const theme = (mode: ThemeMode = 'light') => createTheme(mode);
+// TODO 13 [Dynamic Themes]: Complete the theme creation object map structure
+const theme = (mode: ThemeMode = 'light') => createTheme({ palette: { mode } });
 
 export default function RootLayout() {
-  // TODO 14 [State Management]: Initialize a boolean React state hook variable named 'isDarkMode' defaulting to false.
+  // TODO 14 [State Management]: Initialize a boolean React state hook variable
   const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
 
   return (
