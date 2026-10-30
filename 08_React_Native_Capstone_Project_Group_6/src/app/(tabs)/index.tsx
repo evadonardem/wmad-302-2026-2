@@ -8,7 +8,6 @@ import {
   RefreshControl,
   ScrollView,
   StyleSheet,
-  TextInput,
   useWindowDimensions,
   View,
 } from 'react-native';
@@ -42,54 +41,6 @@ const POPULAR = [
   'Camiguin',
   'Sagada',
 ];
-
-/** Rounded search field used both in the page and in the sticky bar */
-function SearchField({
-  value,
-  onChange,
-  onSubmit,
-  onClear,
-  loading,
-}: {
-  value: string;
-  onChange: (v: string) => void;
-  onSubmit: () => void;
-  onClear: () => void;
-  loading: boolean;
-}) {
-  const theme = useTheme();
-  return (
-    <View style={[styles.searchField, { backgroundColor: theme.colors.surface, borderColor: theme.colors.outline }]}>
-      <MaterialCommunityIcons name="magnify" size={22} color={theme.colors.primary} />
-      <TextInput
-        value={value}
-        onChangeText={onChange}
-        onSubmitEditing={onSubmit}
-        returnKeyType="search"
-        placeholder="Search any place, e.g. Boracay, Sagada..."
-        placeholderTextColor={theme.colors.onSurfaceVariant}
-        style={[styles.searchInput, { color: theme.colors.onSurface }]}
-      />
-      {value.length > 0 && (
-        <Pressable onPress={onClear} hitSlop={10} accessibilityLabel="Clear search">
-          <MaterialCommunityIcons name="close-circle" size={20} color={theme.colors.onSurfaceVariant} />
-        </Pressable>
-      )}
-      <TouchableRipple
-        onPress={onSubmit}
-        borderless
-        accessibilityLabel="Search"
-        style={[styles.searchBtn, { backgroundColor: theme.colors.primary }]}
-      >
-        <MaterialCommunityIcons
-          name={loading ? 'dots-horizontal' : 'arrow-right'}
-          size={20}
-          color={theme.colors.onPrimary}
-        />
-      </TouchableRipple>
-    </View>
-  );
-}
 
 /** Horizontally scrollable row of tappable chips */
 function ChipRow({
@@ -147,18 +98,15 @@ export default function SearchScreen() {
   const [searched, setSearched] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Free-text search + what was last searched
-  const [query, setQuery] = useState('');
+  // What was last searched (used by pull-to-refresh and "Try again")
   const [lastTerm, setLastTerm] = useState('');
-  const [recents, setRecents] = useState<string[]>([]);
 
   // Favorites (kept for this session) + filter toggle
   const [favorites, setFavorites] = useState<Photo[]>([]);
   const [showFavs, setShowFavs] = useState(false);
 
-  // Scroll state: sticky compact search bar + back-to-top button
+  // Scroll state: back-to-top button
   const listRef = useRef<FlatList<Photo>>(null);
-  const [showCompact, setShowCompact] = useState(false);
   const [showTop, setShowTop] = useState(false);
 
   // Photos for the two polaroids in the header (day + night versions)
@@ -229,7 +177,6 @@ export default function SearchScreen() {
     const trimmed = term.trim();
     if (!trimmed) return;
 
-    setQuery(trimmed);
     setLastTerm(trimmed);
     setShowFavs(false);
     setLoading(true);
@@ -241,7 +188,6 @@ export default function SearchScreen() {
       setPhotos(results);
       if (results.length > 0) {
         recordSearch(trimmed);
-        setRecents((prev) => [trimmed, ...prev.filter((t) => t.toLowerCase() !== trimmed.toLowerCase())].slice(0, 8));
       }
     } catch {
       setError('Could not load photos. Check your connection and try again.');
@@ -255,14 +201,6 @@ export default function SearchScreen() {
     runSearch(city.name);
   };
 
-  const clearSearch = () => {
-    setQuery('');
-    setLastTerm('');
-    setSearched(false);
-    setError(null);
-    setPhotos([]);
-  };
-
   const toggleFavorite = (photo: Photo) => {
     setFavorites((prev) =>
       prev.some((p) => String(p.id) === String(photo.id))
@@ -273,7 +211,6 @@ export default function SearchScreen() {
 
   const onScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const y = e.nativeEvent.contentOffset.y;
-    setShowCompact(y > 420);
     setShowTop(y > 800);
   };
 
@@ -332,7 +269,7 @@ export default function SearchScreen() {
         <Text variant="bodyMedium" style={[styles.stateText, { color: theme.colors.onSurfaceVariant }]}>
           {searched
             ? 'No tourist spots found. Try another city or municipality.'
-            : 'Search a place, pick a popular destination, or choose a region and city to see its tourist spots.'}
+            : 'Pick a popular destination, or choose a region and city to see its tourist spots.'}
         </Text>
       </View>
     );
@@ -340,21 +277,6 @@ export default function SearchScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
-      {/* Sticky compact search bar: appears after the header scrolls away */}
-      {showCompact && (
-        <View style={[styles.compactBar, { backgroundColor: theme.colors.surface }]}>
-          <View style={styles.compactInner}>
-            <SearchField
-              value={query}
-              onChange={setQuery}
-              onSubmit={() => runSearch(query)}
-              onClear={clearSearch}
-              loading={loading}
-            />
-          </View>
-        </View>
-      )}
-
       <FlatList
         ref={listRef}
         key={columns}
@@ -394,15 +316,6 @@ export default function SearchScreen() {
             />
 
             <View style={styles.searchArea}>
-              <SearchField
-                value={query}
-                onChange={setQuery}
-                onSubmit={() => runSearch(query)}
-                onClear={clearSearch}
-                loading={loading}
-              />
-
-              <ChipRow label="Recent searches" icon="history" items={recents} onPress={runSearch} />
               <ChipRow label="Popular destinations" icon="fire" items={POPULAR} onPress={runSearch} />
 
               {/* Results toolbar */}
@@ -411,8 +324,8 @@ export default function SearchScreen() {
                   {showFavs
                     ? `${favorites.length} favorite${favorites.length === 1 ? '' : 's'}`
                     : lastTerm && !loading && !error
-                    ? `${photos.length} photo${photos.length === 1 ? '' : 's'} for "${lastTerm}"`
-                    : ''}
+                      ? `${photos.length} photo${photos.length === 1 ? '' : 's'} for "${lastTerm}"`
+                      : ''}
                 </Text>
                 <TouchableRipple
                   onPress={() => setShowFavs((v) => !v)}
@@ -496,18 +409,6 @@ const styles = StyleSheet.create({
   content: { paddingBottom: 96, gap: 12 },
   header: { marginBottom: 8 },
   searchArea: { width: '100%', maxWidth: 640, alignSelf: 'center', paddingHorizontal: 16, paddingTop: 16 },
-  searchField: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    borderWidth: 1.5,
-    borderRadius: 999,
-    paddingLeft: 16,
-    paddingRight: 5,
-    paddingVertical: 5,
-  },
-  searchInput: { flex: 1, fontSize: 16, paddingVertical: 8, outlineStyle: 'none' } as any,
-  searchBtn: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
   chipSection: { marginTop: 14 },
   chipLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 },
   chipScroll: { gap: 8, paddingRight: 16 },
@@ -515,21 +416,6 @@ const styles = StyleSheet.create({
   toolbar: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 16 },
   favToggle: { borderRadius: 999 },
   favToggleInner: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 8 },
-  compactBar: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 10,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    elevation: 6,
-    shadowColor: '#000',
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 3 },
-  },
-  compactInner: { width: '100%', maxWidth: 640, alignSelf: 'center' },
   card: {
     borderRadius: 12,
     overflow: 'hidden',
