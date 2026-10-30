@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFavorites } from '@/favorites';
 import { useTheme } from '@/theme';
@@ -18,10 +18,35 @@ export default function FavoritesScreen() {
              its text (styles.rowText) and author (styles.rowAuthor).
           c. Give each row a remove <Pressable> (Ionicons "trash-outline", styles.removeButton)
              wired to removeFavorite(quote). */}
-      {/* [Your code here] */}
-      <Text style={[styles.empty, { color: theme.colors.textSecondary }]}>
-        No favorites yet — tap the heart on a quote to save it here.
-      </Text>
+      {favorites.length === 0 ? (
+        <Text style={[styles.empty, { color: theme.colors.textSecondary }]}>
+          No favorites yet — tap the heart on a quote to save it here.
+        </Text>
+      ) : (
+        <ScrollView contentContainerStyle={{ gap: 12 }}>
+          {favorites.map((fav, index) => (
+            <View
+              key={`${fav.text}-${index}`}
+              style={[styles.row, { backgroundColor: theme.colors.surface }]}
+            >
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.rowText, { color: theme.colors.text }]}>
+                  "{fav.text}"
+                </Text>
+                <Text style={[styles.rowAuthor, { color: theme.colors.textSecondary }]}>
+                  — {fav.author}
+                </Text>
+              </View>
+              <Pressable
+                style={styles.removeButton}
+                onPress={() => removeFavorite(fav)}
+              >
+                <Ionicons name="trash-outline" size={20} color="#e53935" />
+              </Pressable>
+            </View>
+          ))}
+        </ScrollView>
+      )}
     </View>
   );
 }

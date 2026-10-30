@@ -17,10 +17,20 @@ export default function GeneralSettings({ actions }: { actions: SettingsAction[]
   // b. The item's icon and its name label.
   // c. Wire the row's onPress to the item's onPress callback (fall back to a no-op when
   //    no onPress was provided).
+
   return (
     <View style={[styles.card, { backgroundColor: theme.colors.surface }]}>
-      {/* TODO 12: Map the 'actions' prop into rows here */}
-      {/* [Your code here] */}
+      {/* TODO 12 */}
+      {actions.map((item) => (
+        <Pressable
+          key={item.name}
+          style={styles.actionRow}
+          onPress={item.onPress ?? (() => {})}
+        >
+          {item.icon}
+          <Text style={[styles.actionName, { color: theme.colors.text }]}>{item.name}</Text>
+        </Pressable>
+      ))}
     </View>
   );
 }

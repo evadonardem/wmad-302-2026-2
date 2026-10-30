@@ -14,21 +14,25 @@ export default function SettingsScreen() {
   // (use setIsDarkMode) upon execution.
   const actions: SettingsAction[] = [
     {
-      icon: <Ionicons name="moon" size={22} color={theme.colors.text} />, // isDarkMode ? <Ionicons name="sunny" ... /> : <Ionicons name="moon" ... />
-      name: 'Dark Mode', // isDarkMode ? 'Light Mode' : 'Dark Mode',
-      // [Your code here: Add dynamic icon and state-toggling onPress function]
+      icon: isDarkMode ? (
+        <Ionicons name="sunny" size={22} color={theme.colors.text} />
+      ) : (
+        <Ionicons name="moon" size={22} color={theme.colors.text} />
+      ),
+      name: isDarkMode ? 'Light Mode' : 'Dark Mode',
+      onPress: () => setIsDarkMode((prev) => !prev),
     },
     { icon: <Ionicons name="color-palette" size={22} color={theme.colors.text} />, name: 'Theme' },
     { icon: <Ionicons name="print" size={22} color={theme.colors.text} />, name: 'Print' },
     { icon: <Ionicons name="share-social" size={22} color={theme.colors.text} />, name: 'Share' },
   ];
-
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <GeneralSettings actions={actions} />
     </View>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: {
