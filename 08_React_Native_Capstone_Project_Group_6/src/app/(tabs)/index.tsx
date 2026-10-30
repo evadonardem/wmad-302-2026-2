@@ -1,131 +1,186 @@
-import { useEffect, useState } from 'react';
-import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import { useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, FlatList, Image, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
-import { IconButton, Text, useTheme } from 'react-native-paper';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import LocationForm from '@/components/LocationForm';
-import MediaGallery from '@/components/MediaGallery';
-import { searchPhotosByLocation } from '@/services/geoPhotoService';
+import { Text, useTheme } from 'react-native-paper';
+import LakbayHeader, { IslandGroup } from '@/components/LakbayHeader';
+import {
+  City,
+  Region,
+  getCitiesMunicipalitiesByRegion,
+  getRegions,
+  searchPhotosByLocation,
+} from '@/services/geoPhotoService';
 import { usePhotos } from '@/photos';
 import { useSearchHistory } from '@/searchHistory';
-import { useThemeMode } from '@/themeMode';
 
 export default function SearchScreen() {
   const theme = useTheme();
-  const { isDarkMode, setIsDarkMode } = useThemeMode();
+  const { width } = useWindowDimensions();
+  const columns = width >= 760 ? 3 : 2;
+
+  const { q } = useLocalSearchParams<{ q?: string }>();
+
+  const [group, setGroup] = useState<IslandGroup>('all');
+  const [regions, setRegions] = useState<Region[]>([]);
+  const [selectedRegion, setSelectedRegion] = useState<Region | null>(null);
+  const [cities, setCities] = useState<City[]>([]);
+  const [selectedCity, setSelectedCity] = useState<City | null>(null);
+  const [citiesLoading, setCitiesLoading] = useState(false);
+
+  const [loading, setLoading] = useState(false);
+  const [searched, setSearched] = useState(false);
+
+  // Photos for the two polaroids in the header (day + night versions)
+  const [polaroids, setPolaroids] = useState<{
+    left?: { uri: string };
+    right?: { uri: string };
+    leftDark?: { uri: string };
+    rightDark?: { uri: string };
+  }>({});
+
   const { photos, setPhotos } = usePhotos();
   const { recordSearch } = useSearchHistory();
 
-  // TODO 3.7
-  const [loading, setLoading] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
-  const [lastSearchedCity, setLastSearchedCity] = useState('');
+  useEffect(() => {
+    getRegions().then(setRegions);
 
-  // City handed back from the History screen as a route param (see TODO 5.4)
-  const { q } = useLocalSearchParams<{ q?: string }>();
-
-  const handleSearchSubmit = async (locationName: string) => {
-    // TODO 3.8
-    setLoading(true);
-    try {
-      const results = await searchPhotosByLocation(locationName);
-      setPhotos(results);
-      setLastSearchedCity(locationName);
-
-      // TODO 5.1
-      if (results.length > 0) {
-        recordSearch(locationName);
+    const first = async (term: string) => {
+      try {
+        const res = await searchPhotosByLocation(term);
+        return res[0] ? { uri: res[0].imageUrl } : undefined;
+      } catch {
+        return undefined;
       }
-    } finally {
-      setLoading(false);
+    };
+
+    Promise.all([
+      first('El Nido Palawan'),
+      first('Boracay'),
+      first('Vigan night'), // night photo for the left polaroid
+      first('Manila Bay night'), // night photo for the right polaroid
+    ]).then(([left, right, leftDark, rightDark]) => {
+      setPolaroids({ left, right, leftDark, rightDark });
+    });
+  }, []);
+
+  const visibleRegions = useMemo(
+    () => (group === 'all' ? regions : regions.filter((r) => r.islandGroupCode === group)),
+    [regions, group]
+  );
+
+  const handleChangeGroup = (next: IslandGroup) => {
+    setGroup(next);
+    if (selectedRegion && next !== 'all' && selectedRegion.islandGroupCode !== next) {
+      setSelectedRegion(null);
+      setSelectedCity(null);
+      setCities([]);
     }
   };
 
-  const handleRefresh = async () => {
-    // TODO 4.6
-    setRefreshing(true);
-    try {
-      if (lastSearchedCity) {
-        const results = await searchPhotosByLocation(lastSearchedCity);
-        setPhotos(results);
-      }
-    } finally {
-      setRefreshing(false);
-    }
+  const handleSelectRegion = async (region: Region) => {
+    setSelectedRegion(region);
+    setSelectedCity(null);
+    setCities([]);
+    setCitiesLoading(true);
+    const result = await getCitiesMunicipalitiesByRegion(region.code);
+    setCities([...result].sort((a, b) => a.name.localeCompare(b.name)));
+    setCitiesLoading(false);
+  };
+
+  const runSearch = async (term: string) => {
+    const trimmed = term.trim();
+    if (!trimmed) return;
+
+    setLoading(true);
+    setSearched(true);
+    const results = await searchPhotosByLocation(trimmed);
+    setPhotos(results);
+    setLoading(false);
+
+    if (results.length > 0) recordSearch(trimmed);
+  };
+
+  const handleSelectCity = (city: City) => {
+    setSelectedCity(city);
+    runSearch(city.name);
   };
 
   useEffect(() => {
-    // TODO 5.4
-    if (q) {
-      handleSearchSubmit(q);
-    }
+    if (q) runSearch(q);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [q]);
 
+  const gap = 12;
+  const cardWidth = (Math.min(width, 960) - 32 - gap * (columns - 1)) / columns;
+
   return (
-    <SafeAreaView style={[styles.screen, { backgroundColor: theme.colors.background }]} edges={['top', 'left', 'right']}>
-      <View style={styles.header}>
-        <IconButton
-          icon="history"
-          iconColor={theme.colors.onBackground}
-          size={22}
-          onPress={() => router.push('/history')}
-          accessibilityLabel="Recent searches"
-        />
-        <IconButton
-          icon={isDarkMode ? 'weather-sunny' : 'weather-night'}
-          iconColor={theme.colors.onBackground}
-          size={24}
-          onPress={() => setIsDarkMode(!isDarkMode)}
-          accessibilityLabel="Toggle dark mode"
-        />
-      </View>
-
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={theme.colors.primary} />
-        }
-      >
-        <Text variant="headlineMedium" style={[styles.title, { color: theme.colors.onBackground }]}>
-          🇵🇭 Lakbay PH
-        </Text>
-        <Text variant="bodyLarge" style={[styles.subtitle, { color: theme.colors.onSurfaceVariant }]}>
-          Explore tourist spots across regions, cities, and municipalities in the Philippines
-        </Text>
-
-        {/* Connect the location selection input modules */}
-        <LocationForm onSearch={handleSearchSubmit} />
-
-        {/* Connect presentation display layout nodes passing state parameters downstream */}
-        <MediaGallery photos={photos} loading={loading} />
-      </ScrollView>
-    </SafeAreaView>
+    <FlatList
+      key={columns}
+      data={photos}
+      keyExtractor={(item) => String(item.id)}
+      numColumns={columns}
+      style={{ backgroundColor: theme.colors.background }}
+      contentContainerStyle={styles.content}
+      columnWrapperStyle={{ gap, paddingHorizontal: 16, justifyContent: 'center' }}
+      keyboardShouldPersistTaps="handled"
+      ListHeaderComponent={
+        <View style={styles.header}>
+          <LakbayHeader
+            group={group}
+            onChangeGroup={handleChangeGroup}
+            regions={visibleRegions}
+            selectedRegion={selectedRegion}
+            onSelectRegion={handleSelectRegion}
+            cities={cities}
+            selectedCity={selectedCity}
+            onSelectCity={handleSelectCity}
+            citiesLoading={citiesLoading}
+            polaroidLeft={polaroids.left}
+            polaroidRight={polaroids.right}
+            polaroidLeftDark={polaroids.leftDark}
+            polaroidRightDark={polaroids.rightDark}
+          />
+        </View>
+      }
+      renderItem={({ item }) => (
+        <Pressable
+          onPress={() => router.push({ pathname: '/photo/[id]', params: { id: String(item.id) } })}
+          style={[styles.card, { width: cardWidth, backgroundColor: theme.colors.surface }]}
+        >
+          <Image source={{ uri: item.imageUrl }} style={styles.image} resizeMode="cover" accessibilityLabel={item.altText} />
+          <Text variant="labelSmall" numberOfLines={1} style={[styles.credit, { color: theme.colors.onSurfaceVariant }]}>
+            Photo by {item.photographer}
+          </Text>
+        </Pressable>
+      )}
+      ListEmptyComponent={
+        loading ? (
+          <ActivityIndicator style={styles.state} />
+        ) : (
+          <Text variant="bodyMedium" style={[styles.state, { color: theme.colors.onSurfaceVariant }]}>
+            {searched
+              ? 'No tourist spots found. Try another city or municipality.'
+              : 'Search a region, then a city or municipality, to see its tourist spots.'}
+          </Text>
+        )
+      }
+    />
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    width: '100%',
+  content: { paddingBottom: 32, gap: 12 },
+  header: { marginBottom: 8 },
+  card: {
+    borderRadius: 12,
+    overflow: 'hidden',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    gap: 4,
-  },
-  scrollContent: {
-    width: '100%',
-    maxWidth: 960,
-    alignSelf: 'center',
-    paddingHorizontal: 16,
-    paddingBottom: 24,
-  },
-  title: {
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
-  subtitle: {
-    textAlign: 'center',
-    marginBottom: 24,
-  },
+  image: { width: '100%', aspectRatio: 4 / 3 },
+  credit: { padding: 8 },
+  state: { textAlign: 'center', marginTop: 32, paddingHorizontal: 24 },
 });
