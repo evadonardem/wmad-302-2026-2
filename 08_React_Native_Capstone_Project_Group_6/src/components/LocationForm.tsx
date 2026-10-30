@@ -69,12 +69,19 @@ export default function LocationForm({ onSearch }: { onSearch: (cityName: string
   };
 
   // TODO 2.9 (b)
-  const filteredRegions = useMemo(
-    () =>
+  const filteredRegions = useMemo(() => {
+    const list =
       islandFilter === 'all'
         ? regions
-        : regions.filter((r) => r.islandGroupCode === islandFilter),
-    [regions, islandFilter]
+        : regions.filter((r) => r.islandGroupCode === islandFilter);
+
+    return [...list].sort((a, b) => a.name.localeCompare(b.name));
+  }, [regions, islandFilter]);
+
+  // Alphabetical city list for the city menu
+  const sortedCities = useMemo(
+    () => [...cities].sort((a, b) => a.name.localeCompare(b.name)),
+    [cities]
   );
 
   // TODO 2.9 (d)
@@ -156,7 +163,7 @@ export default function LocationForm({ onSearch }: { onSearch: (cityName: string
             }
           >
             {/* TODO 2.8 */}
-            {cities.map((city) => (
+            {sortedCities.map((city) => (
               <Menu.Item
                 key={city.code}
                 title={city.name}
