@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { Button, Chip, Menu } from 'react-native-paper';
 import {
   getCitiesMunicipalitiesByRegion,
@@ -132,16 +132,18 @@ export default function LocationForm({ onSearch }: { onSearch: (cityName: string
             }
           >
             {/* TODO 2.6 */}
-            {filteredRegions.map((region) => (
-              <Menu.Item
-                key={region.code}
-                title={region.name}
-                onPress={() => {
-                  setSelectedRegion(region.code);
-                  setRegionMenuVisible(false);
-                }}
-              />
-            ))}
+            <ScrollView style={styles.menuScroll} nestedScrollEnabled>
+              {filteredRegions.map((region) => (
+                <Menu.Item
+                  key={region.code}
+                  title={region.name}
+                  onPress={() => {
+                    setSelectedRegion(region.code);
+                    setRegionMenuVisible(false);
+                  }}
+                />
+              ))}
+            </ScrollView>
           </Menu>
         </View>
 
@@ -163,16 +165,18 @@ export default function LocationForm({ onSearch }: { onSearch: (cityName: string
             }
           >
             {/* TODO 2.8 */}
-            {sortedCities.map((city) => (
-              <Menu.Item
-                key={city.code}
-                title={city.name}
-                onPress={() => {
-                  setSelectedCityName(city.name);
-                  setCityMenuVisible(false);
-                }}
-              />
-            ))}
+            <ScrollView style={styles.menuScroll} nestedScrollEnabled>
+              {sortedCities.map((city) => (
+                <Menu.Item
+                  key={city.code}
+                  title={city.name}
+                  onPress={() => {
+                    setSelectedCityName(city.name);
+                    setCityMenuVisible(false);
+                  }}
+                />
+              ))}
+            </ScrollView>
           </Menu>
         </View>
 
@@ -219,5 +223,8 @@ const styles = StyleSheet.create({
   },
   searchButton: {
     width: '100%',
+  },
+  menuScroll: {
+    maxHeight: 280,
   },
 });

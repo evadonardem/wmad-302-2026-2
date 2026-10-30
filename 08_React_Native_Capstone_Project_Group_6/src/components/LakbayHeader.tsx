@@ -1,11 +1,11 @@
 import { useMemo, useState } from 'react';
 import {
   ActivityIndicator,
-  FlatList,
   Image,
   ImageSourcePropType,
   Modal,
   Pressable,
+  ScrollView,
   StyleSheet,
   TextInput,
   useWindowDimensions,
@@ -187,7 +187,7 @@ function Swoosh({ color, width }: { color: string; width: number }) {
   );
 }
 
-/** Pill-shaped search tab that opens a searchable list */
+/** Pill-shaped search tab that opens a searchable, scrollable list in a centered card */
 function SearchTab<T extends { code: string }>({
   icon,
   placeholder,
@@ -215,11 +215,15 @@ function SearchTab<T extends { code: string }>({
 }) {
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState('');
+  const { height } = useWindowDimensions();
+  const listMaxHeight = Math.max(160, height * 0.7 - 150);
 
   const filtered = useMemo(() => {
     const term = filter.trim().toLowerCase();
     if (!term) return items;
-    return items.filter((item) => `${getLabel(item)} ${getSubLabel?.(item) ?? ''}`.toLowerCase().includes(term));
+    return items.filter((item) =>
+      `${getLabel(item)} ${getSubLabel?.(item) ?? ''}`.toLowerCase().includes(term)
+    );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [items, filter]);
 
@@ -251,53 +255,65 @@ function SearchTab<T extends { code: string }>({
         </View>
       </TouchableRipple>
 
-      <Modal visible={open} animationType="slide" onRequestClose={close}>
-        <View style={[styles.modal, { backgroundColor: colors.paper }]}>
-          <View style={styles.modalHeader}>
-            <Text style={[styles.modalTitle, { color: colors.green }]}>{modalTitle}</Text>
-            <Pressable onPress={close} hitSlop={12} accessibilityLabel="Close">
-              <MaterialCommunityIcons name="close" size={26} color={colors.green} />
-            </Pressable>
-          </View>
+      <Modal visible={open} transparent animationType="fade" onRequestClose={close}>
+        <View style={styles.overlay}>
+          {/* Tap outside the card to close */}
+          <Pressable style={StyleSheet.absoluteFill} onPress={close} accessibilityLabel="Close" />
 
-          <View style={[styles.modalSearch, { backgroundColor: colors.field, borderColor: colors.green }]}>
-            <MaterialCommunityIcons name="magnify" size={22} color={colors.green} />
-            <TextInput
-              autoFocus
-              value={filter}
-              onChangeText={setFilter}
-              placeholder={placeholder}
-              placeholderTextColor={colors.muted}
-              style={[styles.modalInput, { color: colors.ink }]}
-            />
-            {filter.length > 0 && (
-              <Pressable onPress={() => setFilter('')} hitSlop={10}>
-                <MaterialCommunityIcons name="close-circle" size={20} color={colors.muted} />
+          <View style={[styles.modalCard, { backgroundColor: colors.paper, maxHeight: height * 0.7 }]}>
+            <View style={styles.modalHeader}>
+              <Text style={[styles.modalTitle, { color: colors.green }]}>{modalTitle}</Text>
+              <Pressable onPress={close} hitSlop={12} accessibilityLabel="Close">
+                <MaterialCommunityIcons name="close" size={26} color={colors.green} />
               </Pressable>
-            )}
-          </View>
+            </View>
 
-          <FlatList
-            data={filtered}
-            keyExtractor={(item) => item.code}
-            keyboardShouldPersistTaps="handled"
-            contentContainerStyle={{ paddingBottom: 40 }}
-            ListEmptyComponent={<Text style={[styles.modalEmpty, { color: colors.muted }]}>No matches found.</Text>}
-            renderItem={({ item }) => (
-              <TouchableRipple
-                onPress={() => {
-                  onSelect(item);
-                  close();
-                }}
-                style={[styles.modalRow, { borderBottomColor: colors.greenSoft }]}
-              >
-                <View>
-                  <Text style={{ color: colors.ink, fontSize: 16, fontWeight: '600' }}>{getLabel(item)}</Text>
-                  {getSubLabel?.(item) ? <Text style={{ color: colors.muted, fontSize: 13 }}>{getSubLabel(item)}</Text> : null}
-                </View>
-              </TouchableRipple>
-            )}
-          />
+            <View style={[styles.modalSearch, { backgroundColor: colors.field, borderColor: colors.green }]}>
+              <MaterialCommunityIcons name="magnify" size={22} color={colors.green} />
+              <TextInput
+                value={filter}
+                onChangeText={setFilter}
+                placeholder={placeholder}
+                placeholderTextColor={colors.muted}
+                style={[styles.modalInput, { color: colors.ink }]}
+              />
+              {filter.length > 0 && (
+                <Pressable onPress={() => setFilter('')} hitSlop={10}>
+                  <MaterialCommunityIcons name="close-circle" size={20} color={colors.muted} />
+                </Pressable>
+              )}
+            </View>
+
+            <ScrollView
+              style={{ height: listMaxHeight }}
+              contentContainerStyle={{ paddingBottom: 12 }}
+              showsVerticalScrollIndicator
+              nestedScrollEnabled
+              keyboardShouldPersistTaps="handled"
+            >
+              {filtered.length === 0 ? (
+                <Text style={[styles.modalEmpty, { color: colors.muted }]}>No matches found.</Text>
+              ) : (
+                filtered.map((item) => (
+                  <TouchableRipple
+                    key={item.code}
+                    onPress={() => {
+                      onSelect(item);
+                      close();
+                    }}
+                    style={[styles.modalRow, { borderBottomColor: colors.greenSoft }]}
+                  >
+                    <View>
+                      <Text style={{ color: colors.ink, fontSize: 16, fontWeight: '600' }}>{getLabel(item)}</Text>
+                      {getSubLabel?.(item) ? (
+                        <Text style={{ color: colors.muted, fontSize: 13 }}>{getSubLabel(item)}</Text>
+                      ) : null}
+                    </View>
+                  </TouchableRipple>
+                ))
+              )}
+            </ScrollView>
+          </View>
         </View>
       </Modal>
     </>
@@ -453,7 +469,8 @@ const styles = StyleSheet.create({
   tabInner: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingLeft: 16, paddingRight: 5, paddingVertical: 5 },
   tabText: { flex: 1, fontSize: 16, paddingVertical: 8 },
   tabBtn: { width: 42, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center' },
-  modal: { flex: 1, paddingTop: 56, paddingHorizontal: 16 },
+  overlay: { flex: 1, justifyContent: 'center', paddingHorizontal: 20, backgroundColor: 'rgba(0,0,0,0.45)' },
+  modalCard: { borderRadius: 20, paddingTop: 18, paddingHorizontal: 16, paddingBottom: 8, overflow: 'hidden' },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },
   modalTitle: { fontSize: 22, fontWeight: '800' },
   modalSearch: {
