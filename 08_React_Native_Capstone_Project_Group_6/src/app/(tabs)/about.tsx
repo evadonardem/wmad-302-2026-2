@@ -50,11 +50,11 @@ export default function AboutScreen() {
 
       <Divider style={styles.divider} />
 
-      {/* TODO 4.9 [Declarative Navigation]: Render a declarative <Link href="/"> below that jumps
-          back to the Search tab — the JSX-based counterpart to the imperative router.push calls
-          used elsewhere. Style it like a call-to-action (e.g. "Start exploring →"). */}
+      {/* TODO 4.9 */}
       <View style={styles.cta}>
-        {/* [Your <Link> here] */}
+        <Link href="/" style={[styles.link, { color: theme.colors.primary }]}>
+          Start exploring →
+        </Link>
       </View>
     </ScrollView>
   );
@@ -80,5 +80,9 @@ const styles = StyleSheet.create({
   cta: {
     marginTop: 4,
     alignItems: 'center',
+  },
+  link: {
+    fontSize: 18,
+    fontWeight: 'bold',
   },
 });
