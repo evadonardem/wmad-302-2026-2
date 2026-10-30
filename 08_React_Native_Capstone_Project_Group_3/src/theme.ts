@@ -1,0 +1,66 @@
+import { MD3DarkTheme, MD3LightTheme, type MD3Theme } from 'react-native-paper';
+
+// Ocean teal + sunset orange palette for a travel feel
+export const lightTheme: MD3Theme = {
+  ...MD3LightTheme,
+  roundness: 4,
+  colors: {
+    ...MD3LightTheme.colors,
+    primary: '#0A7E8C',
+    onPrimary: '#FFFFFF',
+    primaryContainer: '#CDEFF3',
+    onPrimaryContainer: '#00363D',
+    secondary: '#E8892B',
+    onSecondary: '#FFFFFF',
+    secondaryContainer: '#FFE3C4',
+    onSecondaryContainer: '#4A2A00',
+    background: '#F3F9FA',
+    onBackground: '#0F2326',
+    surface: '#FFFFFF',
+    onSurface: '#0F2326',
+    surfaceVariant: '#E1EEF0',
+    onSurfaceVariant: '#3F5256',
+    outline: '#6F8A8E',
+    outlineVariant: '#C4D8DB',
+    elevation: {
+      level0: 'transparent',
+      level1: '#FFFFFF',
+      level2: '#F8FCFC',
+      level3: '#F1F8F9',
+      level4: '#EDF6F7',
+      level5: '#E8F3F5',
+    },
+  },
+};
+
+export const darkTheme: MD3Theme = {
+  ...MD3DarkTheme,
+  roundness: 4,
+  colors: {
+    ...MD3DarkTheme.colors,
+    primary: '#5CD3E0',
+    onPrimary: '#00363D',
+    primaryContainer: '#004F58',
+    onPrimaryContainer: '#CDEFF3',
+    secondary: '#FFB870',
+    onSecondary: '#4A2A00',
+    secondaryContainer: '#5A3A12',
+    onSecondaryContainer: '#FFDDB8',
+    background: '#0B1416',
+    onBackground: '#E1EEF0',
+    surface: '#122024',
+    onSurface: '#E1EEF0',
+    surfaceVariant: '#223639',
+    onSurfaceVariant: '#B5CBCE',
+    outline: '#7F9699',
+    outlineVariant: '#2E4548',
+    elevation: {
+      level0: 'transparent',
+      level1: '#15262A',
+      level2: '#182C30',
+      level3: '#1B3136',
+      level4: '#1D343A',
+      level5: '#20383E',
+    },
+  },
+};
