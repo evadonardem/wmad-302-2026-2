@@ -17,7 +17,14 @@ const ISLAND_OPTIONS: { value: IslandFilter; label: string }[] = [
   { value: 'mindanao', label: 'Mindanao' },
 ];
 
-export default function LocationForm({ onSearch }: { onSearch: (cityName: string) => void }) {
+export default function LocationForm({
+  onSearch,
+  onCityChange,
+}: {
+  onSearch: (cityName: string) => void;
+  // Optional: tells the dashboard which area is chosen (null when it is cleared) so it can show the description
+  onCityChange?: (city: City | null, regionName: string) => void;
+}) {
   // TODO 2.1 [State Trackers]: Replace the four placeholder trackers below with real React state hooks:
   // - 'regions': Stores the array of all regions (default: empty array)
   // - 'cities': Stores the array of filtered sub-municipalities (default: empty array)
@@ -57,6 +64,7 @@ export default function LocationForm({ onSearch }: { onSearch: (cityName: string
     let active = true;
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setSelectedCityName('');
+    onCityChange?.(null, '');
     if (selectedRegion) {
       getCitiesMunicipalitiesByRegion(selectedRegion).then((result) => {
         if (active) setCities(result);
@@ -67,6 +75,7 @@ export default function LocationForm({ onSearch }: { onSearch: (cityName: string
     return () => {
       active = false;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedRegion]);
 
   const handleSubmit = () => {
@@ -91,6 +100,7 @@ export default function LocationForm({ onSearch }: { onSearch: (cityName: string
     if (current && value !== 'all' && current.islandGroupCode?.toLowerCase() !== value) {
       setSelectedRegion('');
       setSelectedCityName('');
+      onCityChange?.(null, '');
     }
   };
 
@@ -183,6 +193,7 @@ export default function LocationForm({ onSearch }: { onSearch: (cityName: string
                 title={city.name}
                 onPress={() => {
                   setSelectedCityName(city.name);
+                  onCityChange?.(city, regions.find((r) => r.code === selectedRegion)?.regionName ?? '');
                   setCityMenuVisible(false);
                 }}
               />

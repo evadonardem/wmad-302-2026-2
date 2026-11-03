@@ -7,8 +7,9 @@ const PSGC_BASE_URL = 'https://psgc.gitlab.io/api';
 // Expo only exposes environment variables prefixed with EXPO_PUBLIC_ (loaded from the .env file).
 const PEXELS_API_KEY = process.env.EXPO_PUBLIC_PEXELS_API_KEY;
 
-// Number of photos requested per Pexels page (also used to guess if another page exists).
-export const PHOTOS_PER_PAGE = 12;
+// How many photos are requested from Pexels per page. Most of them are dropped by the place
+// filter below, so a big page is asked for to keep enough photos of the chosen area.
+const RAW_PAGE_SIZE = 80;
 
 export type Region = {
   code: string;
@@ -25,6 +26,9 @@ export type City = {
   isMunicipality: boolean;
   provinceCode: string;
   regionCode: string;
+  // Extra fields returned by the PSGC API that the area description uses
+  isCapital?: boolean;
+  islandGroupCode?: string;
 };
 
 // The same photo in the different sizes Pexels offers (used by the download size option).
@@ -55,6 +59,53 @@ const cleanPlaceName = (locationName: string) =>
     .replace(/^(City of|Municipality of)\s+/i, '')
     .replace(/\s+/g, ' ')
     .trim();
+
+// Lowercase and without accents, so "Ni\u00f1o" and "Nino" compare equal.
+const normalize = (text: string) =>
+  text
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+
+// The name a photo must mention to count as a photo of this area: "Baguio City" -> "baguio".
+const placeTerm = (locationName: string) =>
+  normalize(cleanPlaceName(locationName).replace(/\s+(city|island)$/i, ''));
+
+// Words that a photo must mention for each theme ("tag"). The default theme has no extra words.
+const DEFAULT_TOPIC = 'tourist spot';
+const TOPIC_KEYWORDS: Record<string, string[]> = {
+  beach: ['beach', 'shore', 'coast', 'sand', 'sea', 'ocean', 'island', 'bay', 'lagoon', 'cove', 'resort'],
+  mountain: ['mountain', 'peak', 'hill', 'volcano', 'highland', 'summit', 'trail'],
+  'heritage church': ['church', 'heritage', 'historic', 'historical', 'cathedral', 'colonial', 'museum', 'fort', 'ruins', 'temple', 'shrine', 'ancestral'],
+  food: ['food', 'dish', 'meal', 'restaurant', 'cuisine', 'market', 'delicacy', 'delicacies', 'cake', 'coffee', 'seafood', 'fruit'],
+};
+
+// Pexels has no location filter, so photos are checked by their description and page address.
+// A photo is kept only when it mentions the chosen place, and (for themes like Beaches)
+// the theme too. Photos of other places are never used as a replacement.
+const belongsTo = (rawPhoto: any, term: string, topic: string): boolean => {
+  const text = normalize(`${rawPhoto.alt ?? ''} ${String(rawPhoto.url ?? '').replace(/[-/:.]/g, ' ')}`);
+  if (!text.includes(term)) return false;
+  const keywords = TOPIC_KEYWORDS[topic];
+  return !keywords || keywords.some((word) => text.includes(word));
+};
+
+const toPhoto = (rawPhoto: any, locationName: string): Photo => ({
+  id: rawPhoto.id,
+  imageUrl: rawPhoto.src.large,
+  photographer: rawPhoto.photographer,
+  photographerUrl: rawPhoto.photographer_url,
+  altText: rawPhoto.alt,
+  thumbUrl: rawPhoto.src.medium,
+  sizes: {
+    small: rawPhoto.src.small,
+    medium: rawPhoto.src.medium,
+    large: rawPhoto.src.large,
+    large2x: rawPhoto.src.large2x,
+    original: rawPhoto.src.original,
+  },
+  place: locationName,
+});
 
 export const getRegions = async (): Promise<Region[]> => {
   // TODO 1.2 [Regions Retrieval]: Fetch the full array of regions from the PSGC host.
@@ -87,12 +138,24 @@ export const getCitiesMunicipalitiesByRegion = async (regionCode: string): Promi
   }
 };
 
+// Name of a province from the PSGC (used by the area description). Empty when it is unknown.
+export const getProvinceName = async (provinceCode: string): Promise<string> => {
+  if (!provinceCode) return '';
+  try {
+    const response = await axios.get(`${PSGC_BASE_URL}/provinces/${provinceCode}/`);
+    return response.data?.name ?? '';
+  } catch {
+    return '';
+  }
+};
+
 // 'page' and 'topic' are optional extras: page 2, 3... loads more photos, and 'topic' swaps the
 // default "tourist spot" for another theme (beach, mountain...). With neither, it behaves as before.
+// Only photos that really belong to the chosen place (and theme) are returned.
 export const searchPhotosByLocation = async (
   locationName: string,
   page: number = 1,
-  topic: string = 'tourist spot',
+  topic: string = DEFAULT_TOPIC,
 ): Promise<Photo[]> => {
   // TODO 1.4 [Pexels Query Resolution]: Build the photo search pipeline.
   // a. Create a combined query keyword string: `${locationName} tourist spot`.
@@ -105,62 +168,58 @@ export const searchPhotosByLocation = async (
   // e. Provide a backup empty array (or placeholder photo array) inside your catch layer shield
   //    to handle error edge cases gracefully.
   // The keyword is "<place> Philippines <topic>": the clean place name plus "Philippines" keeps
-  // photos from showing a same-named place in another country.
+  // the search on the right country. The results are then filtered to the chosen place.
   const keyword = `${cleanPlaceName(locationName)} Philippines ${topic}`;
+  const term = placeTerm(locationName);
   try {
     const response = await axios.get(
-      `https://api.pexels.com/v1/search?query=${encodeURIComponent(keyword)}&per_page=${PHOTOS_PER_PAGE}&page=${page}`,
+      `https://api.pexels.com/v1/search?query=${encodeURIComponent(keyword)}&per_page=${RAW_PAGE_SIZE}&page=${page}`,
       {
         headers: { Authorization: PEXELS_API_KEY ?? '' },
       },
     );
-    return response.data.photos.map((photo: any) => ({
-      id: photo.id,
-      imageUrl: photo.src.large,
-      photographer: photo.photographer,
-      photographerUrl: photo.photographer_url,
-      altText: photo.alt,
-      thumbUrl: photo.src.medium,
-      sizes: {
-        small: photo.src.small,
-        medium: photo.src.medium,
-        large: photo.src.large,
-        large2x: photo.src.large2x,
-        original: photo.src.original,
-      },
-      place: locationName,
-    }));
+    return response.data.photos
+      .filter((photo: any) => belongsTo(photo, term, topic))
+      .map((photo: any) => toPhoto(photo, locationName));
   } catch {
     return [];
   }
 };
 
-// Short description of a place (where it is, a bit of history) from Wikipedia. No API key needed.
-export const getPlaceDescription = async (
+// Same search, but also tells whether Pexels has more pages (used by the "Load more" button).
+export const searchPhotosPage = async (
   locationName: string,
-): Promise<{ text: string; url: string } | null> => {
+  page: number,
+  topic: string = DEFAULT_TOPIC,
+): Promise<{ photos: Photo[]; hasMore: boolean }> => {
+  const keyword = `${cleanPlaceName(locationName)} Philippines ${topic}`;
+  const term = placeTerm(locationName);
   try {
-    const search = await axios.get('https://en.wikipedia.org/w/api.php', {
-      params: {
-        action: 'query',
-        list: 'search',
-        srsearch: `${cleanPlaceName(locationName)} Philippines`,
-        srlimit: 1,
-        format: 'json',
-        origin: '*',
+    const response = await axios.get(
+      `https://api.pexels.com/v1/search?query=${encodeURIComponent(keyword)}&per_page=${RAW_PAGE_SIZE}&page=${page}`,
+      {
+        headers: { Authorization: PEXELS_API_KEY ?? '' },
       },
-    });
-    const title: string | undefined = search.data?.query?.search?.[0]?.title;
-    if (!title) return null;
-    const summary = await axios.get(
-      `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title.replace(/ /g, '_'))}`,
     );
-    if (summary.data.type === 'disambiguation' || !summary.data.extract) return null;
     return {
-      text: summary.data.extract,
-      url: summary.data.content_urls?.desktop?.page ?? '',
+      photos: response.data.photos
+        .filter((photo: any) => belongsTo(photo, term, topic))
+        .map((photo: any) => toPhoto(photo, locationName)),
+      hasMore: !!response.data.next_page,
     };
   } catch {
-    return null;
+    return { photos: [], hasMore: false };
   }
+};
+
+// One photo of a place for the start-screen cards. Remembered so each place is only asked once.
+// When Pexels has no photo that mentions the place, the card simply has no picture.
+const coverCache = new Map<string, Photo | null>();
+export const getPlaceCoverPhoto = async (name: string): Promise<Photo | null> => {
+  if (coverCache.has(name)) return coverCache.get(name) ?? null;
+  const photos = await searchPhotosByLocation(name);
+  const cover = photos[0] ?? null;
+  // A failed request returns an empty list too, so only remember real answers.
+  if (cover) coverCache.set(name, cover);
+  return cover;
 };

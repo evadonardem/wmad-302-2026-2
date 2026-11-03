@@ -5,7 +5,16 @@ import * as WebBrowser from 'expo-web-browser';
 import type { Photo } from '@/services/geoPhotoService';
 import { useFavorites } from '@/favorites';
 
-export default function MediaGallery({ photos, loading }: { photos: Photo[]; loading: boolean }) {
+export default function MediaGallery({
+  photos,
+  loading,
+  emptyMessage,
+}: {
+  photos: Photo[];
+  loading: boolean;
+  // Optional text for the empty state (for example "No beach photos were found for Baguio.")
+  emptyMessage?: string;
+}) {
   const { isFavorite, toggleFavorite } = useFavorites();
 
   // TODO 3.1 [Loading Skeletal Feedbacks]: If the 'loading' prop evaluates true, return a visual
@@ -27,7 +36,7 @@ export default function MediaGallery({ photos, loading }: { photos: Photo[]; loa
     return (
       <View style={styles.centered}>
         <Text variant="bodyLarge" style={styles.emptyText}>
-          No tourist spots found for this area yet.
+          {emptyMessage ?? 'No tourist spots found for this area yet.'}
         </Text>
       </View>
     );

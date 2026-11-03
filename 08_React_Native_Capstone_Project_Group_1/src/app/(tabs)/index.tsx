@@ -4,9 +4,12 @@ import { Image, type ImageSource } from 'expo-image';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Button, Chip, IconButton, Text, useTheme } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import AreaDescription from '@/components/AreaDescription';
+import FeaturedSection from '@/components/FeaturedSection';
 import LocationForm from '@/components/LocationForm';
 import MediaGallery from '@/components/MediaGallery';
-import { PHOTOS_PER_PAGE, searchPhotosByLocation } from '@/services/geoPhotoService';
+import { ALL_FEATURED_PLACES } from '@/data/featuredPlaces';
+import { searchPhotosByLocation, searchPhotosPage, type City } from '@/services/geoPhotoService';
 import { usePhotos } from '@/photos';
 import { useSearchHistory } from '@/searchHistory';
 import { useThemeMode } from '@/themeMode';
@@ -16,7 +19,8 @@ import { useThemeMode } from '@/themeMode';
 // While it is null, only the "Lakbay PH" title shows.
 const LOGO_SOURCE: ImageSource | null = null;
 
-// Featured-spot tabs: each one searches the same city with a different theme.
+// Tags: each one searches the same area with a different theme. They stay visible after a search.
+// When an area has no photos for a tag (for example Beaches in Baguio) the gallery stays empty.
 const TOPICS = [
   { label: 'Featured', query: 'tourist spot' },
   { label: 'Beaches', query: 'beach' },
@@ -41,17 +45,18 @@ export default function SearchScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [lastSearchedCity, setLastSearchedCity] = useState('');
 
-  // Extra trackers for the featured-spot tabs and the "Load more" paging
+  // Extra trackers for the tags, the "Load more" paging and the area description
   const [topic, setTopic] = useState(TOPICS[0].query);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [area, setArea] = useState<{ city: City; regionName: string } | null>(null);
 
   // City handed back from the History screen as a route param (see TODO 5.4)
   const { q } = useLocalSearchParams<{ q?: string }>();
 
-  // 'topicOverride' is only passed by the featured-spot tabs. A search from the form (or from
-  // History) starts again on the Featured tab.
+  // 'topicOverride' is only passed by the tag chips. A search from the form, the featured cards,
+  // the randomizer or History starts again on the Featured tag.
   const handleSearchSubmit = async (locationName: string, topicOverride?: string) => {
     // TODO 3.8 [Operational Async Glue Engine]:
     // a. Shift the local 'loading' state tracker to true.
@@ -68,11 +73,11 @@ export default function SearchScreen() {
       setLastSearchedCity(locationName);
       setTopic(activeTopic);
       setPage(1);
-      setHasMore(results.length >= PHOTOS_PER_PAGE);
+      setHasMore(results.length > 0);
 
       // TODO 5.1 [History Recording]: Once the search above succeeds, record the searched city
       // with recordSearch(locationName) from useSearchHistory() so the History screen can list it.
-      // (Switching a featured-spot tab is the same city, so it is not recorded again.)
+      // (Switching a tag is the same area, so it is not recorded again.)
       if (topicOverride === undefined) {
         recordSearch(locationName);
       }
@@ -93,7 +98,7 @@ export default function SearchScreen() {
         const results = await searchPhotosByLocation(lastSearchedCity, 1, topic);
         setPhotos(results);
         setPage(1);
-        setHasMore(results.length >= PHOTOS_PER_PAGE);
+        setHasMore(results.length > 0);
       }
     } finally {
       setRefreshing(false);
@@ -106,14 +111,29 @@ export default function SearchScreen() {
     setLoadingMore(true);
     try {
       const nextPage = page + 1;
-      const more = await searchPhotosByLocation(lastSearchedCity, nextPage, topic);
-      const fresh = more.filter((m) => !photos.some((p) => p.id === m.id));
+      const result = await searchPhotosPage(lastSearchedCity, nextPage, topic);
+      const fresh = result.photos.filter((m) => !photos.some((p) => p.id === m.id));
       setPhotos([...photos, ...fresh]);
       setPage(nextPage);
-      setHasMore(more.length >= PHOTOS_PER_PAGE);
+      setHasMore(result.hasMore);
     } finally {
       setLoadingMore(false);
     }
+  };
+
+  // Randomizer: picks a random featured place (these are known to have photos) and searches it.
+  const handleSurprise = () => {
+    const pool = ALL_FEATURED_PLACES.filter((p) => p.name !== lastSearchedCity);
+    const pick = pool[Math.floor(Math.random() * pool.length)];
+    if (pick) handleSearchSubmit(pick.name);
+  };
+
+  // Goes back to the start screen with the featured places.
+  const handleBackToFeatured = () => {
+    setLastSearchedCity('');
+    setPhotos([]);
+    setHasMore(false);
+    setTopic(TOPICS[0].query);
   };
 
   useEffect(() => {
@@ -126,6 +146,15 @@ export default function SearchScreen() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [q]);
+
+  // The start screen shows the featured places until a search has been made.
+  const showResults = loading || !!lastSearchedCity;
+  const topicLabel = TOPICS.find((t) => t.query === topic)?.label.toLowerCase() ?? '';
+  const placeLabel = lastSearchedCity.replace(/^(City of|Municipality of)\s+/i, '');
+  const emptyMessage =
+    topic === TOPICS[0].query
+      ? `No photos of ${placeLabel} were found yet.`
+      : `No ${topicLabel} photos were found for ${placeLabel}.`;
 
   return (
     <SafeAreaView style={[styles.screen, { backgroundColor: theme.colors.background }]} edges={['top', 'left', 'right']}>
@@ -178,39 +207,59 @@ export default function SearchScreen() {
         </Text>
 
         {/* Connect the location selection input modules */}
-        <LocationForm onSearch={handleSearchSubmit} />
+        <LocationForm
+          onSearch={handleSearchSubmit}
+          onCityChange={(city, regionName) => setArea(city ? { city, regionName } : null)}
+        />
 
-        {/* Featured-spot tabs: shown once a city has been searched */}
-        {lastSearchedCity ? (
-          <View style={styles.topicRow}>
-            {TOPICS.map((t) => (
-              <Chip
-                key={t.query}
-                selected={topic === t.query}
-                showSelectedOverlay
-                onPress={() => handleSearchSubmit(lastSearchedCity, t.query)}
+        {/* Description of the chosen area, shown once when it is picked */}
+        {area && <AreaDescription city={area.city} regionName={area.regionName} />}
+
+        {/* Randomizer */}
+        <Button mode="text" icon="dice-5" onPress={handleSurprise} style={styles.surprise}>
+          Surprise me
+        </Button>
+
+        {showResults ? (
+          <>
+            {/* Tags: they stay here after a search and re-run it for the same area */}
+            <View style={styles.topicRow}>
+              {TOPICS.map((t) => (
+                <Chip
+                  key={t.query}
+                  selected={topic === t.query}
+                  showSelectedOverlay
+                  disabled={loading || !lastSearchedCity}
+                  onPress={() => handleSearchSubmit(lastSearchedCity, t.query)}
+                >
+                  {t.label}
+                </Chip>
+              ))}
+            </View>
+
+            {/* Connect presentation display layout nodes passing state parameters downstream */}
+            <MediaGallery photos={photos} loading={loading} emptyMessage={emptyMessage} />
+
+            {/* Pagination: asks Pexels for the next page of the same search */}
+            {hasMore && !loading && photos.length > 0 && (
+              <Button
+                mode="outlined"
+                icon="plus"
+                loading={loadingMore}
+                disabled={loadingMore}
+                onPress={handleLoadMore}
+                style={styles.loadMore}
               >
-                {t.label}
-              </Chip>
-            ))}
-          </View>
-        ) : null}
+                Load more photos
+              </Button>
+            )}
 
-        {/* Connect presentation display layout nodes passing state parameters downstream */}
-        <MediaGallery photos={photos} loading={loading} />
-
-        {/* Pagination: asks Pexels for the next page of the same search */}
-        {hasMore && !loading && photos.length > 0 && (
-          <Button
-            mode="outlined"
-            icon="plus"
-            loading={loadingMore}
-            disabled={loadingMore}
-            onPress={handleLoadMore}
-            style={styles.loadMore}
-          >
-            Load more photos
-          </Button>
+            <Button mode="text" icon="arrow-left" onPress={handleBackToFeatured} style={styles.loadMore}>
+              Back to featured places
+            </Button>
+          </>
+        ) : (
+          <FeaturedSection onPick={handleSearchSubmit} />
         )}
       </ScrollView>
     </SafeAreaView>
@@ -251,6 +300,10 @@ const styles = StyleSheet.create({
   subtitle: {
     textAlign: 'center',
     marginBottom: 24,
+  },
+  surprise: {
+    alignSelf: 'center',
+    marginBottom: 12,
   },
   topicRow: {
     flexDirection: 'row',
