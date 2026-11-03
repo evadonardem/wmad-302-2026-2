@@ -1,10 +1,13 @@
 import { Pressable, StyleSheet, View } from 'react-native';
-import { ActivityIndicator, Card, Text } from 'react-native-paper';
+import { ActivityIndicator, Card, IconButton, Text } from 'react-native-paper';
 import { router } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import type { Photo } from '@/services/geoPhotoService';
+import { useFavorites } from '@/favorites';
 
 export default function MediaGallery({ photos, loading }: { photos: Photo[]; loading: boolean }) {
+  const { isFavorite, toggleFavorite } = useFavorites();
+
   // TODO 3.1 [Loading Skeletal Feedbacks]: If the 'loading' prop evaluates true, return a visual
   // waiting feedback layout instead of the gallery.
   // Pro Tip: render a Paper <ActivityIndicator /> (or loop mock placeholder Views) to show a
@@ -54,6 +57,7 @@ export default function MediaGallery({ photos, loading }: { photos: Photo[]; loa
                   photographer: photo.photographer,
                   photographerUrl: photo.photographerUrl,
                   altText: photo.altText,
+                  place: photo.place ?? '',
                 },
               })
             }
@@ -62,7 +66,19 @@ export default function MediaGallery({ photos, loading }: { photos: Photo[]; loa
               {/* TODO 3.5 [Multimedia Presentation Layer]: Render a Paper <Card.Cover /> image block.
                   Set its source to {{ uri: photo.imageUrl }} and bind 'photo.altText' as the
                   accessibilityLabel for the image asset. */}
-              <Card.Cover source={{ uri: photo.imageUrl }} accessibilityLabel={photo.altText} />
+              <View>
+                <Card.Cover source={{ uri: photo.thumbUrl ?? photo.imageUrl }} accessibilityLabel={photo.altText} />
+                {/* Favorite toggle (saved on the phone, listed on the Favorites screen) */}
+                <IconButton
+                  icon={isFavorite(photo.id) ? 'heart' : 'heart-outline'}
+                  iconColor="#e53935"
+                  containerColor="rgba(255,255,255,0.85)"
+                  size={20}
+                  style={styles.heartButton}
+                  onPress={() => toggleFavorite(photo)}
+                  accessibilityLabel="Toggle favorite"
+                />
+              </View>
 
               <Card.Content style={styles.cardContent}>
                 <Text variant="labelSmall" style={styles.creditLabel}>
@@ -107,6 +123,12 @@ const styles = StyleSheet.create({
   },
   creditLabel: {
     opacity: 0.7,
+  },
+  heartButton: {
+    position: 'absolute',
+    top: 6,
+    right: 6,
+    margin: 0,
   },
   creditLink: {
     textDecorationLine: 'underline',
