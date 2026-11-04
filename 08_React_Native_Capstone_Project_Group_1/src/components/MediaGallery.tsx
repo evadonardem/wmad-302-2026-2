@@ -1,5 +1,5 @@
 import { Pressable, StyleSheet, View } from 'react-native';
-import { ActivityIndicator, Card, IconButton, Text } from 'react-native-paper';
+import { Card, IconButton, Text, useTheme } from 'react-native-paper';
 import { router } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import type { Photo } from '@/services/geoPhotoService';
@@ -15,6 +15,7 @@ export default function MediaGallery({
   // Optional text for the empty state (for example "No beach photos were found for Baguio.")
   emptyMessage?: string;
 }) {
+  const theme = useTheme();
   const { isFavorite, toggleFavorite } = useFavorites();
 
   // TODO 3.1 [Loading Skeletal Feedbacks]: If the 'loading' prop evaluates true, return a visual
@@ -22,9 +23,14 @@ export default function MediaGallery({
   // Pro Tip: render a Paper <ActivityIndicator /> (or loop mock placeholder Views) to show a
   // clean visual waiting state while photos are being fetched.
   if (loading) {
+    // Placeholder cards show the layout straight away, so the page feels faster while photos load.
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator animating size="large" />
+      <View style={styles.grid}>
+        {[0, 1, 2, 3, 4, 5].map((i) => (
+          <View key={i} style={styles.gridItem}>
+            <View style={[styles.skeleton, { backgroundColor: theme.colors.surfaceVariant }]} />
+          </View>
+        ))}
       </View>
     );
   }
@@ -141,6 +147,11 @@ const styles = StyleSheet.create({
   },
   creditLink: {
     textDecorationLine: 'underline',
+  },
+  skeleton: {
+    height: 250,
+    borderRadius: 12,
+    opacity: 0.6,
   },
   centered: {
     width: '100%',

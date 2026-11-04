@@ -61,8 +61,30 @@ export default function FeaturedSection({ onPick }: { onPick: (name: string) => 
   const [activeKey, setActiveKey] = useState(FEATURED_CATEGORIES[0].key);
   const active = FEATURED_CATEGORIES.find((c) => c.key === activeKey) ?? FEATURED_CATEGORIES[0];
 
+  // Speed: a moment after the start screen opens, the pictures of the other tabs are loaded quietly
+  // one by one, so switching tabs is instant. They are saved on the device, so this happens once.
+  useEffect(() => {
+    let cancelled = false;
+    const warmUp = async () => {
+      await new Promise((resolve) => setTimeout(resolve, 2500));
+      for (const category of FEATURED_CATEGORIES) {
+        for (const place of category.places) {
+          if (cancelled) return;
+          await getPlaceCoverPhoto(place.name);
+        }
+      }
+    };
+    warmUp();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   return (
     <View>
+      <Text variant="titleMedium" style={[styles.heading, { color: theme.colors.secondary }]}>
+        🕯️ Places to explore this Undas
+      </Text>
       <View style={styles.tabRow}>
         {FEATURED_CATEGORIES.map((category) => (
           <Chip
@@ -90,6 +112,11 @@ export default function FeaturedSection({ onPick }: { onPick: (name: string) => 
 }
 
 const styles = StyleSheet.create({
+  heading: {
+    textAlign: 'center',
+    fontWeight: '700',
+    marginBottom: 12,
+  },
   tabRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',

@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 
 // TODO 1.1 [Base Configuration]: Set the fixed PSGC Gitlab API trailing-slash base URL constant.
@@ -10,6 +11,18 @@ const PEXELS_API_KEY = process.env.EXPO_PUBLIC_PEXELS_API_KEY;
 // How many photos are requested from Pexels per page. Most of them are dropped by the place
 // filter below, so a big page is asked for to keep enough photos of the chosen area.
 const RAW_PAGE_SIZE = 80;
+// The start-screen cards only need one photo each, so a smaller page is enough (and faster).
+const COVER_RAW_SIZE = 40;
+
+// ---- Speed: remember answers so the same request is never made twice ----
+const SEARCH_CACHE_MS = 10 * 60 * 1000; // photo searches are remembered for 10 minutes
+const pexelsCache = new Map<string, { data: any; at: number }>();
+let regionsCache: Region[] | null = null;
+const citiesCache = new Map<string, City[]>();
+const provinceCache = new Map<string, string>();
+
+// Forgets the remembered photo searches (used by pull-to-refresh so it really fetches fresh photos).
+export const clearSearchCache = () => pexelsCache.clear();
 
 export type Region = {
   code: string;
@@ -111,8 +124,12 @@ export const getRegions = async (): Promise<Region[]> => {
   // TODO 1.2 [Regions Retrieval]: Fetch the full array of regions from the PSGC host.
   // Perform an asynchronous GET request using axios targeting `${PSGC_BASE_URL}/regions/`,
   // return the response data array on success, and return an empty array fallback inside the catch safety layer.
+  if (regionsCache) {
+    return regionsCache;
+  }
   try {
     const response = await axios.get(`${PSGC_BASE_URL}/regions/`);
+    regionsCache = response.data;
     return response.data;
   } catch {
     return [];
@@ -128,10 +145,15 @@ export const getCitiesMunicipalitiesByRegion = async (regionCode: string): Promi
   if (!regionCode) {
     return [];
   }
+  const remembered = citiesCache.get(regionCode);
+  if (remembered) {
+    return remembered;
+  }
   try {
     const response = await axios.get(
       `${PSGC_BASE_URL}/regions/${regionCode}/cities-municipalities/`,
     );
+    citiesCache.set(regionCode, response.data);
     return response.data;
   } catch {
     return [];
@@ -141,9 +163,13 @@ export const getCitiesMunicipalitiesByRegion = async (regionCode: string): Promi
 // Name of a province from the PSGC (used by the area description). Empty when it is unknown.
 export const getProvinceName = async (provinceCode: string): Promise<string> => {
   if (!provinceCode) return '';
+  const remembered = provinceCache.get(provinceCode);
+  if (remembered !== undefined) return remembered;
   try {
     const response = await axios.get(`${PSGC_BASE_URL}/provinces/${provinceCode}/`);
-    return response.data?.name ?? '';
+    const name = response.data?.name ?? '';
+    provinceCache.set(provinceCode, name);
+    return name;
   } catch {
     return '';
   }
@@ -156,6 +182,7 @@ export const searchPhotosByLocation = async (
   locationName: string,
   page: number = 1,
   topic: string = DEFAULT_TOPIC,
+  perPage: number = RAW_PAGE_SIZE,
 ): Promise<Photo[]> => {
   // TODO 1.4 [Pexels Query Resolution]: Build the photo search pipeline.
   // a. Create a combined query keyword string: `${locationName} tourist spot`.
@@ -171,14 +198,19 @@ export const searchPhotosByLocation = async (
   // the search on the right country. The results are then filtered to the chosen place.
   const keyword = `${cleanPlaceName(locationName)} Philippines ${topic}`;
   const term = placeTerm(locationName);
+  const url = `https://api.pexels.com/v1/search?query=${encodeURIComponent(keyword)}&per_page=${perPage}&page=${page}`;
   try {
-    const response = await axios.get(
-      `https://api.pexels.com/v1/search?query=${encodeURIComponent(keyword)}&per_page=${RAW_PAGE_SIZE}&page=${page}`,
-      {
+    // Speed: the same search is answered from memory for a few minutes.
+    const cached = pexelsCache.get(url);
+    let data = cached && Date.now() - cached.at < SEARCH_CACHE_MS ? cached.data : null;
+    if (!data) {
+      const response = await axios.get(url, {
         headers: { Authorization: PEXELS_API_KEY ?? '' },
-      },
-    );
-    return response.data.photos
+      });
+      data = response.data;
+      pexelsCache.set(url, { data, at: Date.now() });
+    }
+    return data.photos
       .filter((photo: any) => belongsTo(photo, term, topic))
       .map((photo: any) => toPhoto(photo, locationName));
   } catch {
@@ -194,32 +226,61 @@ export const searchPhotosPage = async (
 ): Promise<{ photos: Photo[]; hasMore: boolean }> => {
   const keyword = `${cleanPlaceName(locationName)} Philippines ${topic}`;
   const term = placeTerm(locationName);
+  const url = `https://api.pexels.com/v1/search?query=${encodeURIComponent(keyword)}&per_page=${RAW_PAGE_SIZE}&page=${page}`;
   try {
-    const response = await axios.get(
-      `https://api.pexels.com/v1/search?query=${encodeURIComponent(keyword)}&per_page=${RAW_PAGE_SIZE}&page=${page}`,
-      {
+    const cached = pexelsCache.get(url);
+    let data = cached && Date.now() - cached.at < SEARCH_CACHE_MS ? cached.data : null;
+    if (!data) {
+      const response = await axios.get(url, {
         headers: { Authorization: PEXELS_API_KEY ?? '' },
-      },
-    );
+      });
+      data = response.data;
+      pexelsCache.set(url, { data, at: Date.now() });
+    }
     return {
-      photos: response.data.photos
+      photos: data.photos
         .filter((photo: any) => belongsTo(photo, term, topic))
         .map((photo: any) => toPhoto(photo, locationName)),
-      hasMore: !!response.data.next_page,
+      hasMore: !!data.next_page,
     };
   } catch {
     return { photos: [], hasMore: false };
   }
 };
 
-// One photo of a place for the start-screen cards. Remembered so each place is only asked once.
-// When Pexels has no photo that mentions the place, the card simply has no picture.
-const coverCache = new Map<string, Photo | null>();
+// One photo of a place for the start-screen cards.
+// Speed: the covers are saved on the device for 7 days, so after the first time the start screen
+// shows its pictures straight away. When Pexels has no photo that mentions the place, the card
+// simply has no picture instead of a photo of another place.
+const COVER_KEY = 'lakbay_covers_v1';
+const COVER_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+type CoverStore = Record<string, { photo: Photo; savedAt: number }>;
+let coverStorePromise: Promise<CoverStore> | null = null;
+
+// Loaded once and shared, so many cards asking at the same time use the same object.
+const loadCoverStore = (): Promise<CoverStore> => {
+  if (!coverStorePromise) {
+    coverStorePromise = AsyncStorage.getItem(COVER_KEY)
+      .then((raw) => (raw ? (JSON.parse(raw) as CoverStore) : {}))
+      .catch(() => ({}) as CoverStore);
+  }
+  return coverStorePromise;
+};
+
 export const getPlaceCoverPhoto = async (name: string): Promise<Photo | null> => {
-  if (coverCache.has(name)) return coverCache.get(name) ?? null;
-  const photos = await searchPhotosByLocation(name);
+  const store = await loadCoverStore();
+  const saved = store[name];
+  if (saved && Date.now() - saved.savedAt < COVER_TTL_MS) {
+    return saved.photo;
+  }
+  const photos = await searchPhotosByLocation(name, 1, DEFAULT_TOPIC, COVER_RAW_SIZE);
   const cover = photos[0] ?? null;
-  // A failed request returns an empty list too, so only remember real answers.
-  if (cover) coverCache.set(name, cover);
+  // A failed request returns an empty list too, so only save real answers.
+  if (cover) {
+    store[name] = { photo: cover, savedAt: Date.now() };
+    AsyncStorage.setItem(COVER_KEY, JSON.stringify(store)).catch(() => {
+      // Saving is only a speed-up; ignore failures.
+    });
+  }
   return cover;
 };

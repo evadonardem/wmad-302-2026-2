@@ -9,18 +9,26 @@ import FeaturedSection from '@/components/FeaturedSection';
 import LocationForm from '@/components/LocationForm';
 import MediaGallery from '@/components/MediaGallery';
 import { ALL_FEATURED_PLACES } from '@/data/featuredPlaces';
-import { searchPhotosByLocation, searchPhotosPage, type City } from '@/services/geoPhotoService';
+import {
+  clearSearchCache,
+  searchPhotosByLocation,
+  searchPhotosPage,
+  type City,
+} from '@/services/geoPhotoService';
 import { usePhotos } from '@/photos';
 import { useSearchHistory } from '@/searchHistory';
 import { useThemeMode } from '@/themeMode';
 
 // Your own logo goes here later: save the image as assets/images/logo.png and replace null below with
 //   require('../../../assets/images/logo.png')
-// While it is null, only the "Lakbay PH" title shows.
-const LOGO_SOURCE: ImageSource | null = null;
+// While it is null, a dashed LOGO box shows in its place.
+   const LOGO_SOURCE: ImageSource | null = require('../../../assets/images/logocrocodille.png');
 
 // Tags: each one searches the same area with a different theme. They stay visible after a search.
 // When an area has no photos for a tag (for example Beaches in Baguio) the gallery stays empty.
+// Speed: only this many photos are drawn at first; "Load more" shows more of them.
+const SHOWN_AT_FIRST = 12;
+
 const TOPICS = [
   { label: 'Featured', query: 'tourist spot' },
   { label: 'Beaches', query: 'beach' },
@@ -50,6 +58,7 @@ export default function SearchScreen() {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(SHOWN_AT_FIRST);
   const [area, setArea] = useState<{ city: City; regionName: string } | null>(null);
 
   // City handed back from the History screen as a route param (see TODO 5.4)
@@ -73,6 +82,7 @@ export default function SearchScreen() {
       setLastSearchedCity(locationName);
       setTopic(activeTopic);
       setPage(1);
+      setVisibleCount(SHOWN_AT_FIRST);
       setHasMore(results.length > 0);
 
       // TODO 5.1 [History Recording]: Once the search above succeeds, record the searched city
@@ -95,9 +105,11 @@ export default function SearchScreen() {
     setRefreshing(true);
     try {
       if (lastSearchedCity) {
+        clearSearchCache(); // pull-to-refresh should ask Pexels again, not use the remembered answer
         const results = await searchPhotosByLocation(lastSearchedCity, 1, topic);
         setPhotos(results);
         setPage(1);
+        setVisibleCount(SHOWN_AT_FIRST);
         setHasMore(results.length > 0);
       }
     } finally {
@@ -108,12 +120,18 @@ export default function SearchScreen() {
   // Loads the next page of the current search and adds it under the photos already shown.
   const handleLoadMore = async () => {
     if (!lastSearchedCity || loadingMore) return;
+    // Photos already downloaded but not drawn yet are shown first, with no waiting.
+    if (photos.length > visibleCount) {
+      setVisibleCount(visibleCount + SHOWN_AT_FIRST);
+      return;
+    }
     setLoadingMore(true);
     try {
       const nextPage = page + 1;
       const result = await searchPhotosPage(lastSearchedCity, nextPage, topic);
       const fresh = result.photos.filter((m) => !photos.some((p) => p.id === m.id));
       setPhotos([...photos, ...fresh]);
+      setVisibleCount(visibleCount + SHOWN_AT_FIRST);
       setPage(nextPage);
       setHasMore(result.hasMore);
     } finally {
@@ -188,23 +206,37 @@ export default function SearchScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={theme.colors.primary} />
         }
       >
-        <View style={styles.titleRow}>
-          {/* Logo beside the title (appears once LOGO_SOURCE above is set) */}
-          {LOGO_SOURCE && (
-            <Image
-              source={LOGO_SOURCE}
-              style={styles.logo}
-              contentFit="contain"
-              accessibilityLabel="Lakbay PH logo"
-            />
-          )}
-          <Text variant="headlineMedium" style={[styles.title, { color: theme.colors.onBackground }]}>
-            Lakbay PH
+        {/* Halloween banner: logo slot + title + tagline */}
+        <View style={[styles.banner, { backgroundColor: theme.colors.surface, borderColor: theme.colors.primary }]}>
+          <View style={styles.titleRow}>
+            {/* Logo beside the title: shows your image once LOGO_SOURCE above is set */}
+            {LOGO_SOURCE ? (
+              <Image
+                source={LOGO_SOURCE}
+                style={styles.logo}
+                contentFit="contain"
+                accessibilityLabel="Lakbay PH logo"
+              />
+            ) : (
+              <View style={[styles.logoSlot, { borderColor: theme.colors.secondary }]}>
+                <Text variant="labelSmall" style={{ color: theme.colors.secondary }}>
+                  LOGO
+                </Text>
+              </View>
+            )}
+            <Text variant="headlineMedium" style={[styles.title, { color: theme.colors.primary }]}>
+              Lakbay PH
+            </Text>
+          </View>
+          <Text variant="labelLarge" style={[styles.tagline, { color: theme.colors.secondary }]}>
+            🎃 Undas Edition 🕯️
           </Text>
+          <Text variant="bodyMedium" style={[styles.subtitle, { color: theme.colors.onSurfaceVariant }]}>
+            Misty mountains, moonlit beaches and old heritage towns: explore spooky and scenic spots
+            across the Philippines
+          </Text>
+          <Text style={styles.decor}>🦇  🕸️  🎃  💀  🕯️  🌙  🦇</Text>
         </View>
-        <Text variant="bodyLarge" style={[styles.subtitle, { color: theme.colors.onSurfaceVariant }]}>
-          Explore tourist spots across regions, cities, and municipalities in the Philippines
-        </Text>
 
         {/* Connect the location selection input modules */}
         <LocationForm
@@ -238,10 +270,10 @@ export default function SearchScreen() {
             </View>
 
             {/* Connect presentation display layout nodes passing state parameters downstream */}
-            <MediaGallery photos={photos} loading={loading} emptyMessage={emptyMessage} />
+            <MediaGallery photos={photos.slice(0, visibleCount)} loading={loading} emptyMessage={emptyMessage} />
 
             {/* Pagination: asks Pexels for the next page of the same search */}
-            {hasMore && !loading && photos.length > 0 && (
+            {(hasMore || photos.length > visibleCount) && !loading && photos.length > 0 && (
               <Button
                 mode="outlined"
                 icon="plus"
@@ -283,23 +315,50 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 24,
   },
+  banner: {
+    borderWidth: 1,
+    borderRadius: 16,
+    paddingVertical: 18,
+    paddingHorizontal: 16,
+    marginBottom: 20,
+    alignItems: 'center',
+    gap: 6,
+  },
   titleRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 10,
+    gap: 12,
   },
   logo: {
-    width: 44,
-    height: 44,
+    width: 56,
+    height: 56,
+  },
+  logoSlot: {
+    width: 56,
+    height: 56,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderStyle: 'dashed',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   title: {
     fontWeight: 'bold',
     textAlign: 'center',
   },
+  tagline: {
+    letterSpacing: 2,
+    textTransform: 'uppercase',
+    textAlign: 'center',
+  },
   subtitle: {
     textAlign: 'center',
-    marginBottom: 24,
+  },
+  decor: {
+    fontSize: 16,
+    textAlign: 'center',
+    marginTop: 4,
   },
   surprise: {
     alignSelf: 'center',

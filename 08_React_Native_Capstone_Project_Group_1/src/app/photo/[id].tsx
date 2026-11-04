@@ -3,6 +3,7 @@ import { Platform, Pressable, Share, StyleSheet, View } from 'react-native';
 import { Image } from 'expo-image';
 import { Redirect, Stack, router, useLocalSearchParams } from 'expo-router';
 import { Button, IconButton, Menu, Snackbar, Text, useTheme } from 'react-native-paper';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as WebBrowser from 'expo-web-browser';
 import { downloadPhoto, type DownloadResult } from '@/services/downloadService';
 import type { Photo } from '@/services/geoPhotoService';
@@ -28,6 +29,7 @@ const DOWNLOAD_MESSAGES: Record<DownloadResult, string> = {
 
 export default function PhotoDetailScreen() {
   const theme = useTheme();
+  const insets = useSafeAreaInsets(); // keeps the buttons above the phone's gesture bar
   const { photos } = usePhotos();
   const { isFavorite, toggleFavorite } = useFavorites();
 
@@ -163,7 +165,7 @@ export default function PhotoDetailScreen() {
         />
       </View>
 
-      <View style={[styles.panel, { backgroundColor: theme.colors.surface }]}>
+      <View style={[styles.panel, { backgroundColor: theme.colors.surface, paddingBottom: 12 + insets.bottom }]}>
         {/* Who took the photo, with prev/next */}
         <View style={styles.pagerRow}>
           <IconButton
