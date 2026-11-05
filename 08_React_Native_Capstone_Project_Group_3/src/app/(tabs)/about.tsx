@@ -1,6 +1,7 @@
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { Link } from 'expo-router';
 import { Surface, Text, useTheme } from 'react-native-paper';
+import AppBackground from '@/components/AppBackground';
 
 const SECTIONS = [
   {
@@ -24,8 +25,9 @@ export default function AboutScreen() {
   const theme = useTheme();
 
   return (
+    <AppBackground>
     <ScrollView
-      style={[styles.screen, { backgroundColor: theme.colors.background }]}
+      style={[styles.screen, { backgroundColor: 'transparent' }]}
       contentContainerStyle={styles.content}
     >
       <View style={[styles.banner, { backgroundColor: theme.colors.primaryContainer }]}>
@@ -64,6 +66,7 @@ export default function AboutScreen() {
         </Link>
       </View>
     </ScrollView>
+    </AppBackground>
   );
 }
 

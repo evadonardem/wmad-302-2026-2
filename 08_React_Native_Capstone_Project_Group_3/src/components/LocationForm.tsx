@@ -1,10 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import { StyleSheet, View, useWindowDimensions } from 'react-native';
-import { Button, Chip, Menu, Text, useTheme } from 'react-native-paper';
+import { Button, Chip, Menu, useTheme } from 'react-native-paper';
 import {
+  getCitiesMunicipalitiesByProvince,
   getCitiesMunicipalitiesByRegion,
+  getProvincesByRegion,
   getRegions,
   type City,
+  type Province,
   type Region,
 } from '@/services/geoPhotoService';
 
@@ -22,17 +25,22 @@ export default function LocationForm({ onSearch }: { onSearch: (cityName: string
   const { width } = useWindowDimensions();
   const isWide = width >= 800;
 
-  // TODO 2.1 [State Trackers]
+  // TODO 2.1 [State Trackers] (+ province step: Region > Province > City/Municipality)
   const [regions, setRegions] = useState<Region[]>([]);
+  const [provinces, setProvinces] = useState<Province[]>([]);
   const [cities, setCities] = useState<City[]>([]);
   const [selectedRegion, setSelectedRegion] = useState('');
+  const [selectedProvince, setSelectedProvince] = useState('');
   const [selectedCityName, setSelectedCityName] = useState('');
+  const [loadingProvinces, setLoadingProvinces] = useState(false);
+  const [loadingCities, setLoadingCities] = useState(false);
 
   // TODO 2.9 (a) island-group filter state
   const [islandFilter, setIslandFilter] = useState<IslandFilter>('all');
 
   // Paper <Menu> visibility flags (scaffolded UI chrome — no TODO required)
   const [regionMenuVisible, setRegionMenuVisible] = useState(false);
+  const [provinceMenuVisible, setProvinceMenuVisible] = useState(false);
   const [cityMenuVisible, setCityMenuVisible] = useState(false);
 
   useEffect(() => {
@@ -52,22 +60,40 @@ export default function LocationForm({ onSearch }: { onSearch: (cityName: string
   }, []);
 
   useEffect(() => {
-    // TODO 2.3 [Reactive Cascading Refresh]
+    // TODO 2.3 [Reactive Cascading Refresh] — a new region clears everything below it
     let cancelled = false;
 
-    // b. Always clear the previous city so stale selections never leak into the next search
+    setSelectedProvince('');
     setSelectedCityName('');
+    setProvinces([]);
     setCities([]);
+    setLoadingCities(false);
 
-    if (!selectedRegion) return;
+    if (!selectedRegion) {
+      setLoadingProvinces(false);
+      return;
+    }
 
-    // a. Load the cities/municipalities for the newly selected region
+    setLoadingProvinces(true);
     (async () => {
       try {
-        const data = await getCitiesMunicipalitiesByRegion(selectedRegion);
-        if (!cancelled) setCities(data);
+        const provinceList = await getProvincesByRegion(selectedRegion);
+        if (cancelled) return;
+        setProvinces(provinceList);
+
+        // Regions without provinces (such as NCR) go straight to their cities
+        if (provinceList.length === 0) {
+          setLoadingCities(true);
+          const cityList = await getCitiesMunicipalitiesByRegion(selectedRegion);
+          if (!cancelled) setCities(cityList);
+        }
       } catch (error) {
-        console.warn('Failed to load cities:', error);
+        console.warn('Failed to load provinces:', error);
+      } finally {
+        if (!cancelled) {
+          setLoadingProvinces(false);
+          setLoadingCities(false);
+        }
       }
     })();
 
@@ -75,6 +101,31 @@ export default function LocationForm({ onSearch }: { onSearch: (cityName: string
       cancelled = true;
     };
   }, [selectedRegion]);
+
+  useEffect(() => {
+    // A new province loads its cities/municipalities
+    if (!selectedProvince) return;
+    let cancelled = false;
+
+    setSelectedCityName('');
+    setCities([]);
+    setLoadingCities(true);
+
+    (async () => {
+      try {
+        const cityList = await getCitiesMunicipalitiesByProvince(selectedProvince);
+        if (!cancelled) setCities(cityList);
+      } catch (error) {
+        console.warn('Failed to load cities:', error);
+      } finally {
+        if (!cancelled) setLoadingCities(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedProvince]);
 
   // TODO 2.9 (b) filtered region list derived from regions + islandFilter
   const filteredRegions = useMemo(
@@ -93,32 +144,55 @@ export default function LocationForm({ onSearch }: { onSearch: (cityName: string
     const stillVisible = next === 'all' || selected?.islandGroupCode === next;
     if (!stillVisible) {
       setSelectedRegion('');
+      setSelectedProvince('');
       setSelectedCityName('');
     }
   };
 
+  const selectedProvinceName = provinces.find((p) => p.code === selectedProvince)?.name;
+
   const handleSubmit = () => {
     // TODO 2.4 [Form Submit Bubble]
-    if (selectedCityName) {
-      onSearch(selectedCityName);
-    }
+    // Adds the province ("La Trinidad, Benguet") so places that share a name are not mixed up.
+    // To send the plain city name instead, change this to: onSearch(selectedCityName)
+    if (!selectedCityName) return;
+    onSearch(selectedProvinceName ? `${selectedCityName}, ${selectedProvinceName}` : selectedCityName);
   };
+
+  const handleReset = () => {
+    setIslandFilter('all');
+    setSelectedRegion('');
+    setSelectedProvince('');
+    setSelectedCityName('');
+  };
+
+  // Which dropdowns can be used right now
+  const regionHasProvinces = provinces.length > 0;
+  const provinceEnabled = !!selectedRegion && !loadingProvinces && regionHasProvinces;
+  const cityEnabled =
+    !!selectedRegion &&
+    !loadingProvinces &&
+    !loadingCities &&
+    (regionHasProvinces ? !!selectedProvince : true) &&
+    cities.length > 0;
 
   // Display labels derived from the current selections (scaffolded)
   const selectedRegionLabel = regions.find((r) => r.code === selectedRegion)?.name ?? 'Select Region';
-  const selectedCityLabel = selectedCityName || 'Select City / Municipality';
 
+  let provinceLabel = 'Select Province';
+  if (selectedRegion && loadingProvinces) provinceLabel = 'Loading provinces…';
+  else if (selectedRegion && !regionHasProvinces) provinceLabel = 'No provinces in this region';
+  else if (selectedProvinceName) provinceLabel = selectedProvinceName;
+
+  let cityLabel = 'Select City / Municipality';
+  if (selectedCityName) cityLabel = selectedCityName;
+  else if (loadingCities) cityLabel = 'Loading municipalities…';
+
+  const hasSelection = !!selectedRegion || islandFilter !== 'all';
   const menuContentStyle = { backgroundColor: theme.colors.surface, borderRadius: 14 };
 
   return (
     <View style={styles.form}>
-      <Text variant="titleMedium" style={[styles.heading, { color: theme.colors.onSurface }]}>
-        Where to next?
-      </Text>
-      <Text variant="bodySmall" style={[styles.hint, { color: theme.colors.onSurfaceVariant }]}>
-        Choose an island group, then a region and a city to find tourist spots.
-      </Text>
-
       {/* TODO 2.9 (c) [Island-Group Filter] chips */}
       <View style={styles.filterRow}>
         {ISLAND_OPTIONS.map((option) => (
@@ -135,6 +209,7 @@ export default function LocationForm({ onSearch }: { onSearch: (cityName: string
       </View>
 
       <View style={[styles.row, isWide && styles.rowWide]}>
+        {/* 1. Region */}
         <View style={[styles.field, isWide && styles.fieldWide]}>
           <Menu
             visible={regionMenuVisible}
@@ -167,6 +242,40 @@ export default function LocationForm({ onSearch }: { onSearch: (cityName: string
           </Menu>
         </View>
 
+        {/* 2. Province */}
+        <View style={[styles.field, isWide && styles.fieldWide]}>
+          <Menu
+            visible={provinceMenuVisible}
+            onDismiss={() => setProvinceMenuVisible(false)}
+            anchorPosition="bottom"
+            contentStyle={menuContentStyle}
+            anchor={
+              <Button
+                mode="outlined"
+                icon="map-outline"
+                disabled={!provinceEnabled}
+                contentStyle={styles.buttonContent}
+                style={styles.button}
+                onPress={() => setProvinceMenuVisible(true)}
+              >
+                {provinceLabel}
+              </Button>
+            }
+          >
+            {provinces.map((province) => (
+              <Menu.Item
+                key={province.code}
+                title={province.name}
+                onPress={() => {
+                  setSelectedProvince(province.code);
+                  setProvinceMenuVisible(false);
+                }}
+              />
+            ))}
+          </Menu>
+        </View>
+
+        {/* 3. City / Municipality */}
         <View style={[styles.field, isWide && styles.fieldWide]}>
           <Menu
             visible={cityMenuVisible}
@@ -177,12 +286,12 @@ export default function LocationForm({ onSearch }: { onSearch: (cityName: string
               <Button
                 mode="outlined"
                 icon="city-variant-outline"
-                disabled={!selectedRegion}
+                disabled={!cityEnabled}
                 contentStyle={styles.buttonContent}
                 style={styles.button}
                 onPress={() => setCityMenuVisible(true)}
               >
-                {selectedCityLabel}
+                {cityLabel}
               </Button>
             }
           >
@@ -199,18 +308,26 @@ export default function LocationForm({ onSearch }: { onSearch: (cityName: string
             ))}
           </Menu>
         </View>
+      </View>
 
+      <View style={styles.actions}>
         <Button
           mode="contained"
           icon="magnify"
           disabled={!selectedCityName}
           contentStyle={styles.buttonContent}
           labelStyle={styles.searchLabel}
-          style={[styles.searchButton, isWide && styles.searchButtonWide]}
+          style={styles.searchButton}
           onPress={handleSubmit}
         >
-          Search
+          Search this place
         </Button>
+
+        {hasSelection && (
+          <Button mode="text" icon="refresh" onPress={handleReset}>
+            Reset
+          </Button>
+        )}
       </View>
     </View>
   );
@@ -219,13 +336,6 @@ export default function LocationForm({ onSearch }: { onSearch: (cityName: string
 const styles = StyleSheet.create({
   form: {
     width: '100%',
-  },
-  heading: {
-    fontWeight: '700',
-  },
-  hint: {
-    marginTop: 2,
-    marginBottom: 14,
   },
   filterRow: {
     flexDirection: 'row',
@@ -259,13 +369,15 @@ const styles = StyleSheet.create({
   buttonContent: {
     paddingVertical: 6,
   },
-  searchButton: {
-    width: '100%',
-    borderRadius: 16,
+  actions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 14,
   },
-  searchButtonWide: {
-    width: 'auto',
-    minWidth: 150,
+  searchButton: {
+    flex: 1,
+    borderRadius: 16,
   },
   searchLabel: {
     fontWeight: '700',

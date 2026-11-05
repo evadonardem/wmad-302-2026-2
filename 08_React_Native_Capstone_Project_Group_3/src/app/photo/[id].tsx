@@ -3,6 +3,7 @@ import { Platform, ScrollView, Share, StyleSheet, View, useWindowDimensions } fr
 import { Redirect, Stack, router, useLocalSearchParams } from 'expo-router';
 import { Button, IconButton, Surface, Text, useTheme } from 'react-native-paper';
 import * as WebBrowser from 'expo-web-browser';
+import AppBackground from '@/components/AppBackground';
 import ZoomableImage from '@/components/ZoomableImage';
 import { usePhotos } from '@/photos';
 
@@ -95,7 +96,7 @@ export default function PhotoDetailScreen() {
   }
 
   return (
-    <View style={[styles.screen, { backgroundColor: theme.colors.background }]}>
+    <AppBackground>
       {/* Dynamic native header title */}
       <Stack.Screen options={{ title: photographer ? `By ${photographer}` : 'Tourist Spot' }} />
 
@@ -167,14 +168,11 @@ export default function PhotoDetailScreen() {
           </Surface>
         </View>
       </ScrollView>
-    </View>
+    </AppBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-  },
   scroll: {
     flexGrow: 1,
   },

@@ -1,6 +1,7 @@
-import { StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { router } from 'expo-router';
-import { List, Text, useTheme } from 'react-native-paper';
+import { List, Surface, Text, useTheme } from 'react-native-paper';
+import AppBackground from '@/components/AppBackground';
 import { useSearchHistory } from '@/searchHistory';
 
 export default function HistoryScreen() {
@@ -13,43 +14,59 @@ export default function HistoryScreen() {
   };
 
   return (
-    <View style={[styles.screen, { backgroundColor: theme.colors.background }]}>
-      <Text variant="bodyMedium" style={[styles.intro, { color: theme.colors.onSurfaceVariant }]}>
-        Tap a city to jump back into that search.
-      </Text>
+    <AppBackground>
+      <ScrollView contentContainerStyle={styles.scroll}>
+        <View style={styles.screen}>
+          <Text variant="bodyMedium" style={[styles.intro, { color: theme.colors.onSurfaceVariant }]}>
+            Tap a city to jump back into that search.
+          </Text>
 
-      {/* TODO 5.2 [History List Mapping] — entries are already ordered most recent first */}
-      {entries.map((entry, index) => (
-        <List.Item
-          key={`${entry}-${index}`}
-          title={entry}
-          titleStyle={{ color: theme.colors.onBackground }}
-          left={(props) => <List.Icon {...props} icon="map-marker" />}
-          onPress={() => handlePick(entry)}
-          accessibilityLabel={`Search ${entry} again`}
-        />
-      ))}
+          {/* TODO 5.2 [History List Mapping] — entries are already ordered most recent first */}
+          {entries.map((entry, index) => (
+            <Surface
+              key={`${entry}-${index}`}
+              style={[styles.item, { backgroundColor: theme.colors.surface }]}
+              elevation={2}
+            >
+              <List.Item
+                title={entry}
+                titleStyle={{ color: theme.colors.onSurface, fontWeight: '600' }}
+                left={(props) => <List.Icon {...props} icon="map-marker" />}
+                right={(props) => <List.Icon {...props} icon="chevron-right" />}
+                onPress={() => handlePick(entry)}
+                accessibilityLabel={`Search ${entry} again`}
+              />
+            </Surface>
+          ))}
 
-      {entries.length === 0 && (
-        <Text variant="bodyMedium" style={[styles.empty, { color: theme.colors.onSurfaceVariant }]}>
-          No searches yet — run a search on the Search tab first.
-        </Text>
-      )}
-    </View>
+          {entries.length === 0 && (
+            <Text variant="bodyMedium" style={[styles.empty, { color: theme.colors.onSurfaceVariant }]}>
+              No searches yet — run a search on the Search tab first.
+            </Text>
+          )}
+        </View>
+      </ScrollView>
+    </AppBackground>
   );
 }
 
 const styles = StyleSheet.create({
+  scroll: {
+    flexGrow: 1,
+  },
   screen: {
-    flex: 1,
     width: '100%',
     maxWidth: 720,
     alignSelf: 'center',
     padding: 20,
-    gap: 8,
+    gap: 10,
   },
   intro: {
     marginBottom: 8,
+  },
+  item: {
+    borderRadius: 16,
+    overflow: 'hidden',
   },
   empty: {
     textAlign: 'center',
