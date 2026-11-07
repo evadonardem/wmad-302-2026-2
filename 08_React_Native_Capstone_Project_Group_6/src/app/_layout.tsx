@@ -18,7 +18,17 @@ export default function RootLayout() {
         <SearchHistoryProvider>
           <PaperProvider theme={theme}>
             <StatusBar style={isDarkMode ? 'light' : 'dark'} />
-            <Stack screenOptions={{ headerShown: false }}>
+            <Stack
+              screenOptions={{
+                headerShown: false,
+                // Native header follows the Paper theme
+                headerStyle: { backgroundColor: theme.colors.surface },
+                headerTintColor: theme.colors.onSurface,
+                headerTitleStyle: { color: theme.colors.onSurface },
+                headerShadowVisible: false,
+                contentStyle: { backgroundColor: theme.colors.background },
+              }}
+            >
               <Stack.Screen name="(tabs)" />
               {/* The photo detail route opens as a modal with the native header providing Back */}
               <Stack.Screen

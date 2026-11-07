@@ -213,6 +213,11 @@ export default function PhotoDetailScreen() {
         options={{
           title: `By ${photographer}`,
           headerShown: !viewerOpen,
+          // Header follows the light/dark theme
+          headerStyle: { backgroundColor: theme.colors.surface },
+          headerTintColor: theme.colors.onSurface,
+          headerTitleStyle: { color: theme.colors.onSurface },
+          headerShadowVisible: false,
           // Download icon in the top-right corner
           headerRight: () => (
             <IconButton
