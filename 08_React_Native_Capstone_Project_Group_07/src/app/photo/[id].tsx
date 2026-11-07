@@ -1,10 +1,11 @@
 import { TricolorBar } from '@/components/ui';
 import { usePhotos } from '@/photos';
-import { fontFamily, glass, radius } from '@/theme';
+import { brand, fontFamily, glass, radius } from '@/theme';
 import * as Haptics from 'expo-haptics';
 import { Image } from 'expo-image';
 import { Redirect, Stack, router, useLocalSearchParams } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
+import { useState } from 'react';
 import { Platform, ScrollView, Share, StyleSheet, View } from 'react-native';
 import { Button, IconButton, Text, useTheme } from 'react-native-paper';
 
@@ -13,6 +14,7 @@ const asString = (value?: string | string[]) => (Array.isArray(value) ? (value[0
 export default function PhotoDetailScreen() {
   const theme = useTheme();
   const { photos } = usePhotos();
+  const [isFavorited, setIsFavorited] = useState(false);
 
   const params = useLocalSearchParams<{
     id?: string;
@@ -20,12 +22,14 @@ export default function PhotoDetailScreen() {
     photographer?: string;
     photographerUrl?: string;
     altText?: string;
+    locationName?: string;
   }>();
   const id = asString(params.id);
   const imageUrl = asString(params.imageUrl);
   const photographer = asString(params.photographer);
   const photographerUrl = asString(params.photographerUrl);
   const altText = asString(params.altText);
+  const locationName = asString(params.locationName) || altText || 'Philippines';
 
   if (!imageUrl || !photographer) {
     return <Redirect href="/" />;
@@ -50,8 +54,24 @@ export default function PhotoDetailScreen() {
         photographer: target.photographer,
         photographerUrl: target.photographerUrl,
         altText: target.altText,
+        locationName: target.altText,
       },
     });
+  };
+
+  const handleToggleFavorite = () => {
+    void Haptics.notificationAsync(
+      isFavorited
+        ? Haptics.NotificationFeedbackType.Warning
+        : Haptics.NotificationFeedbackType.Success
+    );
+    setIsFavorited(!isFavorited);
+  };
+
+  const handleOpenMap = () => {
+    void Haptics.selectionAsync();
+    const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(locationName + ', Philippines')}`;
+    WebBrowser.openBrowserAsync(mapUrl);
   };
 
   const handleOpenPhotographer = () => {
@@ -63,10 +83,10 @@ export default function PhotoDetailScreen() {
 
   const handleShare = async () => {
     void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    const text = `${altText || 'Tourist spot'} — 📸 by ${photographer}`;
+    const text = `📍 ${locationName} — 📸 by ${photographer}`;
     try {
       await Share.share({
-        title: `Tourist spot by ${photographer}`,
+        title: `Tourist spot: ${locationName}`,
         message: Platform.OS === 'android' && photographerUrl ? `${text}\n${photographerUrl}` : text,
         url: photographerUrl || undefined,
       });
@@ -81,17 +101,26 @@ export default function PhotoDetailScreen() {
 
       <TricolorBar />
 
-      {/* Hero container with image and overlaid navigation arrows */}
       <View style={styles.heroContainer}>
         <Image
           source={{ uri: imageUrl }}
           style={styles.hero}
           contentFit="contain"
-          transition={350} // Smooth image fade-in transition
+          transition={350}
           accessibilityLabel={altText}
         />
 
-        {/* Left Arrow Button (Previous) */}
+        {/* Favorite Heart Overlay Button */}
+        <IconButton
+          icon={isFavorited ? 'heart' : 'heart-outline'}
+          iconColor={isFavorited ? brand.red : '#ffffff'}
+          containerColor="rgba(0, 0, 0, 0.45)"
+          size={24}
+          style={styles.favoriteOverlayButton}
+          onPress={handleToggleFavorite}
+          accessibilityLabel="Toggle favorite"
+        />
+
         {hasPrevious && (
           <IconButton
             icon="chevron-left"
@@ -104,7 +133,6 @@ export default function PhotoDetailScreen() {
           />
         )}
 
-        {/* Right Arrow Button (Next) */}
         {hasNext && (
           <IconButton
             icon="chevron-right"
@@ -122,7 +150,23 @@ export default function PhotoDetailScreen() {
         style={[styles.body, { backgroundColor: theme.colors.surface }]}
         contentContainerStyle={styles.bodyContent}
       >
-        {/* Displays the photo's description / alt text */}
+        <View style={[styles.locationCard, { backgroundColor: theme.colors.elevation.level1, borderColor: glass.border }]}>
+          <View style={styles.locationTextRow}>
+            <Text style={styles.mapPinIcon}>📍</Text>
+            <View style={styles.locationDetails}>
+              <Text variant="labelMedium" style={{ color: theme.colors.primary, fontFamily: fontFamily.semiBold }}>
+                LOCATION SPOT
+              </Text>
+              <Text variant="titleSmall" style={{ color: theme.colors.onSurface, fontFamily: fontFamily.bold }}>
+                {locationName}
+              </Text>
+            </View>
+          </View>
+          <Button mode="text" icon="map-marker-radius" onPress={handleOpenMap} compact labelStyle={{ fontSize: 13 }}>
+            Open Map
+          </Button>
+        </View>
+
         {altText ? (
           <Text variant="bodyLarge" style={[styles.description, { color: theme.colors.onSurface }]}>
             {altText}
@@ -160,6 +204,13 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
+  favoriteOverlayButton: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    zIndex: 10,
+    margin: 0,
+  },
   arrowButton: {
     position: 'absolute',
     top: '50%',
@@ -183,6 +234,34 @@ const styles = StyleSheet.create({
   bodyContent: {
     padding: 20,
     gap: 14,
+  },
+  locationCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 12,
+    borderRadius: radius.card,
+    borderWidth: 1,
+  },
+  locationTextRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    flex: 1,
+  },
+  mapPinIcon: {
+    fontSize: 22,
+  },
+  locationDetails: {
+    flex: 1,
+  },
+  locationLabel: {
+  fontSize: 8,
+  fontFamily: fontFamily.medium,
+  },
+  locationNameText: {
+    fontSize: 10,
+    fontFamily: fontFamily.medium,
   },
   description: {
     fontFamily: fontFamily.medium,

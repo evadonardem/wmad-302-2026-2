@@ -30,9 +30,7 @@ function SkeletonCard() {
     );
   }, [opacity]);
 
-  const animatedStyle = useAnimatedStyle(() => ({
-    opacity: opacity.value,
-  }));
+  const animatedStyle = useAnimatedStyle(() => ({ opacity: opacity.value }));
 
   return (
     <View style={styles.gridItem}>
@@ -56,7 +54,7 @@ function PhotoCard({
   photo: Photo;
   index: number;
   isFavorite: boolean;
-  onToggleFavorite: (id: string | number) => void;
+  onToggleFavorite: (photo: Photo) => void;
 }) {
   const theme = useTheme();
   const [isHovered, setIsHovered] = useState(false);
@@ -76,14 +74,11 @@ function PhotoCard({
         ? Haptics.NotificationFeedbackType.Warning
         : Haptics.NotificationFeedbackType.Success
     );
-    onToggleFavorite(photo.id);
+    onToggleFavorite(photo);
   };
 
   return (
-    <Animated.View
-      entering={FadeInUp.delay(index * 60).duration(500)}
-      style={styles.gridItem}
-    >
+    <Animated.View entering={FadeInUp.delay(index * 60).duration(500)} style={styles.gridItem}>
       <Pressable
         onHoverIn={() => setIsHovered(true)}
         onHoverOut={() => setIsHovered(false)}
@@ -99,6 +94,7 @@ function PhotoCard({
               photographer: photo.photographer,
               photographerUrl: photo.photographerUrl,
               altText: photo.altText,
+              locationName: photo.altText,
             },
           })
         }
@@ -118,7 +114,14 @@ function PhotoCard({
               style={[styles.cover, isActive && styles.coverHovered]}
             />
 
-            {/* Favorite / Bookmark Heart Button Overlay */}
+            {photo.altText ? (
+              <View style={styles.locationTag}>
+                <Text numberOfLines={1} style={styles.locationTagText}>
+                  📍 {photo.altText}
+                </Text>
+              </View>
+            ) : null}
+
             <IconButton
               icon={isFavorite ? 'heart' : 'heart-outline'}
               iconColor={isFavorite ? brand.red : '#ffffff'}
@@ -165,13 +168,13 @@ function PhotoCard({
 export default function MediaGallery({ photos, loading }: { photos: Photo[]; loading: boolean }) {
   const [favoriteIds, setFavoriteIds] = useState<Set<string | number>>(new Set());
 
-  const handleToggleFavorite = (id: string | number) => {
+  const handleToggleFavorite = (photo: Photo) => {
     setFavoriteIds((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
+      if (next.has(photo.id)) {
+        next.delete(photo.id);
       } else {
-        next.add(id);
+        next.add(photo.id);
       }
       return next;
     });
@@ -248,6 +251,21 @@ const styles = StyleSheet.create({
   },
   coverHovered: {
     opacity: 0.95,
+  },
+  locationTag: {
+    position: 'absolute',
+    bottom: 8,
+    left: 8,
+    backgroundColor: 'rgba(0, 0, 0, 0.65)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: radius.pill,
+    maxWidth: '80%',
+  },
+  locationTagText: {
+    color: '#ffffff',
+    fontSize: 12,
+    fontFamily: fontFamily.medium,
   },
   favoriteButton: {
     position: 'absolute',

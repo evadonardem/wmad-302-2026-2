@@ -60,7 +60,7 @@ export const shadow: Record<'soft' | 'lift' | 'blue', ViewStyle> = {
 };
 
 // Gradient color stops (used with expo-linear-gradient)
-export const gradients = {
+export const gradients = {  
   // Glossy Search button: blue -> light blue -> sky
   primary: [brand.blue, brand.blueLight, brand.sky],
   // "Lakbay PH" title text

@@ -4,13 +4,22 @@ import { GradientTitle, ScreenBackground } from '@/components/ui';
 import { usePhotos } from '@/photos';
 import { useSearchHistory } from '@/searchHistory';
 import { searchPhotosByLocation } from '@/services/geoPhotoService';
-import { fontFamily, glass } from '@/theme';
+import { fontFamily, glass, radius } from '@/theme';
 import { useThemeMode } from '@/themeMode';
+import * as Haptics from 'expo-haptics';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
-import { IconButton, Text, useTheme } from 'react-native-paper';
+import { Chip, IconButton, Text, useTheme } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
+const CATEGORIES = [
+  { id: 'beaches', label: 'Beaches', icon: 'island' },
+  { id: 'mountains', label: 'Mountains', icon: 'image-filter-hdr' },
+  { id: 'heritage', label: 'Heritage', icon: 'castle' },
+  { id: 'food', label: 'Food Spots', icon: 'silverware-fork-knife' },
+  { id: 'sunsets', label: 'Sunsets', icon: 'weather-sunset' },
+];
 
 export default function SearchScreen() {
   const theme = useTheme();
@@ -21,13 +30,19 @@ export default function SearchScreen() {
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [lastSearchedCity, setLastSearchedCity] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   const { q } = useLocalSearchParams<{ q?: string }>();
 
   const handleSearchSubmit = async (locationName: string) => {
     setLoading(true);
     try {
-      const results = await searchPhotosByLocation(locationName);
+      // Appends "Philippines" if not already present to guarantee regional filter scoping
+      const phQuery = locationName.toLowerCase().includes('philippines')
+        ? locationName
+        : `${locationName}, Philippines`;
+
+      const results = await searchPhotosByLocation(phQuery);
       setPhotos(results);
       setLastSearchedCity(locationName);
       recordSearch(locationName);
@@ -38,11 +53,24 @@ export default function SearchScreen() {
     }
   };
 
+  const handleCategoryPress = (categoryLabel: string) => {
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    if (selectedCategory === categoryLabel) {
+      setSelectedCategory(null);
+    } else {
+      setSelectedCategory(categoryLabel);
+      void handleSearchSubmit(categoryLabel);
+    }
+  };
+
   const handleRefresh = async () => {
     setRefreshing(true);
     try {
       if (lastSearchedCity) {
-        const results = await searchPhotosByLocation(lastSearchedCity);
+        const phQuery = lastSearchedCity.toLowerCase().includes('philippines')
+          ? lastSearchedCity
+          : `${lastSearchedCity}, Philippines`;
+        const results = await searchPhotosByLocation(phQuery);
         setPhotos(results);
       }
     } catch (error) {
@@ -81,7 +109,7 @@ export default function SearchScreen() {
           size={24}
           style={styles.glassIcon}
           onPress={() => setIsDarkMode(!isDarkMode)}
-          accessibilityLabel="Toggle dark mode"
+          accessibilityLabel="Toggle dark mode" 
         />
       </View>
 
@@ -106,6 +134,38 @@ export default function SearchScreen() {
         </Text>
 
         <LocationForm onSearch={handleSearchSubmit} />
+
+        {/* Category & Tag Filter Pills */}
+        <View style={styles.categoriesContainer}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipsScroll}>
+            {CATEGORIES.map((cat) => {
+              const isSelected = selectedCategory === cat.label;
+              return (
+                <Chip
+                  key={cat.id}
+                  icon={cat.icon}
+                  selected={isSelected}
+                  showSelectedCheck={false}
+                  mode="outlined"
+                  style={[
+                    styles.chip,
+                    {
+                      backgroundColor: isSelected ? theme.colors.primaryContainer : glass.fill,
+                      borderColor: isSelected ? theme.colors.primary : glass.border,
+                    },
+                  ]}
+                  textStyle={[
+                    styles.chipText,
+                    { color: isSelected ? theme.colors.onPrimaryContainer : theme.colors.onSurface },
+                  ]}
+                  onPress={() => handleCategoryPress(cat.label)}
+                >
+                  {cat.label}
+                </Chip>
+              );
+            })}
+          </ScrollView>
+        </View>
 
         <MediaGallery photos={photos} loading={loading} />
       </ScrollView>
@@ -146,14 +206,30 @@ const styles = StyleSheet.create({
   greeting: {
     textAlign: 'center',
     fontFamily: fontFamily.medium,
-    fontSize: 24,
+    fontSize: 16,
     marginTop: 6,
     marginBottom: 6,
     opacity: 0.85,
   },
   subtitle: {
     textAlign: 'center',
-    marginBottom: 24,
+    marginBottom: 20,
     opacity: 0.75,
+  },
+  categoriesContainer: {
+    marginBottom: 20,
+  },
+  chipsScroll: {
+    flexDirection: 'row',
+    gap: 8,
+    paddingHorizontal: 2,
+  },
+  chip: {
+    borderRadius: radius.pill,
+    borderWidth: 1,
+  },
+  chipText: {
+    fontFamily: fontFamily.medium,
+    fontSize: 13,
   },
 });
