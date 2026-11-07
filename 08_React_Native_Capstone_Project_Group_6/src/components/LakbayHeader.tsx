@@ -360,7 +360,7 @@ export default function LakbayHeader({
 
   return (
     <View
-      style={[styles.wrap, { backgroundColor: c.paper }]}
+      style={[styles.wrap, { backgroundColor: c.paper, paddingBottom: wide ? 28 : 44 }]}
       onLayout={(e) => setSize({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}
     >
       <Scene dark={isDarkMode} width={size.w} height={size.h} />
@@ -380,90 +380,97 @@ export default function LakbayHeader({
         />
       </TouchableRipple>
 
-      {wide && (
-        <>
+      <View style={[styles.stage, wide && styles.stageWide]}>
+        {wide && (
           <Polaroid
             source={isDarkMode ? polaroidLeftDark ?? polaroidLeft : polaroidLeft}
             caption={isDarkMode ? 'Even the nights are beautiful' : 'Same country, endless views'}
             tilt="-8deg"
             style={styles.polaroidLeft}
           />
+        )}
+
+        <View style={[styles.center, wide && styles.centerWide]}>
+          <SunAndMountains color={c.green} />
+
+          <View style={styles.titleRow}>
+            <Text style={[styles.title, { color: c.green }]}>PH Lakbay PH</Text>
+            <MaterialCommunityIcons name="map-marker" size={30} color={c.green} style={styles.pin} />
+          </View>
+          <Swoosh color={c.green} width={Math.min(width - 80, 360)} />
+
+          <Text style={[styles.tagline, { color: c.muted }]}>
+            Explore tourist spots across regions, cities, and municipalities in the Philippines
+          </Text>
+
+          <View style={styles.chips}>
+            {GROUPS.map(({ key, label }) => {
+              const active = key === group;
+              return (
+                <TouchableRipple
+                  key={key}
+                  onPress={() => onChangeGroup(key)}
+                  borderless
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: active }}
+                  style={[styles.chip, { backgroundColor: active ? c.green : c.greenSoft }]}
+                >
+                  <View style={styles.chipInner}>
+                    {active && <MaterialCommunityIcons name="check" size={16} color={c.onGreen} />}
+                    <Text style={{ color: active ? c.onGreen : c.ink, fontWeight: '600' }}>{label}</Text>
+                  </View>
+                </TouchableRipple>
+              );
+            })}
+          </View>
+
+          <View style={[styles.tabs, wide && styles.tabsWide]}>
+            <View style={wide ? styles.tabSlot : undefined}>
+              <SearchTab<Region>
+                icon="map-outline"
+                placeholder="Search region..."
+                modalTitle="Select a region"
+                valueLabel={selectedRegion ? selectedRegion.regionName : undefined}
+                items={regions}
+                getLabel={(r) => r.regionName}
+                getSubLabel={(r) => r.name}
+                onSelect={onSelectRegion}
+                colors={c}
+              />
+            </View>
+            <View style={wide ? styles.tabSlot : undefined}>
+              <SearchTab<City>
+                icon="city-variant-outline"
+                placeholder="Search city / municipality..."
+                modalTitle="Select a city or municipality"
+                valueLabel={selectedCity ? selectedCity.name : undefined}
+                items={cities}
+                getLabel={(city) => city.name}
+                getSubLabel={(city) => (city.isMunicipality ? 'Municipality' : 'City')}
+                onSelect={onSelectCity}
+                disabled={!selectedRegion}
+                loading={citiesLoading}
+                colors={c}
+              />
+            </View>
+          </View>
+        </View>
+
+        {wide && (
           <Polaroid
             source={isDarkMode ? polaroidRightDark ?? polaroidRight : polaroidRight}
             caption={isDarkMode ? 'City lights, island nights' : "It's more fun in the Philippines"}
             tilt="6deg"
             style={styles.polaroidRight}
           />
-        </>
-      )}
-
-      <View style={styles.center}>
-        <SunAndMountains color={c.green} />
-
-        <View style={styles.titleRow}>
-          <Text style={[styles.title, { color: c.green }]}>PH Lakbay PH</Text>
-          <MaterialCommunityIcons name="map-marker" size={30} color={c.green} style={styles.pin} />
-        </View>
-        <Swoosh color={c.green} width={Math.min(width - 80, 360)} />
-
-        <Text style={[styles.tagline, { color: c.muted }]}>
-          Explore tourist spots across regions, cities, and municipalities in the Philippines
-        </Text>
-
-        <View style={styles.chips}>
-          {GROUPS.map(({ key, label }) => {
-            const active = key === group;
-            return (
-              <TouchableRipple
-                key={key}
-                onPress={() => onChangeGroup(key)}
-                borderless
-                accessibilityRole="button"
-                accessibilityState={{ selected: active }}
-                style={[styles.chip, { backgroundColor: active ? c.green : c.greenSoft }]}
-              >
-                <View style={styles.chipInner}>
-                  {active && <MaterialCommunityIcons name="check" size={16} color={c.onGreen} />}
-                  <Text style={{ color: active ? c.onGreen : c.ink, fontWeight: '600' }}>{label}</Text>
-                </View>
-              </TouchableRipple>
-            );
-          })}
-        </View>
-
-        <View style={styles.tabs}>
-          <SearchTab<Region>
-            icon="map-outline"
-            placeholder="Search region..."
-            modalTitle="Select a region"
-            valueLabel={selectedRegion ? selectedRegion.regionName : undefined}
-            items={regions}
-            getLabel={(r) => r.regionName}
-            getSubLabel={(r) => r.name}
-            onSelect={onSelectRegion}
-            colors={c}
-          />
-          <SearchTab<City>
-            icon="city-variant-outline"
-            placeholder="Search city / municipality..."
-            modalTitle="Select a city or municipality"
-            valueLabel={selectedCity ? selectedCity.name : undefined}
-            items={cities}
-            getLabel={(city) => city.name}
-            getSubLabel={(city) => (city.isMunicipality ? 'Municipality' : 'City')}
-            onSelect={onSelectCity}
-            disabled={!selectedRegion}
-            loading={citiesLoading}
-            colors={c}
-          />
-        </View>
+        )}
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  wrap: { width: '100%', overflow: 'hidden', paddingTop: 28, paddingBottom: 44, paddingHorizontal: 16 },
+  wrap: { width: '100%', overflow: 'hidden', paddingTop: 24, paddingBottom: 44, paddingHorizontal: 16 },
   toggle: {
     position: 'absolute',
     top: 12,
@@ -476,7 +483,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  center: { alignItems: 'center', width: '100%', maxWidth: 640, alignSelf: 'center' },
+
+  stage: { width: '100%', alignItems: 'center' },
+  stageWide: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'center',
+    gap: 24,
+    maxWidth: 1100,
+    alignSelf: 'center',
+  },
+  center: { alignItems: 'center', width: '100%', maxWidth: 640, alignSelf: 'center', flexShrink: 1 },
+  centerWide: { maxWidth: 720, flex: 1 },
+
   titleRow: { flexDirection: 'row', alignItems: 'flex-start', marginTop: 4 },
   title: { fontSize: 44, fontWeight: '800', fontStyle: 'italic', letterSpacing: -1.5 },
   pin: { marginLeft: 2, marginTop: 6 },
@@ -484,11 +503,15 @@ const styles = StyleSheet.create({
   chips: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 10, marginBottom: 16 },
   chip: { borderRadius: 999 },
   chipInner: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 18, paddingVertical: 9 },
+
   tabs: { width: '100%', gap: 12 },
+  tabsWide: { flexDirection: 'row' },
+  tabSlot: { flex: 1 },
   tab: { width: '100%', borderRadius: 999, borderWidth: 1.5 },
   tabInner: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingLeft: 16, paddingRight: 5, paddingVertical: 5 },
   tabText: { flex: 1, fontSize: 16, paddingVertical: 8 },
   tabBtn: { width: 42, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center' },
+
   overlay: { flex: 1, justifyContent: 'center', paddingHorizontal: 20, backgroundColor: 'rgba(0,0,0,0.45)' },
   modalCard: {
     width: '100%',
@@ -514,8 +537,8 @@ const styles = StyleSheet.create({
   modalInput: { flex: 1, fontSize: 16, paddingVertical: 12 },
   modalRow: { paddingVertical: 14, paddingHorizontal: 6, borderBottomWidth: StyleSheet.hairlineWidth },
   modalEmpty: { textAlign: 'center', marginTop: 32 },
+
   polaroid: {
-    position: 'absolute',
     width: 150,
     padding: 7,
     paddingBottom: 12,
@@ -529,8 +552,9 @@ const styles = StyleSheet.create({
   },
   polaroidPhoto: { height: 100, borderRadius: 2, overflow: 'hidden' },
   polaroidCaption: { fontStyle: 'italic', fontSize: 12, color: '#4A5A50', marginTop: 8 },
-  polaroidLeft: { left: 20, top: 24 },
-  polaroidRight: { right: 20, top: 70, width: 140 },
+  // polaroids sit in the row beside the title instead of at the screen edges
+  polaroidLeft: { marginTop: 16 },
+  polaroidRight: { marginTop: 56, width: 140 },
   tape: {
     position: 'absolute',
     top: -8,

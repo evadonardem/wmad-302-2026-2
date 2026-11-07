@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
+  ActivityIndicator,
   FlatList,
   Image,
   NativeScrollEvent,
@@ -41,6 +42,9 @@ const POPULAR = [
   'Camiguin',
   'Sagada',
 ];
+
+const PAGE_SIZE = 24; // divisible by 2, 3 and 4 columns, so rows stay full
+const CONTENT_MAX = 1200;
 
 /** Tappable chips: swipeable row on phones, wrapping grid on desktop */
 function ChipRow({
@@ -94,7 +98,7 @@ function ChipRow({
 export default function SearchScreen() {
   const theme = useTheme();
   const { width } = useWindowDimensions();
-  const columns = width >= 760 ? 3 : 2;
+  const columns = width >= 1000 ? 4 : width >= 760 ? 3 : 2;
 
   const { q } = useLocalSearchParams<{ q?: string }>();
 
@@ -111,6 +115,13 @@ export default function SearchScreen() {
 
   // What was last searched (used by pull-to-refresh and "Try again")
   const [lastTerm, setLastTerm] = useState('');
+
+  // Pagination ("load more")
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const searchId = useRef(0); // ignores stale responses from older searches
+  const busyMore = useRef(false); // prevents double-firing onEndReached
 
   // Favorites (kept for this session) + filter toggle
   const [favorites, setFavorites] = useState<Photo[]>([]);
@@ -188,22 +199,57 @@ export default function SearchScreen() {
     const trimmed = term.trim();
     if (!trimmed) return;
 
+    const id = ++searchId.current;
+    busyMore.current = false;
+
     setLastTerm(trimmed);
     setShowFavs(false);
     setLoading(true);
+    setLoadingMore(false);
     setSearched(true);
     setError(null);
+    setPage(1);
+    setHasMore(false);
 
     try {
-      const results = await searchPhotosByLocation(trimmed);
+      const results = await searchPhotosByLocation(trimmed, 1, PAGE_SIZE);
+      if (id !== searchId.current) return;
       setPhotos(results);
+      setHasMore(results.length >= PAGE_SIZE);
       if (results.length > 0) {
         recordSearch(trimmed);
       }
     } catch {
+      if (id !== searchId.current) return;
       setError('Could not load photos. Check your connection and try again.');
     } finally {
-      setLoading(false);
+      if (id === searchId.current) setLoading(false);
+    }
+  };
+
+  const loadMore = async () => {
+    if (showFavs || !lastTerm || loading || !hasMore || busyMore.current) return;
+
+    const id = searchId.current;
+    const nextPage = page + 1;
+    busyMore.current = true;
+    setLoadingMore(true);
+
+    try {
+      const results = await searchPhotosByLocation(lastTerm, nextPage, PAGE_SIZE);
+      if (id !== searchId.current) return;
+
+      setPhotos((prev) => {
+        const seen = new Set(prev.map((p) => String(p.id)));
+        return [...prev, ...results.filter((p) => !seen.has(String(p.id)))];
+      });
+      setPage(nextPage);
+      setHasMore(results.length >= PAGE_SIZE);
+    } finally {
+      if (id === searchId.current) {
+        busyMore.current = false;
+        setLoadingMore(false);
+      }
     }
   };
 
@@ -231,13 +277,14 @@ export default function SearchScreen() {
   }, [q]);
 
   const gap = 12;
-  const cardWidth = (Math.min(width, 960) - 32 - gap * (columns - 1)) / columns;
+  const contentWidth = Math.min(width, CONTENT_MAX);
+  const cardWidth = Math.floor((contentWidth - 32 - gap * (columns - 1)) / columns);
   const data: Photo[] = showFavs ? favorites : photos;
 
   const renderEmpty = () => {
     if (loading) {
       return (
-        <View style={[styles.skeletonWrap, { gap, maxWidth: 960 }]}>
+        <View style={[styles.skeletonWrap, { gap }]}>
           {Array.from({ length: columns * 2 }).map((_, i) => (
             <View key={i} style={[styles.card, { width: cardWidth, backgroundColor: theme.colors.surface }]}>
               <View style={[styles.image, { backgroundColor: theme.colors.surfaceVariant }]} />
@@ -286,6 +333,42 @@ export default function SearchScreen() {
     );
   };
 
+  const renderFooter = () => {
+    if (showFavs || loading || photos.length === 0) return <View style={{ height: 8 }} />;
+
+    if (loadingMore) {
+      return (
+        <View style={styles.footer}>
+          <ActivityIndicator color={theme.colors.primary} />
+        </View>
+      );
+    }
+
+    if (hasMore) {
+      return (
+        <View style={styles.footer}>
+          <TouchableRipple
+            onPress={loadMore}
+            borderless
+            accessibilityRole="button"
+            style={[styles.loadMoreBtn, { backgroundColor: theme.colors.primary }]}
+          >
+            <View style={styles.favToggleInner}>
+              <MaterialCommunityIcons name="plus" size={18} color={theme.colors.onPrimary} />
+              <Text style={{ color: theme.colors.onPrimary, fontWeight: '700' }}>Load more</Text>
+            </View>
+          </TouchableRipple>
+        </View>
+      );
+    }
+
+    return (
+      <Text variant="labelMedium" style={[styles.endText, { color: theme.colors.onSurfaceVariant }]}>
+        You've reached the end ✨
+      </Text>
+    );
+  };
+
   return (
     <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <FlatList
@@ -296,10 +379,19 @@ export default function SearchScreen() {
         numColumns={columns}
         style={{ backgroundColor: theme.colors.background }}
         contentContainerStyle={styles.content}
-        columnWrapperStyle={{ gap, paddingHorizontal: 16, justifyContent: 'center' }}
+        columnWrapperStyle={{
+          gap,
+          paddingHorizontal: 16,
+          width: '100%',
+          maxWidth: CONTENT_MAX,
+          alignSelf: 'center',
+          justifyContent: 'flex-start',
+        }}
         keyboardShouldPersistTaps="handled"
         onScroll={onScroll}
         scrollEventThrottle={16}
+        onEndReached={loadMore}
+        onEndReachedThreshold={0.6}
         refreshControl={
           <RefreshControl
             refreshing={loading && photos.length > 0}
@@ -398,6 +490,7 @@ export default function SearchScreen() {
           );
         }}
         ListEmptyComponent={renderEmpty()}
+        ListFooterComponent={renderFooter()}
       />
 
       {/* Back to top */}
@@ -419,7 +512,7 @@ export default function SearchScreen() {
 const styles = StyleSheet.create({
   content: { paddingBottom: 96, gap: 12 },
   header: { marginBottom: 8 },
-  searchArea: { width: '100%', maxWidth: 640, alignSelf: 'center', paddingHorizontal: 16, paddingTop: 16 },
+  searchArea: { width: '100%', maxWidth: CONTENT_MAX, alignSelf: 'center', paddingHorizontal: 16, paddingTop: 16 },
   chipSection: { marginTop: 14 },
   chipLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 },
   chipScroll: { gap: 8, paddingRight: 16 },
@@ -453,14 +546,19 @@ const styles = StyleSheet.create({
   skeletonWrap: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
     alignSelf: 'center',
+    width: '100%',
+    maxWidth: CONTENT_MAX,
     paddingHorizontal: 16,
   },
   skeletonLine: { height: 10, borderRadius: 5, margin: 10, width: '60%' },
   stateBox: { alignItems: 'center', marginTop: 32, paddingHorizontal: 24, gap: 12 },
   stateText: { textAlign: 'center' },
   retryBtn: { borderRadius: 999, paddingHorizontal: 22, paddingVertical: 10 },
+  footer: { alignItems: 'center', paddingVertical: 16 },
+  loadMoreBtn: { borderRadius: 999 },
+  endText: { textAlign: 'center', paddingVertical: 20 },
   topBtn: {
     position: 'absolute',
     right: 16,
