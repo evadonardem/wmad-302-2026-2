@@ -62,28 +62,19 @@ export default function LocationForm({ onSearch }: { onSearch: (cityName: string
   }, []);
 
   useEffect(() => {
-    // TODO 2.3 [Reactive Cascading Refresh] — a new region clears everything below it
+    // TODO 2.3 [Reactive Cascading Refresh] — a new region loads its province list and city data
+    if (!selectedRegion) return;
+
     let cancelled = false;
 
-    setSelectedProvince('');
-    setSelectedCityName('');
-    setProvinces([]);
-    setCities([]);
-    setLoadingCities(false);
+    const loadProvinces = async () => {
+      setLoadingProvinces(true);
 
-    if (!selectedRegion) {
-      setLoadingProvinces(false);
-      return;
-    }
-
-    setLoadingProvinces(true);
-    (async () => {
       try {
         const provinceList = await getProvincesByRegion(selectedRegion);
         if (cancelled) return;
         setProvinces(provinceList);
 
-        // Regions without provinces (such as NCR) go straight to their cities
         if (provinceList.length === 0) {
           setLoadingCities(true);
           const cityList = await getCitiesMunicipalitiesByRegion(selectedRegion);
@@ -97,7 +88,9 @@ export default function LocationForm({ onSearch }: { onSearch: (cityName: string
           setLoadingCities(false);
         }
       }
-    })();
+    };
+
+    void loadProvinces();
 
     return () => {
       cancelled = true;
@@ -107,13 +100,12 @@ export default function LocationForm({ onSearch }: { onSearch: (cityName: string
   useEffect(() => {
     // A new province loads its cities/municipalities
     if (!selectedProvince) return;
+
     let cancelled = false;
 
-    setSelectedCityName('');
-    setCities([]);
-    setLoadingCities(true);
+    const loadCities = async () => {
+      setLoadingCities(true);
 
-    (async () => {
       try {
         const cityList = await getCitiesMunicipalitiesByProvince(selectedProvince);
         if (!cancelled) setCities(cityList);
@@ -122,7 +114,9 @@ export default function LocationForm({ onSearch }: { onSearch: (cityName: string
       } finally {
         if (!cancelled) setLoadingCities(false);
       }
-    })();
+    };
+
+    void loadCities();
 
     return () => {
       cancelled = true;
@@ -201,8 +195,15 @@ export default function LocationForm({ onSearch }: { onSearch: (cityName: string
           <Chip
             key={option.value}
             selected={islandFilter === option.value}
-            showSelectedCheck
-            style={styles.chip}
+            showSelectedCheck={false}
+            style={[
+              styles.chip,
+              {
+                borderColor: theme.colors.outlineVariant,
+                backgroundColor:
+                  islandFilter === option.value ? theme.colors.primaryContainer : theme.colors.surface,
+              },
+            ]}
             onPress={() => handleIslandFilterChange(option.value)}
           >
             {option.label}
@@ -237,6 +238,9 @@ export default function LocationForm({ onSearch }: { onSearch: (cityName: string
                 title={region.name}
                 onPress={() => {
                   setSelectedRegion(region.code);
+                  setSelectedProvince('');
+                  setSelectedCityName('');
+                  setCities([]);
                   setRegionMenuVisible(false);
                 }}
               />
@@ -270,6 +274,7 @@ export default function LocationForm({ onSearch }: { onSearch: (cityName: string
                 title={province.name}
                 onPress={() => {
                   setSelectedProvince(province.code);
+                  setSelectedCityName('');
                   setProvinceMenuVisible(false);
                 }}
               />
@@ -342,11 +347,12 @@ const styles = StyleSheet.create({
   filterRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
-    marginBottom: 16,
+    gap: 6,
+    marginBottom: 14,
   },
   chip: {
-    borderRadius: 20,
+    borderRadius: 8,
+    borderWidth: 1,
   },
   row: {
     flexDirection: 'column',
@@ -366,10 +372,11 @@ const styles = StyleSheet.create({
   },
   button: {
     width: '100%',
-    borderRadius: 16,
+    borderRadius: 8,
   },
   buttonContent: {
     paddingVertical: 6,
+    minHeight: 48,
   },
   actions: {
     flexDirection: 'row',
@@ -379,10 +386,10 @@ const styles = StyleSheet.create({
   },
   searchButton: {
     flex: 1,
-    borderRadius: 16,
+    borderRadius: 8,
   },
   searchLabel: {
-    fontWeight: '700',
-    fontSize: 16,
+    fontWeight: '600',
+    fontSize: 15,
   },
 });

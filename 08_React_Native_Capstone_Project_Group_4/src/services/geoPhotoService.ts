@@ -87,12 +87,11 @@ export const searchPhotosByLocation = async (locationName: string) => {
   if (!queryName) return [];
 
   const keyword = `${queryName} tourist spot`;
-  const encodedKeyword = encodeURIComponent(keyword);
 
   try {
     const { data } = await axios.get('https://api.pexels.com/v1/search', {
       params: {
-        query: encodedKeyword,
+        query: keyword,
         per_page: 12,
       },
       headers: {

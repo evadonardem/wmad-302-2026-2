@@ -10,10 +10,16 @@ export default function TabsLayout() {
       screenOptions={{
         tabBarActiveTintColor: theme.colors.primary,
         tabBarInactiveTintColor: theme.colors.onSurfaceVariant,
-        tabBarStyle: { backgroundColor: theme.colors.surface },
+        tabBarStyle: {
+          display: 'none',
+          backgroundColor: theme.colors.surface,
+          borderTopColor: theme.colors.outlineVariant,
+          elevation: 0,
+        },
         headerStyle: { backgroundColor: theme.colors.background },
         headerTitleStyle: { fontWeight: '700', color: theme.colors.onBackground },
         headerTintColor: theme.colors.onBackground,
+        headerShown: false,
       }}
     >
       <Tabs.Screen

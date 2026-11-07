@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { Animated, Platform, Pressable, StyleSheet, View } from 'react-native';
 import { ActivityIndicator, Card, Text, useTheme } from 'react-native-paper';
 import { router } from 'expo-router';
@@ -10,7 +10,7 @@ const useNativeDriver = Platform.OS !== 'web';
 // Pulsing placeholder cards shown while photos load (TODO 3.1)
 function SkeletonGrid() {
   const theme = useTheme();
-  const pulse = useRef(new Animated.Value(0.45)).current;
+  const [pulse] = useState(() => new Animated.Value(0.45));
 
   useEffect(() => {
     const loop = Animated.loop(
@@ -51,7 +51,7 @@ function SkeletonGrid() {
 // One photo card: on hover the card lifts, the photo zooms in and a "View & zoom" badge fades in
 function PhotoCard({ photo }: { photo: Photo }) {
   const theme = useTheme();
-  const hover = useRef(new Animated.Value(0)).current;
+  const [hover] = useState(() => new Animated.Value(0));
 
   const animateTo = (toValue: number) =>
     Animated.spring(hover, { toValue, useNativeDriver, friction: 8, tension: 70 }).start();
@@ -81,7 +81,10 @@ function PhotoCard({ photo }: { photo: Photo }) {
           })
         }
       >
-        <Card style={styles.card} elevation={3}>
+        <Card
+          style={[styles.card, { borderColor: theme.colors.outlineVariant }]}
+          elevation={0}
+        >
           <View style={styles.coverWrap}>
             <Animated.View style={{ transform: [{ scale: imageScale }] }}>
               {/* TODO 3.5 [Multimedia Presentation Layer] */}
@@ -94,7 +97,7 @@ function PhotoCard({ photo }: { photo: Photo }) {
 
             <Animated.View style={[styles.hoverOverlay, { opacity: hover }]} pointerEvents="none">
               <View style={styles.hoverPill}>
-                <Text style={styles.hoverPillText}>🔍 View & zoom</Text>
+                    <Text style={styles.hoverPillText}>View photo</Text>
               </View>
             </Animated.View>
           </View>
@@ -103,7 +106,7 @@ function PhotoCard({ photo }: { photo: Photo }) {
             <View style={styles.creditRow}>
               <View style={styles.creditText}>
                 <Text variant="labelSmall" style={[styles.creditLabel, { color: theme.colors.onSurfaceVariant }]}>
-                  📸 Captured by:
+                  PHOTO BY
                 </Text>
                 {/* TODO 3.6 [Attribution Links] */}
                 <Pressable
@@ -147,9 +150,8 @@ export default function MediaGallery({ photos, loading }: { photos: Photo[]; loa
   if (!photos || photos.length === 0) {
     return (
       <View style={styles.empty}>
-        <Text style={styles.emptyEmoji}>🏝️</Text>
         <Text variant="titleMedium" style={[styles.emptyTitle, { color: theme.colors.onBackground }]}>
-          No tourist spots found for this area yet.
+          No photos just yet
         </Text>
         <Text variant="bodyMedium" style={[styles.emptyHint, { color: theme.colors.onSurfaceVariant }]}>
           Pick a region and a city above, or tap a popular destination to see photos.
@@ -182,13 +184,9 @@ const styles = StyleSheet.create({
   empty: {
     width: '100%',
     alignItems: 'center',
-    paddingVertical: 36,
+    paddingVertical: 44,
     paddingHorizontal: 16,
-    gap: 6,
-  },
-  emptyEmoji: {
-    fontSize: 56,
-    marginBottom: 6,
+    gap: 8,
   },
   emptyTitle: {
     textAlign: 'center',
@@ -200,7 +198,7 @@ const styles = StyleSheet.create({
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 16,
+    gap: 18,
     width: '100%',
   },
   gridItem: {
@@ -209,7 +207,7 @@ const styles = StyleSheet.create({
     minWidth: 240,
   },
   pressable: {
-    borderRadius: 20,
+    borderRadius: 8,
   },
   pressed: {
     opacity: 0.92,
@@ -218,7 +216,8 @@ const styles = StyleSheet.create({
   card: {
     width: '100%',
     overflow: 'hidden',
-    borderRadius: 20,
+    borderRadius: 8,
+    borderWidth: StyleSheet.hairlineWidth,
   },
   coverWrap: {
     height: 200,
@@ -240,17 +239,17 @@ const styles = StyleSheet.create({
   },
   hoverPill: {
     backgroundColor: 'rgba(255,255,255,0.92)',
-    paddingHorizontal: 16,
+    paddingHorizontal: 14,
     paddingVertical: 8,
-    borderRadius: 20,
+    borderRadius: 8,
   },
   hoverPillText: {
     color: '#0F2326',
     fontWeight: '700',
   },
   cardContent: {
-    paddingTop: 12,
-    paddingBottom: 14,
+    paddingTop: 14,
+    paddingBottom: 16,
   },
   creditRow: {
     flexDirection: 'row',
@@ -267,9 +266,9 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   chevron: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
+    width: 30,
+    height: 30,
+    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -279,7 +278,7 @@ const styles = StyleSheet.create({
     lineHeight: 26,
   },
   skeletonCard: {
-    borderRadius: 20,
+    borderRadius: 8,
     overflow: 'hidden',
   },
   skeletonImage: {
