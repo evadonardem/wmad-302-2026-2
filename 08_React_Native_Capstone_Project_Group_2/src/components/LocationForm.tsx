@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Button, Chip, Menu } from 'react-native-paper';
 import {
@@ -8,40 +8,93 @@ import {
   type Region,
 } from '@/services/geoPhotoService';
 
+type IslandFilter = 'all' | 'luzon' | 'visayas' | 'mindanao';
+
+const ISLAND_FILTERS: { value: IslandFilter; label: string }[] = [
+  { value: 'all', label: 'All' },
+  { value: 'luzon', label: 'Luzon' },
+  { value: 'visayas', label: 'Visayas' },
+  { value: 'mindanao', label: 'Mindanao' },
+];
+
 export default function LocationForm({ onSearch }: { onSearch: (cityName: string) => void }) {
-  // TODO 2.1 [State Trackers]: Replace the four placeholder trackers below with real React state hooks:
-  // - 'regions': Stores the array of all regions (default: empty array)
-  // - 'cities': Stores the array of filtered sub-municipalities (default: empty array)
-  // - 'selectedRegion': String tracking the chosen active region code (default: empty string)
-  // - 'selectedCityName': String tracking the chosen city text name fed to the search keyword engine (default: empty string)
-  const regions: Region[] = [];
-  const cities: City[] = [];
-  const selectedRegion = '';
-  const selectedCityName = '';
+  // TODO 2.1 [State Trackers]
+  const [regions, setRegions] = useState<Region[]>([]);
+  const [cities, setCities] = useState<City[]>([]);
+  const [selectedRegion, setSelectedRegion] = useState('');
+  const [selectedCityName, setSelectedCityName] = useState('');
+
+  // TODO 2.9 [Island-Group Filter]: current chip selection
+  const [islandFilter, setIslandFilter] = useState<IslandFilter>('all');
 
   // Paper <Menu> visibility flags (scaffolded UI chrome — no TODO required)
   const [regionMenuVisible, setRegionMenuVisible] = useState(false);
   const [cityMenuVisible, setCityMenuVisible] = useState(false);
 
   useEffect(() => {
-    // TODO 2.2 [Initial Data Populate]: Invoke the 'getRegions' service function asynchronously inside
-    // this mounting side-effect and store the returned collection into your local regions state.
-    // [Your code here]
+    // TODO 2.2 [Initial Data Populate]
+    let cancelled = false;
+
+    const loadRegions = async () => {
+      const data = await getRegions();
+      if (!cancelled) setRegions(data);
+    };
+    loadRegions();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
-    // TODO 2.3 [Reactive Cascading Refresh]: Run whenever 'selectedRegion' changes.
-    // a. If selectedRegion holds a valid code, call 'getCitiesMunicipalitiesByRegion(selectedRegion)'
-    //    and load the result into your cities list state.
-    // b. CRITICAL: Reset your 'selectedCityName' state back to an empty string so stale child
-    //    selections never leak into the next search.
-    // [Your code here]
+    // TODO 2.3 [Reactive Cascading Refresh]
+    // The `cancelled` flag stops a slow response for a previous region from overwriting the
+    // cities of the region the user picked afterwards (no race conditions / state pollution).
+    let cancelled = false;
+
+    const loadCities = async () => {
+      // b. Always clear the child selection (and stale list) when the parent region changes
+      setSelectedCityName('');
+      setCities([]);
+
+      // a. Only fetch when a valid region code is selected
+      if (!selectedRegion) return;
+
+      const data = await getCitiesMunicipalitiesByRegion(selectedRegion);
+      if (!cancelled) {
+        setCities([...data].sort((a, b) => a.name.localeCompare(b.name)));
+      }
+    };
+    loadCities();
+
+    return () => {
+      cancelled = true;
+    };
   }, [selectedRegion]);
 
+  // TODO 2.9 b: filtered region list (the region menu maps over THIS, not the raw array)
+  const filteredRegions = useMemo(
+    () => (islandFilter === 'all' ? regions : regions.filter((r) => r.islandGroupCode === islandFilter)),
+    [regions, islandFilter],
+  );
+
+  const handleFilterChange = (next: IslandFilter) => {
+    setIslandFilter(next);
+
+    // TODO 2.9 d [Safety]: if the selected region falls outside the new filter, reset both
+    // selections so a hidden region can never trigger a search.
+    if (selectedRegion && next !== 'all') {
+      const current = regions.find((r) => r.code === selectedRegion);
+      if (current?.islandGroupCode !== next) {
+        setSelectedRegion('');
+        setSelectedCityName('');
+      }
+    }
+  };
+
   const handleSubmit = () => {
-    // TODO 2.4 [Form Submit Bubble]: Trigger the parent callback routine 'onSearch'
-    // passing through your active 'selectedCityName' value string.
-    // [Your code here]
+    // TODO 2.4 [Form Submit Bubble]
+    if (selectedCityName) onSearch(selectedCityName);
   };
 
   // Display labels derived from the current selections (scaffolded)
@@ -50,17 +103,18 @@ export default function LocationForm({ onSearch }: { onSearch: (cityName: string
 
   return (
     <View style={styles.form}>
-      {/* TODO 2.9 [Island-Group Filter]: Let users narrow the region menu by island group:
-          a. Add state 'islandFilter' (default 'all'; option values 'all' | 'luzon' | 'visayas' |
-             'mindanao', matching the Region.islandGroupCode field).
-          b. Derive a filtered region list (useMemo) from 'regions' + 'islandFilter', and have your
-             TODO 2.6 menu map over THAT list instead of the raw array.
-          c. Render a row of Paper <Chip> options in the filterRow below (selected chip highlighted,
-             onPress sets the filter).
-          d. SAFETY: if the currently selected region falls outside the new filter, reset
-             'selectedRegion' and 'selectedCityName' so a hidden selection can never trigger a search. */}
+      {/* TODO 2.9 c: island-group chips */}
       <View style={styles.filterRow}>
-        {/* [Your <Chip> options here] */}
+        {ISLAND_FILTERS.map((filter) => (
+          <Chip
+            key={filter.value}
+            selected={islandFilter === filter.value}
+            showSelectedOverlay
+            onPress={() => handleFilterChange(filter.value)}
+          >
+            {filter.label}
+          </Chip>
+        ))}
       </View>
 
       <View style={styles.row}>
@@ -80,11 +134,17 @@ export default function LocationForm({ onSearch }: { onSearch: (cityName: string
               </Button>
             }
           >
-            {/* TODO 2.6 [Region Menu Map]: Dynamically map through your local regions array state to
-                output <Menu.Item> choice options. Use region.code as the selection value and
-                region.name for the displayed label. Each item's onPress should write the code into
-                'selectedRegion' and dismiss the menu (setRegionMenuVisible(false)). */}
-            {null}
+            {/* TODO 2.6 [Region Menu Map] */}
+            {filteredRegions.map((region) => (
+              <Menu.Item
+                key={region.code}
+                title={region.name}
+                onPress={() => {
+                  setSelectedRegion(region.code);
+                  setRegionMenuVisible(false);
+                }}
+              />
+            ))}
           </Menu>
         </View>
 
@@ -105,11 +165,17 @@ export default function LocationForm({ onSearch }: { onSearch: (cityName: string
               </Button>
             }
           >
-            {/* TODO 2.8 [City Menu Map]: Map through your internal cities array state to output
-                <Menu.Item> options. Use city.code as the selection key and map city.name to the
-                label. Each item's onPress should write the name into 'selectedCityName'
-                and dismiss the menu. */}
-            {null}
+            {/* TODO 2.8 [City Menu Map] */}
+            {cities.map((city) => (
+              <Menu.Item
+                key={city.code}
+                title={city.name}
+                onPress={() => {
+                  setSelectedCityName(city.name);
+                  setCityMenuVisible(false);
+                }}
+              />
+            ))}
           </Menu>
         </View>
 
