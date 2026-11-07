@@ -66,50 +66,105 @@ const STARS: [number, number, number][] = [
   [40, 30, 1.4], [110, 80, 1], [170, 25, 1.6], [240, 110, 1], [300, 45, 1.2],
   [360, 140, 1], [420, 20, 1.5], [480, 95, 1], [540, 40, 1.3], [600, 130, 1],
   [660, 28, 1.6], [720, 85, 1], [770, 150, 1.2], [930, 40, 1.4], [960, 120, 1],
-  [70, 170, 1.2], [200, 190, 1], [330, 215, 1.3], [510, 190, 1], [640, 205, 1.2],
-  [880, 190, 1], [990, 215, 1.4],
+  [70, 170, 1.2], [200, 150, 1], [330, 165, 1.3], [510, 150, 1], [640, 160, 1.2],
+  [880, 150, 1], [990, 165, 1.4],
 ];
 
-// The artwork is 1000 x 420. On wide screens it is fitted to the header HEIGHT and the
-// 1000-wide tile is repeated sideways so the hills and sea fill the width.
-// On narrow screens (phones) the original full 1000-wide scene is used.
+// The artwork is 1000 x 420 and is fitted to the header HEIGHT. The 1000-wide tile is
+// repeated sideways as far as needed, so any screen width is filled (the mountain ranges
+// start and end at the same height, so the tiles join seamlessly).
 const TILE_W = 1000;
 const TILE_H = 420;
-const TILES = [-2, -1, 0, 1, 2];
+const HORIZON = 310;
 
-/** Island scene (light) / night sea (dark) drawn behind the header */
+// Two mountain ranges (far = lighter, near = darker). Both end at the same height
+// they start at, so repeated tiles connect without a seam.
+const FAR_RANGE =
+  'M0 310 L0 255 L70 215 L120 245 L200 190 L270 240 L340 210 L420 250 L500 200 L580 245 ' +
+  'L650 215 L730 255 L800 195 L880 240 L950 220 L1000 255 L1000 310 Z';
+const NEAR_RANGE =
+  'M0 310 L0 280 L90 235 L150 265 L240 215 L330 270 L410 245 L480 280 L570 225 L660 275 ' +
+  'L740 240 L830 280 L920 232 L1000 280 L1000 310 Z';
+
+/** Light: sun + mountains + sea. Dark: moon + mountains + sea. Drawn behind the header. */
 function Scene({ dark, width, height }: { dark: boolean; width: number; height: number }) {
-  const island = dark ? '#0C2233' : '#8FB59C';
-  const islandFar = dark ? '#133450' : '#B3CFBC';
+  const farColor = dark ? '#15324D' : '#B7D1BF';
+  const nearColor = dark ? '#0B2133' : '#7FA98D';
   const wave = dark ? '#6C95B5' : '#FFFFFF';
 
-  // Wide screens: fit to height and repeat the artwork sideways.
-  // Narrow screens (phones): keep the original full 1000-wide scene.
-  const scale = height > 0 ? height / TILE_H : 0;
+  const scale = height > 0 && width > 0 ? height / TILE_H : 0;
   const visibleW = scale > 0 ? width / scale : TILE_W;
-  const isWide = visibleW > TILE_W;
-  const viewBox = isWide
-    ? `${TILE_W / 2 - visibleW / 2} 0 ${visibleW} ${TILE_H}`
-    : `0 0 ${TILE_W} ${TILE_H}`;
+  const vbX = TILE_W / 2 - visibleW / 2;
+  const viewBox = `${vbX} 0 ${visibleW} ${TILE_H}`;
+
+  // which tiles are needed to cover the visible area
+  const firstTile = Math.floor(vbX / TILE_W);
+  const lastTile = Math.floor((vbX + visibleW) / TILE_W);
+  const tiles: number[] = [];
+  for (let k = firstTile; k <= lastTile; k++) tiles.push(k);
+
+  // sun / moon sits near the right edge of what is actually visible (works on phones too)
+  const bodyX = TILE_W / 2 + visibleW / 2 - Math.min(150, Math.max(70, visibleW * 0.16));
+  const bodyY = 92;
 
   return (
     <Svg style={StyleSheet.absoluteFill} viewBox={viewBox} preserveAspectRatio="xMidYMax slice">
       <Defs>
         <LinearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
-          <Stop offset="0" stopColor={dark ? '#080F24' : '#F4ECDB'} />
-          <Stop offset="1" stopColor={dark ? '#1A3A56' : '#EBF0E1'} />
+          <Stop offset="0" stopColor={dark ? '#080F24' : '#F9E7C4'} />
+          <Stop offset="1" stopColor={dark ? '#1A3A56' : '#EEF2E3'} />
         </LinearGradient>
         <LinearGradient id="sea" x1="0" y1="0" x2="0" y2="1">
           <Stop offset="0" stopColor={dark ? '#12304A' : '#BEDCCF'} />
           <Stop offset="1" stopColor={dark ? '#07131F' : '#8FC4BB'} />
         </LinearGradient>
+        <LinearGradient id="haze" x1="0" y1="0" x2="0" y2="1">
+          <Stop offset="0" stopColor={dark ? '#1A3A56' : '#FFFFFF'} stopOpacity={0} />
+          <Stop offset="1" stopColor={dark ? '#1A3A56' : '#FFFFFF'} stopOpacity={dark ? 0.35 : 0.45} />
+        </LinearGradient>
       </Defs>
 
-      {/* sky + sea span far beyond the visible area */}
-      <Rect x={-3000} y={0} width={7000} height={420} fill="url(#sky)" />
-      <Rect x={-3000} y={300} width={7000} height={120} fill="url(#sea)" />
+      {/* sky + sea span the whole visible width */}
+      <Rect x={vbX - 200} y={0} width={visibleW + 400} height={TILE_H} fill="url(#sky)" />
 
-      {TILES.map((k) => (
+      {/* sun (light) or moon (dark): one copy, drawn behind the mountains */}
+      {dark ? (
+        <>
+          <Circle cx={bodyX} cy={bodyY} r={80} fill="#F4F1DC" opacity={0.05} />
+          <Circle cx={bodyX} cy={bodyY} r={54} fill="#F4F1DC" opacity={0.1} />
+          <Circle cx={bodyX} cy={bodyY} r={30} fill="#F6F3DF" />
+          <Circle cx={bodyX - 9} cy={bodyY - 8} r={5.5} fill="#E3DFC2" opacity={0.7} />
+          <Circle cx={bodyX + 10} cy={bodyY + 10} r={3.8} fill="#E3DFC2" opacity={0.6} />
+          <Circle cx={bodyX + 8} cy={bodyY - 14} r={2.6} fill="#E3DFC2" opacity={0.55} />
+        </>
+      ) : (
+        <>
+          <Circle cx={bodyX} cy={bodyY} r={84} fill="#FFC857" opacity={0.14} />
+          <Circle cx={bodyX} cy={bodyY} r={58} fill="#FFC857" opacity={0.26} />
+          {Array.from({ length: 14 }).map((_, i) => {
+            const a = (i / 14) * Math.PI * 2;
+            const r1 = 44;
+            const r2 = i % 2 ? 58 : 68;
+            return (
+              <Line
+                key={i}
+                x1={bodyX + Math.cos(a) * r1}
+                y1={bodyY + Math.sin(a) * r1}
+                x2={bodyX + Math.cos(a) * r2}
+                y2={bodyY + Math.sin(a) * r2}
+                stroke="#FFB938"
+                strokeWidth={3.5}
+                strokeLinecap="round"
+                opacity={0.75}
+              />
+            );
+          })}
+          <Circle cx={bodyX} cy={bodyY} r={34} fill="#FFB938" />
+          <Circle cx={bodyX} cy={bodyY} r={26} fill="#FFD36B" opacity={0.7} />
+        </>
+      )}
+
+      {tiles.map((k) => (
         <G key={k} transform={`translate(${k * TILE_W} 0)`}>
           {dark ? (
             <>
@@ -119,42 +174,52 @@ function Scene({ dark, width, height }: { dark: boolean; width: number; height: 
             </>
           ) : (
             <>
-              <Ellipse cx={170} cy={70} rx={70} ry={16} fill="#FFFFFF" opacity={0.55} />
-              <Ellipse cx={215} cy={60} rx={42} ry={14} fill="#FFFFFF" opacity={0.55} />
-              <Ellipse cx={800} cy={110} rx={80} ry={16} fill="#FFFFFF" opacity={0.5} />
-              <Ellipse cx={850} cy={98} rx={44} ry={14} fill="#FFFFFF" opacity={0.5} />
+              <Ellipse cx={170} cy={70} rx={70} ry={16} fill="#FFFFFF" opacity={0.6} />
+              <Ellipse cx={215} cy={60} rx={42} ry={14} fill="#FFFFFF" opacity={0.6} />
+              <Ellipse cx={620} cy={120} rx={64} ry={13} fill="#FFFFFF" opacity={0.5} />
+              <Ellipse cx={660} cy={110} rx={38} ry={11} fill="#FFFFFF" opacity={0.5} />
             </>
           )}
 
-          {/* islands */}
-          <Path d="M380 300 C 410 280, 450 272, 490 284 C 515 291, 530 296, 545 300 Z" fill={islandFar} />
-          <Path d="M600 300 C 615 290, 640 286, 660 292 C 670 295, 676 298, 680 300 Z" fill={islandFar} />
-          <Path d="M-20 300 C 40 255, 110 240, 170 262 C 210 276, 240 290, 270 300 Z" fill={island} />
-          <Path d="M700 300 C 740 250, 810 232, 880 258 C 930 276, 975 290, 1020 300 Z" fill={island} />
-
-          {/* waves */}
-          <Path d="M60 340 q15 -8 30 0 t30 0 t30 0" stroke={wave} strokeWidth={2.5} fill="none" opacity={dark ? 0.3 : 0.6} strokeLinecap="round" />
-          <Path d="M300 365 q15 -8 30 0 t30 0 t30 0" stroke={wave} strokeWidth={2.5} fill="none" opacity={dark ? 0.25 : 0.55} strokeLinecap="round" />
-          <Path d="M560 335 q15 -8 30 0 t30 0" stroke={wave} strokeWidth={2.5} fill="none" opacity={dark ? 0.25 : 0.55} strokeLinecap="round" />
-          <Path d="M120 390 q15 -8 30 0 t30 0 t30 0" stroke={wave} strokeWidth={2.5} fill="none" opacity={dark ? 0.2 : 0.5} strokeLinecap="round" />
-          <Path d="M700 385 q15 -8 30 0 t30 0 t30 0" stroke={wave} strokeWidth={2.5} fill="none" opacity={dark ? 0.2 : 0.5} strokeLinecap="round" />
+          {/* mountains: far range, then near range */}
+          <Path d={FAR_RANGE} fill={farColor} />
+          <Path d={NEAR_RANGE} fill={nearColor} />
         </G>
       ))}
 
-      {/* moon + moonlight on the water: single copy only */}
-      {dark && (
-        <>
-          <Circle cx={850} cy={80} r={78} fill="#F4F1DC" opacity={0.05} />
-          <Circle cx={850} cy={80} r={52} fill="#F4F1DC" opacity={0.1} />
-          <Circle cx={850} cy={80} r={27} fill="#F6F3DF" />
-          <Circle cx={841} cy={72} r={5} fill="#E3DFC2" opacity={0.7} />
-          <Circle cx={860} cy={90} r={3.5} fill="#E3DFC2" opacity={0.6} />
-          <Line x1={815} y1={312} x2={885} y2={312} stroke="#F4F1DC" strokeWidth={3} opacity={0.4} strokeLinecap="round" />
-          <Line x1={825} y1={330} x2={875} y2={330} stroke="#F4F1DC" strokeWidth={3} opacity={0.3} strokeLinecap="round" />
-          <Line x1={832} y1={349} x2={868} y2={349} stroke="#F4F1DC" strokeWidth={3} opacity={0.22} strokeLinecap="round" />
-          <Line x1={838} y1={369} x2={862} y2={369} stroke="#F4F1DC" strokeWidth={3} opacity={0.15} strokeLinecap="round" />
-        </>
-      )}
+      {/* mist where the mountains meet the sea */}
+      <Rect x={vbX - 200} y={HORIZON - 55} width={visibleW + 400} height={55} fill="url(#haze)" />
+
+      {/* sea */}
+      <Rect x={vbX - 200} y={HORIZON} width={visibleW + 400} height={TILE_H - HORIZON} fill="url(#sea)" />
+
+      {/* sun / moon reflection on the water */}
+      {[
+        [70, 0.5], [54, 0.4], [40, 0.3], [26, 0.22],
+      ].map(([w, o], i) => (
+        <Line
+          key={i}
+          x1={bodyX - (w as number)}
+          y1={HORIZON + 14 + i * 20}
+          x2={bodyX + (w as number)}
+          y2={HORIZON + 14 + i * 20}
+          stroke={dark ? '#F4F1DC' : '#FFF1C2'}
+          strokeWidth={3}
+          opacity={(o as number) * (dark ? 0.8 : 1)}
+          strokeLinecap="round"
+        />
+      ))}
+
+      {tiles.map((k) => (
+        <G key={`w${k}`} transform={`translate(${k * TILE_W} 0)`}>
+          <Path d="M60 340 q15 -8 30 0 t30 0 t30 0" stroke={wave} strokeWidth={2.5} fill="none" opacity={dark ? 0.3 : 0.6} strokeLinecap="round" />
+          <Path d="M300 362 q15 -8 30 0 t30 0 t30 0" stroke={wave} strokeWidth={2.5} fill="none" opacity={dark ? 0.25 : 0.55} strokeLinecap="round" />
+          <Path d="M560 335 q15 -8 30 0 t30 0" stroke={wave} strokeWidth={2.5} fill="none" opacity={dark ? 0.25 : 0.55} strokeLinecap="round" />
+          <Path d="M120 392 q15 -8 30 0 t30 0 t30 0" stroke={wave} strokeWidth={2.5} fill="none" opacity={dark ? 0.2 : 0.5} strokeLinecap="round" />
+          <Path d="M720 385 q15 -8 30 0 t30 0 t30 0" stroke={wave} strokeWidth={2.5} fill="none" opacity={dark ? 0.2 : 0.5} strokeLinecap="round" />
+          <Path d="M430 400 q15 -8 30 0 t30 0" stroke={wave} strokeWidth={2.5} fill="none" opacity={dark ? 0.2 : 0.5} strokeLinecap="round" />
+        </G>
+      ))}
     </Svg>
   );
 }

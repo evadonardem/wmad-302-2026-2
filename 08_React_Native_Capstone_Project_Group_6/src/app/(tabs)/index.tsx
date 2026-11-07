@@ -22,6 +22,7 @@ import {
   getCitiesMunicipalitiesByRegion,
   getRegions,
   searchPhotosByLocation,
+  searchPhotosPage,
 } from '@/services/geoPhotoService';
 import { usePhotos } from '@/photos';
 import { useSearchHistory } from '@/searchHistory';
@@ -113,15 +114,17 @@ export default function SearchScreen() {
   const [searched, setSearched] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // What was last searched (used by pull-to-refresh and "Try again")
+  // What was last searched (used by pull-to-refresh, "Try again" and "Load more")
   const [lastTerm, setLastTerm] = useState('');
 
   // Pagination ("load more")
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
+  const [total, setTotal] = useState(0);
   const [loadingMore, setLoadingMore] = useState(false);
-  const searchId = useRef(0); // ignores stale responses from older searches
-  const busyMore = useRef(false); // prevents double-firing onEndReached
+  const [loadMoreError, setLoadMoreError] = useState(false);
+  const searchId = useRef(0); // ignores responses that belong to an older search
+  const busyMore = useRef(false); // prevents onEndReached from double-firing
 
   // Favorites (kept for this session) + filter toggle
   const [favorites, setFavorites] = useState<Photo[]>([]);
@@ -146,12 +149,8 @@ export default function SearchScreen() {
     getRegions().then(setRegions);
 
     const first = async (term: string) => {
-      try {
-        const res = await searchPhotosByLocation(term);
-        return res[0] ? { uri: res[0].imageUrl } : undefined;
-      } catch {
-        return undefined;
-      }
+      const res = await searchPhotosByLocation(term);
+      return res[0] ? { uri: res[0].imageUrl } : undefined;
     };
 
     Promise.all([
@@ -195,6 +194,7 @@ export default function SearchScreen() {
     }
   };
 
+  /** New search: resets everything and loads page 1 */
   const runSearch = async (term: string) => {
     const trimmed = term.trim();
     if (!trimmed) return;
@@ -206,19 +206,21 @@ export default function SearchScreen() {
     setShowFavs(false);
     setLoading(true);
     setLoadingMore(false);
+    setLoadMoreError(false);
     setSearched(true);
     setError(null);
     setPage(1);
     setHasMore(false);
+    setTotal(0);
 
     try {
-      const results = await searchPhotosByLocation(trimmed, 1, PAGE_SIZE);
+      const result = await searchPhotosPage(trimmed, 1, PAGE_SIZE);
       if (id !== searchId.current) return;
-      setPhotos(results);
-      setHasMore(results.length >= PAGE_SIZE);
-      if (results.length > 0) {
-        recordSearch(trimmed);
-      }
+
+      setPhotos(result.photos);
+      setHasMore(result.hasMore);
+      setTotal(result.total);
+      if (result.photos.length > 0) recordSearch(trimmed);
     } catch {
       if (id !== searchId.current) return;
       setError('Could not load photos. Check your connection and try again.');
@@ -227,24 +229,32 @@ export default function SearchScreen() {
     }
   };
 
-  const loadMore = async () => {
+  /** Next page: appended to the same list (shared store, so prev/next on the photo screen includes it) */
+  const loadMore = async (manual = false) => {
     if (showFavs || !lastTerm || loading || !hasMore || busyMore.current) return;
+    // after a failure, only the Retry button may try again (no endless auto-retry loop)
+    if (loadMoreError && !manual) return;
 
     const id = searchId.current;
     const nextPage = page + 1;
     busyMore.current = true;
+    setLoadMoreError(false);
     setLoadingMore(true);
 
     try {
-      const results = await searchPhotosByLocation(lastTerm, nextPage, PAGE_SIZE);
+      const result = await searchPhotosPage(lastTerm, nextPage, PAGE_SIZE);
       if (id !== searchId.current) return;
 
       setPhotos((prev) => {
         const seen = new Set(prev.map((p) => String(p.id)));
-        return [...prev, ...results.filter((p) => !seen.has(String(p.id)))];
+        return [...prev, ...result.photos.filter((p) => !seen.has(String(p.id)))];
       });
       setPage(nextPage);
-      setHasMore(results.length >= PAGE_SIZE);
+      setHasMore(result.hasMore);
+      if (result.total) setTotal(result.total);
+    } catch {
+      if (id !== searchId.current) return;
+      setLoadMoreError(true);
     } finally {
       if (id === searchId.current) {
         busyMore.current = false;
@@ -280,6 +290,14 @@ export default function SearchScreen() {
   const contentWidth = Math.min(width, CONTENT_MAX);
   const cardWidth = Math.floor((contentWidth - 32 - gap * (columns - 1)) / columns);
   const data: Photo[] = showFavs ? favorites : photos;
+
+  const toolbarText = showFavs
+    ? `${favorites.length} favorite${favorites.length === 1 ? '' : 's'}`
+    : lastTerm && !loading && !error
+      ? total > photos.length
+        ? `Showing ${photos.length} of ${total} photos for "${lastTerm}"`
+        : `${photos.length} photo${photos.length === 1 ? '' : 's'} for "${lastTerm}"`
+      : '';
 
   const renderEmpty = () => {
     if (loading) {
@@ -340,6 +358,30 @@ export default function SearchScreen() {
       return (
         <View style={styles.footer}>
           <ActivityIndicator color={theme.colors.primary} />
+          <Text variant="labelMedium" style={{ color: theme.colors.onSurfaceVariant }}>
+            Loading more photos…
+          </Text>
+        </View>
+      );
+    }
+
+    if (loadMoreError) {
+      return (
+        <View style={styles.footer}>
+          <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>
+            Could not load more photos.
+          </Text>
+          <TouchableRipple
+            onPress={() => loadMore(true)}
+            borderless
+            accessibilityRole="button"
+            style={[styles.loadMoreBtn, { backgroundColor: theme.colors.primary }]}
+          >
+            <View style={styles.btnInner}>
+              <MaterialCommunityIcons name="refresh" size={18} color={theme.colors.onPrimary} />
+              <Text style={{ color: theme.colors.onPrimary, fontWeight: '700' }}>Retry</Text>
+            </View>
+          </TouchableRipple>
         </View>
       );
     }
@@ -348,12 +390,13 @@ export default function SearchScreen() {
       return (
         <View style={styles.footer}>
           <TouchableRipple
-            onPress={loadMore}
+            onPress={() => loadMore(true)}
             borderless
             accessibilityRole="button"
+            accessibilityLabel="Load more photos"
             style={[styles.loadMoreBtn, { backgroundColor: theme.colors.primary }]}
           >
-            <View style={styles.favToggleInner}>
+            <View style={styles.btnInner}>
               <MaterialCommunityIcons name="plus" size={18} color={theme.colors.onPrimary} />
               <Text style={{ color: theme.colors.onPrimary, fontWeight: '700' }}>Load more</Text>
             </View>
@@ -390,7 +433,7 @@ export default function SearchScreen() {
         keyboardShouldPersistTaps="handled"
         onScroll={onScroll}
         scrollEventThrottle={16}
-        onEndReached={loadMore}
+        onEndReached={() => loadMore()}
         onEndReachedThreshold={0.6}
         refreshControl={
           <RefreshControl
@@ -424,11 +467,7 @@ export default function SearchScreen() {
               {/* Results toolbar */}
               <View style={styles.toolbar}>
                 <Text variant="labelLarge" style={{ color: theme.colors.onSurfaceVariant, flex: 1 }} numberOfLines={1}>
-                  {showFavs
-                    ? `${favorites.length} favorite${favorites.length === 1 ? '' : 's'}`
-                    : lastTerm && !loading && !error
-                      ? `${photos.length} photo${photos.length === 1 ? '' : 's'} for "${lastTerm}"`
-                      : ''}
+                  {toolbarText}
                 </Text>
                 <TouchableRipple
                   onPress={() => setShowFavs((v) => !v)}
@@ -440,7 +479,7 @@ export default function SearchScreen() {
                     { backgroundColor: showFavs ? theme.colors.primary : theme.colors.secondaryContainer },
                   ]}
                 >
-                  <View style={styles.favToggleInner}>
+                  <View style={styles.btnInner}>
                     <MaterialCommunityIcons
                       name={showFavs ? 'heart' : 'heart-outline'}
                       size={16}
@@ -464,7 +503,20 @@ export default function SearchScreen() {
           const fav = favoriteIds.has(String(item.id));
           return (
             <Pressable
-              onPress={() => router.push({ pathname: '/photo/[id]', params: { id: String(item.id) } })}
+              onPress={() =>
+                router.push({
+                  pathname: '/photo/[id]',
+                  params: {
+                    id: String(item.id),
+                    imageUrl: item.imageUrl,
+                    photographer: item.photographer,
+                    photographerUrl: item.photographerUrl,
+                    altText: item.altText,
+                    width: String(item.width ?? ''),
+                    height: String(item.height ?? ''),
+                  },
+                })
+              }
               style={[styles.card, { width: cardWidth, backgroundColor: theme.colors.surface }]}
             >
               <View>
@@ -520,7 +572,7 @@ const styles = StyleSheet.create({
   chip: { borderRadius: 999, paddingHorizontal: 16, paddingVertical: 8 },
   toolbar: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 16 },
   favToggle: { borderRadius: 999 },
-  favToggleInner: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 8 },
+  btnInner: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 8 },
   card: {
     borderRadius: 12,
     overflow: 'hidden',
@@ -556,7 +608,7 @@ const styles = StyleSheet.create({
   stateBox: { alignItems: 'center', marginTop: 32, paddingHorizontal: 24, gap: 12 },
   stateText: { textAlign: 'center' },
   retryBtn: { borderRadius: 999, paddingHorizontal: 22, paddingVertical: 10 },
-  footer: { alignItems: 'center', paddingVertical: 16 },
+  footer: { alignItems: 'center', paddingVertical: 20, gap: 10 },
   loadMoreBtn: { borderRadius: 999 },
   endText: { textAlign: 'center', paddingVertical: 20 },
   topBtn: {

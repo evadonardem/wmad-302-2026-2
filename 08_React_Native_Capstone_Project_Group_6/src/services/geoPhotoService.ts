@@ -28,6 +28,14 @@ export type Photo = {
   photographer: string;
   photographerUrl: string;
   altText: string;
+  width?: number;
+  height?: number;
+};
+
+export type PhotoPage = {
+  photos: Photo[];
+  hasMore: boolean;
+  total: number;
 };
 
 export const getRegions = async (): Promise<Region[]> => {
@@ -56,31 +64,49 @@ export const getCitiesMunicipalitiesByRegion = async (
   }
 };
 
-export const searchPhotosByLocation = async (
+/**
+ * One page of results. THROWS on network errors so the UI can show
+ * "Try again" / "Retry". `hasMore` comes from Pexels' own next_page field.
+ */
+export const searchPhotosPage = async (
   locationName: string,
   page = 1,
-  perPage = 12
-): Promise<Photo[]> => {
+  perPage = 24
+): Promise<PhotoPage> => {
   if (!locationName || !PEXELS_API_KEY) {
     console.warn('Missing location name or EXPO_PUBLIC_PEXELS_API_KEY');
-    return [];
+    return { photos: [], hasMore: false, total: 0 };
   }
 
   const keyword = `${locationName} Philippines tourist spot`;
 
-  try {
-    const response = await axios.get('https://api.pexels.com/v1/search', {
-      params: { query: keyword, per_page: perPage, page },
-      headers: { Authorization: PEXELS_API_KEY },
-    });
+  const response = await axios.get('https://api.pexels.com/v1/search', {
+    params: { query: keyword, per_page: perPage, page },
+    headers: { Authorization: PEXELS_API_KEY },
+  });
 
-    return (response.data.photos ?? []).map((photo: any): Photo => ({
-      id: photo.id,
-      imageUrl: photo.src.large,
-      photographer: photo.photographer,
-      photographerUrl: photo.photographer_url,
-      altText: photo.alt || `${locationName} tourist spot`,
-    }));
+  const photos: Photo[] = (response.data.photos ?? []).map((photo: any): Photo => ({
+    id: photo.id,
+    imageUrl: photo.src.large,
+    photographer: photo.photographer,
+    photographerUrl: photo.photographer_url,
+    altText: photo.alt || `${locationName} tourist spot`,
+    width: photo.width,
+    height: photo.height,
+  }));
+
+  return {
+    photos,
+    hasMore: Boolean(response.data.next_page),
+    total: response.data.total_results ?? photos.length,
+  };
+};
+
+/** Simple first-page helper (never throws). Used for the header polaroids. */
+export const searchPhotosByLocation = async (locationName: string): Promise<Photo[]> => {
+  try {
+    const { photos } = await searchPhotosPage(locationName, 1, 12);
+    return photos;
   } catch (error) {
     console.error('Failed to fetch photos:', error);
     return [];
