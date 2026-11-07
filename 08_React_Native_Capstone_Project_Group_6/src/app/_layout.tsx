@@ -1,7 +1,20 @@
+
+import 'react-native-gesture-handler';
+
 import { useState } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { MD3DarkTheme, MD3LightTheme, PaperProvider } from 'react-native-paper';
+
+import {
+  GestureHandlerRootView,
+} from 'react-native-gesture-handler';
+
+import {
+  MD3DarkTheme,
+  MD3LightTheme,
+  PaperProvider,
+} from 'react-native-paper';
+
 import { PhotosProvider } from '@/photos';
 import { SearchHistoryProvider } from '@/searchHistory';
 import { ThemeModeProvider } from '@/themeMode';
@@ -9,38 +22,67 @@ import { ThemeModeProvider } from '@/themeMode';
 export default function RootLayout() {
   const [isDarkMode, setIsDarkMode] = useState(false);
 
-  // Dynamic Paper theme configuration (MD3 light/dark palettes, app-wide)
-  const theme = isDarkMode ? MD3DarkTheme : MD3LightTheme;
+  // Dynamic light and dark themes
+  const theme = isDarkMode
+    ? MD3DarkTheme
+    : MD3LightTheme;
 
   return (
-    <ThemeModeProvider value={{ isDarkMode, setIsDarkMode }}>
-      <PhotosProvider>
-        <SearchHistoryProvider>
-          <PaperProvider theme={theme}>
-            <StatusBar style={isDarkMode ? 'light' : 'dark'} />
-            <Stack
-              screenOptions={{
-                headerShown: false,
-                // Native header follows the Paper theme
-                headerStyle: { backgroundColor: theme.colors.surface },
-                headerTintColor: theme.colors.onSurface,
-                headerTitleStyle: { color: theme.colors.onSurface },
-                headerShadowVisible: false,
-                contentStyle: { backgroundColor: theme.colors.background },
-              }}
-            >
-              <Stack.Screen name="(tabs)" />
-              {/* The photo detail route opens as a modal with the native header providing Back */}
-              <Stack.Screen
-                name="photo/[id]"
-                options={{ headerShown: true, presentation: 'modal', title: 'Tourist Spot' }}
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <ThemeModeProvider
+        value={{ isDarkMode, setIsDarkMode }}
+      >
+        <PhotosProvider>
+          <SearchHistoryProvider>
+            <PaperProvider theme={theme}>
+              <StatusBar
+                style={isDarkMode ? 'light' : 'dark'}
               />
-              {/* Recent searches screen pushes over the tabs with its own native header */}
-              <Stack.Screen name="history" options={{ headerShown: true, title: 'Recent Searches' }} />
-            </Stack>
-          </PaperProvider>
-        </SearchHistoryProvider>
-      </PhotosProvider>
-    </ThemeModeProvider>
+
+              <Stack
+                screenOptions={{
+                  headerShown: false,
+
+                  headerStyle: {
+                    backgroundColor: theme.colors.surface,
+                  },
+
+                  headerTintColor: theme.colors.onSurface,
+
+                  headerTitleStyle: {
+                    color: theme.colors.onSurface,
+                  },
+
+                  headerShadowVisible: false,
+
+                  contentStyle: {
+                    backgroundColor: theme.colors.background,
+                  },
+                }}
+              >
+                <Stack.Screen name="(tabs)" />
+
+                <Stack.Screen
+                  name="photo/[id]"
+                  options={{
+                    headerShown: true,
+                    presentation: 'modal',
+                    title: 'Tourist Spot',
+                  }}
+                />
+
+                <Stack.Screen
+                  name="history"
+                  options={{
+                    headerShown: true,
+                    title: 'Recent Searches',
+                  }}
+                />
+              </Stack>
+            </PaperProvider>
+          </SearchHistoryProvider>
+        </PhotosProvider>
+      </ThemeModeProvider>
+    </GestureHandlerRootView>
   );
 }

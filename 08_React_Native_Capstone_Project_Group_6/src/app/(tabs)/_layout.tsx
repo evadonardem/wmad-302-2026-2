@@ -41,6 +41,7 @@ export default function TabsLayout() {
             <Ionicons name="information-circle-outline" color={color as string} size={size} />
           ),
         }}
+        
       />
     </Tabs>
   );
