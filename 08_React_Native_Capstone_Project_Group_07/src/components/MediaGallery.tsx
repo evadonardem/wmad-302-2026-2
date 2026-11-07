@@ -1,8 +1,10 @@
-import { Pressable, StyleSheet, View } from 'react-native';
-import { ActivityIndicator, Card, Text, useTheme } from 'react-native-paper';
+import type { Photo } from '@/services/geoPhotoService';
+import { fontFamily, glass, radius, shadow } from '@/theme';
 import { router } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
-import type { Photo } from '@/services/geoPhotoService';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Card, Text, useTheme } from 'react-native-paper';
+import Animated, { FadeInUp } from 'react-native-reanimated';
 
 export default function MediaGallery({ photos, loading }: { photos: Photo[]; loading: boolean }) {
   const theme = useTheme();
@@ -18,17 +20,25 @@ export default function MediaGallery({ photos, loading }: { photos: Photo[]; loa
 
   if (!photos || photos.length === 0) {
     return (
-      <View style={[styles.emptyState, { borderColor: theme.colors.outline }]}>
-        <Text variant="bodyMedium">No tourist spots found for this area yet.</Text>
+      <View style={styles.emptyWrap}>
+        <View style={styles.emptyState}>
+          <Text variant="bodyMedium">No tourist spots found for this area yet.</Text>
+        </View>
       </View>
     );
   }
 
   return (
     <View style={styles.grid}>
-      {photos.map((photo) => (
-        <View key={photo.id} style={styles.gridItem}>
+      {photos.map((photo, index) => (
+        // Cards fade up one after another (the fadeUp stagger from the web version)
+        <Animated.View
+          key={photo.id}
+          entering={FadeInUp.delay(index * 50).duration(600)}
+          style={styles.gridItem}
+        >
           <Pressable
+            style={({ pressed }) => pressed && styles.pressed}
             onPress={() =>
               router.push({
                 pathname: '/photo/[id]',
@@ -42,8 +52,12 @@ export default function MediaGallery({ photos, loading }: { photos: Photo[]; loa
               })
             }
           >
-            <Card mode="elevated" style={styles.card}>
-              <Card.Cover source={{ uri: photo.imageUrl }} accessibilityLabel={photo.altText} />
+            <Card mode="elevated" style={[styles.card, shadow.soft]}>
+              <Card.Cover
+                source={{ uri: photo.imageUrl }}
+                accessibilityLabel={photo.altText}
+                style={styles.cover}
+              />
 
               <Card.Content style={styles.cardContent}>
                 <Text variant="labelSmall" style={styles.creditLabel}>
@@ -51,19 +65,16 @@ export default function MediaGallery({ photos, loading }: { photos: Photo[]; loa
                 </Text>
                 <Pressable
                   onPress={() => WebBrowser.openBrowserAsync(photo.photographerUrl)}
-                  style={[styles.creditPill, { backgroundColor: theme.colors.primaryContainer }]}
+                  style={styles.creditPill}
                 >
-                  <Text
-                    variant="bodyMedium"
-                    style={[styles.photographerName, { color: theme.colors.onPrimaryContainer }]}
-                  >
+                  <Text variant="bodyMedium" style={[styles.photographerName, { color: theme.colors.primary }]}>
                     {photo.photographer}
                   </Text>
                 </Pressable>
               </Card.Content>
             </Card>
           </Pressable>
-        </View>
+        </Animated.View>
       ))}
     </View>
   );
@@ -81,10 +92,19 @@ const styles = StyleSheet.create({
     flexBasis: '30%',
     minWidth: 240,
   },
+  pressed: {
+    opacity: 0.92,
+    transform: [{ scale: 0.98 }],
+  },
   card: {
     width: '100%',
-    borderRadius: 20,
+    borderRadius: radius.card,
+    borderWidth: 1,
+    borderColor: glass.border,
     overflow: 'hidden',
+  },
+  cover: {
+    borderRadius: 0,
   },
   cardContent: {
     paddingTop: 12,
@@ -94,26 +114,36 @@ const styles = StyleSheet.create({
   creditLabel: {
     opacity: 0.7,
   },
+  // Photographer link as a small pill (same tint as the web .MuiLink-root pill)
   creditPill: {
     alignSelf: 'flex-start',
-    paddingHorizontal: 12,
+    paddingHorizontal: 14,
     paddingVertical: 4,
-    borderRadius: 999,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: 'rgba(47,107,255,0.4)',
+    backgroundColor: 'rgba(47,107,255,0.1)',
   },
   photographerName: {
-    fontWeight: '600',
+    fontFamily: fontFamily.semiBold,
   },
   loadingState: {
     paddingVertical: 28,
     alignItems: 'center',
     gap: 8,
   },
+  emptyWrap: {
+    alignItems: 'center',
+  },
+  // Dashed glass box for the empty message (.MuiBox-root > h6 in the web version)
   emptyState: {
     paddingVertical: 22,
     paddingHorizontal: 34,
     alignItems: 'center',
     borderWidth: 2,
     borderStyle: 'dashed',
-    borderRadius: 20,
+    borderColor: glass.borderDashed,
+    borderRadius: radius.card,
+    backgroundColor: glass.fill,
   },
 });

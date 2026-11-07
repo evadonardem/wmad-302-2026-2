@@ -1,9 +1,11 @@
-import { Platform, ScrollView, Share, StyleSheet, View } from 'react-native';
+import { TricolorBar } from '@/components/ui';
+import { usePhotos } from '@/photos';
+import { fontFamily, glass, radius } from '@/theme';
 import { Image } from 'expo-image';
 import { Redirect, Stack, router, useLocalSearchParams } from 'expo-router';
-import { Button, IconButton, Text, useTheme } from 'react-native-paper';
 import * as WebBrowser from 'expo-web-browser';
-import { usePhotos } from '@/photos';
+import { Platform, ScrollView, Share, StyleSheet, View } from 'react-native';
+import { Button, IconButton, Text, useTheme } from 'react-native-paper';
 
 // Search params always arrive as string | string[] | undefined — normalise to a plain string
 const asString = (value?: string | string[]) => (Array.isArray(value) ? (value[0] ?? '') : (value ?? ''));
@@ -82,6 +84,9 @@ export default function PhotoDetailScreen() {
       {/* Dynamic native header title from the photographer param */}
       <Stack.Screen options={{ title: photographer ? `By ${photographer}` : 'Tourist Spot' }} />
 
+      {/* Same tricolor accent bar as the header panel */}
+      <TricolorBar />
+
       {/* Hero: capped at half the screen and shown in full ("contain") so it is never cropped
           and the info panel below always stays visible */}
       <Image
@@ -140,8 +145,11 @@ const styles = StyleSheet.create({
   },
   body: {
     flex: 1,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    borderTopLeftRadius: radius.panel,
+    borderTopRightRadius: radius.panel,
+    borderWidth: 1,
+    borderBottomWidth: 0,
+    borderColor: glass.border,
   },
   bodyContent: {
     padding: 20,
@@ -154,7 +162,7 @@ const styles = StyleSheet.create({
   },
   photographer: {
     flex: 1,
-    fontWeight: '600',
+    fontFamily: fontFamily.semiBold,
     textAlign: 'center',
   },
   shareButton: {

@@ -1,5 +1,6 @@
-import { Tabs } from 'expo-router';
+import { fontFamily, glass } from '@/theme';
 import { Ionicons } from '@expo/vector-icons';
+import { Tabs } from 'expo-router';
 import { useTheme } from 'react-native-paper';
 
 // TODO 4.1 [Tab Bar Configuration]: tab bar + header follow Paper's light/dark MD3 palette
@@ -13,12 +14,13 @@ export default function TabsLayout() {
         tabBarInactiveTintColor: theme.colors.onSurfaceVariant,
         tabBarStyle: {
           backgroundColor: theme.colors.surface,
-          borderTopColor: theme.colors.outlineVariant,
+          borderTopColor: glass.border,
         },
+        tabBarLabelStyle: { fontFamily: fontFamily.semiBold },
         headerStyle: { backgroundColor: theme.colors.surface },
         headerTintColor: theme.colors.onSurface,
         headerTitleStyle: {
-          fontWeight: 'bold',
+          fontFamily: fontFamily.bold,
           color: theme.colors.onSurface,
         },
       }}

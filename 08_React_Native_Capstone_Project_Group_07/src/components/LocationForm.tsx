@@ -1,14 +1,14 @@
-import { useEffect, useMemo, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
-import { Button, Chip, Menu, useTheme } from 'react-native-paper';
+import { GlassPanel, GradientButton } from '@/components/ui';
 import {
   getCitiesMunicipalitiesByRegion,
   getRegions,
   type City,
   type Region,
-} 
-from '@/services/geoPhotoService';
-import { brand } from '@/theme';
+} from '@/services/geoPhotoService';
+import { glass, radius } from '@/theme';
+import { useEffect, useMemo, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
+import { Button, Chip, Menu, useTheme } from 'react-native-paper';
 
 type IslandFilter = 'all' | 'luzon' | 'visayas' | 'mindanao';
 
@@ -115,14 +115,8 @@ export default function LocationForm({ onSearch }: { onSearch: (cityName: string
   const selectedCityLabel = selectedCityName || 'Select City / Municipality';
 
   return (
-    <View style={styles.form}>
-      {/* Tricolor accent bar, like the header in the web version */}
-      <View style={styles.tricolor}>
-        <View style={[styles.stripe, { backgroundColor: brand.blue }]} />
-        <View style={[styles.stripe, { backgroundColor: brand.yellow }]} />
-        <View style={[styles.stripe, { backgroundColor: brand.red }]} />
-      </View>
-
+    // Frosted glass panel with the tricolor accent bar along the top
+    <GlassPanel accent style={styles.form}>
       {/* TODO 2.9 (c) [Island-Group Filter]: row of Paper <Chip> options */}
       <View style={styles.filterRow}>
         {islandOptions.map((option) => {
@@ -131,7 +125,10 @@ export default function LocationForm({ onSearch }: { onSearch: (cityName: string
             <Chip
               key={option.key}
               selected={selected}
-              style={[styles.chip, selected && { backgroundColor: theme.colors.primaryContainer }]}
+              style={[
+                styles.chip,
+                selected ? { backgroundColor: theme.colors.primaryContainer } : { backgroundColor: glass.fill },
+              ]}
               onPress={() => setIslandFilter(option.key)}
             >
               {option.label}
@@ -145,6 +142,7 @@ export default function LocationForm({ onSearch }: { onSearch: (cityName: string
           <Menu
             visible={regionMenuVisible}
             onDismiss={() => setRegionMenuVisible(false)}
+            contentStyle={styles.menu}
             anchor={
               <Button
                 mode="outlined"
@@ -175,6 +173,7 @@ export default function LocationForm({ onSearch }: { onSearch: (cityName: string
           <Menu
             visible={cityMenuVisible}
             onDismiss={() => setCityMenuVisible(false)}
+            contentStyle={styles.menu}
             anchor={
               <Button
                 mode="outlined"
@@ -202,18 +201,18 @@ export default function LocationForm({ onSearch }: { onSearch: (cityName: string
           </Menu>
         </View>
 
-        <Button
-          mode="contained"
+        {/* Glossy gradient Search button (a Paper <Button> inside the gradient wrapper) */}
+        <GradientButton
           icon="magnify"
           disabled={!selectedCityName}
           contentStyle={styles.buttonContent}
-          style={[styles.pill, styles.searchButton]}
+          style={styles.searchButton}
           onPress={handleSubmit}
         >
           Search
-        </Button>
+        </GradientButton>
       </View>
-    </View>
+    </GlassPanel>
   );
 }
 
@@ -221,16 +220,6 @@ const styles = StyleSheet.create({
   form: {
     width: '100%',
     marginBottom: 24,
-  },
-  tricolor: {
-    flexDirection: 'row',
-    height: 6,
-    borderRadius: 3,
-    overflow: 'hidden',
-    marginBottom: 16,
-  },
-  stripe: {
-    flex: 1,
   },
   filterRow: {
     flexDirection: 'row',
@@ -240,7 +229,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   chip: {
-    borderRadius: 999,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: glass.border,
   },
   row: {
     flexDirection: 'column',
@@ -252,9 +243,17 @@ const styles = StyleSheet.create({
   },
   pill: {
     width: '100%',
-    borderRadius: 999,
+    borderRadius: radius.pill,
+    backgroundColor: glass.fill,
+    borderColor: glass.border,
+  },
+  menu: {
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: glass.border,
   },
   searchButton: {
+    width: '100%',
     marginTop: 4,
   },
   buttonContent: {

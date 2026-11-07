@@ -1,14 +1,16 @@
-import { useEffect, useState } from 'react';
-import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
-import { router, useLocalSearchParams } from 'expo-router';
-import { IconButton, Text, useTheme } from 'react-native-paper';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import LocationForm from '@/components/LocationForm';
 import MediaGallery from '@/components/MediaGallery';
-import { searchPhotosByLocation } from '@/services/geoPhotoService';
+import { GradientTitle, ScreenBackground } from '@/components/ui';
 import { usePhotos } from '@/photos';
 import { useSearchHistory } from '@/searchHistory';
+import { searchPhotosByLocation } from '@/services/geoPhotoService';
+import { glass } from '@/theme';
 import { useThemeMode } from '@/themeMode';
+import { router, useLocalSearchParams } from 'expo-router';
+import { useEffect, useState } from 'react';
+import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import { IconButton, Text, useTheme } from 'react-native-paper';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function SearchScreen() {
   const theme = useTheme();
@@ -75,18 +77,25 @@ export default function SearchScreen() {
 
   return (
     <SafeAreaView style={[styles.screen, { backgroundColor: theme.colors.background }]} edges={['top', 'left', 'right']}>
+      {/* Corner glows behind everything */}
+      <ScreenBackground />
+
       <View style={styles.header}>
         <IconButton
           icon="history"
           iconColor={theme.colors.onBackground}
+          containerColor={glass.fill}
           size={22}
+          style={styles.glassIcon}
           onPress={() => router.push('/history')}
           accessibilityLabel="Recent searches"
         />
         <IconButton
           icon={isDarkMode ? 'weather-sunny' : 'weather-night'}
           iconColor={theme.colors.onBackground}
+          containerColor={glass.fill}
           size={24}
+          style={styles.glassIcon}
           onPress={() => setIsDarkMode(!isDarkMode)}
           accessibilityLabel="Toggle dark mode"
         />
@@ -98,9 +107,11 @@ export default function SearchScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={theme.colors.primary} />
         }
       >
-        <Text variant="headlineMedium" style={[styles.title, { color: theme.colors.onBackground }]}>
-          🇵🇭 Lakbay PH
-        </Text>
+        {/* Flag stays outside the gradient so the emoji keeps its own colors */}
+        <View style={styles.titleRow}>
+          <Text style={styles.flag}>🇵🇭</Text>
+          <GradientTitle>Lakbay PH</GradientTitle>
+        </View>
         <Text variant="bodyLarge" style={[styles.subtitle, { color: theme.colors.onSurfaceVariant }]}>
           Explore tourist spots across regions, cities, and municipalities in the Philippines
         </Text>
@@ -132,9 +143,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 24,
   },
-  title: {
-    fontWeight: 'bold',
-    textAlign: 'center',
+  glassIcon: {
+    borderWidth: 1,
+    borderColor: glass.border,
+  },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+  },
+  flag: {
+    fontSize: 34,
   },
   subtitle: {
     textAlign: 'center',

@@ -1,16 +1,38 @@
-import { useState } from 'react';
-import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import { MD3DarkTheme, MD3LightTheme, PaperProvider } from 'react-native-paper';
 import { PhotosProvider } from '@/photos';
 import { SearchHistoryProvider } from '@/searchHistory';
+import { darkTheme, fontFamily, lightTheme } from '@/theme';
 import { ThemeModeProvider } from '@/themeMode';
+import {
+  Poppins_400Regular,
+  Poppins_500Medium,
+  Poppins_600SemiBold,
+  Poppins_700Bold,
+  Poppins_800ExtraBold,
+} from '@expo-google-fonts/poppins';
+import { useFonts } from 'expo-font';
+import { Stack } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
+import { useState } from 'react';
+import { PaperProvider } from 'react-native-paper';
 
 export default function RootLayout() {
   const [isDarkMode, setIsDarkMode] = useState(false);
 
-  // Dynamic Paper theme configuration (MD3 light/dark palettes, app-wide)
-  const theme = isDarkMode ? MD3DarkTheme : MD3LightTheme;
+  const [fontsLoaded, fontError] = useFonts({
+    Poppins_400Regular,
+    Poppins_500Medium,
+    Poppins_600SemiBold,
+    Poppins_700Bold,
+    Poppins_800ExtraBold,
+  });
+
+  // Dynamic Paper theme configuration (brand MD3 light/dark palettes from theme.ts, app-wide)
+  const theme = isDarkMode ? darkTheme : lightTheme;
+
+  // Wait for Poppins (or a load error, then fall back to system fonts)
+  if (!fontsLoaded && !fontError) {
+    return null;
+  }
 
   return (
     <ThemeModeProvider value={{ isDarkMode, setIsDarkMode }}>
@@ -18,7 +40,16 @@ export default function RootLayout() {
         <SearchHistoryProvider>
           <PaperProvider theme={theme}>
             <StatusBar style={isDarkMode ? 'light' : 'dark'} />
-            <Stack screenOptions={{ headerShown: false }}>
+            <Stack
+              screenOptions={{
+                headerShown: false,
+                // Native headers (photo modal, history) follow the Paper palette in light/dark
+                headerStyle: { backgroundColor: theme.colors.surface },
+                headerTintColor: theme.colors.onSurface,
+                headerTitleStyle: { fontFamily: fontFamily.bold, color: theme.colors.onSurface },
+                contentStyle: { backgroundColor: theme.colors.background },
+              }}
+            >
               <Stack.Screen name="(tabs)" />
               {/* The photo detail route opens as a modal with the native header providing Back */}
               <Stack.Screen
