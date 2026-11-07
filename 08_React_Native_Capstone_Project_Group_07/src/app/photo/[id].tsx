@@ -1,6 +1,7 @@
 import { TricolorBar } from '@/components/ui';
 import { usePhotos } from '@/photos';
 import { fontFamily, glass, radius } from '@/theme';
+import * as Haptics from 'expo-haptics';
 import { Image } from 'expo-image';
 import { Redirect, Stack, router, useLocalSearchParams } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
@@ -31,11 +32,15 @@ export default function PhotoDetailScreen() {
   }
 
   const currentIndex = photos.findIndex((p) => String(p.id) === id);
+  const hasPrevious = currentIndex > 0;
+  const hasNext = currentIndex >= 0 && currentIndex < photos.length - 1;
 
   const goToAdjacentPhoto = (offset: number) => {
     if (currentIndex < 0) return;
     const target = photos[currentIndex + offset];
     if (!target) return;
+
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
     router.replace({
       pathname: '/photo/[id]',
@@ -51,11 +56,13 @@ export default function PhotoDetailScreen() {
 
   const handleOpenPhotographer = () => {
     if (photographerUrl) {
+      void Haptics.selectionAsync();
       WebBrowser.openBrowserAsync(photographerUrl);
     }
   };
 
   const handleShare = async () => {
+    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     const text = `${altText || 'Tourist spot'} — 📸 by ${photographer}`;
     try {
       await Share.share({
@@ -74,13 +81,42 @@ export default function PhotoDetailScreen() {
 
       <TricolorBar />
 
-      <Image
-        source={{ uri: imageUrl }}
-        style={styles.hero}
-        contentFit="contain"
-        transition={200}
-        accessibilityLabel={altText}
-      />
+      {/* Hero container with image and overlaid navigation arrows */}
+      <View style={styles.heroContainer}>
+        <Image
+          source={{ uri: imageUrl }}
+          style={styles.hero}
+          contentFit="contain"
+          transition={350} // Smooth image fade-in transition
+          accessibilityLabel={altText}
+        />
+
+        {/* Left Arrow Button (Previous) */}
+        {hasPrevious && (
+          <IconButton
+            icon="chevron-left"
+            iconColor="#ffffff"
+            containerColor="rgba(0, 0, 0, 0.45)"
+            size={28}
+            style={[styles.arrowButton, styles.leftArrow]}
+            onPress={() => goToAdjacentPhoto(-1)}
+            accessibilityLabel="Previous photo"
+          />
+        )}
+
+        {/* Right Arrow Button (Next) */}
+        {hasNext && (
+          <IconButton
+            icon="chevron-right"
+            iconColor="#ffffff"
+            containerColor="rgba(0, 0, 0, 0.45)"
+            size={28}
+            style={[styles.arrowButton, styles.rightArrow]}
+            onPress={() => goToAdjacentPhoto(1)}
+            accessibilityLabel="Next photo"
+          />
+        )}
+      </View>
 
       <ScrollView
         style={[styles.body, { backgroundColor: theme.colors.surface }]}
@@ -93,25 +129,9 @@ export default function PhotoDetailScreen() {
           </Text>
         ) : null}
 
-        <View style={styles.pagerRow}>
-          <IconButton
-            icon="chevron-left"
-            iconColor={theme.colors.onSurface}
-            size={28}
-            onPress={() => goToAdjacentPhoto(-1)}
-            accessibilityLabel="Previous photo"
-          />
-          <Text variant="titleMedium" style={[styles.photographer, { color: theme.colors.onSurface }]}>
-            📸 Captured by {photographer || '—'}
-          </Text>
-          <IconButton
-            icon="chevron-right"
-            iconColor={theme.colors.onSurface}
-            size={28}
-            onPress={() => goToAdjacentPhoto(1)}
-            accessibilityLabel="Next photo"
-          />
-        </View>
+        <Text variant="titleMedium" style={[styles.photographer, { color: theme.colors.onSurface }]}>
+          📸 Captured by {photographer || '—'}
+        </Text>
 
         <Button mode="outlined" icon="open-in-new" onPress={handleOpenPhotographer} disabled={!photographerUrl}>
           Visit photographer profile
@@ -129,10 +149,28 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
   },
-  hero: {
+  heroContainer: {
     width: '100%',
     height: '50%',
     backgroundColor: '#000',
+    position: 'relative',
+    justifyContent: 'center',
+  },
+  hero: {
+    width: '100%',
+    height: '100%',
+  },
+  arrowButton: {
+    position: 'absolute',
+    top: '50%',
+    marginTop: -24,
+    zIndex: 10,
+  },
+  leftArrow: {
+    left: 12,
+  },
+  rightArrow: {
+    right: 12,
   },
   body: {
     flex: 1,
@@ -151,15 +189,10 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     marginBottom: 4,
   },
-  pagerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
   photographer: {
-    flex: 1,
     fontFamily: fontFamily.semiBold,
     textAlign: 'center',
+    marginVertical: 4,
   },
   shareButton: {
     marginTop: 4,

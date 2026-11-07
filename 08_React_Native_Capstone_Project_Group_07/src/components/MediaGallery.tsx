@@ -1,35 +1,95 @@
 import type { Photo } from '@/services/geoPhotoService';
 import { brand, fontFamily, glass, radius, shadow } from '@/theme';
+import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
-import { ActivityIndicator, Card, Text, useTheme } from 'react-native-paper';
-import Animated, { FadeInUp } from 'react-native-reanimated';
+import { Card, IconButton, Text, useTheme } from 'react-native-paper';
+import Animated, {
+  FadeInUp,
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withSequence,
+  withTiming,
+} from 'react-native-reanimated';
 
-function PhotoCard({ photo, index }: { photo: Photo; index: number }) {
+function SkeletonCard() {
+  const opacity = useSharedValue(0.3);
+
+  useEffect(() => {
+    opacity.value = withRepeat(
+      withSequence(
+        withTiming(0.8, { duration: 750 }),
+        withTiming(0.3, { duration: 750 })
+      ),
+      -1,
+      true
+    );
+  }, [opacity]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+  }));
+
+  return (
+    <View style={styles.gridItem}>
+      <Card mode="elevated" style={[styles.card, { borderColor: glass.border }]}>
+        <Animated.View style={[styles.skeletonCover, animatedStyle]} />
+        <Card.Content style={styles.cardContent}>
+          <Animated.View style={[styles.skeletonTextSmall, animatedStyle]} />
+          <Animated.View style={[styles.skeletonPill, animatedStyle]} />
+        </Card.Content>
+      </Card>
+    </View>
+  );
+}
+
+function PhotoCard({
+  photo,
+  index,
+  isFavorite,
+  onToggleFavorite,
+}: {
+  photo: Photo;
+  index: number;
+  isFavorite: boolean;
+  onToggleFavorite: (id: string | number) => void;
+}) {
   const theme = useTheme();
   const [isHovered, setIsHovered] = useState(false);
   const [isPressed, setIsPressed] = useState(false);
 
-  // Active if hovered (web) or actively pressed/held (mobile)
   const isActive = isHovered || isPressed;
+
+  const handlePressIn = () => {
+    setIsPressed(true);
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  };
+
+  const handleFavoritePress = (e: any) => {
+    e.stopPropagation();
+    void Haptics.notificationAsync(
+      isFavorite
+        ? Haptics.NotificationFeedbackType.Warning
+        : Haptics.NotificationFeedbackType.Success
+    );
+    onToggleFavorite(photo.id);
+  };
 
   return (
     <Animated.View
-      entering={FadeInUp.delay(index * 50).duration(600)}
+      entering={FadeInUp.delay(index * 60).duration(500)}
       style={styles.gridItem}
     >
       <Pressable
         onHoverIn={() => setIsHovered(true)}
         onHoverOut={() => setIsHovered(false)}
-        onPressIn={() => setIsPressed(true)}
+        onPressIn={handlePressIn}
         onPressOut={() => setIsPressed(false)}
-        style={[
-          styles.pressableContainer,
-          isActive && styles.hoveredScale,
-        ]}
+        style={[styles.pressableContainer, isActive && styles.hoveredScale]}
         onPress={() =>
           router.push({
             pathname: '/photo/[id]',
@@ -51,11 +111,24 @@ function PhotoCard({ photo, index }: { photo: Photo; index: number }) {
             { borderColor: isActive ? theme.colors.primary : glass.border },
           ]}
         >
-          <Card.Cover
-            source={{ uri: photo.imageUrl }}
-            accessibilityLabel={photo.altText}
-            style={[styles.cover, isActive && styles.coverHovered]}
-          />
+          <View style={styles.coverWrapper}>
+            <Card.Cover
+              source={{ uri: photo.imageUrl }}
+              accessibilityLabel={photo.altText}
+              style={[styles.cover, isActive && styles.coverHovered]}
+            />
+
+            {/* Favorite / Bookmark Heart Button Overlay */}
+            <IconButton
+              icon={isFavorite ? 'heart' : 'heart-outline'}
+              iconColor={isFavorite ? brand.red : '#ffffff'}
+              containerColor="rgba(0, 0, 0, 0.45)"
+              size={20}
+              style={styles.favoriteButton}
+              onPress={handleFavoritePress}
+              accessibilityLabel={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+            />
+          </View>
 
           <Card.Content style={styles.cardContent}>
             <Text variant="labelSmall" style={styles.creditLabel}>
@@ -63,7 +136,8 @@ function PhotoCard({ photo, index }: { photo: Photo; index: number }) {
             </Text>
             <Pressable
               onPress={(e) => {
-                e.stopPropagation(); // Prevent opening card modal when clicking author pill
+                e.stopPropagation();
+                void Haptics.selectionAsync();
                 WebBrowser.openBrowserAsync(photo.photographerUrl);
               }}
               style={styles.creditPill}
@@ -74,7 +148,6 @@ function PhotoCard({ photo, index }: { photo: Photo; index: number }) {
             </Pressable>
           </Card.Content>
 
-          {/* Accent line featuring blue, red, and yellow colors on hover/press */}
           {isActive && (
             <LinearGradient
               colors={[brand.blue, brand.red, brand.yellow]}
@@ -90,13 +163,26 @@ function PhotoCard({ photo, index }: { photo: Photo; index: number }) {
 }
 
 export default function MediaGallery({ photos, loading }: { photos: Photo[]; loading: boolean }) {
-  const theme = useTheme();
+  const [favoriteIds, setFavoriteIds] = useState<Set<string | number>>(new Set());
+
+  const handleToggleFavorite = (id: string | number) => {
+    setFavoriteIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
 
   if (loading) {
     return (
-      <View style={styles.loadingState}>
-        <ActivityIndicator size="large" color={theme.colors.primary} />
-        <Text variant="bodyMedium">Loading tourist spots…</Text>
+      <View style={styles.grid}>
+        {Array.from({ length: 6 }).map((_, i) => (
+          <SkeletonCard key={i} />
+        ))}
       </View>
     );
   }
@@ -114,7 +200,13 @@ export default function MediaGallery({ photos, loading }: { photos: Photo[]; loa
   return (
     <View style={styles.grid}>
       {photos.map((photo, index) => (
-        <PhotoCard key={photo.id} photo={photo} index={index} />
+        <PhotoCard
+          key={photo.id}
+          photo={photo}
+          index={index}
+          isFavorite={favoriteIds.has(photo.id)}
+          onToggleFavorite={handleToggleFavorite}
+        />
       ))}
     </View>
   );
@@ -146,12 +238,23 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     transition: 'box-shadow 0.4s ease-in-out, border-color 0.4s ease-in-out',
   } as any,
+  coverWrapper: {
+    position: 'relative',
+    width: '100%',
+  },
   cover: {
     borderRadius: 0,
     height: 200,
   },
   coverHovered: {
     opacity: 0.95,
+  },
+  favoriteButton: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    margin: 0,
+    zIndex: 10,
   },
   cardContent: {
     paddingTop: 12,
@@ -177,13 +280,9 @@ const styles = StyleSheet.create({
     height: 5,
     width: '100%',
   },
-  loadingState: {
-    paddingVertical: 28,
-    alignItems: 'center',
-    gap: 8,
-  },
   emptyWrap: {
     alignItems: 'center',
+    width: '100%',
   },
   emptyState: {
     paddingVertical: 22,
@@ -194,5 +293,22 @@ const styles = StyleSheet.create({
     borderColor: glass.borderDashed,
     borderRadius: radius.card,
     backgroundColor: glass.fill,
+  },
+  skeletonCover: {
+    height: 200,
+    backgroundColor: '#e1e9ee',
+  },
+  skeletonTextSmall: {
+    width: '40%',
+    height: 12,
+    borderRadius: 4,
+    backgroundColor: '#e1e9ee',
+  },
+  skeletonPill: {
+    width: '65%',
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#e1e9ee',
+    marginTop: 4,
   },
 });

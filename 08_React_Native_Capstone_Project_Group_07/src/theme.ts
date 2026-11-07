@@ -70,7 +70,7 @@ export const gradients = {
 // Shared look of the big gradient title (h1.MuiTypography-h3 in App.css)
 export const titleTextStyle: TextStyle = {
   fontFamily: fontFamily.extraBold,
-  fontSize: 36,
+  fontSize: 52,
   letterSpacing: -1,
   textAlign: 'center',
 };

@@ -4,7 +4,7 @@ import { GradientTitle, ScreenBackground } from '@/components/ui';
 import { usePhotos } from '@/photos';
 import { useSearchHistory } from '@/searchHistory';
 import { searchPhotosByLocation } from '@/services/geoPhotoService';
-import { glass } from '@/theme';
+import { fontFamily, glass } from '@/theme';
 import { useThemeMode } from '@/themeMode';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
@@ -18,42 +18,29 @@ export default function SearchScreen() {
   const { photos, setPhotos } = usePhotos();
   const { recordSearch } = useSearchHistory();
 
-  // TODO 3.7 [Global Search Coordination]
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [lastSearchedCity, setLastSearchedCity] = useState('');
 
-  // City handed back from the History screen as a route param (see TODO 5.4)
   const { q } = useLocalSearchParams<{ q?: string }>();
 
   const handleSearchSubmit = async (locationName: string) => {
-    // TODO 3.8 [Operational Async Glue Engine]
-    // a. Loading on
     setLoading(true);
     try {
-      // b. Fire the async search
       const results = await searchPhotosByLocation(locationName);
-      // c. Store the results in the shared photo store
       setPhotos(results);
-      // d. Remember the keyword for pull-to-refresh
       setLastSearchedCity(locationName);
-
-      // TODO 5.1 [History Recording]: the search above succeeded, so record the city
       recordSearch(locationName);
     } catch (error) {
       console.error(`Search failed for "${locationName}":`, error);
     } finally {
-      // e. Loading off no matter what
       setLoading(false);
     }
   };
 
   const handleRefresh = async () => {
-    // TODO 4.6 [Pull-to-Refresh Workflow]
-    // a. Refreshing on
     setRefreshing(true);
     try {
-      // b. Re-run the most recent search, if there is one
       if (lastSearchedCity) {
         const results = await searchPhotosByLocation(lastSearchedCity);
         setPhotos(results);
@@ -61,17 +48,14 @@ export default function SearchScreen() {
     } catch (error) {
       console.error(`Refresh failed for "${lastSearchedCity}":`, error);
     } finally {
-      // c. Refreshing off no matter what
       setRefreshing(false);
     }
   };
 
   useEffect(() => {
-    // TODO 5.4 [Param-Driven Re-Search]: run the same flow as TODO 3.8 when 'q' arrives or changes
     if (typeof q === 'string' && q.trim()) {
       void handleSearchSubmit(q.trim());
     }
-    // handleSearchSubmit is recreated every render; the search must only re-run when 'q' changes
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [q]);
 
@@ -107,19 +91,22 @@ export default function SearchScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={theme.colors.primary} />
         }
       >
-        {/* Flag stays outside the gradient so the emoji keeps its own colors */}
         <View style={styles.titleRow}>
-          <Text style={styles.flag}>🇵🇭</Text>
+          
           <GradientTitle>Lakbay PH</GradientTitle>
         </View>
+
+        {/* Friendly greeting styled with theme-adaptive soft surface color */}
+        <Text variant="titleMedium" style={[styles.greeting, { color: theme.colors.onSurfaceVariant }]}>
+          Magandang araw! Let's find your next Philippine adventure. 🌴
+        </Text>
+
         <Text variant="bodyLarge" style={[styles.subtitle, { color: theme.colors.onSurfaceVariant }]}>
           Explore tourist spots across regions, cities, and municipalities in the Philippines
         </Text>
 
-        {/* Connect the location selection input modules */}
         <LocationForm onSearch={handleSearchSubmit} />
 
-        {/* Connect presentation display layout nodes passing state parameters downstream */}
         <MediaGallery photos={photos} loading={loading} />
       </ScrollView>
     </SafeAreaView>
@@ -151,13 +138,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 10,
+    gap: 12,
   },
   flag: {
-    fontSize: 34,
+    fontSize: 44,
+  },
+  greeting: {
+    textAlign: 'center',
+    fontFamily: fontFamily.medium,
+    fontSize: 24,
+    marginTop: 6,
+    marginBottom: 6,
+    opacity: 0.85,
   },
   subtitle: {
     textAlign: 'center',
     marginBottom: 24,
+    opacity: 0.75,
   },
 });
