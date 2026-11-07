@@ -49,10 +49,10 @@ export function GlassPanel({
 // React Native has no radial gradients, so each glow is a diagonal linear gradient
 // fading from a corner toward the center (same four colors as the web body background).
 const glows = [
-  { rgb: '47,107,255', alpha: 0.35, start: { x: 0, y: 0 }, end: { x: 0.7, y: 0.7 } }, // top-left blue
-  { rgb: '252,209,22', alpha: 0.35, start: { x: 1, y: 0 }, end: { x: 0.3, y: 0.7 } }, // top-right yellow
-  { rgb: '206,17,38', alpha: 0.28, start: { x: 1, y: 1 }, end: { x: 0.3, y: 0.3 } }, // bottom-right red
-  { rgb: '56,189,248', alpha: 0.32, start: { x: 0, y: 1 }, end: { x: 0.7, y: 0.3 } }, // bottom-left sky
+  { rgb: '47,107,255', alpha: 0.6, start: { x: 0, y: 0 }, end: { x: 0.9, y: 0.9 } }, // top-left blue
+  { rgb: '252,209,22', alpha: 0.6, start: { x: 1, y: 0 }, end: { x: 0.1, y: 0.9 } }, // top-right yellow
+  { rgb: '206,17,38', alpha: 0.5, start: { x: 1, y: 1 }, end: { x: 0.1, y: 0.1 } }, // bottom-right red
+  { rgb: '56,189,248', alpha: 0.55, start: { x: 0, y: 1 }, end: { x: 0.9, y: 0.1 } }, // bottom-left sky
 ];
 
 /** Place as the FIRST child of a screen; it sits behind everything else and ignores touches. */
