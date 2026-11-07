@@ -7,15 +7,12 @@ import * as WebBrowser from 'expo-web-browser';
 import { Platform, ScrollView, Share, StyleSheet, View } from 'react-native';
 import { Button, IconButton, Text, useTheme } from 'react-native-paper';
 
-// Search params always arrive as string | string[] | undefined — normalise to a plain string
 const asString = (value?: string | string[]) => (Array.isArray(value) ? (value[0] ?? '') : (value ?? ''));
 
 export default function PhotoDetailScreen() {
   const theme = useTheme();
   const { photos } = usePhotos();
 
-  // TODO 4.4 [Route Param Extraction]: 'id' comes from the dynamic path segment (/photo/[id]),
-  // the rest from search params (?imageUrl=...&photographer=...)
   const params = useLocalSearchParams<{
     id?: string;
     imageUrl?: string;
@@ -29,22 +26,17 @@ export default function PhotoDetailScreen() {
   const photographerUrl = asString(params.photographerUrl);
   const altText = asString(params.altText);
 
-  // TODO 4.8 [Route Guard]: opened directly or via a stale link -> bounce back to the Search tab
   if (!imageUrl || !photographer) {
     return <Redirect href="/" />;
   }
 
-  // Position of the current photo inside the shared result set (for prev/next)
   const currentIndex = photos.findIndex((p) => String(p.id) === id);
 
   const goToAdjacentPhoto = (offset: number) => {
-    // TODO 4.7 [Prev/Next Viewer]
-    // a. Target photo, guarding against "not in the result set" and out-of-bounds
     if (currentIndex < 0) return;
     const target = photos[currentIndex + offset];
     if (!target) return;
 
-    // b. replace (not push) so Back closes the modal instead of stepping through every photo
     router.replace({
       pathname: '/photo/[id]',
       params: {
@@ -64,31 +56,24 @@ export default function PhotoDetailScreen() {
   };
 
   const handleShare = async () => {
-    // TODO 4.5 [Generic Share Sheet]
     const text = `${altText || 'Tourist spot'} — 📸 by ${photographer}`;
     try {
       await Share.share({
         title: `Tourist spot by ${photographer}`,
-        // Android ignores `url`, so the profile link goes inside the message there
         message: Platform.OS === 'android' && photographerUrl ? `${text}\n${photographerUrl}` : text,
         url: photographerUrl || undefined,
       });
     } catch (error) {
-      // No share support (some browsers) or the user cancelled — fail gracefully
       console.warn('Share was not completed:', error);
     }
   };
 
   return (
     <View style={[styles.screen, { backgroundColor: theme.colors.background }]}>
-      {/* Dynamic native header title from the photographer param */}
       <Stack.Screen options={{ title: photographer ? `By ${photographer}` : 'Tourist Spot' }} />
 
-      {/* Same tricolor accent bar as the header panel */}
       <TricolorBar />
 
-      {/* Hero: capped at half the screen and shown in full ("contain") so it is never cropped
-          and the info panel below always stays visible */}
       <Image
         source={{ uri: imageUrl }}
         style={styles.hero}
@@ -97,11 +82,17 @@ export default function PhotoDetailScreen() {
         accessibilityLabel={altText}
       />
 
-      {/* Info panel scrolls if the screen is too short to show everything */}
       <ScrollView
         style={[styles.body, { backgroundColor: theme.colors.surface }]}
         contentContainerStyle={styles.bodyContent}
       >
+        {/* Displays the photo's description / alt text */}
+        {altText ? (
+          <Text variant="bodyLarge" style={[styles.description, { color: theme.colors.onSurface }]}>
+            {altText}
+          </Text>
+        ) : null}
+
         <View style={styles.pagerRow}>
           <IconButton
             icon="chevron-left"
@@ -154,6 +145,11 @@ const styles = StyleSheet.create({
   bodyContent: {
     padding: 20,
     gap: 14,
+  },
+  description: {
+    fontFamily: fontFamily.medium,
+    lineHeight: 22,
+    marginBottom: 4,
   },
   pagerRow: {
     flexDirection: 'row',

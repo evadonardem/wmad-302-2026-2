@@ -74,7 +74,7 @@ function PhotoCard({ photo, index }: { photo: Photo; index: number }) {
             </Pressable>
           </Card.Content>
 
-          {/* Wider accent line featuring blue, red, and yellow colors on hover (web) or active touch (mobile) */}
+          {/* Accent line featuring blue, red, and yellow colors on hover/press */}
           {isActive && (
             <LinearGradient
               colors={[brand.blue, brand.red, brand.yellow]}
@@ -174,7 +174,7 @@ const styles = StyleSheet.create({
     fontFamily: fontFamily.semiBold,
   },
   hoverBar: {
-    height: 5, // Increased height from 3 to 5 for a more noticeable accent line
+    height: 5,
     width: '100%',
   },
   loadingState: {
