@@ -1,14 +1,15 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
-import { router, useLocalSearchParams } from 'expo-router';
 import { IconButton, Text, useTheme } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { router, useLocalSearchParams } from 'expo-router';
 import LocationForm from '@/components/LocationForm';
 import MediaGallery from '@/components/MediaGallery';
 import { searchPhotosByLocation } from '@/services/geoPhotoService';
 import { usePhotos } from '@/photos';
 import { useSearchHistory } from '@/searchHistory';
 import { useThemeMode } from '@/themeMode';
+import React from 'react';
 
 export default function SearchScreen() {
   const theme = useTheme();
@@ -16,86 +17,85 @@ export default function SearchScreen() {
   const { photos, setPhotos } = usePhotos();
   const { recordSearch } = useSearchHistory();
 
-  // TODO 3.7 [Global Search Coordination]: Replace the placeholder trackers below with real
-  // React state hooks managed by this dashboard (the photo list itself lives in the shared
-  // PhotosProvider — already wired above via usePhotos()):
-  // - 'loading': Toggles the boolean workflow flag while operations are in flight (default: false)
-  // - 'refreshing': Toggles while the pull-to-refresh gesture is running (default: false)
-  // - 'lastSearchedCity': Remembers the most recent search keyword so pull-to-refresh can re-run it (default: empty string)
-  const loading = false;
-  const refreshing = false;
-  const lastSearchedCity = '';
-
-  // City handed back from the History screen as a route param (see TODO 5.4)
+  // Handoff from the History screen arrives as ?q=<city>
   const { q } = useLocalSearchParams<{ q?: string }>();
 
-  const handleSearchSubmit = async (locationName: string) => {
-    // TODO 3.8 [Operational Async Glue Engine]:
-    // a. Shift the local 'loading' state tracker to true.
-    // b. Fire the async handler function 'searchPhotosByLocation(locationName)' inside an await statement.
-    // c. Capture the resulting photo dataset array into the shared store via setPhotos(...)
-    //    (from usePhotos()).
-    // d. Remember 'locationName' inside 'lastSearchedCity' (feeds the pull-to-refresh in TODO 4.6).
-    // e. Toggle the 'loading' tracker back to false inside a finally safety wrapper execution tier.
-    // [Your code here]
+  const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
-    // TODO 5.1 [History Recording]: Once the search above succeeds, record the searched city
-    // with recordSearch(locationName) from useSearchHistory() so the History screen can list it.
-    // [Your code here]
+  // Most recent searched city (used by pull-to-refresh) and a counter so an older,
+  // slower response can never overwrite the results of a newer search.
+  const lastCity = useRef('');
+  const latestRequest = useRef(0);
+
+  // TODO 3.7 [Search Orchestration]
+  const runSearch = async (cityName: string) => {
+    const requestId = ++latestRequest.current;
+    lastCity.current = cityName;
+    setLoading(true);
+
+    const results = await searchPhotosByLocation(cityName);
+    if (requestId !== latestRequest.current) return;
+
+    // TODO 3.8 [Share Results]: put the photos in the shared store for the detail viewer
+    setPhotos(results);
+    setLoading(false);
+
+    // TODO 5.1 [Record History]: only successful searches are recorded
+    if (results.length > 0) recordSearch(cityName);
   };
 
+  // TODO 4.6 [Pull-to-Refresh]: re-run the most recent search
   const handleRefresh = async () => {
-    // TODO 4.6 [Pull-to-Refresh Workflow]: Implement the RefreshControl gesture handler below:
-    // a. Flip the 'refreshing' tracker to true.
-    // b. If 'lastSearchedCity' holds a value, re-run 'searchPhotosByLocation(lastSearchedCity)'
-    //    and swap the shared photo store with the fresh results via setPhotos(...).
-    // c. Flip 'refreshing' back to false inside a finally safety wrapper.
-    // [Your code here]
+    if (!lastCity.current) return;
+    setRefreshing(true);
+    const requestId = ++latestRequest.current;
+
+    const results = await searchPhotosByLocation(lastCity.current);
+    if (requestId === latestRequest.current) setPhotos(results);
+
+    setRefreshing(false);
   };
 
+  // TODO 5.4 [Param Handoff]: a city chosen on the History screen re-runs the search
   useEffect(() => {
-    // TODO 5.4 [Param-Driven Re-Search]: When the 'q' search param arrives or changes (the
-    // History screen navigates back here with it), and it holds a non-empty value, run the
-    // same search flow as TODO 3.8 with that city (locationName = q).
-    // [Your code here]
+    if (!q) return;
+    runSearch(q);
+    // Clear the param so picking the same city again still triggers this effect
+    router.setParams({ q: undefined });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [q]);
 
   return (
-    <SafeAreaView style={[styles.screen, { backgroundColor: theme.colors.background }]} edges={['top', 'left', 'right']}>
-      <View style={styles.header}>
-        <IconButton
-          icon="history"
-          iconColor={theme.colors.onBackground}
-          size={22}
-          onPress={() => router.push('/history')}
-          accessibilityLabel="Recent searches"
-        />
-        <IconButton
-          icon={isDarkMode ? 'weather-sunny' : 'weather-night'}
-          iconColor={theme.colors.onBackground}
-          size={24}
-          onPress={() => setIsDarkMode(!isDarkMode)}
-          accessibilityLabel="Toggle dark mode"
-        />
-      </View>
-
+    <SafeAreaView
+      edges={['left', 'right', 'bottom']}
+      style={[styles.screen, { backgroundColor: theme.colors.background }]}
+    >
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={theme.colors.primary} />
-        }
+        contentContainerStyle={styles.content}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
       >
+        <View style={styles.toolbar}>
+          <IconButton
+            icon="history"
+            accessibilityLabel="Recent searches"
+            onPress={() => router.push('/history')}
+          />
+          <IconButton
+            icon={isDarkMode ? 'white-balance-sunny' : 'moon-waning-crescent'}
+            accessibilityLabel="Toggle dark mode"
+            onPress={() => setIsDarkMode((prev) => !prev)}
+          />
+        </View>
+
         <Text variant="headlineMedium" style={[styles.title, { color: theme.colors.onBackground }]}>
           🇵🇭 Lakbay PH
         </Text>
-        <Text variant="bodyLarge" style={[styles.subtitle, { color: theme.colors.onSurfaceVariant }]}>
+        <Text variant="bodyMedium" style={[styles.subtitle, { color: theme.colors.onSurfaceVariant }]}>
           Explore tourist spots across regions, cities, and municipalities in the Philippines
         </Text>
 
-        {/* Connect the location selection input modules */}
-        <LocationForm onSearch={handleSearchSubmit} />
-
-        {/* Connect presentation display layout nodes passing state parameters downstream */}
+        <LocationForm onSearch={runSearch} />
         <MediaGallery photos={photos} loading={loading} />
       </ScrollView>
     </SafeAreaView>
@@ -105,19 +105,16 @@ export default function SearchScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    width: '100%',
   },
-  header: {
+  content: {
+    width: '100%',
+    maxWidth: 1100,
+    alignSelf: 'center',
+    padding: 20,
+  },
+  toolbar: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
-    gap: 4,
-  },
-  scrollContent: {
-    width: '100%',
-    maxWidth: 960,
-    alignSelf: 'center',
-    paddingHorizontal: 16,
-    paddingBottom: 24,
   },
   title: {
     fontWeight: 'bold',
@@ -125,6 +122,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     textAlign: 'center',
-    marginBottom: 24,
+    marginTop: 4,
+    marginBottom: 20,
   },
 });
