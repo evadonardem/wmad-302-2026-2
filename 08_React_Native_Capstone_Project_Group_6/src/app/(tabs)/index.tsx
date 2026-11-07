@@ -469,6 +469,21 @@ export default function SearchScreen() {
                 <Text variant="labelLarge" style={{ color: theme.colors.onSurfaceVariant, flex: 1 }} numberOfLines={1}>
                   {toolbarText}
                 </Text>
+
+                {/* History button */}
+                <TouchableRipple
+                  onPress={() => router.push('/history')}
+                  borderless
+                  accessibilityRole="button"
+                  accessibilityLabel="Recent searches"
+                  style={[styles.favToggle, { backgroundColor: theme.colors.secondaryContainer }]}
+                >
+                  <View style={styles.btnInner}>
+                    <MaterialCommunityIcons name="history" size={16} color={theme.colors.onSecondaryContainer} />
+                    <Text style={{ color: theme.colors.onSecondaryContainer, fontWeight: '700' }}>History</Text>
+                  </View>
+                </TouchableRipple>
+
                 <TouchableRipple
                   onPress={() => setShowFavs((v) => !v)}
                   borderless
