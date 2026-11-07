@@ -1,77 +1,112 @@
 import { Pressable, StyleSheet, View } from 'react-native';
-import { ActivityIndicator, Card, Text } from 'react-native-paper';
+import { ActivityIndicator, Card, Text, useTheme } from 'react-native-paper';
 import { router } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import type { Photo } from '@/services/geoPhotoService';
 
-export default function MediaGallery({ photos, loading }: { photos: Photo[]; loading: boolean }) {
+export default function MediaGallery({
+  photos,
+  loading,
+  locationName,
+  error,
+}: {
+  photos: Photo[];
+  loading: boolean;
+  locationName?: string;
+  error?: string;
+}) {
+  const theme = useTheme();
+
   if (loading) {
     return (
       <View style={styles.stateContainer}>
         <ActivityIndicator animating size="large" />
-        <Text variant="bodyMedium" style={styles.stateText}>
-          Loading tourist spots...
+        <Text variant="bodyMedium" style={[styles.stateText, { color: theme.colors.onSurfaceVariant }]}>
+          Searching for places in {locationName || 'your selected area'}...
         </Text>
       </View>
     );
   }
 
-  if (!photos || photos.length === 0) {
+  if (error || photos.length === 0) {
     return (
       <View style={styles.stateContainer}>
-        <Text variant="bodyMedium" style={styles.stateText}>
-          No tourist spots found for this area yet.
+        <Text variant="titleMedium" style={[styles.stateTitle, { color: theme.colors.onSurface }]}>
+          {error ? 'Search could not be completed' : 'No tourist spots found yet'}
+        </Text>
+        <Text
+          accessibilityRole={error ? 'alert' : 'text'}
+          variant="bodyMedium"
+          style={[styles.stateText, { color: theme.colors.onSurfaceVariant }]}
+        >
+          {error ??
+            (locationName
+              ? `We couldn’t find matching photos for ${locationName}. Try another city or municipality.`
+              : 'No tourist spots found for this area yet.')}
         </Text>
       </View>
     );
   }
 
   return (
-    <View style={styles.grid}>
-      {photos.map((photo) => (
-        <View key={String(photo.id)} style={styles.gridItem}>
-          <Pressable
-            onPress={() =>
-              router.push({
-                pathname: '/photo/[id]',
-                params: {
-                  id: String(photo.id),
-                  imageUrl: photo.imageUrl,
-                  photographer: photo.photographer,
-                  photographerUrl: photo.photographerUrl,
-                  altText: photo.altText,
-                },
-              })
-            }
-          >
-            <Card style={styles.card} elevation={2}>
-              <Card.Cover
-                source={{ uri: photo.imageUrl }}
-                accessibilityLabel={photo.altText}
-              />
-
-              <Card.Content style={styles.cardContent}>
-                <Text variant="labelSmall" style={styles.creditLabel}>
-                  📸 Captured by:
-                </Text>
-                <Pressable
-                  onPress={() => WebBrowser.openBrowserAsync(photo.photographerUrl)}
-                  style={styles.photographerLink}
-                >
-                  <Text variant="bodyMedium" style={styles.photographerText}>
-                    {photo.photographer}
+    <View>
+      <Text variant="bodyMedium" style={[styles.resultCount, { color: theme.colors.onSurfaceVariant }]}>
+        {photos.length} photo{photos.length === 1 ? '' : 's'} found for {locationName || 'this location'}
+      </Text>
+      <View style={styles.grid}>
+        {photos.map((photo) => (
+          <View key={String(photo.id)} style={styles.gridItem}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`View details for ${photo.altText || 'photo'}`}
+              onPress={() =>
+                router.push({
+                  pathname: '/photo/[id]',
+                  params: {
+                    id: String(photo.id),
+                    imageUrl: photo.imageUrl,
+                    photographer: photo.photographer,
+                    photographerUrl: photo.photographerUrl,
+                    altText: photo.altText,
+                    title: photo.altText || 'Photo details',
+                    subtitle: locationName ?? '',
+                  },
+                })
+              }
+            >
+              <Card style={styles.card} elevation={2}>
+                <Card.Cover source={{ uri: photo.imageUrl }} accessibilityLabel={photo.altText} />
+                <Card.Content style={styles.cardContent}>
+                  <Text variant="labelSmall" style={{ color: theme.colors.onSurfaceVariant }}>
+                    📸 Captured by:
                   </Text>
-                </Pressable>
-              </Card.Content>
-            </Card>
-          </Pressable>
-        </View>
-      ))}
+                  <Pressable
+                    accessibilityRole="link"
+                    onPress={(event) => {
+                      event.stopPropagation();
+                      void WebBrowser.openBrowserAsync(photo.photographerUrl);
+                    }}
+                    style={styles.photographerLink}
+                  >
+                    <Text variant="bodyMedium" style={[styles.photographerText, { color: theme.colors.primary }]}>
+                      {photo.photographer}
+                    </Text>
+                  </Pressable>
+                </Card.Content>
+              </Card>
+            </Pressable>
+          </View>
+        ))}
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  resultCount: {
+    marginBottom: 12,
+    fontWeight: '600',
+  },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -90,9 +125,6 @@ const styles = StyleSheet.create({
   cardContent: {
     paddingBottom: 12,
   },
-  creditLabel: {
-    opacity: 0.7,
-  },
   photographerLink: {
     marginTop: 4,
   },
@@ -102,8 +134,13 @@ const styles = StyleSheet.create({
   stateContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 32,
-    gap: 12,
+    paddingVertical: 36,
+    paddingHorizontal: 20,
+    gap: 10,
+  },
+  stateTitle: {
+    textAlign: 'center',
+    fontWeight: '700',
   },
   stateText: {
     textAlign: 'center',

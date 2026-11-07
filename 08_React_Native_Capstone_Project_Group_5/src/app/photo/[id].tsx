@@ -8,19 +8,24 @@ import { usePhotos } from '@/photos';
 export default function PhotoDetailScreen() {
   const theme = useTheme();
   const { photos } = usePhotos();
-  const { id, imageUrl, photographer, photographerUrl, altText } = useLocalSearchParams<{
-    id?: string;
-    imageUrl?: string;
-    photographer?: string;
-    photographerUrl?: string;
-    altText?: string;
-  }>();
+  const { id, imageUrl, photographer, photographerUrl, altText, title, subtitle } =
+    useLocalSearchParams<{
+      id?: string;
+      imageUrl?: string;
+      photographer?: string;
+      photographerUrl?: string;
+      altText?: string;
+      title?: string;
+      subtitle?: string;
+    }>();
 
   const routeId = Array.isArray(id) ? id[0] : id ?? '';
   const routeImageUrl = Array.isArray(imageUrl) ? imageUrl[0] : imageUrl ?? '';
   const routePhotographer = Array.isArray(photographer) ? photographer[0] : photographer ?? '';
   const routePhotographerUrl = Array.isArray(photographerUrl) ? photographerUrl[0] : photographerUrl ?? '';
   const routeAltText = Array.isArray(altText) ? altText[0] : altText ?? '';
+  const routeTitle = Array.isArray(title) ? title[0] : title ?? '';
+  const routeSubtitle = Array.isArray(subtitle) ? subtitle[0] : subtitle ?? '';
 
   if (!routeImageUrl || !routePhotographer) {
     return <Redirect href="/" />;
@@ -42,6 +47,8 @@ export default function PhotoDetailScreen() {
         photographer: target.photographer,
         photographerUrl: target.photographerUrl,
         altText: target.altText,
+        title: routeTitle,
+        subtitle: routeSubtitle,
       },
     });
   };
@@ -66,7 +73,11 @@ export default function PhotoDetailScreen() {
 
   return (
     <View style={[styles.screen, { backgroundColor: theme.colors.background }]}>
-      <Stack.Screen options={{ title: routePhotographer ? `By ${routePhotographer}` : 'Tourist Spot' }} />
+      <Stack.Screen
+        options={{
+          title: routeTitle || (routePhotographer ? `By ${routePhotographer}` : 'Tourist Spot'),
+        }}
+      />
 
       <Image
         source={{ uri: routeImageUrl }}
@@ -77,6 +88,18 @@ export default function PhotoDetailScreen() {
       />
 
       <View style={[styles.body, { backgroundColor: theme.colors.surface }]}>
+        {routeTitle ? (
+          <View>
+            <Text variant="titleLarge" style={[styles.photoTitle, { color: theme.colors.onSurface }]}>
+              {routeTitle}
+            </Text>
+            {routeSubtitle ? (
+              <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>
+                {routeSubtitle}
+              </Text>
+            ) : null}
+          </View>
+        ) : null}
         <View style={styles.pagerRow}>
           <IconButton
             icon="chevron-left"
@@ -124,6 +147,9 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     marginTop: -20,
+  },
+  photoTitle: {
+    fontWeight: '700',
   },
   pagerRow: {
     flexDirection: 'row',

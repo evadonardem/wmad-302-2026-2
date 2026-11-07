@@ -9,8 +9,20 @@ import { ThemeModeProvider } from '@/themeMode';
 export default function RootLayout() {
   const [isDarkMode, setIsDarkMode] = useState(false);
 
-  // Dynamic Paper theme configuration (MD3 light/dark palettes, app-wide)
-  const theme = isDarkMode ? MD3DarkTheme : MD3LightTheme;
+  const baseTheme = isDarkMode ? MD3DarkTheme : MD3LightTheme;
+  const theme = {
+    ...baseTheme,
+    colors: {
+      ...baseTheme.colors,
+      primary: isDarkMode ? '#9ccbb3' : '#28675a',
+      secondary: isDarkMode ? '#d29b79' : '#a95f43',
+      background: isDarkMode ? '#1a120d' : '#f7e7d4',
+      surface: isDarkMode ? '#2f231d' : '#f3d7b6',
+      onBackground: isDarkMode ? '#f7efe8' : '#2d1f1a',
+      onSurface: isDarkMode ? '#f7efe8' : '#2d1f1a',
+      onSurfaceVariant: isDarkMode ? '#d7c0ab' : '#665348',
+    },
+  };
 
   return (
     <ThemeModeProvider value={{ isDarkMode, setIsDarkMode }}>

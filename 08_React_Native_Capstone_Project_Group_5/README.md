@@ -3,13 +3,13 @@
 ## Objective
 Collaborate in teams of three to build a theme-responsive **React Native (Expo)** application that maps geographical data of the Philippines and searches for stunning location visuals. You will combine the official **Philippine Standard Geographic Code (PSGC) API** with the **Pexels Image API**, and present everything through **React Native Paper** Material Design 3 components.
 
-The user journey follows a strict chain sequence: **Select Region** → **Select City/Municipality** within that region → Click **Search** to display real-time tourist attraction photos fetched directly from Pexels — optionally narrowing regions first with an **island-group filter**, and revisiting past queries from a **Recent Searches** screen. The app is structured around **Expo Router**: a bottom tab navigator (Search / About) hosts the main screens, each photo card opens a **modal detail route** on a **dynamic path segment** (`/photo/[id]`) carrying its data as **route params**, with a **prev/next viewer**, a **redirect guard**, and **pull-to-refresh** on the results list. The same codebase runs on Android, iOS, and the web.
+The user journey follows a chained sequence: **Select Region** → **Select Province** when available → **Select City/Municipality** → **Search** to display tourist attraction photos from Pexels. Users can narrow regions with an **island-group filter**, explore **featured destinations**, and revisit past queries from **Recent Searches**. The app is structured around **Expo Router**: a bottom tab navigator (Search / About) hosts the main screens, each photo card opens a **modal detail route** on a **dynamic path segment** (`/photo/[id]`) carrying its data as **route params**, with a **prev/next viewer**, a **redirect guard**, and **pull-to-refresh** on search results. The same codebase runs on Android, iOS, and the web.
 
 ---
 
 ## Technical Specifications & Architecture Flow
 1. **Dynamic Regional Fetching:** On initial mount, load all administrative regions of the Philippines via the PSGC API endpoints (`/regions/`).
-2. **Dependent Chained Pickers:** When a region is chosen, immediately query that region's precise sub-municipalities and cities (`/regions/{regionCode}/cities-municipalities/`) to populate the nested picker dynamically. React Native has no built-in `<Select>` — you will build chained pickers from Paper `<Menu>` components.
+2. **Dependent Chained Pickers:** When a region is chosen, query its provinces (`/regions/{regionCode}/provinces/`) and then the selected province's cities and municipalities (`/provinces/{provinceCode}/cities-municipalities/`). For regions without provinces, query their cities and municipalities directly (`/regions/{regionCode}/cities-municipalities/`). React Native has no built-in `<Select>` — build the chained pickers from Paper `<Menu>` components.
 3. **Pexels Image Resolution:** Use the localized text descriptor of the selected municipality to build a focused keyword string (e.g., `"Vigan City tourist spot"`) and fetch high-definition image streams via the Pexels search route.
 4. **Environment Variables:** Application access keys must be extracted safely from localized environment files using Expo's standard `EXPO_PUBLIC_` loading mechanics.
 5. **Bottom-Tab Navigation:** Register a two-tab navigator (Search, About) with icons via file-based routing.
@@ -45,8 +45,8 @@ To protect private access tokens from leaking into public code history repositor
 ### **Developer 2: Cascading Form & State Manager**
 * **Core File:** `src/components/LocationForm.tsx`
 * **Deliverables:**
-  * Coordinate the interdependent layout state tracking variables (`regions`, `cities`, `selectedRegion`, `selectedCityName`) plus the island-group filter.
-  * Program reactive side-effect hooks (`useEffect`) that clear down-tier selections and trigger new requests to Developer 1's service layer automatically whenever a user shifts the parent region picker.
+  * Coordinate the interdependent layout state tracking variables (`regions`, `provinces`, `cities`, `selectedRegion`, `selectedProvince`, `selectedCityName`) plus the island-group filter.
+  * Program reactive side-effect hooks (`useEffect`) that clear down-tier selections and trigger new requests to Developer 1's service layer automatically whenever a user shifts a parent picker.
   * Construct the chained pickers from React Native Paper components (`<Menu>` anchored to `<Button>` triggers with `<Menu.Item>` options) and the `<Chip>` filter row above them.
 
 ### **Developer 3: Dashboard Layout & Media Gallery Designer**

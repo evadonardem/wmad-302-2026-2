@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
 
 // Pre-built search history store (not part of the assignment).
 // The Search dashboard records each successful search (TODO 5.1) and the History screen
@@ -19,16 +19,18 @@ const SearchHistoryContext = createContext<SearchHistoryValue>({
 export function SearchHistoryProvider({ children }: { children: ReactNode }) {
   const [entries, setEntries] = useState<string[]>([]);
 
+  const recordSearch = useCallback((city: string) => {
+    const trimmed = city.trim();
+    if (!trimmed) return;
+    setEntries((prev) => [
+      trimmed,
+      ...prev.filter((entry) => entry.toLowerCase() !== trimmed.toLowerCase()),
+    ].slice(0, MAX_ENTRIES));
+  }, []);
+
   const value = useMemo(
-    () => ({
-      entries,
-      recordSearch: (city: string) => {
-        const trimmed = city.trim();
-        if (!trimmed) return;
-        setEntries((prev) => [trimmed, ...prev.filter((e) => e.toLowerCase() !== trimmed.toLowerCase())].slice(0, MAX_ENTRIES));
-      },
-    }),
-    [entries],
+    () => ({ entries, recordSearch }),
+    [entries, recordSearch],
   );
 
   return <SearchHistoryContext.Provider value={value}>{children}</SearchHistoryContext.Provider>;
