@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { StyleSheet } from 'react-native';
-import { Card, Text, useTheme } from 'react-native-paper';
+import { Linking, StyleSheet } from 'react-native';
+import { Button, Card, Text, useTheme } from 'react-native-paper';
 import { findFeaturedByCityName } from '@/data/featuredPlaces';
+import { useLanguage } from '@/i18n';
 import { getProvinceName, type City } from '@/services/geoPhotoService';
 
 // Shown once when an area is chosen in the form (not on every photo).
@@ -9,6 +10,7 @@ import { getProvinceName, type City } from '@/services/geoPhotoService';
 // our featured places, a short description from the Department of Tourism based list is added.
 export default function AreaDescription({ city, regionName }: { city: City; regionName: string }) {
   const theme = useTheme();
+  const { t } = useLanguage();
   const [province, setProvince] = useState({ code: '', name: '' });
 
   useEffect(() => {
@@ -23,7 +25,7 @@ export default function AreaDescription({ city, regionName }: { city: City; regi
   }, [city.provinceCode]);
 
   const shortName = city.name.replace(/^(City of|Municipality of)\s+/i, '');
-  const kind = city.isCity ? 'city' : 'municipality';
+  const kind = city.isCity ? t('kindCity') : t('kindMunicipality');
   const islandGroup = city.islandGroupCode
     ? city.islandGroupCode.charAt(0).toUpperCase() + city.islandGroupCode.slice(1)
     : '';
@@ -37,11 +39,11 @@ export default function AreaDescription({ city, regionName }: { city: City; regi
     <Card mode="outlined" style={styles.card}>
       <Card.Content style={styles.content}>
         <Text variant="titleMedium" style={{ color: theme.colors.onSurface }}>
-          About {shortName}
+          {t('aboutArea', { name: shortName })}
         </Text>
         <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>
-          {shortName} is a {kind} in {where}.
-          {city.isCapital ? ' It is the provincial capital.' : ''}
+          {t('areaIs', { name: shortName, kind, where })}
+          {city.isCapital ? t('capitalNote') : ''}
         </Text>
         {featured && (
           <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>
@@ -49,9 +51,24 @@ export default function AreaDescription({ city, regionName }: { city: City; regi
           </Text>
         )}
         <Text variant="labelSmall" style={{ color: theme.colors.outline }}>
-          Location facts: Philippine Standard Geographic Code (PSGC)
-          {featured ? '. Highlights: Department of Tourism news and travel guides.' : ''}
+          {t('factsSource')}
+          {featured ? t('highlightsSource') : ''}
         </Text>
+        {/* Opens the place in the phone's map app (or Google Maps in the browser) */}
+        <Button
+          mode="outlined"
+          icon="map-marker"
+          style={styles.mapsButton}
+          onPress={() =>
+            Linking.openURL(
+              `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                [shortName, provinceName, 'Philippines'].filter(Boolean).join(', '),
+              )}`,
+            )
+          }
+        >
+          {t('openInMaps')}
+        </Button>
       </Card.Content>
     </Card>
   );
@@ -63,5 +80,9 @@ const styles = StyleSheet.create({
   },
   content: {
     gap: 6,
+  },
+  mapsButton: {
+    alignSelf: 'flex-start',
+    marginTop: 6,
   },
 });

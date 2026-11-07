@@ -1,21 +1,28 @@
 import { Pressable, StyleSheet, View } from 'react-native';
-import { Card, IconButton, Text, useTheme } from 'react-native-paper';
+import { Button, Card, IconButton, Text, useTheme } from 'react-native-paper';
 import { router } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import type { Photo } from '@/services/geoPhotoService';
 import { useFavorites } from '@/favorites';
+import { useLanguage } from '@/i18n';
 
 export default function MediaGallery({
   photos,
   loading,
   emptyMessage,
+  failed,
+  onRetry,
 }: {
   photos: Photo[];
   loading: boolean;
   // Optional text for the empty state (for example "No beach photos were found for Baguio.")
   emptyMessage?: string;
+  // True when the search itself failed (no connection...): shows a Try again button
+  failed?: boolean;
+  onRetry?: () => void;
 }) {
   const theme = useTheme();
+  const { t } = useLanguage();
   const { isFavorite, toggleFavorite } = useFavorites();
 
   // TODO 3.1 [Loading Skeletal Feedbacks]: If the 'loading' prop evaluates true, return a visual
@@ -42,8 +49,13 @@ export default function MediaGallery({
     return (
       <View style={styles.centered}>
         <Text variant="bodyLarge" style={styles.emptyText}>
-          {emptyMessage ?? 'No tourist spots found for this area yet.'}
+          {failed ? t('loadError') : (emptyMessage ?? 'No tourist spots found for this area yet.')}
         </Text>
+        {failed && onRetry && (
+          <Button mode="contained" icon="refresh" onPress={onRetry} style={styles.retryButton}>
+            {t('tryAgain')}
+          </Button>
+        )}
       </View>
     );
   }
@@ -97,7 +109,7 @@ export default function MediaGallery({
 
               <Card.Content style={styles.cardContent}>
                 <Text variant="labelSmall" style={styles.creditLabel}>
-                  📸 Captured by:
+                  {t('capturedByColon')}
                 </Text>
                 {/* TODO 3.6 [Attribution Links]: Render the photographer credit as a Pressable Text.
                     Display 'photo.photographer' and, on press, open 'photo.photographerUrl' in the
@@ -158,6 +170,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 32,
+  },
+  retryButton: {
+    marginTop: 16,
   },
   emptyText: {
     textAlign: 'center',

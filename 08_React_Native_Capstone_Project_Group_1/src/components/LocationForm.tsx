@@ -7,6 +7,7 @@ import {
   type City,
   type Region,
 } from '@/services/geoPhotoService';
+import { useLanguage } from '@/i18n';
 
 type IslandFilter = 'all' | 'luzon' | 'visayas' | 'mindanao';
 
@@ -25,6 +26,8 @@ export default function LocationForm({
   // Optional: tells the dashboard which area is chosen (null when it is cleared) so it can show the description
   onCityChange?: (city: City | null, regionName: string) => void;
 }) {
+  const { t } = useLanguage();
+
   // TODO 2.1 [State Trackers]: Replace the four placeholder trackers below with real React state hooks:
   // - 'regions': Stores the array of all regions (default: empty array)
   // - 'cities': Stores the array of filtered sub-municipalities (default: empty array)
@@ -105,8 +108,8 @@ export default function LocationForm({
   };
 
   // Display labels derived from the current selections (scaffolded)
-  const selectedRegionLabel = regions.find((r) => r.code === selectedRegion)?.name ?? 'Select Region';
-  const selectedCityLabel = selectedCityName || 'Select City / Municipality';
+  const selectedRegionLabel = regions.find((r) => r.code === selectedRegion)?.name ?? t('selectRegion');
+  const selectedCityLabel = selectedCityName || t('selectCity');
 
   return (
     <View style={styles.form}>
@@ -127,7 +130,7 @@ export default function LocationForm({
             showSelectedOverlay
             onPress={() => handleFilterChange(option.value)}
           >
-            {option.label}
+            {option.value === 'all' ? t('islandAll') : option.label}
           </Chip>
         ))}
       </View>
@@ -209,7 +212,7 @@ export default function LocationForm({
           style={styles.searchButton}
           onPress={handleSubmit}
         >
-          Search
+          {t('searchBtn')}
         </Button>
       </View>
     </View>

@@ -1,11 +1,14 @@
-import { useState } from 'react';
+import { useState, type SetStateAction } from 'react';
+import { useColorScheme } from 'react-native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { MD3DarkTheme, MD3LightTheme, PaperProvider } from 'react-native-paper';
 import { FavoritesProvider } from '@/favorites';
+import { LanguageProvider, useLanguage } from '@/i18n';
 import { PhotosProvider } from '@/photos';
 import { SearchHistoryProvider } from '@/searchHistory';
 import { ThemeModeProvider } from '@/themeMode';
+import { TripProvider } from '@/tripPlanner';
 
 // Halloween Philippines palettes: the standard MD3 themes recolored.
 // Night = deep violet-black with pumpkin orange and candle yellow (the sun on the Philippine flag).
@@ -72,36 +75,56 @@ const HalloweenDuskTheme = {
   },
 };
 
+// The screens of the app. A separate component so the screen titles can follow the chosen language.
+function AppStack() {
+  const { t } = useLanguage();
+  return (
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="(tabs)" />
+      {/* The photo detail route opens as a modal with the native header providing Back */}
+      <Stack.Screen
+        name="photo/[id]"
+        options={{ headerShown: true, presentation: 'modal', title: t('spotTitle') }}
+      />
+      {/* Recent searches screen pushes over the tabs with its own native header */}
+      <Stack.Screen name="history" options={{ headerShown: true, title: t('historyTitle') }} />
+      {/* Saved photos screen, opened from the heart button on the Search tab */}
+      <Stack.Screen name="favorites" options={{ headerShown: true, title: t('favoritesTitle') }} />
+      {/* My Trip, Festivals and Folklore screens, opened from buttons on the Search tab */}
+      <Stack.Screen name="trip" options={{ headerShown: true, title: t('tripTitle') }} />
+      <Stack.Screen name="festivals" options={{ headerShown: true, title: t('festivalsTitle') }} />
+      <Stack.Screen name="folklore" options={{ headerShown: true, title: t('folkloreTitle') }} />
+    </Stack>
+  );
+}
+
 export default function RootLayout() {
-  // Starts on the dark Halloween night look; the sun/moon button switches to the cream dusk look.
-  const [isDarkMode, setIsDarkMode] = useState(true);
+  // Follows the phone's light/dark setting. Once the sun/moon button is pressed, that choice is used instead.
+  const systemScheme = useColorScheme();
+  const [manualChoice, setManualChoice] = useState<boolean | null>(null);
+  const isDarkMode = manualChoice ?? systemScheme !== 'light';
+  const setIsDarkMode = (value: SetStateAction<boolean>) =>
+    setManualChoice(typeof value === 'function' ? value(isDarkMode) : value);
 
   // Dynamic Paper theme configuration (MD3 light/dark palettes, app-wide)
   const theme = isDarkMode ? HalloweenNightTheme : HalloweenDuskTheme;
 
   return (
     <ThemeModeProvider value={{ isDarkMode, setIsDarkMode }}>
-      <PhotosProvider>
-        <SearchHistoryProvider>
-          <FavoritesProvider>
-            <PaperProvider theme={theme}>
-              <StatusBar style={isDarkMode ? 'light' : 'dark'} />
-              <Stack screenOptions={{ headerShown: false }}>
-                <Stack.Screen name="(tabs)" />
-                {/* The photo detail route opens as a modal with the native header providing Back */}
-                <Stack.Screen
-                  name="photo/[id]"
-                  options={{ headerShown: true, presentation: 'modal', title: 'Tourist Spot' }}
-                />
-                {/* Recent searches screen pushes over the tabs with its own native header */}
-                <Stack.Screen name="history" options={{ headerShown: true, title: 'Recent Searches' }} />
-                {/* Saved photos screen, opened from the heart button on the Search tab */}
-                <Stack.Screen name="favorites" options={{ headerShown: true, title: 'Favorites' }} />
-              </Stack>
-            </PaperProvider>
-          </FavoritesProvider>
-        </SearchHistoryProvider>
-      </PhotosProvider>
+      <LanguageProvider>
+        <PhotosProvider>
+          <SearchHistoryProvider>
+            <FavoritesProvider>
+              <TripProvider>
+                <PaperProvider theme={theme}>
+                  <StatusBar style={isDarkMode ? 'light' : 'dark'} />
+                  <AppStack />
+                </PaperProvider>
+              </TripProvider>
+            </FavoritesProvider>
+          </SearchHistoryProvider>
+        </PhotosProvider>
+      </LanguageProvider>
     </ThemeModeProvider>
   );
 }

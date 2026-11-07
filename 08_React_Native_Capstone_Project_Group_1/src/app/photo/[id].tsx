@@ -1,35 +1,24 @@
 import { useState } from 'react';
 import { Platform, Pressable, Share, StyleSheet, View } from 'react-native';
-import { Image } from 'expo-image';
 import { Redirect, Stack, router, useLocalSearchParams } from 'expo-router';
 import { Button, IconButton, Menu, Snackbar, Text, useTheme } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as WebBrowser from 'expo-web-browser';
+import ZoomableImage from '@/components/ZoomableImage';
+import { useLanguage } from '@/i18n';
 import { downloadPhoto, type DownloadResult } from '@/services/downloadService';
 import type { Photo } from '@/services/geoPhotoService';
 import { useFavorites } from '@/favorites';
 import { usePhotos } from '@/photos';
 
 // Download sizes (keys match the sizes Pexels provides for every photo)
-const SIZE_OPTIONS = [
-  { key: 'small', label: 'Small' },
-  { key: 'medium', label: 'Medium' },
-  { key: 'large', label: 'Large' },
-  { key: 'large2x', label: 'HD' },
-  { key: 'original', label: 'Original' },
-] as const;
-type SizeKey = (typeof SIZE_OPTIONS)[number]['key'];
-
-const DOWNLOAD_MESSAGES: Record<DownloadResult, string> = {
-  saved: Platform.OS === 'web' ? 'Download started.' : 'Saved to your gallery.',
-  opened: 'Opened the image so you can save it from there.',
-  denied: 'Allow photo access to save images to your gallery.',
-  failed: 'Could not download this photo. Please try again.',
-};
+const SIZE_KEYS = ['small', 'medium', 'large', 'large2x', 'original'] as const;
+type SizeKey = (typeof SIZE_KEYS)[number];
 
 export default function PhotoDetailScreen() {
   const theme = useTheme();
   const insets = useSafeAreaInsets(); // keeps the buttons above the phone's gesture bar
+  const { t } = useLanguage();
   const { photos } = usePhotos();
   const { isFavorite, toggleFavorite } = useFavorites();
 
@@ -138,8 +127,14 @@ export default function PhotoDetailScreen() {
     setDownloading(true);
     try {
       const url = currentPhoto.sizes?.[size] ?? imageUrl;
-      const result = await downloadPhoto(url, id, size);
-      setMessage(DOWNLOAD_MESSAGES[result]);
+      const result: DownloadResult = await downloadPhoto(url, id, size);
+      const messageKey = {
+        saved: Platform.OS === 'web' ? 'dl_started' : 'dl_saved',
+        opened: 'dl_opened',
+        denied: 'dl_denied',
+        failed: 'dl_failed',
+      } as const;
+      setMessage(t(messageKey[result]));
     } finally {
       setDownloading(false);
     }
@@ -150,22 +145,26 @@ export default function PhotoDetailScreen() {
   return (
     <View style={[styles.screen, { backgroundColor: theme.colors.background }]}>
       {/* Dynamic native header title — takes effect once TODO 4.4 wires the photographer param */}
-      <Stack.Screen options={{ title: photographer ? `By ${photographer}` : 'Tourist Spot' }} />
+      <Stack.Screen
+        options={{ title: photographer ? t('photoTitle', { name: photographer }) : t('spotTitle') }}
+      />
 
-      {/* The photo takes all the free space and is shown whole (not cropped), so nothing scrolls. */}
-      <View style={styles.imageArea}>
-        <Image
-          source={{ uri: imageUrl }}
-          placeholder={currentPhoto.thumbUrl ? { uri: currentPhoto.thumbUrl } : undefined}
-          cachePolicy="memory-disk"
-          style={styles.image}
-          contentFit="contain"
-          transition={200}
-          accessibilityLabel={altText}
-        />
-      </View>
+      {/* The photo takes all the free space and is shown whole (not cropped), so nothing scrolls.
+          Pinch to zoom, double-tap to zoom, and swipe sideways to change the photo. */}
+      <ZoomableImage
+        key={imageUrl}
+        uri={imageUrl}
+        placeholderUri={currentPhoto.thumbUrl}
+        altText={altText}
+        onSwipe={(direction) => goToAdjacentPhoto(direction)}
+      />
 
-      <View style={[styles.panel, { backgroundColor: theme.colors.surface, paddingBottom: 12 + insets.bottom }]}>
+      <View
+        style={[
+          styles.panel,
+          { backgroundColor: theme.colors.surface, paddingBottom: 12 + insets.bottom },
+        ]}
+      >
         {/* Who took the photo, with prev/next */}
         <View style={styles.pagerRow}>
           <IconButton
@@ -177,7 +176,7 @@ export default function PhotoDetailScreen() {
           />
           <Pressable style={styles.photographerBox} onPress={handleOpenPhotographer} disabled={!photographerUrl}>
             <Text variant="labelSmall" style={{ color: theme.colors.onSurfaceVariant }}>
-              📸 Captured by
+              📸 {t('capturedBy')}
             </Text>
             <Text
               variant="titleMedium"
@@ -210,15 +209,15 @@ export default function PhotoDetailScreen() {
                   disabled={downloading}
                   onPress={() => setSizeMenuVisible(true)}
                 >
-                  Download
+                  {t('download')}
                 </Button>
               }
             >
-              {SIZE_OPTIONS.map((option) => (
+              {SIZE_KEYS.map((key) => (
                 <Menu.Item
-                  key={option.key}
-                  title={option.label}
-                  onPress={() => handleDownload(option.key)}
+                  key={key}
+                  title={t(`size_${key}`)}
+                  onPress={() => handleDownload(key)}
                 />
               ))}
             </Menu>
@@ -230,12 +229,12 @@ export default function PhotoDetailScreen() {
               textColor="#e53935"
               onPress={() => toggleFavorite(currentPhoto)}
             >
-              {favorite ? 'Saved' : 'Favorite'}
+              {favorite ? t('saved') : t('favorite')}
             </Button>
           </View>
           <View style={styles.action}>
             <Button mode="text" icon="share-variant" onPress={handleShare}>
-              Share
+              {t('share')}
             </Button>
           </View>
         </View>
@@ -252,18 +251,9 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
   },
-  imageArea: {
-    flex: 1,
-    backgroundColor: '#000000',
-  },
-  image: {
-    flex: 1,
-    width: '100%',
-  },
   panel: {
     paddingHorizontal: 16,
     paddingTop: 8,
-    paddingBottom: 20,
     gap: 10,
   },
   pagerRow: {

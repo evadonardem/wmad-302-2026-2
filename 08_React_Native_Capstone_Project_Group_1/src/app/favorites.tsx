@@ -2,9 +2,11 @@ import { Pressable, ScrollView, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
 import { Card, IconButton, Text, useTheme } from 'react-native-paper';
 import { useFavorites } from '@/favorites';
+import { useLanguage } from '@/i18n';
 
 export default function FavoritesScreen() {
   const theme = useTheme();
+  const { t } = useLanguage();
   const { favorites, toggleFavorite } = useFavorites();
 
   return (
@@ -13,7 +15,7 @@ export default function FavoritesScreen() {
       contentContainerStyle={styles.content}
     >
       <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>
-        Tap a photo to open it. Tap the heart to remove it from your favorites.
+        {t('favHint')}
       </Text>
 
       {favorites.map((photo) => (
@@ -53,7 +55,7 @@ export default function FavoritesScreen() {
 
       {favorites.length === 0 && (
         <Text variant="bodyMedium" style={[styles.empty, { color: theme.colors.onSurfaceVariant }]}>
-          No favorites yet — tap the heart on a photo to save it here.
+          {t('favEmpty')}
         </Text>
       )}
     </ScrollView>

@@ -1,6 +1,7 @@
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from 'react-native-paper';
+import { useLanguage } from '@/i18n';
 
 // TODO 4.1 [Tab Bar Configuration]: Configure the bottom tab bar inside the empty
 // screenOptions object below. At minimum set:
@@ -9,6 +10,7 @@ import { useTheme } from 'react-native-paper';
 // - headerTitle styling (font weight, colors) to match your theme
 export default function TabsLayout() {
   const theme = useTheme();
+  const { t } = useLanguage();
 
   return (
     <Tabs screenOptions={{
@@ -30,14 +32,14 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Search',
+          title: t('tabSearch'),
           tabBarIcon: ({ color, size }) => <Ionicons name="search" size={size} color={color as string} />,
         }}
       />
       <Tabs.Screen
         name="about"
         options={{
-          title: 'About',
+          title: t('tabAbout'),
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="information-circle-outline" size={size} color={color as string} />
           ),

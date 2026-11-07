@@ -1,10 +1,12 @@
 import { StyleSheet, View } from 'react-native';
 import { router } from 'expo-router';
 import { List, Text, useTheme } from 'react-native-paper';
+import { useLanguage } from '@/i18n';
 import { useSearchHistory } from '@/searchHistory';
 
 export default function HistoryScreen() {
   const theme = useTheme();
+  const { t } = useLanguage();
   const { entries } = useSearchHistory();
 
   const handlePick = (city: string) => {
@@ -19,7 +21,7 @@ export default function HistoryScreen() {
   return (
     <View style={[styles.screen, { backgroundColor: theme.colors.background }]}>
       <Text variant="bodyMedium" style={[styles.intro, { color: theme.colors.onSurfaceVariant }]}>
-        Tap a city to jump back into that search.
+        {t('histIntro')}
       </Text>
 
       {/* TODO 5.2 [History List Mapping]: Map through 'entries' (most recent first) and render a
@@ -37,7 +39,7 @@ export default function HistoryScreen() {
 
       {entries.length === 0 && (
         <Text variant="bodyMedium" style={[styles.empty, { color: theme.colors.onSurfaceVariant }]}>
-          No searches yet — run a search on the Search tab first.
+          {t('histEmpty')}
         </Text>
       )}
     </View>

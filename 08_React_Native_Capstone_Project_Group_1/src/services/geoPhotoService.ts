@@ -24,6 +24,11 @@ const provinceCache = new Map<string, string>();
 // Forgets the remembered photo searches (used by pull-to-refresh so it really fetches fresh photos).
 export const clearSearchCache = () => pexelsCache.clear();
 
+// Tells the dashboard whether the last photo search FAILED (no connection, bad key...)
+// or simply found no photos, so it can offer a "Try again" button only after a failure.
+let lastSearchFailed = false;
+export const didLastSearchFail = () => lastSearchFailed;
+
 export type Region = {
   code: string;
   name: string;
@@ -160,6 +165,21 @@ export const getCitiesMunicipalitiesByRegion = async (regionCode: string): Promi
   }
 };
 
+// Every city and municipality in the country (used by the place search box). Loaded once and remembered.
+let allCitiesCache: City[] | null = null;
+export const getAllCitiesMunicipalities = async (): Promise<City[]> => {
+  if (allCitiesCache) {
+    return allCitiesCache;
+  }
+  try {
+    const response = await axios.get(`${PSGC_BASE_URL}/cities-municipalities/`);
+    allCitiesCache = response.data;
+    return response.data;
+  } catch {
+    return [];
+  }
+};
+
 // Name of a province from the PSGC (used by the area description). Empty when it is unknown.
 export const getProvinceName = async (provinceCode: string): Promise<string> => {
   if (!provinceCode) return '';
@@ -210,10 +230,12 @@ export const searchPhotosByLocation = async (
       data = response.data;
       pexelsCache.set(url, { data, at: Date.now() });
     }
+    lastSearchFailed = false;
     return data.photos
       .filter((photo: any) => belongsTo(photo, term, topic))
       .map((photo: any) => toPhoto(photo, locationName));
   } catch {
+    lastSearchFailed = true;
     return [];
   }
 };
@@ -223,10 +245,11 @@ export const searchPhotosPage = async (
   locationName: string,
   page: number,
   topic: string = DEFAULT_TOPIC,
+  perPage: number = RAW_PAGE_SIZE,
 ): Promise<{ photos: Photo[]; hasMore: boolean }> => {
   const keyword = `${cleanPlaceName(locationName)} Philippines ${topic}`;
   const term = placeTerm(locationName);
-  const url = `https://api.pexels.com/v1/search?query=${encodeURIComponent(keyword)}&per_page=${RAW_PAGE_SIZE}&page=${page}`;
+  const url = `https://api.pexels.com/v1/search?query=${encodeURIComponent(keyword)}&per_page=${perPage}&page=${page}`;
   try {
     const cached = pexelsCache.get(url);
     let data = cached && Date.now() - cached.at < SEARCH_CACHE_MS ? cached.data : null;
@@ -273,7 +296,7 @@ export const getPlaceCoverPhoto = async (name: string): Promise<Photo | null> =>
   if (saved && Date.now() - saved.savedAt < COVER_TTL_MS) {
     return saved.photo;
   }
-  const photos = await searchPhotosByLocation(name, 1, DEFAULT_TOPIC, COVER_RAW_SIZE);
+  const { photos } = await searchPhotosPage(name, 1, DEFAULT_TOPIC, COVER_RAW_SIZE);
   const cover = photos[0] ?? null;
   // A failed request returns an empty list too, so only save real answers.
   if (cover) {

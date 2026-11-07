@@ -2,12 +2,14 @@ import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { ActivityIndicator, Card, Chip, Text, useTheme } from 'react-native-paper';
 import { FEATURED_CATEGORIES, type FeaturedPlace } from '@/data/featuredPlaces';
+import { useLanguage } from '@/i18n';
 import { getPlaceCoverPhoto, type Photo } from '@/services/geoPhotoService';
 
 // One card of the start screen. It loads its own cover photo. If Pexels has no photo that
 // mentions the place, the card shows no picture instead of a photo of another place.
 function PlaceCard({ place, onPick }: { place: FeaturedPlace; onPick: (name: string) => void }) {
   const theme = useTheme();
+  const { t } = useLanguage();
   const [state, setState] = useState<{ name: string; photo: Photo | null } | null>(null);
 
   useEffect(() => {
@@ -32,7 +34,7 @@ function PlaceCard({ place, onPick }: { place: FeaturedPlace; onPick: (name: str
           <View style={[styles.noPhoto, { backgroundColor: theme.colors.surfaceVariant }]}>
             {loaded ? (
               <Text variant="labelMedium" style={{ color: theme.colors.onSurfaceVariant }}>
-                No photo yet
+                {t('noPhotoYet')}
               </Text>
             ) : (
               <ActivityIndicator animating />
@@ -58,6 +60,7 @@ function PlaceCard({ place, onPick }: { place: FeaturedPlace; onPick: (name: str
 // Start screen: Featured / Most Beautiful / Most Visited places. Tapping a card searches that place.
 export default function FeaturedSection({ onPick }: { onPick: (name: string) => void }) {
   const theme = useTheme();
+  const { t } = useLanguage();
   const [activeKey, setActiveKey] = useState(FEATURED_CATEGORIES[0].key);
   const active = FEATURED_CATEGORIES.find((c) => c.key === activeKey) ?? FEATURED_CATEGORIES[0];
 
@@ -83,7 +86,7 @@ export default function FeaturedSection({ onPick }: { onPick: (name: string) => 
   return (
     <View>
       <Text variant="titleMedium" style={[styles.heading, { color: theme.colors.secondary }]}>
-        🕯️ Places to explore this Undas
+        🕯️ {t('placesHeading')}
       </Text>
       <View style={styles.tabRow}>
         {FEATURED_CATEGORIES.map((category) => (
@@ -93,7 +96,7 @@ export default function FeaturedSection({ onPick }: { onPick: (name: string) => 
             showSelectedOverlay
             onPress={() => setActiveKey(category.key)}
           >
-            {category.label}
+            {t(`tab_${category.key}`)}
           </Chip>
         ))}
       </View>
@@ -105,7 +108,7 @@ export default function FeaturedSection({ onPick }: { onPick: (name: string) => 
       </View>
 
       <Text variant="labelSmall" style={[styles.source, { color: theme.colors.outline }]}>
-        Source: {active.source}
+        {t('sourceLabel')} {active.source}
       </Text>
     </View>
   );
