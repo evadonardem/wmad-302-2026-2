@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { ActivityIndicator, Card, Text, useTheme } from 'react-native-paper';
 import { router } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
@@ -16,6 +16,8 @@ export default function MediaGallery({
   error?: string;
 }) {
   const theme = useTheme();
+  const { width } = useWindowDimensions();
+  const minCardWidth = Math.min(240, width - 48);
 
   if (loading) {
     return (
@@ -55,7 +57,7 @@ export default function MediaGallery({
       </Text>
       <View style={styles.grid}>
         {photos.map((photo) => (
-          <View key={String(photo.id)} style={styles.gridItem}>
+          <View key={String(photo.id)} style={[styles.gridItem, { minWidth: minCardWidth }]}>
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={`View details for ${photo.altText || 'photo'}`}

@@ -3,14 +3,14 @@
 ## Objective
 Collaborate in teams of three to build a theme-responsive **React Native (Expo)** application that maps geographical data of the Philippines and searches for stunning location visuals. You will combine the official **Philippine Standard Geographic Code (PSGC) API** with the **Pexels Image API**, and present everything through **React Native Paper** Material Design 3 components.
 
-The user journey follows a chained sequence: **Select Region** → **Select Province** when available → **Select City/Municipality** → **Search** to display tourist attraction photos from Pexels. Users can narrow regions with an **island-group filter**, explore **featured destinations**, and revisit past queries from **Recent Searches**. The app is structured around **Expo Router**: a bottom tab navigator (Search / About) hosts the main screens, each photo card opens a **modal detail route** on a **dynamic path segment** (`/photo/[id]`) carrying its data as **route params**, with a **prev/next viewer**, a **redirect guard**, and **pull-to-refresh** on search results. The same codebase runs on Android, iOS, and the web.
+The user journey is simple: type any city, island, landmark, or destination into the **single search field** to find tourist photos from Pexels. Users can also explore **featured destinations** and revisit past queries from **Recent Searches**. The app is structured around **Expo Router**: a bottom tab navigator (Search / About) hosts the main screens, each photo card opens a **modal detail route** on a **dynamic path segment** (`/photo/[id]`) carrying its data as **route params**, with a **prev/next viewer**, a **redirect guard**, and **pull-to-refresh** on search results. The same codebase runs on Android, iOS, and the web.
 
 ---
 
 ## Technical Specifications & Architecture Flow
 1. **Dynamic Regional Fetching:** On initial mount, load all administrative regions of the Philippines via the PSGC API endpoints (`/regions/`).
-2. **Dependent Chained Pickers:** When a region is chosen, query its provinces (`/regions/{regionCode}/provinces/`) and then the selected province's cities and municipalities (`/provinces/{provinceCode}/cities-municipalities/`). For regions without provinces, query their cities and municipalities directly (`/regions/{regionCode}/cities-municipalities/`). React Native has no built-in `<Select>` — build the chained pickers from Paper `<Menu>` components.
-3. **Pexels Image Resolution:** Use the localized text descriptor of the selected municipality to build a focused keyword string (e.g., `"Vigan City tourist spot"`) and fetch high-definition image streams via the Pexels search route.
+2. **Destination Search:** Accept a free-text destination query so users can search for any city, island, landmark, or place without selecting chained administrative filters.
+3. **Pexels Image Resolution:** Use the entered destination text to build a focused keyword string (e.g., `"Vigan City tourist spot"`) and fetch high-definition image streams via the Pexels search route.
 4. **Environment Variables:** Application access keys must be extracted safely from localized environment files using Expo's standard `EXPO_PUBLIC_` loading mechanics.
 5. **Bottom-Tab Navigation:** Register a two-tab navigator (Search, About) with icons via file-based routing.
 6. **Modal Detail Route & Params:** Push a `/photo/[id]` route from any gallery card — the id rides in the URL path, the remaining data as search params — read them back with `useLocalSearchParams`, guard against incomplete links with `<Redirect>`, and browse results with a prev/next viewer that `router.replace`s the current entry.
@@ -42,12 +42,11 @@ To protect private access tokens from leaking into public code history repositor
   * Implement dynamic parameter parsing logic fetching specific cities/municipalities from nested paths using string interpolation.
   * Build the Pexels image data handler. Configure custom authorization request header tokens safely (reading `process.env.EXPO_PUBLIC_PEXELS_API_KEY`) and structure clean response arrays containing photo URLs and photographer attribution details.
 
-### **Developer 2: Cascading Form & State Manager**
+### **Developer 2: Destination Search & State Manager**
 * **Core File:** `src/components/LocationForm.tsx`
 * **Deliverables:**
-  * Coordinate the interdependent layout state tracking variables (`regions`, `provinces`, `cities`, `selectedRegion`, `selectedProvince`, `selectedCityName`) plus the island-group filter.
-  * Program reactive side-effect hooks (`useEffect`) that clear down-tier selections and trigger new requests to Developer 1's service layer automatically whenever a user shifts a parent picker.
-  * Construct the chained pickers from React Native Paper components (`<Menu>` anchored to `<Button>` triggers with `<Menu.Item>` options) and the `<Chip>` filter row above them.
+  * Provide a single text search field for arbitrary city, island, landmark, or destination names.
+  * Submit queries from the keyboard or the search icon and pass the destination text to the dashboard.
 
 ### **Developer 3: Dashboard Layout & Media Gallery Designer**
 * **Core File:** `src/app/(tabs)/index.tsx`, `src/components/MediaGallery.tsx`, `src/app/(tabs)/_layout.tsx`, `src/app/photo/[id].tsx`, `src/app/history.tsx`
@@ -64,7 +63,7 @@ To protect private access tokens from leaking into public code history repositor
 | Category | Component focus | Max Points | Evaluation Requirements |
 | :--- | :--- | :--- | :--- |
 | **1. API Service Operations** | `geoPhotoService.ts` | **15 pts** | Async/await execution parsing sub-resource endpoints cleanly, passing security tokens seamlessly, and returning uniform error-resilient models. |
-| **2. Chained Lifecycle & Filtering** | `LocationForm.tsx` | **15 pts** | Functional reactive listeners executing dynamic dependent data refreshes without race conditions or state pollution, plus island-group filtering with safe selection resets. |
+| **2. Destination Search** | `LocationForm.tsx` | **15 pts** | Responsive single-field destination search with keyboard and button submission. |
 | **3. Layout & Visual Presentation** | `MediaGallery.tsx` | **12 pts** | Clean interface rendering utilizing Paper components, flexbox wrapping grids, and error/empty boundaries. |
 | **4. Integration & State Toggling** | `(tabs)/index.tsx` | **08 pts** | Flawless connectivity wiring the picker outputs to trigger the gallery view alongside functional Dark/Light MD3 palette mapping contexts. |
 | **5. Navigation & Screen Flow** | `photo/[id].tsx`, `(tabs)/_layout.tsx` | **10 pts** | A configured tab navigator, a param-carrying guarded modal detail with prev/next browsing, and a graceful generic share integration. |
@@ -86,11 +85,9 @@ To protect private access tokens from leaking into public code history repositor
 |   |   +-----------------------------------------------------------------------------------+   |   |
 |   |   | [LocationForm.tsx]                                                                |   |   |
 |   |   |                                                                                   |   |   |
-|   |   |  +------------------------+  +----------------------------+  +-----------------+  |   |   |
-|   |   |  | Paper <Menu>           |  | Paper <Menu> (disabled if  |  | Paper <Button>  |  |   |   |
-|   |   |  |                        |  | no region code selected)   |  |                 |  |   |   |
-|   |   |  |  [ Select Region    ▾ ]|  |  [ Select City/Muni     ▾ ]|  | [🔍 Search]     |  |   |   |
-|   |   |  +------------------------+  +----------------------------+  +-----------------+  |   |   |
+|   |   |  +----------------------------------------------------------------------------+   |   |   |
+|   |   |  | 🔍 [ Search any destination                                      ] [ ➜ ]   |   |   |
+|   |   |  +----------------------------------------------------------------------------+   |   |   |
 |   |   +-----------------------------------------------------------------------------------+   |   |
 |   =============================================================================================   |
 |                                                                                                   |

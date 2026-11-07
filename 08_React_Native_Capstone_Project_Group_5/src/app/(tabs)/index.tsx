@@ -1,5 +1,12 @@
-import { useCallback, useEffect, useState } from 'react';
-import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  View,
+  useWindowDimensions,
+} from 'react-native';
 import { Image } from 'expo-image';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Button, Card, IconButton, Text, useTheme } from 'react-native-paper';
@@ -69,9 +76,18 @@ const islandGroups: IslandGroup[] = ['Luzon', 'Visayas', 'Mindanao'];
 
 export default function SearchScreen() {
   const theme = useTheme();
+  const { width } = useWindowDimensions();
+  const isCompact = width < 380;
+  const isPhoneLayout = width < 600;
+  const contentWidth = Math.min(width, 960) - (isCompact ? 24 : 32);
+  const featuredColumns = width >= 900 ? 4 : width >= 600 ? 3 : 2;
+  const featuredCardWidth =
+    (contentWidth - 12 * (featuredColumns - 1)) / featuredColumns;
+  const featuredCardHeight = isPhoneLayout ? (isCompact ? 180 : 200) : 220;
   const { isDarkMode, setIsDarkMode } = useThemeMode();
   const { photos, setPhotos } = usePhotos();
   const { recordSearch } = useSearchHistory();
+  const hasSearchedRef = useRef(false);
 
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -82,6 +98,10 @@ export default function SearchScreen() {
   const [lastSearchedContext, setLastSearchedContext] = useState('');
   const [featuredItems, setFeaturedItems] = useState<FeaturedDestination[]>(featuredDestinations);
   const [featuredError, setFeaturedError] = useState('');
+  const [failedFeaturedImageUrls, setFailedFeaturedImageUrls] = useState<string[]>([]);
+  const [loadingFeaturedNames, setLoadingFeaturedNames] = useState<string[]>(
+    featuredDestinations.map((destination) => destination.name),
+  );
   const featuredMessage =
     featuredError ||
     (!isPexelsConfigured ? 'Add EXPO_PUBLIC_PEXELS_API_KEY to load destination photos.' : '');
@@ -94,27 +114,53 @@ export default function SearchScreen() {
     let isCurrent = true;
     const loadFeaturedPhotos = async () => {
       let failedRequests = false;
-      const destinationsWithPhotos = await Promise.all(
-        featuredDestinations.map(async (destination) => {
-          try {
-            const results = await searchPhotosByLocation(destination.name, destination.region);
-            const photoKeywords = destination.photoKeywords ?? [destination.name];
-            const matchingPhoto = results.find((result) =>
-              photoKeywords.some((keyword) =>
-                result.altText.toLowerCase().includes(keyword.toLowerCase()),
-              ),
-            );
-            return { ...destination, photo: matchingPhoto ?? results[0] ?? null };
-          } catch (error) {
-            console.error(`Unable to load a featured photo for ${destination.name}:`, error);
-            failedRequests = true;
-            return { ...destination, photo: null };
-          }
-        }),
-      );
+      const photosByDestination = new Map<string, Photo>();
+      const updateFeaturedPhotoList = () => {
+        if (hasSearchedRef.current) return;
+        const orderedPhotos = featuredDestinations
+          .map((destination) => photosByDestination.get(destination.name))
+          .filter((photo): photo is Photo => Boolean(photo));
+        setPhotos(orderedPhotos);
+      };
+
+      for (let index = 0; index < featuredDestinations.length; index += 3) {
+        if (!isCurrent) return;
+
+        await Promise.all(
+          featuredDestinations.slice(index, index + 3).map(async (destination) => {
+            try {
+              const results = await searchPhotosByLocation(destination.name, destination.region);
+              const photoKeywords = destination.photoKeywords ?? [destination.name];
+              const matchingPhoto = results.find((result) =>
+                photoKeywords.some((keyword) =>
+                  result.altText.toLowerCase().includes(keyword.toLowerCase()),
+                ),
+              );
+              const photo = matchingPhoto ?? results[0] ?? null;
+              if (isCurrent) {
+                if (photo) photosByDestination.set(destination.name, photo);
+                setFeaturedItems((items) =>
+                  items.map((item) =>
+                    item.name === destination.name ? { ...item, photo } : item,
+                  ),
+                );
+                updateFeaturedPhotoList();
+              }
+            } catch (error) {
+              console.error(`Unable to load a featured photo for ${destination.name}:`, error);
+              failedRequests = true;
+            } finally {
+              if (isCurrent) {
+                setLoadingFeaturedNames((names) =>
+                  names.filter((name) => name !== destination.name),
+                );
+              }
+            }
+          }),
+        );
+      }
 
       if (isCurrent) {
-        setFeaturedItems(destinationsWithPhotos);
         if (failedRequests) setFeaturedError('Some featured photos could not be loaded.');
       }
     };
@@ -123,13 +169,14 @@ export default function SearchScreen() {
     return () => {
       isCurrent = false;
     };
-  }, []);
+  }, [setPhotos]);
 
   const handleSearchSubmit = useCallback(
     async (locationName: string, locationContext?: string) => {
       const cityName = locationName.trim();
       if (!cityName) return;
 
+      hasSearchedRef.current = true;
       setHasSearched(true);
       setLoading(true);
       setSearchError('');
@@ -180,6 +227,7 @@ export default function SearchScreen() {
   }, [q, handleSearchSubmit]);
 
   const handleResetSearch = () => {
+    hasSearchedRef.current = false;
     setHasSearched(false);
     setSearchError('');
     setSearchSummary('');
@@ -209,7 +257,12 @@ export default function SearchScreen() {
       edges={['top', 'left', 'right']}
     >
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="always"
+        keyboardDismissMode="on-drag"
+        contentContainerStyle={[
+          styles.scrollContent,
+          width < 360 && styles.compactScrollContent,
+        ]}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -220,11 +273,12 @@ export default function SearchScreen() {
       >
         <View style={styles.header}>
           <View style={styles.brand}>
-            <View style={[styles.brandMark, { backgroundColor: theme.colors.primary }]}>
-              <Text variant="titleLarge" style={styles.brandMarkText}>
-                PH
-              </Text>
-            </View>
+            <Image
+              source={require('../../../assets/images/Logo.png')}
+              style={styles.brandLogo}
+              contentFit="contain"
+              accessibilityLabel="Lakbay PH logo"
+            />
             <View>
               <Text variant="titleMedium" style={[styles.brandTitle, { color: theme.colors.onBackground }]}>
                 Lakbay <Text style={{ color: theme.colors.primary }}>PH</Text>
@@ -250,24 +304,34 @@ export default function SearchScreen() {
           </View>
         </View>
 
-        <View style={styles.hero}>
+        <View style={[styles.hero, isCompact && styles.compactHero]}>
           <Text variant="labelLarge" style={[styles.eyebrow, { color: theme.colors.primary }]}>
             EXPLORE THE PHILIPPINES
           </Text>
-          <Text variant="displaySmall" style={[styles.heroTitle, { color: theme.colors.onBackground }]}>
+          <Text
+            variant="displaySmall"
+            style={[
+              styles.heroTitle,
+              isCompact && styles.compactHeroTitle,
+              { color: theme.colors.onBackground },
+            ]}
+          >
             Find a place to remember.
           </Text>
           <Text variant="bodyLarge" style={[styles.heroSubtitle, { color: theme.colors.onSurfaceVariant }]}>
-            Choose a region and city or municipality to discover places across the islands.
+            Search any city, island, landmark, or destination in one step.
           </Text>
         </View>
 
         <Card style={[styles.searchPanel, { backgroundColor: theme.colors.surface }]} mode="contained">
           <Card.Content>
             <Text variant="labelLarge" style={[styles.panelHeading, { color: theme.colors.onSurface }]}>
-              Search by location
+              Search any destination
             </Text>
-            <LocationForm onSearch={handleSearchSubmit} />
+            <LocationForm
+              onSearch={handleSearchSubmit}
+              suggestions={featuredDestinations.map((destination) => destination.name)}
+            />
           </Card.Content>
         </Card>
 
@@ -315,69 +379,100 @@ export default function SearchScreen() {
                 <View style={styles.featuredGrid}>
                   {featuredItems
                     .filter((destination) => destination.islandGroup === group)
-                    .map((destination) => (
-                      <Card
-                        key={destination.name}
-                        style={[styles.featuredCard, { backgroundColor: destination.accent }]}
-                        mode="contained"
-                      >
-                        <Pressable
-                          style={styles.featuredPressable}
-                          accessibilityRole={destination.photo ? 'button' : undefined}
-                          accessibilityLabel={`View photo details for ${destination.name}`}
-                          disabled={!destination.photo}
-                          onPress={() => {
-                            if (destination.photo) {
-                              openPhoto(
-                                destination.photo,
-                                destination.name,
-                                `${destination.region}, ${destination.islandGroup}`,
-                              );
-                            }
-                          }}
+                    .map((destination) => {
+                      const photo = destination.photo;
+                      const photoUrl = photo?.imageUrl;
+                      const hasPhoto = Boolean(
+                        photoUrl && !failedFeaturedImageUrls.includes(photoUrl),
+                      );
+                      const isLoadingPhoto =
+                        isPexelsConfigured && loadingFeaturedNames.includes(destination.name);
+
+                      return (
+                        <Card
+                          key={destination.name}
+                          style={[
+                            styles.featuredCard,
+                            {
+                              width: featuredCardWidth,
+                              height: featuredCardHeight,
+                              backgroundColor: destination.accent,
+                            },
+                          ]}
+                          mode="contained"
                         >
-                          {destination.photo ? (
-                            <Image
-                              source={{ uri: destination.photo.imageUrl }}
-                              style={styles.featuredImage}
-                              contentFit="cover"
-                              transition={200}
-                              accessibilityLabel={destination.photo.altText}
-                            />
-                          ) : (
-                            <View style={styles.unavailableImage}>
-                              <Text variant="titleMedium" style={styles.unavailableText}>
-                                Photo unavailable
-                              </Text>
-                            </View>
-                          )}
-                          <View style={styles.featuredDetails}>
-                            <Text variant="labelSmall" style={styles.featuredRegion}>
-                              {destination.region}
-                            </Text>
-                            <Text variant="titleMedium" style={styles.featuredName}>
-                              {destination.name}
-                            </Text>
-                            {destination.photo?.photographer ? (
-                              <Pressable
-                                accessibilityRole="link"
-                                onPress={(event) => {
-                                  event.stopPropagation();
-                                  const photographerUrl = destination.photo?.photographerUrl;
-                                  if (photographerUrl) {
-                                    void WebBrowser.openBrowserAsync(photographerUrl);
-                                  }
+                          <Pressable
+                            style={styles.featuredPressable}
+                            accessibilityRole={hasPhoto ? 'button' : undefined}
+                            accessibilityLabel={`View photo details for ${destination.name}`}
+                            disabled={!hasPhoto}
+                            onPress={() => {
+                              if (hasPhoto && photo) {
+                                openPhoto(
+                                  photo,
+                                  destination.name,
+                                  `${destination.region}, ${destination.islandGroup}`,
+                                );
+                              }
+                            }}
+                          >
+                            {hasPhoto && photo ? (
+                              <Card.Cover
+                                source={{ uri: photo.imageUrl }}
+                                style={{
+                                  width: featuredCardWidth,
+                                  height: featuredCardHeight,
                                 }}
+                                accessibilityLabel={photo.altText}
+                                onError={() => {
+                                  if (!photoUrl) return;
+                                  setFailedFeaturedImageUrls((failedUrls) =>
+                                    failedUrls.includes(photoUrl)
+                                      ? failedUrls
+                                      : [...failedUrls, photoUrl],
+                                  );
+                                }}
+                              />
+                            ) : (
+                              <View
+                                style={[
+                                  styles.unavailableImage,
+                                  { width: featuredCardWidth, height: featuredCardHeight },
+                                ]}
                               >
-                                <Text variant="labelSmall" style={styles.featuredCredit}>
-                                  Photo by {destination.photo.photographer}
+                                <Text variant="titleMedium" style={styles.unavailableText}>
+                                  {isLoadingPhoto ? 'Loading photo...' : 'Photo unavailable'}
                                 </Text>
-                              </Pressable>
-                            ) : null}
-                          </View>
-                        </Pressable>
-                      </Card>
-                    ))}
+                              </View>
+                            )}
+                            <View style={styles.featuredDetails}>
+                              <Text variant="labelSmall" style={styles.featuredRegion}>
+                                {destination.region}
+                              </Text>
+                              <Text variant="titleMedium" style={styles.featuredName}>
+                                {destination.name}
+                              </Text>
+                              {hasPhoto && photo?.photographer ? (
+                                <Pressable
+                                  accessibilityRole="link"
+                                  onPress={(event) => {
+                                    event.stopPropagation();
+                                    const photographerUrl = photo.photographerUrl;
+                                    if (photographerUrl) {
+                                      void WebBrowser.openBrowserAsync(photographerUrl);
+                                    }
+                                  }}
+                                >
+                                  <Text variant="labelSmall" style={styles.featuredCredit}>
+                                    Photo by {photo.photographer}
+                                  </Text>
+                                </Pressable>
+                              ) : null}
+                            </View>
+                          </Pressable>
+                        </Card>
+                      );
+                    })}
                 </View>
               </View>
             ))}
@@ -400,6 +495,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 28,
   },
+  compactScrollContent: {
+    paddingHorizontal: 12,
+    paddingBottom: 20,
+  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -414,16 +513,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
   },
-  brandMark: {
+  brandLogo: {
     width: 48,
     height: 48,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  brandMarkText: {
-    color: '#fff',
-    fontWeight: '800',
   },
   brandTitle: {
     fontWeight: '700',
@@ -436,6 +528,9 @@ const styles = StyleSheet.create({
   hero: {
     marginBottom: 22,
   },
+  compactHero: {
+    marginBottom: 18,
+  },
   eyebrow: {
     fontWeight: '800',
     letterSpacing: 1.4,
@@ -447,6 +542,11 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     marginTop: 6,
     marginBottom: 8,
+  },
+  compactHeroTitle: {
+    fontSize: 34,
+    lineHeight: 39,
+    letterSpacing: -0.6,
   },
   heroSubtitle: {
     maxWidth: 620,
@@ -505,23 +605,19 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   featuredCard: {
-    flexGrow: 1,
-    flexBasis: '22%',
-    minWidth: 155,
-    height: 220,
     overflow: 'hidden',
     borderRadius: 14,
   },
   featuredPressable: {
-    height: '100%',
-  },
-  featuredImage: {
-    ...StyleSheet.absoluteFill,
+    flex: 1,
     width: '100%',
     height: '100%',
+    position: 'relative',
   },
   unavailableImage: {
-    height: '100%',
+    position: 'absolute',
+    top: 0,
+    left: 0,
     alignItems: 'center',
     justifyContent: 'center',
     padding: 16,

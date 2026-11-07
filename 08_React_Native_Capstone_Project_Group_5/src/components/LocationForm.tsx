@@ -1,360 +1,302 @@
-import { useEffect, useMemo, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
-import { Button, Chip, Menu, Text } from 'react-native-paper';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  getCitiesMunicipalitiesByProvince,
-  getCitiesMunicipalitiesByRegion,
-  getProvincesByRegion,
-  getRegions,
-  type City,
-  type Province,
-  type Region,
-} from '@/services/geoPhotoService';
-
-type IslandFilter = 'all' | 'luzon' | 'visayas' | 'mindanao';
-const ISLAND_GROUP_CODES: Record<Exclude<IslandFilter, 'all'>, string> = {
-  luzon: 'luzon',
-  visayas: 'visayas',
-  mindanao: 'mindanao',
-};
+  Keyboard,
+  Platform,
+  Pressable,
+  StyleSheet,
+  TextInput,
+  View,
+  type TextInputKeyPressEvent,
+  type TextInputInstance,
+  type TextStyle,
+} from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { Text, useTheme } from 'react-native-paper';
+import { useSearchHistory } from '@/searchHistory';
+import { useThemeMode } from '@/themeMode';
 
 export default function LocationForm({
   onSearch,
+  suggestions = [],
 }: {
-  onSearch: (cityName: string, contextName?: string) => void;
+  onSearch: (destination: string) => void;
+  suggestions?: string[];
 }) {
-  const [regions, setRegions] = useState<Region[]>([]);
-  const [provinces, setProvinces] = useState<Province[]>([]);
-  const [cities, setCities] = useState<City[]>([]);
-  const [selectedRegion, setSelectedRegion] = useState('');
-  const [selectedProvince, setSelectedProvince] = useState('');
-  const [selectedCityName, setSelectedCityName] = useState('');
-  const [islandFilter, setIslandFilter] = useState<IslandFilter>('all');
-  const [loadingRegions, setLoadingRegions] = useState(true);
-  const [loadingLocations, setLoadingLocations] = useState(false);
-  const [locationError, setLocationError] = useState('');
-  const [regionMenuVisible, setRegionMenuVisible] = useState(false);
-  const [provinceMenuVisible, setProvinceMenuVisible] = useState(false);
-  const [cityMenuVisible, setCityMenuVisible] = useState(false);
+  const theme = useTheme();
+  const { isDarkMode } = useThemeMode();
+  const { entries } = useSearchHistory();
+  const [destination, setDestination] = useState('');
+  const [isFocused, setIsFocused] = useState(false);
+  const inputRef = useRef<TextInputInstance>(null);
+  const blurTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const canSearch = Boolean(destination.trim());
+  const matchingSuggestions = useMemo(() => {
+    const query = destination.trim().toLocaleLowerCase();
+    const choices = [...entries, ...suggestions];
+    const uniqueChoices = choices.filter(
+      (choice, index) =>
+        choices.findIndex((item) => item.toLocaleLowerCase() === choice.toLocaleLowerCase()) ===
+        index,
+    );
 
-  const visibleRegions = useMemo(() => {
-    if (islandFilter === 'all') return regions;
-    return regions.filter((region) => region.islandGroupCode === ISLAND_GROUP_CODES[islandFilter]);
-  }, [regions, islandFilter]);
+    if (!query) return uniqueChoices.slice(0, 5);
+    return uniqueChoices
+      .filter((choice) => choice.toLocaleLowerCase().includes(query))
+      .slice(0, 5);
+  }, [destination, entries, suggestions]);
 
-  useEffect(() => {
-    let isCurrent = true;
+  const submitSearch = () => {
+    const query = destination.trim();
+    if (!query) return;
 
-    const loadRegions = async () => {
-      try {
-        const nextRegions = await getRegions();
-        if (isCurrent) setRegions(nextRegions);
-      } catch (error) {
-        if (isCurrent) {
-          setLocationError(error instanceof Error ? error.message : 'Unable to load regions.');
-        }
-      } finally {
-        if (isCurrent) setLoadingRegions(false);
-      }
-    };
+    setIsFocused(false);
+    Keyboard.dismiss();
+    onSearch(query);
+  };
 
-    void loadRegions();
-    return () => {
-      isCurrent = false;
-    };
-  }, []);
+  const handleSearchPress = () => {
+    if (canSearch) {
+      submitSearch();
+      return;
+    }
 
-  useEffect(() => {
-    let isCurrent = true;
+    inputRef.current?.focus();
+  };
 
-    const loadLocations = async () => {
-      if (!selectedRegion) {
-        setProvinces([]);
-        setCities([]);
-        setSelectedProvince('');
-        setSelectedCityName('');
-        setLoadingLocations(false);
-        return;
-      }
+  const selectSuggestion = (suggestion: string) => {
+    setDestination(suggestion);
+    setIsFocused(false);
+    Keyboard.dismiss();
+    onSearch(suggestion);
+  };
 
-      setLoadingLocations(true);
-      setLocationError('');
-      setProvinces([]);
-      setCities([]);
-      setSelectedProvince('');
-      setSelectedCityName('');
-
-      try {
-        const nextProvinces = await getProvincesByRegion(selectedRegion);
-        if (!isCurrent) return;
-
-        setProvinces(nextProvinces);
-        if (nextProvinces.length === 0) {
-          setCities(await getCitiesMunicipalitiesByRegion(selectedRegion));
-        }
-      } catch (error) {
-        if (isCurrent) {
-          setLocationError(error instanceof Error ? error.message : 'Unable to load locations.');
-        }
-      } finally {
-        if (isCurrent) setLoadingLocations(false);
-      }
-    };
-
-    void loadLocations();
-    return () => {
-      isCurrent = false;
-    };
-  }, [selectedRegion]);
-
-  useEffect(() => {
-    let isCurrent = true;
-
-    const loadCities = async () => {
-      if (!selectedProvince) {
-        if (provinces.length > 0) setCities([]);
-        setSelectedCityName('');
-        return;
-      }
-
-      setLoadingLocations(true);
-      setLocationError('');
-      setCities([]);
-
-      try {
-        const nextCities = await getCitiesMunicipalitiesByProvince(selectedProvince);
-        if (isCurrent) setCities(nextCities);
-      } catch (error) {
-        if (isCurrent) {
-          setLocationError(error instanceof Error ? error.message : 'Unable to load cities.');
-        }
-      } finally {
-        if (isCurrent) setLoadingLocations(false);
-      }
-    };
-
-    void loadCities();
-    return () => {
-      isCurrent = false;
-    };
-  }, [selectedProvince, provinces.length]);
-
-  const handleFilterChange = (nextFilter: IslandFilter) => {
-    setIslandFilter(nextFilter);
-    if (
-      selectedRegion &&
-      nextFilter !== 'all' &&
-      !regions.some(
-        (region) =>
-          region.code === selectedRegion &&
-          region.islandGroupCode === ISLAND_GROUP_CODES[nextFilter],
-      )
-    ) {
-      setSelectedRegion('');
+  const handleKeyPress = (event: TextInputKeyPressEvent) => {
+    if (Platform.OS === 'web' && event.nativeEvent.key === 'Enter') {
+      event.preventDefault();
+      submitSearch();
     }
   };
 
-  const handleSubmit = () => {
-    if (!selectedCityName.trim()) return;
-
-    const regionName = regions.find((region) => region.code === selectedRegion)?.name;
-    const provinceName = provinces.find((province) => province.code === selectedProvince)?.name;
-    onSearch(selectedCityName.trim(), provinceName || regionName);
-  };
-
-  const selectedRegionLabel =
-    regions.find((region) => region.code === selectedRegion)?.name ?? 'Select Region';
-  const selectedProvinceLabel =
-    provinces.find((province) => province.code === selectedProvince)?.name ?? 'Select Province';
-  const selectedCityLabel = selectedCityName || 'Select City / Municipality';
-  const cityPickerEnabled = Boolean(selectedRegion && (selectedProvince || provinces.length === 0));
+  useEffect(
+    () => () => {
+      if (blurTimeout.current) clearTimeout(blurTimeout.current);
+    },
+    [],
+  );
 
   return (
-    <View style={styles.form}>
-      <View style={styles.filterRow}>
-        {(['all', 'luzon', 'visayas', 'mindanao'] as const).map((filter) => (
-          <Chip
-            key={filter}
-            selected={islandFilter === filter}
-            onPress={() => handleFilterChange(filter)}
+    <View>
+      <View
+        style={[
+          styles.searchBox,
+          {
+            backgroundColor: isDarkMode ? '#202327' : '#eff3f4',
+            borderColor: isFocused ? '#1d9bf0' : 'transparent',
+          },
+        ]}
+      >
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={canSearch ? 'Submit destination search' : 'Focus destination search'}
+          onPress={handleSearchPress}
+          style={styles.searchIconButton}
+        >
+          <Ionicons name="search" size={21} color={theme.colors.onSurfaceVariant} />
+        </Pressable>
+        <TextInput
+          ref={inputRef}
+          accessibilityLabel="Search any destination"
+          placeholder="Search"
+          placeholderTextColor={theme.colors.onSurfaceVariant}
+          value={destination}
+          onChangeText={setDestination}
+          onFocus={() => {
+            if (blurTimeout.current) clearTimeout(blurTimeout.current);
+            setIsFocused(true);
+          }}
+          onBlur={() => {
+            blurTimeout.current = setTimeout(() => setIsFocused(false), 160);
+          }}
+          onSubmitEditing={Platform.OS === 'web' ? undefined : submitSearch}
+          onKeyPress={handleKeyPress}
+          returnKeyType="search"
+          enterKeyHint="search"
+          autoCapitalize="words"
+          autoCorrect={false}
+          style={[
+            styles.input,
+            Platform.OS === 'web' &&
+              ({ outlineStyle: 'none' } as unknown as TextStyle),
+            { color: theme.colors.onSurface },
+          ]}
+        />
+        {canSearch ? (
+          <Pressable
             accessibilityRole="button"
+            accessibilityLabel="Clear destination"
+            onPress={() => setDestination('')}
+            hitSlop={8}
+            style={styles.clearButton}
           >
-            {filter === 'all' ? 'All islands' : filter.charAt(0).toUpperCase() + filter.slice(1)}
-          </Chip>
-        ))}
+            <Ionicons name="close-circle" size={20} color={theme.colors.onSurfaceVariant} />
+          </Pressable>
+        ) : null}
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Search destination"
+          onPress={handleSearchPress}
+          style={({ pressed }) => [
+            styles.searchButton,
+            { backgroundColor: canSearch ? theme.colors.primary : theme.colors.surfaceVariant },
+            pressed && styles.searchButtonPressed,
+          ]}
+        >
+          <Ionicons
+            name="arrow-forward"
+            size={20}
+            color={canSearch ? theme.colors.onPrimary : theme.colors.onSurfaceVariant}
+          />
+        </Pressable>
       </View>
 
-      <View style={styles.fields}>
-        <Menu
-          visible={regionMenuVisible}
-          onDismiss={() => setRegionMenuVisible(false)}
-          anchor={
-            <Button
-              mode="outlined"
-              icon="menu-down"
-              contentStyle={styles.buttonContent}
-              style={styles.button}
-              loading={loadingRegions}
-              onPress={() => setRegionMenuVisible(true)}
-            >
-              {selectedRegionLabel}
-            </Button>
-          }
+      {isFocused && (matchingSuggestions.length > 0 || canSearch) ? (
+        <View
+          style={[
+            styles.suggestionsPanel,
+            {
+              backgroundColor: theme.colors.surface,
+              borderColor: theme.colors.outlineVariant,
+            },
+          ]}
         >
-          <Menu.Item
-            title="Clear selection"
-            onPress={() => {
-              setSelectedRegion('');
-              setRegionMenuVisible(false);
-            }}
-          />
-          {visibleRegions.map((region) => (
-            <Menu.Item
-              key={region.code}
-              title={region.name}
-              onPress={() => {
-                setSelectedRegion(region.code);
-                setSelectedCityName('');
-                setRegionMenuVisible(false);
-              }}
-            />
-          ))}
-        </Menu>
-
-        <Menu
-          visible={provinceMenuVisible}
-          onDismiss={() => setProvinceMenuVisible(false)}
-          anchor={
-            <Button
-              mode="outlined"
-              icon="menu-down"
-              disabled={!selectedRegion || provinces.length === 0 || loadingLocations}
-              contentStyle={styles.buttonContent}
-              style={styles.button}
-              onPress={() => setProvinceMenuVisible(true)}
+          {!canSearch && entries.length > 0 ? (
+            <Text variant="labelMedium" style={[styles.suggestionsHeading, { color: theme.colors.onSurfaceVariant }]}>
+              Recent searches
+            </Text>
+          ) : null}
+          {matchingSuggestions.map((suggestion) => (
+            <Pressable
+              key={suggestion}
+              accessibilityRole="button"
+              onPress={() => selectSuggestion(suggestion)}
+              style={({ hovered, pressed }) => [
+                styles.suggestion,
+                (hovered || pressed) && { backgroundColor: theme.colors.surfaceVariant },
+              ]}
             >
-              {loadingLocations && selectedRegion ? 'Loading provinces...' : selectedProvinceLabel}
-            </Button>
-          }
-        >
-          <Menu.Item
-            title="Clear selection"
-            onPress={() => {
-              setSelectedProvince('');
-              setSelectedCityName('');
-              setProvinceMenuVisible(false);
-            }}
-          />
-          {provinces.map((province) => (
-            <Menu.Item
-              key={province.code}
-              title={province.name}
-              onPress={() => {
-                setSelectedProvince(province.code);
-                setSelectedCityName('');
-                setProvinceMenuVisible(false);
-              }}
-            />
-          ))}
-        </Menu>
-
-        <Menu
-          visible={cityMenuVisible}
-          onDismiss={() => setCityMenuVisible(false)}
-          anchor={
-            <Button
-              mode="outlined"
-              icon="menu-down"
-              disabled={!cityPickerEnabled || loadingLocations}
-              contentStyle={styles.buttonContent}
-              style={styles.button}
-              onPress={() => setCityMenuVisible(true)}
-            >
-              {loadingLocations && cityPickerEnabled ? 'Loading cities...' : selectedCityLabel}
-            </Button>
-          }
-        >
-          {cities.length === 0 ? (
-            <Menu.Item title="No cities or municipalities available" disabled />
-          ) : (
-            cities.map((city) => (
-              <Menu.Item
-                key={city.code}
-                title={city.name}
-                onPress={() => {
-                  setSelectedCityName(city.name);
-                  setCityMenuVisible(false);
-                }}
+              <Ionicons
+                name={entries.includes(suggestion) ? 'time-outline' : 'search'}
+                size={18}
+                color={theme.colors.onSurfaceVariant}
               />
-            ))
-          )}
-        </Menu>
-
-        <View style={styles.actionRow}>
-          <Button
-            mode="outlined"
-            icon="close"
-            disabled={!selectedRegion && !selectedProvince && !selectedCityName}
-            contentStyle={styles.buttonContent}
-            onPress={() => {
-              setSelectedRegion('');
-              setSelectedProvince('');
-              setSelectedCityName('');
-              setLocationError('');
-            }}
-          >
-            Clear
-          </Button>
-          <Button
-            mode="contained"
-            icon="magnify"
-            disabled={!selectedCityName}
-            contentStyle={styles.buttonContent}
-            onPress={handleSubmit}
-          >
-            Search
-          </Button>
+              <Text variant="bodyMedium" style={[styles.suggestionText, { color: theme.colors.onSurface }]}>
+                {suggestion}
+              </Text>
+            </Pressable>
+          ))}
+          {canSearch ? (
+            <Pressable
+              accessibilityRole="button"
+              onPress={submitSearch}
+              style={({ hovered, pressed }) => [
+                styles.suggestion,
+                styles.exactSearch,
+                (hovered || pressed) && { backgroundColor: theme.colors.surfaceVariant },
+                { borderTopColor: theme.colors.outlineVariant },
+              ]}
+            >
+              <Ionicons name="arrow-forward" size={18} color={theme.colors.primary} />
+              <Text variant="bodyMedium" style={[styles.suggestionText, { color: theme.colors.onSurface }]}>
+                Search for “{destination.trim()}”
+              </Text>
+            </Pressable>
+          ) : null}
         </View>
-      </View>
-
-      {locationError ? (
-        <Text accessibilityRole="alert" style={styles.error}>
-          {locationError}
-        </Text>
       ) : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  form: {
+  searchBox: {
+    minHeight: 56,
     width: '100%',
-  },
-  filterRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginBottom: 14,
+    alignItems: 'center',
+    borderWidth: 2,
+    borderRadius: 999,
+    paddingHorizontal: 16,
+    gap: 12,
+  },
+  searchIconButton: {
+    width: 36,
+    height: 44,
+    alignItems: 'center',
     justifyContent: 'center',
+    cursor: 'pointer',
   },
-  fields: {
-    gap: 12,
-    alignItems: 'stretch',
+  input: {
+    flex: 1,
+    minWidth: 0,
+    minHeight: 48,
+    fontSize: 16,
+    paddingVertical: 0,
+    paddingHorizontal: 0,
+    borderWidth: 0,
+    borderColor: 'transparent',
+    backgroundColor: 'transparent',
+    outlineWidth: 0,
+    outlineColor: 'transparent',
   },
-  button: {
-    width: '100%',
+  clearButton: {
+    width: 32,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+    cursor: 'pointer',
   },
-  buttonContent: {
-    paddingVertical: 6,
+  searchButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    cursor: 'pointer',
   },
-  actionRow: {
+  searchButtonPressed: {
+    opacity: 0.8,
+  },
+  suggestionsPanel: {
+    marginTop: 8,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: 14,
+    paddingVertical: 8,
+    overflow: 'hidden',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+  },
+  suggestionsHeading: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    fontWeight: '700',
+  },
+  suggestion: {
+    minHeight: 52,
     flexDirection: 'row',
+    alignItems: 'center',
     gap: 12,
-    justifyContent: 'flex-end',
+    paddingHorizontal: 16,
+    cursor: 'pointer',
   },
-  error: {
-    marginTop: 10,
-    textAlign: 'center',
-    color: '#b3261e',
+  suggestionText: {
+    flex: 1,
+  },
+  exactSearch: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    marginTop: 4,
+    paddingTop: 4,
   },
 });

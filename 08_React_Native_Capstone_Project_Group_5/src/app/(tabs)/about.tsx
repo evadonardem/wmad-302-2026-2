@@ -24,10 +24,9 @@ export default function AboutScreen() {
         How it works
       </Text>
       <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>
-        Browse the featured destinations or choose an island group, region, province where
-        available, and city or municipality. The app queries the PSGC registry for locations
-        and Pexels for matching photos. Tap a photo for details, or pull search results down
-        to refresh them.
+        Browse the featured destinations or search directly for any city, island, landmark,
+        or destination. The app finds matching photos with Pexels. Tap a photo for details,
+        or pull search results down to refresh them.
       </Text>
 
       <Divider style={styles.divider} />
