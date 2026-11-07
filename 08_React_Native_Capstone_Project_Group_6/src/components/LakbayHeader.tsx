@@ -11,7 +11,7 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
-import Svg, { Circle, Defs, Ellipse, Line, LinearGradient, Path, Rect, Stop } from 'react-native-svg';
+import Svg, { Circle, Defs, Ellipse, G, Line, LinearGradient, Path, Rect, Stop } from 'react-native-svg';
 import { Text, TouchableRipple, useTheme } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useThemeMode } from '@/themeMode';
@@ -70,14 +70,30 @@ const STARS: [number, number, number][] = [
   [880, 190, 1], [990, 215, 1.4],
 ];
 
+// The artwork is 1000 x 420. On wide screens it is fitted to the header HEIGHT and the
+// 1000-wide tile is repeated sideways so the hills and sea fill the width.
+// On narrow screens (phones) the original full 1000-wide scene is used.
+const TILE_W = 1000;
+const TILE_H = 420;
+const TILES = [-2, -1, 0, 1, 2];
+
 /** Island scene (light) / night sea (dark) drawn behind the header */
-function Scene({ dark }: { dark: boolean }) {
+function Scene({ dark, width, height }: { dark: boolean; width: number; height: number }) {
   const island = dark ? '#0C2233' : '#8FB59C';
   const islandFar = dark ? '#133450' : '#B3CFBC';
   const wave = dark ? '#6C95B5' : '#FFFFFF';
 
+  // Wide screens: fit to height and repeat the artwork sideways.
+  // Narrow screens (phones): keep the original full 1000-wide scene.
+  const scale = height > 0 ? height / TILE_H : 0;
+  const visibleW = scale > 0 ? width / scale : TILE_W;
+  const isWide = visibleW > TILE_W;
+  const viewBox = isWide
+    ? `${TILE_W / 2 - visibleW / 2} 0 ${visibleW} ${TILE_H}`
+    : `0 0 ${TILE_W} ${TILE_H}`;
+
   return (
-    <Svg style={StyleSheet.absoluteFill} viewBox="0 0 1000 420" preserveAspectRatio="xMidYMax slice">
+    <Svg style={StyleSheet.absoluteFill} viewBox={viewBox} preserveAspectRatio="xMidYMax slice">
       <Defs>
         <LinearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
           <Stop offset="0" stopColor={dark ? '#080F24' : '#F4ECDB'} />
@@ -89,54 +105,56 @@ function Scene({ dark }: { dark: boolean }) {
         </LinearGradient>
       </Defs>
 
-      <Rect x={0} y={0} width={1000} height={420} fill="url(#sky)" />
+      {/* sky + sea span far beyond the visible area */}
+      <Rect x={-3000} y={0} width={7000} height={420} fill="url(#sky)" />
+      <Rect x={-3000} y={300} width={7000} height={120} fill="url(#sea)" />
 
-      {dark ? (
+      {TILES.map((k) => (
+        <G key={k} transform={`translate(${k * TILE_W} 0)`}>
+          {dark ? (
+            <>
+              {STARS.map(([x, y, r], i) => (
+                <Circle key={i} cx={x} cy={y} r={r} fill="#FFFFFF" opacity={0.55 + (i % 3) * 0.15} />
+              ))}
+            </>
+          ) : (
+            <>
+              <Ellipse cx={170} cy={70} rx={70} ry={16} fill="#FFFFFF" opacity={0.55} />
+              <Ellipse cx={215} cy={60} rx={42} ry={14} fill="#FFFFFF" opacity={0.55} />
+              <Ellipse cx={800} cy={110} rx={80} ry={16} fill="#FFFFFF" opacity={0.5} />
+              <Ellipse cx={850} cy={98} rx={44} ry={14} fill="#FFFFFF" opacity={0.5} />
+            </>
+          )}
+
+          {/* islands */}
+          <Path d="M380 300 C 410 280, 450 272, 490 284 C 515 291, 530 296, 545 300 Z" fill={islandFar} />
+          <Path d="M600 300 C 615 290, 640 286, 660 292 C 670 295, 676 298, 680 300 Z" fill={islandFar} />
+          <Path d="M-20 300 C 40 255, 110 240, 170 262 C 210 276, 240 290, 270 300 Z" fill={island} />
+          <Path d="M700 300 C 740 250, 810 232, 880 258 C 930 276, 975 290, 1020 300 Z" fill={island} />
+
+          {/* waves */}
+          <Path d="M60 340 q15 -8 30 0 t30 0 t30 0" stroke={wave} strokeWidth={2.5} fill="none" opacity={dark ? 0.3 : 0.6} strokeLinecap="round" />
+          <Path d="M300 365 q15 -8 30 0 t30 0 t30 0" stroke={wave} strokeWidth={2.5} fill="none" opacity={dark ? 0.25 : 0.55} strokeLinecap="round" />
+          <Path d="M560 335 q15 -8 30 0 t30 0" stroke={wave} strokeWidth={2.5} fill="none" opacity={dark ? 0.25 : 0.55} strokeLinecap="round" />
+          <Path d="M120 390 q15 -8 30 0 t30 0 t30 0" stroke={wave} strokeWidth={2.5} fill="none" opacity={dark ? 0.2 : 0.5} strokeLinecap="round" />
+          <Path d="M700 385 q15 -8 30 0 t30 0 t30 0" stroke={wave} strokeWidth={2.5} fill="none" opacity={dark ? 0.2 : 0.5} strokeLinecap="round" />
+        </G>
+      ))}
+
+      {/* moon + moonlight on the water: single copy only */}
+      {dark && (
         <>
-          {STARS.map(([x, y, r], i) => (
-            <Circle key={i} cx={x} cy={y} r={r} fill="#FFFFFF" opacity={0.55 + (i % 3) * 0.15} />
-          ))}
-          {/* moon + glow */}
           <Circle cx={850} cy={80} r={78} fill="#F4F1DC" opacity={0.05} />
           <Circle cx={850} cy={80} r={52} fill="#F4F1DC" opacity={0.1} />
           <Circle cx={850} cy={80} r={27} fill="#F6F3DF" />
           <Circle cx={841} cy={72} r={5} fill="#E3DFC2" opacity={0.7} />
           <Circle cx={860} cy={90} r={3.5} fill="#E3DFC2" opacity={0.6} />
-        </>
-      ) : (
-        <>
-          <Ellipse cx={170} cy={70} rx={70} ry={16} fill="#FFFFFF" opacity={0.55} />
-          <Ellipse cx={215} cy={60} rx={42} ry={14} fill="#FFFFFF" opacity={0.55} />
-          <Ellipse cx={800} cy={110} rx={80} ry={16} fill="#FFFFFF" opacity={0.5} />
-          <Ellipse cx={850} cy={98} rx={44} ry={14} fill="#FFFFFF" opacity={0.5} />
-        </>
-      )}
-
-      {/* sea */}
-      <Rect x={0} y={300} width={1000} height={120} fill="url(#sea)" />
-
-      {/* islands */}
-      <Path d="M380 300 C 410 280, 450 272, 490 284 C 515 291, 530 296, 545 300 Z" fill={islandFar} />
-      <Path d="M600 300 C 615 290, 640 286, 660 292 C 670 295, 676 298, 680 300 Z" fill={islandFar} />
-      <Path d="M-20 300 C 40 255, 110 240, 170 262 C 210 276, 240 290, 270 300 Z" fill={island} />
-      <Path d="M700 300 C 740 250, 810 232, 880 258 C 930 276, 975 290, 1020 300 Z" fill={island} />
-
-      {/* moonlight on the water (dark) */}
-      {dark && (
-        <>
           <Line x1={815} y1={312} x2={885} y2={312} stroke="#F4F1DC" strokeWidth={3} opacity={0.4} strokeLinecap="round" />
           <Line x1={825} y1={330} x2={875} y2={330} stroke="#F4F1DC" strokeWidth={3} opacity={0.3} strokeLinecap="round" />
           <Line x1={832} y1={349} x2={868} y2={349} stroke="#F4F1DC" strokeWidth={3} opacity={0.22} strokeLinecap="round" />
           <Line x1={838} y1={369} x2={862} y2={369} stroke="#F4F1DC" strokeWidth={3} opacity={0.15} strokeLinecap="round" />
         </>
       )}
-
-      {/* waves */}
-      <Path d="M60 340 q15 -8 30 0 t30 0 t30 0" stroke={wave} strokeWidth={2.5} fill="none" opacity={dark ? 0.3 : 0.6} strokeLinecap="round" />
-      <Path d="M300 365 q15 -8 30 0 t30 0 t30 0" stroke={wave} strokeWidth={2.5} fill="none" opacity={dark ? 0.25 : 0.55} strokeLinecap="round" />
-      <Path d="M560 335 q15 -8 30 0 t30 0" stroke={wave} strokeWidth={2.5} fill="none" opacity={dark ? 0.25 : 0.55} strokeLinecap="round" />
-      <Path d="M120 390 q15 -8 30 0 t30 0 t30 0" stroke={wave} strokeWidth={2.5} fill="none" opacity={dark ? 0.2 : 0.5} strokeLinecap="round" />
-      <Path d="M700 385 q15 -8 30 0 t30 0 t30 0" stroke={wave} strokeWidth={2.5} fill="none" opacity={dark ? 0.2 : 0.5} strokeLinecap="round" />
     </Svg>
   );
 }
@@ -187,7 +205,7 @@ function Swoosh({ color, width }: { color: string; width: number }) {
   );
 }
 
-/** Pill-shaped search tab that opens a searchable, scrollable list in a centered card */
+/** Pill-shaped search tab that opens a searchable list (compact, centered, scrollable card) */
 function SearchTab<T extends { code: string }>({
   icon,
   placeholder,
@@ -216,14 +234,11 @@ function SearchTab<T extends { code: string }>({
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState('');
   const { height } = useWindowDimensions();
-  const listMaxHeight = Math.max(160, height * 0.7 - 150);
 
   const filtered = useMemo(() => {
     const term = filter.trim().toLowerCase();
     if (!term) return items;
-    return items.filter((item) =>
-      `${getLabel(item)} ${getSubLabel?.(item) ?? ''}`.toLowerCase().includes(term)
-    );
+    return items.filter((item) => `${getLabel(item)} ${getSubLabel?.(item) ?? ''}`.toLowerCase().includes(term));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [items, filter]);
 
@@ -260,7 +275,7 @@ function SearchTab<T extends { code: string }>({
           {/* Tap outside the card to close */}
           <Pressable style={StyleSheet.absoluteFill} onPress={close} accessibilityLabel="Close" />
 
-          <View style={[styles.modalCard, { backgroundColor: colors.paper, maxHeight: height * 0.7 }]}>
+          <View style={[styles.modalCard, { backgroundColor: colors.paper, height: Math.min(height * 0.7, 480) }]}>
             <View style={styles.modalHeader}>
               <Text style={[styles.modalTitle, { color: colors.green }]}>{modalTitle}</Text>
               <Pressable onPress={close} hitSlop={12} accessibilityLabel="Close">
@@ -284,35 +299,34 @@ function SearchTab<T extends { code: string }>({
               )}
             </View>
 
-            <ScrollView
-              style={{ height: listMaxHeight }}
-              contentContainerStyle={{ paddingBottom: 12 }}
-              showsVerticalScrollIndicator
-              nestedScrollEnabled
-              keyboardShouldPersistTaps="handled"
-            >
-              {filtered.length === 0 ? (
-                <Text style={[styles.modalEmpty, { color: colors.muted }]}>No matches found.</Text>
-              ) : (
-                filtered.map((item) => (
-                  <TouchableRipple
-                    key={item.code}
-                    onPress={() => {
-                      onSelect(item);
-                      close();
-                    }}
-                    style={[styles.modalRow, { borderBottomColor: colors.greenSoft }]}
-                  >
-                    <View>
-                      <Text style={{ color: colors.ink, fontSize: 16, fontWeight: '600' }}>{getLabel(item)}</Text>
-                      {getSubLabel?.(item) ? (
-                        <Text style={{ color: colors.muted, fontSize: 13 }}>{getSubLabel(item)}</Text>
-                      ) : null}
-                    </View>
-                  </TouchableRipple>
-                ))
-              )}
-            </ScrollView>
+            {/* flex: 1 + minHeight: 0 lets the list shrink to the space left in the card and scroll */}
+            <View style={{ flex: 1, minHeight: 0 }}>
+              <ScrollView
+                keyboardShouldPersistTaps="handled"
+                showsVerticalScrollIndicator
+                contentContainerStyle={{ paddingBottom: 12 }}
+              >
+                {filtered.length === 0 ? (
+                  <Text style={[styles.modalEmpty, { color: colors.muted }]}>No matches found.</Text>
+                ) : (
+                  filtered.map((item) => (
+                    <TouchableRipple
+                      key={item.code}
+                      onPress={() => {
+                        onSelect(item);
+                        close();
+                      }}
+                      style={[styles.modalRow, { borderBottomColor: colors.greenSoft }]}
+                    >
+                      <View>
+                        <Text style={{ color: colors.ink, fontSize: 16, fontWeight: '600' }}>{getLabel(item)}</Text>
+                        {getSubLabel?.(item) ? <Text style={{ color: colors.muted, fontSize: 13 }}>{getSubLabel(item)}</Text> : null}
+                      </View>
+                    </TouchableRipple>
+                  ))
+                )}
+              </ScrollView>
+            </View>
           </View>
         </View>
       </Modal>
@@ -341,9 +355,15 @@ export default function LakbayHeader({
   const { width } = useWindowDimensions();
   const wide = width >= 760;
 
+  // Measured header size, so the scene can decide how to fit itself
+  const [size, setSize] = useState({ w: 0, h: 0 });
+
   return (
-    <View style={[styles.wrap, { backgroundColor: c.paper }]}>
-      <Scene dark={isDarkMode} />
+    <View
+      style={[styles.wrap, { backgroundColor: c.paper }]}
+      onLayout={(e) => setSize({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}
+    >
+      <Scene dark={isDarkMode} width={size.w} height={size.h} />
 
       {/* Dark mode toggle */}
       <TouchableRipple
@@ -470,7 +490,16 @@ const styles = StyleSheet.create({
   tabText: { flex: 1, fontSize: 16, paddingVertical: 8 },
   tabBtn: { width: 42, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center' },
   overlay: { flex: 1, justifyContent: 'center', paddingHorizontal: 20, backgroundColor: 'rgba(0,0,0,0.45)' },
-  modalCard: { borderRadius: 20, paddingTop: 18, paddingHorizontal: 16, paddingBottom: 8, overflow: 'hidden' },
+  modalCard: {
+    width: '100%',
+    maxWidth: 560,
+    alignSelf: 'center',
+    borderRadius: 20,
+    paddingTop: 18,
+    paddingHorizontal: 16,
+    paddingBottom: 8,
+    overflow: 'hidden',
+  },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },
   modalTitle: { fontSize: 22, fontWeight: '800' },
   modalSearch: {

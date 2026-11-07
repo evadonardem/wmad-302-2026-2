@@ -42,7 +42,7 @@ const POPULAR = [
   'Sagada',
 ];
 
-/** Horizontally scrollable row of tappable chips */
+/** Tappable chips: swipeable row on phones, wrapping grid on desktop */
 function ChipRow({
   label,
   icon,
@@ -55,7 +55,22 @@ function ChipRow({
   onPress: (term: string) => void;
 }) {
   const theme = useTheme();
+  const { width } = useWindowDimensions();
+  const wide = width >= 760;
+
   if (items.length === 0) return null;
+
+  const chips = items.map((term) => (
+    <TouchableRipple
+      key={term}
+      onPress={() => onPress(term)}
+      borderless
+      style={[styles.chip, { backgroundColor: theme.colors.secondaryContainer }]}
+    >
+      <Text style={{ color: theme.colors.onSecondaryContainer, fontWeight: '600' }}>{term}</Text>
+    </TouchableRipple>
+  ));
+
   return (
     <View style={styles.chipSection}>
       <View style={styles.chipLabelRow}>
@@ -64,18 +79,14 @@ function ChipRow({
           {label}
         </Text>
       </View>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipScroll}>
-        {items.map((term) => (
-          <TouchableRipple
-            key={term}
-            onPress={() => onPress(term)}
-            borderless
-            style={[styles.chip, { backgroundColor: theme.colors.secondaryContainer }]}
-          >
-            <Text style={{ color: theme.colors.onSecondaryContainer, fontWeight: '600' }}>{term}</Text>
-          </TouchableRipple>
-        ))}
-      </ScrollView>
+
+      {wide ? (
+        <View style={styles.chipWrap}>{chips}</View>
+      ) : (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipScroll}>
+          {chips}
+        </ScrollView>
+      )}
     </View>
   );
 }
@@ -412,6 +423,7 @@ const styles = StyleSheet.create({
   chipSection: { marginTop: 14 },
   chipLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 },
   chipScroll: { gap: 8, paddingRight: 16 },
+  chipWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: { borderRadius: 999, paddingHorizontal: 16, paddingVertical: 8 },
   toolbar: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 16 },
   favToggle: { borderRadius: 999 },
