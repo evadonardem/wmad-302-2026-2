@@ -1,9 +1,6 @@
 import { createContext, useContext, useMemo, useState, type ReactNode } from 'react';
 
-// Pre-built search history store (not part of the assignment).
-// The Search dashboard records each successful search (TODO 5.1) and the History screen
-// renders the entries (TODO 5.2) and hands one back to Search (TODO 5.3).
-// Kept in memory on purpose: re-opening the app starts a fresh session.
+// Search history is intentionally kept in memory so reopening the app starts a fresh session.
 const MAX_ENTRIES = 10;
 
 type SearchHistoryValue = {

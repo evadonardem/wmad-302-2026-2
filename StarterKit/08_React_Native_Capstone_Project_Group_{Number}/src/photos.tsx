@@ -1,9 +1,7 @@
 import { createContext, useContext, useState, type Dispatch, type ReactNode, type SetStateAction } from 'react';
 import type { Photo } from '@/services/geoPhotoService';
 
-// Pre-built shared photo store (not part of the assignment).
-// The Search dashboard writes into it (TODO 3.8) and the photo detail screen reads from it
-// to power the prev/next viewer (TODO 4.7) — no prop drilling across routes.
+// Shared photo store used by the dashboard and the detail view without prop drilling.
 type PhotosValue = {
   photos: Photo[];
   setPhotos: Dispatch<SetStateAction<Photo[]>>;
