@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { getRandomQuote, getTags } from '@/services/quoteService';
+import { getRandomQuote, getTags, type Quote } from '@/services/quoteService';
 import { useFavorites } from '@/favorites';
 import { useTheme } from '@/theme';
 
@@ -11,37 +11,47 @@ export default function QuoteOfTheDay() {
   // - 'quote': Stores the current quote object (default: empty object)
   // - 'tags': Stores an array of all available category tags (default: empty array)
   // - 'selectedTag': Tracks the string name of the active filter tag (default: null)
-  // [Your code here]
+  const [quote, setQuote] = useState<Quote>({ text: '', author: '', tags: [] });
+  const [tags, setTags] = useState<string[]>([]);
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
 
   // TODO 2 [Reference Hook]: Create a React mutable reference named 'selectTagRef' that tracks
   // the currently selected filter tag value without triggering a re-render when it changes.
   // Initialize it to null (meaning "any" tag). Hint: useRef<string | null>(null)
-  // [Your code here]
+  const selectTagRef = useRef<string | null>(null);
 
   const loadRandomQuote = async () => {
     // TODO 3 [Async Request Handler]:
     // a. Read the current tag value from 'selectTagRef' (fallback to null if undefined)
     // b. Call 'getRandomQuote(tag)' asynchronously with that value
     // c. Update both your 'quote' state and 'selectedTag' state with the returned values
-    // [Your code here]
+    const currentTag = selectTagRef.current ?? null;
+    const fetchedQuote = await getRandomQuote(currentTag);
+    setQuote(fetchedQuote);
+    setSelectedTag(currentTag);
   };
 
   const loadTags = async () => {
     // TODO 4 [Async List Population]: Fetch tags asynchronously using 'getTags()' and store them into your tags state array
-    // [Your code here]
+    const fetchedTags = await getTags();
+    setTags(fetchedTags);
   };
 
   useEffect(() => {
     // TODO 5 [Component Lifecycle]: Execute both 'loadRandomQuote' and 'loadTags' when the component mounts
-    // [Your code here]
+    const init = async () => {
+      await loadRandomQuote();
+      await loadTags();
+    };
+    void init();
   }, []);
 
   const theme = useTheme();
   // Used by TODO 24 below.
-  const { toggleFavorite } = useFavorites();
+  const { toggleFavorite, isFavorite } = useFavorites();
 
   return (
-    <View style={[styles.card, { backgroundColor: theme.colors.surface }]}>
+    <View style={[styles.card, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
       <Text style={[styles.overline, { color: theme.colors.textSecondary }]}>
         Quote of the Day
       </Text>
@@ -51,17 +61,27 @@ export default function QuoteOfTheDay() {
             - Render a tag chip <View> with a unique key containing a <Text> label={t}
             - Apply styles.chipActive if 'selectedTag' matches 't', otherwise styles.chipInactive
             - Give the chip styles.chip for spacing */}
-        {/* [Your code here] */}
+        {quote.tags?.map((t) => (
+          <View
+            key={t}
+            style={[
+              styles.chip,
+              selectedTag === t ? styles.chipActive : styles.chipInactive,
+            ]}
+          >
+            <Text style={styles.chipText}>{t}</Text>
+          </View>
+        ))}
       </View>
 
       {/* TODO 7 [Text Content Mapping]: Bind 'quote.text' directly inside the quotation marks below */}
       <Text style={[styles.quoteText, { color: theme.colors.text }]}>
-        {'""'}
+        {`"${quote.text || ''}"`}
       </Text>
 
       {/* TODO 8 [Author Content Mapping]: Bind 'quote.author' after the long dash separator symbol */}
       <Text style={[styles.author, { color: theme.colors.textSecondary }]}>
-        —
+        — {quote.author || ''}
       </Text>
 
       <View style={[styles.divider, { backgroundColor: theme.colors.border }]} />
@@ -73,17 +93,74 @@ export default function QuoteOfTheDay() {
             The "any" chip resets both to null. */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
           {/* Base option: filtering by any tag. Wire its onPress so it clears the selection. */}
-          <Pressable style={styles.filterChip}>
-            <Text style={styles.filterChipText}>any</Text>
+          <Pressable
+            style={[
+              styles.filterChip,
+              selectedTag === null && {
+                backgroundColor: theme.colors.primary,
+                borderColor: theme.colors.primary,
+              },
+            ]}
+            onPress={() => {
+              selectTagRef.current = null;
+              setSelectedTag(null);
+            }}
+          >
+            <Text
+              style={[
+                styles.filterChipText,
+                selectedTag === null ? { color: '#ffffff' } : { color: theme.colors.text },
+              ]}
+            >
+              any
+            </Text>
           </Pressable>
           {/* TODO 10 [Select Option Generation]: Map through your 'tags' state array to render a
               filter chip <Pressable> for each tag 't', with label={t} and an onPress handler
               that updates both 'selectTagRef' and 'selectedTag' (see TODO 9). */}
-          {/* [Your code here] */}
+          {tags.map((t) => (
+            <Pressable
+              key={t}
+              style={[
+                styles.filterChip,
+                selectedTag === t && {
+                  backgroundColor: theme.colors.primary,
+                  borderColor: theme.colors.primary,
+                },
+              ]}
+              onPress={() => {
+                selectTagRef.current = t;
+                setSelectedTag(t);
+              }}
+            >
+              <Text
+                style={[
+                  styles.filterChipText,
+                  selectedTag === t ? { color: '#ffffff' } : { color: theme.colors.text },
+                ]}
+              >
+                {t}
+              </Text>
+            </Pressable>
+          ))}
         </ScrollView>
 
         {/* TODO 11 [Action Trigger Binding]: Attach an 'onPress' listener to trigger 'loadRandomQuote' */}
-        <Pressable style={[styles.refreshButton, { backgroundColor: theme.colors.primary }]}>
+        <Pressable
+          style={({ pressed }) => [
+            styles.refreshButton,
+            {
+              backgroundColor: theme.colors.primary,
+              ...(Platform.OS === 'web'
+                ? {
+                    backgroundImage: 'linear-gradient(135deg, #536dfe 0%, #7c4dff 50%, #5117d6 100%)',
+                  }
+                : {}),
+              opacity: pressed ? 0.85 : 1,
+            },
+          ]}
+          onPress={loadRandomQuote}
+        >
           <Ionicons name="refresh" size={18} color="#ffffff" />
           <Text style={styles.refreshButtonText}>Next Quote</Text>
         </Pressable>
@@ -94,7 +171,30 @@ export default function QuoteOfTheDay() {
               useFavorites() also exposes isFavorite(quote))
             - onPress calls toggleFavorite(quote) to save/remove the current quote
             - then jumps to the Favorites tab with router.navigate('/favorites') */}
-        {/* [Your code here] */}
+        <Pressable
+          style={({ pressed }) => [
+            styles.favoriteButton,
+            {
+              backgroundColor: isFavorite(quote)
+                ? 'rgba(124, 77, 255, 0.15)'
+                : 'rgba(0, 0, 0, 0.04)',
+              borderColor: isFavorite(quote) ? theme.colors.primary : theme.colors.border,
+              opacity: pressed ? 0.7 : 1,
+            },
+          ]}
+          onPress={() => {
+            if (quote && quote.text) {
+              toggleFavorite(quote);
+              router.navigate('/favorites');
+            }
+          }}
+        >
+          <Ionicons
+            name={isFavorite(quote) ? 'heart' : 'heart-outline'}
+            size={24}
+            color={theme.colors.primary}
+          />
+        </Pressable>
       </View>
     </View>
   );
@@ -104,19 +204,21 @@ const styles = StyleSheet.create({
   card: {
     maxWidth: 500,
     width: '100%',
-    borderRadius: 16,
-    padding: 24,
-    elevation: 5,
-    shadowColor: '#000',
+    borderRadius: 24,
+    padding: 32,
+    borderWidth: 1,
+    elevation: 4,
+    shadowColor: '#2d1b4e',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
+    shadowOpacity: 0.12,
     shadowRadius: 10,
   },
   overline: {
     fontSize: 12,
+    fontWeight: '600',
     letterSpacing: 2,
     textTransform: 'uppercase',
-    textAlign: 'center',
+    textAlign: 'left',
     marginBottom: 16,
   },
   tagRow: {
@@ -125,9 +227,9 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   chip: {
-    marginRight: 4,
-    marginBottom: 4,
-    paddingHorizontal: 10,
+    marginRight: 6,
+    marginBottom: 6,
+    paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 16,
   },
@@ -135,21 +237,23 @@ const styles = StyleSheet.create({
     backgroundColor: '#2e7d32',
   },
   chipInactive: {
-    backgroundColor: '#7b1fa2',
+    backgroundColor: '#7c4dff',
   },
   chipText: {
     color: '#ffffff',
     fontSize: 12,
+    fontWeight: '600',
   },
   quoteText: {
     fontSize: 20,
     fontStyle: 'italic',
     lineHeight: 30,
-    textAlign: 'center',
-    marginBottom: 12,
+    textAlign: 'left',
+    marginBottom: 16,
   },
   author: {
     fontSize: 15,
+    fontWeight: '500',
     textAlign: 'right',
     marginBottom: 16,
   },
@@ -158,29 +262,35 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   controlsRow: {
-    gap: 12,
+    gap: 14,
   },
   filterRow: {
     gap: 8,
     alignItems: 'center',
   },
   filterChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
     borderRadius: 16,
     borderWidth: 1,
     borderColor: '#bdbdbd',
   },
   filterChipText: {
     fontSize: 13,
+    fontWeight: '500',
   },
   refreshButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    paddingVertical: 12,
+    paddingVertical: 14,
     borderRadius: 12,
+    elevation: 2,
+    shadowColor: '#5117d6',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
   },
   refreshButtonText: {
     color: '#ffffff',
@@ -191,5 +301,6 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     padding: 10,
     borderRadius: 24,
+    borderWidth: 1,
   },
 });

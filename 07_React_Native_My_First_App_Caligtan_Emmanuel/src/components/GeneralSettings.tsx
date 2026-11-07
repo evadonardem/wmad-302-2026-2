@@ -19,8 +19,18 @@ export default function GeneralSettings({ actions }: { actions: SettingsAction[]
   //    no onPress was provided).
   return (
     <View style={[styles.card, { backgroundColor: theme.colors.surface }]}>
-      {/* TODO 12: Map the 'actions' prop into rows here */}
-      {/* [Your code here] */}
+      {actions.map((action) => (
+        <Pressable
+          key={action.name}
+          style={styles.actionRow}
+          onPress={action.onPress ?? (() => { })}
+        >
+          {action.icon}
+          <Text style={[styles.actionName, { color: theme.colors.text }]}>
+            {action.name}
+          </Text>
+        </Pressable>
+      ))}
     </View>
   );
 }
