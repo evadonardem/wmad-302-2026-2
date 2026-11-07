@@ -1,7 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Linking,
-  Modal,
   Platform,
   Pressable,
   ScrollView,
@@ -12,6 +11,7 @@ import {
 } from 'react-native';
 import { Image } from 'expo-image';
 import { Redirect, Stack, router, useLocalSearchParams } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ActivityIndicator, Button, Divider, IconButton, Text, TouchableRipple, useTheme } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as WebBrowser from 'expo-web-browser';
@@ -29,9 +29,16 @@ const SIZE_QUERIES = {
 } as const;
 
 type SizeKey = keyof typeof SIZE_QUERIES;
+type Sheet = 'none' | 'sizes' | 'confirm';
+
+const formatBytes = (bytes: number) => {
+  if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+};
 
 export default function PhotoDetailScreen() {
   const theme = useTheme();
+  const insets = useSafeAreaInsets();
   const { width: screenW } = useWindowDimensions();
   const wide = screenW >= 900;
   const { photos } = usePhotos();
@@ -55,16 +62,46 @@ export default function PhotoDetailScreen() {
   const altText = params.altText ?? current?.altText;
   const photoW = Number(params.width || current?.width) || 0;
   const photoH = Number(params.height || current?.height) || 0;
+  const baseUrl = imageUrl ? imageUrl.split('?')[0] : '';
 
   const [viewerOpen, setViewerOpen] = useState(false);
-  const [downloading, setDownloading] = useState<SizeKey | null>(null);
-  const [status, setStatus] = useState<string | null>(null);
+  const [sheet, setSheet] = useState<Sheet>('none');
+  const [selected, setSelected] = useState<SizeKey | null>(null);
+  const [fileSize, setFileSize] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ text: string; busy?: boolean } | null>(null);
+
+  // Auto-hide the notification (but not while a download is running)
+  useEffect(() => {
+    if (!toast || toast.busy) return;
+    const t = setTimeout(() => setToast(null), 3500);
+    return () => clearTimeout(t);
+  }, [toast]);
+
+  // Best-effort: ask the server how big the chosen file is (silently skipped if unavailable)
+  useEffect(() => {
+    setFileSize(null);
+    if (sheet !== 'confirm' || !selected || !baseUrl) return;
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(baseUrl + SIZE_QUERIES[selected], { method: 'HEAD' });
+        const len = Number(res.headers.get('content-length'));
+        if (!cancelled && len > 0) setFileSize(formatBytes(len));
+      } catch {
+        // size unknown, that's fine
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [sheet, selected, baseUrl]);
 
   if (!imageUrl || !photographer) {
     return <Redirect href="/" />;
   }
 
-  const baseUrl = imageUrl.split('?')[0];
   const aspect = photoW && photoH ? photoW / photoH : 4 / 3;
 
   const sizes: { key: SizeKey; label: string; dims: string; hint: string }[] = [
@@ -82,7 +119,18 @@ export default function PhotoDetailScreen() {
     { key: 'small', label: 'Small', dims: '130 px tall', hint: 'Thumbnail' },
   ];
 
+  const selectedSize = sizes.find((s) => s.key === selected) ?? null;
   const currentIndex = photos.findIndex((p) => String(p.id) === id);
+
+  const openSizes = () => {
+    setSelected(null);
+    setSheet('sizes');
+  };
+
+  const pickSize = (key: SizeKey) => {
+    setSelected(key);
+    setSheet('confirm');
+  };
 
   const goToAdjacentPhoto = (offset: number) => {
     const target = photos[currentIndex + offset];
@@ -102,10 +150,16 @@ export default function PhotoDetailScreen() {
     });
   };
 
-  const handleDownload = async (key: SizeKey, label: string) => {
+  /** Runs after the user taps "Yes" */
+  const confirmDownload = async () => {
+    if (!selected || !selectedSize) return;
+
+    const key = selected;
+    const label = selectedSize.label;
     const url = baseUrl + SIZE_QUERIES[key];
-    setDownloading(key);
-    setStatus(null);
+
+    setSheet('none');
+    setToast({ text: `Downloading ${label}…`, busy: true });
 
     try {
       if (Platform.OS === 'web') {
@@ -121,21 +175,19 @@ export default function PhotoDetailScreen() {
         a.click();
         a.remove();
         URL.revokeObjectURL(href);
-        setStatus(`Downloaded ${label}.`);
+        setToast({ text: `Downloaded ${label} ✓` });
       } else {
         // On phones the image opens in the browser, where it can be saved
         await Linking.openURL(url);
-        setStatus(`Opened ${label}. Press and hold the image to save it.`);
+        setToast({ text: `Opened ${label}. Press and hold the image to save it.` });
       }
     } catch {
       try {
         await Linking.openURL(url);
-        setStatus(`Opened ${label} in your browser. Save it from there.`);
+        setToast({ text: `Opened ${label} in your browser. Save it from there.` });
       } catch {
-        setStatus('Could not download this size. Please try again.');
+        setToast({ text: 'Could not download this size. Please try again.' });
       }
-    } finally {
-      setDownloading(null);
     }
   };
 
@@ -156,33 +208,45 @@ export default function PhotoDetailScreen() {
   };
 
   return (
-    <>
-      <Stack.Screen options={{ title: `By ${photographer}` }} />
-
-      <ScrollView
-        style={{ flex: 1, backgroundColor: theme.colors.background }}
-        contentContainerStyle={[styles.content, wide && styles.contentWide]}
-      >
-        {/* LEFT: the picture (tap to view full screen) */}
-        <View style={wide ? styles.leftWide : undefined}>
-          <Pressable
-            onPress={() => setViewerOpen(true)}
-            accessibilityRole="imagebutton"
-            accessibilityLabel="View photo full screen"
-            style={styles.hero}
-          >
-            <Image
-              source={{ uri: imageUrl }}
-              style={{ width: '100%', aspectRatio: aspect }}
-              contentFit="cover"
-              transition={200}
-              accessibilityLabel={altText}
+    <View style={[styles.screen, { backgroundColor: theme.colors.background }]}>
+      <Stack.Screen
+        options={{
+          title: `By ${photographer}`,
+          headerShown: !viewerOpen,
+          // Download icon in the top-right corner
+          headerRight: () => (
+            <IconButton
+              icon="download"
+              iconColor={theme.colors.onSurface}
+              size={24}
+              onPress={openSizes}
+              accessibilityLabel="Download photo"
             />
-            <View style={styles.expandBadge}>
-              <MaterialCommunityIcons name="arrow-expand" size={18} color="#FFFFFF" />
-            </View>
-          </Pressable>
+          ),
+        }}
+      />
 
+      {/* THE PICTURE */}
+      <ScrollView contentContainerStyle={styles.content}>
+        <Pressable
+          onPress={() => setViewerOpen(true)}
+          accessibilityRole="imagebutton"
+          accessibilityLabel="View photo full screen"
+          style={[styles.hero, wide && styles.heroWide]}
+        >
+          <Image
+            source={{ uri: imageUrl }}
+            style={{ width: '100%', aspectRatio: aspect }}
+            contentFit="cover"
+            transition={200}
+            accessibilityLabel={altText}
+          />
+          <View style={styles.expandBadge}>
+            <MaterialCommunityIcons name="arrow-expand" size={18} color="#FFFFFF" />
+          </View>
+        </Pressable>
+
+        <View style={[styles.below, wide && styles.heroWide]}>
           <View style={styles.pagerRow}>
             <IconButton
               icon="chevron-left"
@@ -204,57 +268,6 @@ export default function PhotoDetailScreen() {
               accessibilityLabel="Next photo"
             />
           </View>
-        </View>
-
-        {/* RIGHT: download sizes */}
-        <View style={[styles.panel, wide && styles.panelWide, { backgroundColor: theme.colors.surface }]}>
-          <View style={styles.panelHeader}>
-            <MaterialCommunityIcons name="download" size={22} color={theme.colors.primary} />
-            <Text variant="titleMedium" style={{ color: theme.colors.onSurface, fontWeight: '700' }}>
-              Download
-            </Text>
-          </View>
-          <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
-            Choose a size. Larger sizes are sharper but make a bigger file.
-          </Text>
-
-          <View style={styles.sizeList}>
-            {sizes.map((s, i) => (
-              <View key={s.key}>
-                {i > 0 && <Divider />}
-                <TouchableRipple
-                  onPress={() => handleDownload(s.key, s.label)}
-                  disabled={downloading !== null}
-                  accessibilityRole="button"
-                  accessibilityLabel={`Download ${s.label}, ${s.dims}`}
-                  style={styles.sizeRow}
-                >
-                  <View style={styles.sizeRowInner}>
-                    <View style={{ flex: 1 }}>
-                      <Text style={{ color: theme.colors.onSurface, fontWeight: '700' }}>{s.label}</Text>
-                      <Text variant="bodySmall" style={{ color: theme.colors.primary }}>
-                        {s.dims}
-                      </Text>
-                      <Text variant="labelSmall" style={{ color: theme.colors.onSurfaceVariant }}>
-                        {s.hint}
-                      </Text>
-                    </View>
-                    {downloading === s.key ? (
-                      <ActivityIndicator size={20} />
-                    ) : (
-                      <MaterialCommunityIcons name="download-outline" size={24} color={theme.colors.primary} />
-                    )}
-                  </View>
-                </TouchableRipple>
-              </View>
-            ))}
-          </View>
-
-          {status && (
-            <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
-              {status}
-            </Text>
-          )}
 
           <Button mode="outlined" icon="open-in-new" onPress={handleOpenPhotographer} disabled={!photographerUrl}>
             Visit photographer profile
@@ -269,47 +282,174 @@ export default function PhotoDetailScreen() {
         </View>
       </ScrollView>
 
-      {/* Full-screen viewer */}
-      <Modal visible={viewerOpen} transparent animationType="fade" onRequestClose={() => setViewerOpen(false)}>
+      {/* FULL-SCREEN VIEWER */}
+      {viewerOpen && (
         <View style={styles.viewer}>
           <Pressable style={StyleSheet.absoluteFill} onPress={() => setViewerOpen(false)} accessibilityLabel="Close" />
           <View style={styles.viewerBody} pointerEvents="none">
             <Image source={{ uri: baseUrl + SIZE_QUERIES.large2x }} style={styles.viewerImage} contentFit="contain" />
           </View>
-          <IconButton
-            icon="close"
-            iconColor="#FFFFFF"
-            size={28}
-            onPress={() => setViewerOpen(false)}
-            accessibilityLabel="Close"
-            style={styles.viewerClose}
-          />
+
+          <View style={[styles.viewerBar, { paddingTop: insets.top + 8 }]}>
+            <IconButton
+              icon="download"
+              iconColor="#FFFFFF"
+              size={26}
+              onPress={openSizes}
+              accessibilityLabel="Download photo"
+            />
+            <IconButton
+              icon="close"
+              iconColor="#FFFFFF"
+              size={26}
+              onPress={() => setViewerOpen(false)}
+              accessibilityLabel="Close"
+            />
+          </View>
         </View>
-      </Modal>
-    </>
+      )}
+
+      {/* SIZE LIST + CONFIRMATION */}
+      {sheet !== 'none' && (
+        <View style={styles.overlay}>
+          <Pressable style={StyleSheet.absoluteFill} onPress={() => setSheet('none')} accessibilityLabel="Close" />
+
+          {sheet === 'sizes' && (
+            <View style={[styles.card, { backgroundColor: theme.colors.surface }]}>
+              <View style={styles.cardHeader}>
+                <View style={{ flex: 1 }}>
+                  <Text variant="titleMedium" style={{ color: theme.colors.onSurface, fontWeight: '700' }}>
+                    Download photo
+                  </Text>
+                  <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
+                    Choose a size
+                  </Text>
+                </View>
+                <IconButton
+                  icon="close"
+                  iconColor={theme.colors.onSurface}
+                  size={22}
+                  onPress={() => setSheet('none')}
+                  accessibilityLabel="Close"
+                />
+              </View>
+
+              <ScrollView style={styles.sizeScroll}>
+                {sizes.map((s, i) => (
+                  <View key={s.key}>
+                    {i > 0 && <Divider />}
+                    <TouchableRipple
+                      onPress={() => pickSize(s.key)}
+                      accessibilityRole="button"
+                      accessibilityLabel={`${s.label}, ${s.dims}`}
+                      style={styles.sizeRow}
+                    >
+                      <View style={styles.sizeRowInner}>
+                        <View style={{ flex: 1 }}>
+                          <Text style={{ color: theme.colors.onSurface, fontWeight: '700' }}>{s.label}</Text>
+                          <Text variant="bodySmall" style={{ color: theme.colors.primary }}>
+                            {s.dims}
+                          </Text>
+                          <Text variant="labelSmall" style={{ color: theme.colors.onSurfaceVariant }}>
+                            {s.hint}
+                          </Text>
+                        </View>
+                        <MaterialCommunityIcons name="chevron-right" size={24} color={theme.colors.onSurfaceVariant} />
+                      </View>
+                    </TouchableRipple>
+                  </View>
+                ))}
+              </ScrollView>
+            </View>
+          )}
+
+          {sheet === 'confirm' && selectedSize && (
+            <View style={[styles.card, styles.confirmCard, { backgroundColor: theme.colors.surface }]}>
+              <View style={[styles.confirmIcon, { backgroundColor: theme.colors.secondaryContainer }]}>
+                <MaterialCommunityIcons name="download" size={30} color={theme.colors.primary} />
+              </View>
+
+              <Text variant="titleLarge" style={{ color: theme.colors.onSurface, fontWeight: '700', textAlign: 'center' }}>
+                Download this photo?
+              </Text>
+
+              <View style={[styles.detailBox, { backgroundColor: theme.colors.surfaceVariant }]}>
+                <View style={styles.detailRow}>
+                  <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>
+                    Size
+                  </Text>
+                  <Text variant="bodyMedium" style={{ color: theme.colors.onSurface, fontWeight: '700' }}>
+                    {selectedSize.label}
+                  </Text>
+                </View>
+                <View style={styles.detailRow}>
+                  <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>
+                    Dimensions
+                  </Text>
+                  <Text variant="bodyMedium" style={{ color: theme.colors.onSurface, fontWeight: '700' }}>
+                    {selectedSize.dims}
+                  </Text>
+                </View>
+                {fileSize && (
+                  <View style={styles.detailRow}>
+                    <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>
+                      File size
+                    </Text>
+                    <Text variant="bodyMedium" style={{ color: theme.colors.onSurface, fontWeight: '700' }}>
+                      {fileSize}
+                    </Text>
+                  </View>
+                )}
+                <View style={styles.detailRow}>
+                  <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>
+                    Photo by
+                  </Text>
+                  <Text
+                    variant="bodyMedium"
+                    numberOfLines={1}
+                    style={{ color: theme.colors.onSurface, fontWeight: '700', flexShrink: 1, textAlign: 'right' }}
+                  >
+                    {photographer}
+                  </Text>
+                </View>
+              </View>
+
+              <View style={styles.confirmButtons}>
+                <Button mode="outlined" onPress={() => setSheet('sizes')} style={styles.confirmBtn}>
+                  No
+                </Button>
+                <Button mode="contained" icon="download" onPress={confirmDownload} style={styles.confirmBtn}>
+                  Yes
+                </Button>
+              </View>
+            </View>
+          )}
+        </View>
+      )}
+
+      {/* NOTIFICATION */}
+      {toast && (
+        <View style={[styles.toastWrap, { bottom: insets.bottom + 24 }]} pointerEvents="none">
+          <View style={[styles.toast, { backgroundColor: theme.colors.inverseSurface }]}>
+            {toast.busy && <ActivityIndicator size={16} color={theme.colors.inverseOnSurface} />}
+            <Text style={{ color: theme.colors.inverseOnSurface, flexShrink: 1 }}>{toast.text}</Text>
+          </View>
+        </View>
+      )}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  content: {
-    width: '100%',
-    maxWidth: 1200,
-    alignSelf: 'center',
-    padding: 16,
-    gap: 16,
-  },
-  contentWide: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    padding: 24,
-    gap: 24,
-  },
-  leftWide: { flex: 3 },
-  hero: { width: '100%', borderRadius: 16, overflow: 'hidden' },
+  screen: { flex: 1 },
+  content: { paddingBottom: 32 },
+
+  hero: { width: '100%', overflow: 'hidden' },
+  heroWide: { maxWidth: 900, alignSelf: 'center', borderRadius: 16 },
   expandBadge: {
     position: 'absolute',
-    right: 10,
-    bottom: 10,
+    right: 12,
+    bottom: 12,
     width: 34,
     height: 34,
     borderRadius: 17,
@@ -317,16 +457,71 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  pagerRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 8 },
+
+  below: { width: '100%', padding: 16, gap: 12 },
+  pagerRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   photographer: { flex: 1, fontWeight: '600', textAlign: 'center' },
-  panel: { width: '100%', borderRadius: 16, padding: 16, gap: 12 },
-  panelWide: { flex: 2 },
-  panelHeader: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  sizeList: { borderRadius: 12, overflow: 'hidden' },
-  sizeRow: { paddingVertical: 10, paddingHorizontal: 4 },
-  sizeRowInner: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  viewer: { flex: 1, backgroundColor: 'rgba(0,0,0,0.92)', justifyContent: 'center' },
+
+  viewer: { ...StyleSheet.absoluteFill, zIndex: 20, backgroundColor: 'rgba(0,0,0,0.95)', justifyContent: 'center' },
   viewerBody: { flex: 1, padding: 12 },
   viewerImage: { width: '100%', height: '100%' },
-  viewerClose: { position: 'absolute', top: 24, right: 12 },
+  viewerBar: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    paddingHorizontal: 8,
+  },
+
+  overlay: {
+    ...StyleSheet.absoluteFill,
+    zIndex: 30,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 20,
+  },
+  card: {
+    width: '100%',
+    maxWidth: 420,
+    maxHeight: '85%',
+    borderRadius: 20,
+    padding: 16,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+  },
+  cardHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
+  sizeScroll: { flexGrow: 0 },
+  sizeRow: { paddingVertical: 12, paddingHorizontal: 4 },
+  sizeRowInner: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+
+  confirmCard: { alignItems: 'stretch', gap: 14, padding: 20 },
+  confirmIcon: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'center',
+  },
+  detailBox: { borderRadius: 12, padding: 14, gap: 8 },
+  detailRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12 },
+  confirmButtons: { flexDirection: 'row', gap: 12 },
+  confirmBtn: { flex: 1 },
+
+  toastWrap: { position: 'absolute', left: 0, right: 0, zIndex: 40, alignItems: 'center', paddingHorizontal: 20 },
+  toast: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    maxWidth: 480,
+  },
 });
