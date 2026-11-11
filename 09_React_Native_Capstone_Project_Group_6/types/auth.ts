@@ -13,6 +13,7 @@ export interface AuthUser {
   image: string;
   token: string;
   refreshToken: string;
+  isLocalAccount?: boolean; // true for accounts created via Register (DummyJSON doesn't save them)
 }
 
 export interface LoginCredentials {

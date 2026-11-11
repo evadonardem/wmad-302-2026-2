@@ -9,9 +9,12 @@
 
 import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from 'axios';
 import { LoginCredentials, RegisterData, AuthUser, RefreshTokenResponse } from '@/types/auth';
-import { authStorage } from '@/utils/storage';
+import { authStorage, accountsStorage, LocalAccount } from '@/utils/storage';
 
 const API_BASE_URL = 'https://dummyjson.com/auth';
+// Usernames that belong to real DummyJSON users we log in with (the demo
+// account). Registering with one would hide it on this device.
+const RESERVED_USERNAMES = ['emilys'];
 
 // Axios config + a flag so a request is only retried once after a refresh.
 type RetriableRequest = InternalAxiosRequestConfig & { _retry?: boolean };
@@ -98,6 +101,16 @@ class AuthApiService {
    * POST /auth/login
    */
   async login(credentials: LoginCredentials): Promise<AuthUser> {
+    // 1. Accounts created on this device (Register screen) win first.
+    const local = await this.findLocalAccount(credentials.username);
+    if (local) {
+      if (local.password !== credentials.password) {
+        throw new Error('Invalid credentials');
+      }
+      return this.startLocalSession(local.user);
+    }
+
+    // 2. Otherwise ask DummyJSON (real users such as the demo account).
     try {
       const response = await this.client.post<RawAuthResponse>('/login', {
         username: credentials.username,
@@ -114,12 +127,56 @@ class AuthApiService {
   }
 
   /**
-   * Register new user
-   * POST /auth/register
-   * TODO (Phase 2): implement
+   * Register new user.
+   * DummyJSON can't store new users, so the account is saved on this device
+   * and the user is signed in right away with a local session.
    */
-  async register(_data: RegisterData): Promise<AuthUser> {
-    throw new Error('TODO: Implement register - call /auth/register then login');
+  async register(data: RegisterData): Promise<AuthUser> {
+    const username = data.username.trim();
+    const email = data.email.trim();
+
+    const taken =
+      RESERVED_USERNAMES.includes(username.toLowerCase()) ||
+      (await this.findLocalAccount(username)) ||
+      (await this.findLocalAccount(email));
+    if (taken) {
+      throw new Error('That username or email is already registered');
+    }
+
+    const profile: LocalAccount['user'] = {
+      id: Date.now(), // unique enough for a device-local account
+      username,
+      email,
+      firstName: data.firstName,
+      lastName: data.lastName,
+      gender: data.gender ?? 'male',
+      image: data.image ?? `https://dummyjson.com/icon/${encodeURIComponent(username)}/128`,
+    };
+    await accountsStorage.add({ password: data.password, user: profile });
+    return this.startLocalSession(profile);
+  }
+
+  /** Find a saved local account by username or email (case-insensitive). */
+  private async findLocalAccount(identifier: string): Promise<LocalAccount | null> {
+    const wanted = identifier.trim().toLowerCase();
+    const accounts = await accountsStorage.getAll();
+    return (
+      accounts.find(
+        (a) => a.user.username.toLowerCase() === wanted || a.user.email.toLowerCase() === wanted
+      ) ?? null
+    );
+  }
+
+  /** Create the stored session for a local account. Tokens are placeholders. */
+  private async startLocalSession(profile: LocalAccount['user']): Promise<AuthUser> {
+    const user: AuthUser = {
+      ...profile,
+      token: `local-${profile.id}`,
+      refreshToken: `local-refresh-${profile.id}`,
+      isLocalAccount: true,
+    };
+    await this.setTokens(user);
+    return user;
   }
 
   /**

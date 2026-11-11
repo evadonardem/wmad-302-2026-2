@@ -1,37 +1,56 @@
 /**
- * Register Screen - SKELETON WITH TODOs
- * Students complete this screen to learn auth flow
- * 
- * TODO LIST:
- * 1. Wire form validation
- * 2. Call authApi.register() in handleRegister
- * 3. On success, call context.login() or navigate to login
- * 4. Add password confirmation field
- * 5. Add terms checkbox
- * 6. Handle loading/error states properly
- * 7. Test with DummyJSON /auth/register endpoint
+ * Register Screen
+ * - Validates every field and shows the message under the field (works on web,
+ *   unlike Alert.alert which does nothing in a browser).
+ * - Calls register() from AuthContext, which creates the user and auto-logs in.
  */
 import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  KeyboardAvoidingView,
-  Platform,
-  Alert,
-  ActivityIndicator,
-} from 'react-native';
+import { View, Text, ScrollView, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
-import { Card, Button, TextInput as PaperTextInput, Checkbox } from 'react-native-paper';
+import {
+  Card,
+  Button,
+  Checkbox,
+  HelperText,
+  SegmentedButtons,
+  TextInput as PaperTextInput,
+} from 'react-native-paper';
 import { styles } from './styles';
+
+type Gender = 'male' | 'female';
+
+interface FormData {
+  firstName: string;
+  lastName: string;
+  username: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+  age: string;
+  gender: Gender;
+}
+
+// One optional error message per text field
+type FormErrors = Partial<Record<keyof FormData | 'terms', string>>;
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+// Extra styles this screen needs (the shared auth styles don't have them)
+const local = StyleSheet.create({
+  row: { flexDirection: 'row', gap: 12 },
+  half: { flex: 1 },
+  fieldGap: { marginBottom: 4 },
+  label: { fontSize: 12, color: '#8D6E63', marginBottom: 6 },
+  terms: { flexDirection: 'row', alignItems: 'center', marginTop: 8 },
+  termsText: { flex: 1, fontSize: 13, color: '#5D4037' },
+});
 
 export default function RegisterScreen() {
   const router = useRouter();
   const { register, isLoading, error, clearError } = useAuth();
 
-  // Form state
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     firstName: '',
     lastName: '',
     username: '',
@@ -39,84 +58,73 @@ export default function RegisterScreen() {
     password: '',
     confirmPassword: '',
     age: '',
-    gender: 'male' as 'male' | 'female',
+    gender: 'male',
   });
-
+  const [errors, setErrors] = useState<FormErrors>({});
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  // Validation helpers
-  const validateForm = (): string | null => {
-    if (!formData.firstName.trim()) return 'First name is required';
-    if (!formData.lastName.trim()) return 'Last name is required';
-    if (!formData.username.trim()) return 'Username is required';
-    if (formData.username.length < 3) return 'Username must be at least 3 characters';
-    if (!formData.email.trim()) return 'Email is required';
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) return 'Invalid email format';
-    if (!formData.password) return 'Password is required';
-    if (formData.password.length < 6) return 'Password must be at least 6 characters';
-    if (formData.password !== formData.confirmPassword) return 'Passwords do not match';
-    if (formData.age && (parseInt(formData.age) < 13 || parseInt(formData.age) > 120)) {
-      return 'Age must be between 13 and 120';
+  // Returns an object of error messages; empty object = form is valid
+  const validateForm = (): FormErrors => {
+    const e: FormErrors = {};
+    if (!formData.firstName.trim()) e.firstName = 'First name is required';
+    if (!formData.lastName.trim()) e.lastName = 'Last name is required';
+
+    if (!formData.username.trim()) e.username = 'Username is required';
+    else if (formData.username.trim().length < 3) e.username = 'At least 3 characters';
+
+    if (!formData.email.trim()) e.email = 'Email is required';
+    else if (!EMAIL_REGEX.test(formData.email.trim())) e.email = 'Invalid email format';
+
+    if (!formData.password) e.password = 'Password is required';
+    else if (formData.password.length < 6) e.password = 'At least 6 characters';
+
+    if (formData.confirmPassword !== formData.password) e.confirmPassword = 'Passwords do not match';
+
+    if (formData.age.trim()) {
+      const age = Number(formData.age);
+      if (!Number.isInteger(age) || age < 13 || age > 120) e.age = 'Age must be 13–120';
     }
-    if (!agreedToTerms) return 'You must agree to the Terms of Service';
-    return null;
+
+    if (!agreedToTerms) e.terms = 'You must agree to the Terms of Service';
+    return e;
   };
 
   const handleRegister = async () => {
-    const validationError = validateForm();
-    if (validationError) {
-      Alert.alert('Validation Error', validationError);
-      return;
-    }
-
-    // TODO: Student Implementation
-    // 1. Call authApi.register() with formData
-    //    - Import authApi from '@/services/authApi'
-    //    - Pass: firstName, lastName, username, password, email, age, gender
-    // 2. On success:
-    //    - Option A: Auto-login by calling context.login(username, password)
-    //    - Option B: Show success alert and navigate to login screen
-    // 3. On failure: Error is handled by context (shows in error state)
+    const found = validateForm();
+    setErrors(found);
+    if (Object.keys(found).length > 0) return;
 
     try {
-      // TODO: Replace with actual implementation
-      // const user = await authApi.register({
-      //   firstName: formData.firstName.trim(),
-      //   lastName: formData.lastName.trim(),
-      //   username: formData.username.trim(),
-      //   password: formData.password,
-      //   email: formData.email.trim(),
-      //   age: formData.age ? parseInt(formData.age) : undefined,
-      //   gender: formData.gender,
-      // });
-      // 
-      // // Auto-login after registration
-      // await login(formData.username.trim(), formData.password);
-      // router.replace('/(app)/(tabs)/home');
-
-      Alert.alert(
-        'TODO: Implement Register',
-        'Complete the register function by:\n1. Calling authApi.register()\n2. Auto-login or redirect to login\n3. Handle errors',
-        [{ text: 'OK' }]
-      );
-    } catch (err) {
-      // Error handled by context
-      console.error('Registration error:', err);
+      await register({
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
+        username: formData.username.trim(),
+        password: formData.password,
+        email: formData.email.trim(),
+        age: formData.age.trim() ? Number(formData.age) : undefined,
+        gender: formData.gender,
+      });
+      // register() already logged the user in, so go straight to Home
+      router.replace('/(app)/(tabs)/home');
+    } catch {
+      // The error message is stored in AuthContext and shown below
     }
   };
 
-  const handleFieldChange = (field: string, value: string) => {
+  // Update one field and clear its error as the user types
+  const handleFieldChange = (field: keyof FormData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+    setErrors((prev) => ({ ...prev, [field]: undefined }));
     if (error) clearError();
   };
 
-  React.useEffect(() => {
-    if (error) {
-      Alert.alert('Registration Failed', error, [{ text: 'OK', onPress: clearError }]);
-    }
-  }, [error, clearError]);
+  const eyeIcon = (
+    <PaperTextInput.Icon
+      icon={showPassword ? 'eye-off' : 'eye'}
+      onPress={() => setShowPassword((v) => !v)}
+    />
+  );
 
   return (
     <KeyboardAvoidingView
@@ -124,208 +132,178 @@ export default function RegisterScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* Logo/Brand */}
         <View style={styles.logoContainer}>
           <Text style={styles.logoText}>🍳</Text>
           <Text style={styles.appName}>Cookbook</Text>
           <Text style={styles.tagline}>Create Your Account</Text>
         </View>
 
-        {/* Register Card */}
         <Card style={styles.card} elevation={3}>
           <Card.Content style={styles.cardContent}>
             <Text style={styles.title}>Create Account</Text>
             <Text style={styles.subtitle}>Start building your recipe collection</Text>
 
-            {/* Name Fields Row */}
-            <View style={styles.nameRow}>
-              <PaperTextInput
-                label="First Name"
-                mode="outlined"
-                value={formData.firstName}
-                onChangeText={(v) => handleFieldChange('firstName', v)}
-                style={[styles.input, styles.halfInput]}
-                autoCapitalize="words"
-                autoCompleteType="given-name"
-                returnKeyType="next"
-                disabled={isLoading}
-              />
-              <PaperTextInput
-                label="Last Name"
-                mode="outlined"
-                value={formData.lastName}
-                onChangeText={(v) => handleFieldChange('lastName', v)}
-                style={[styles.input, styles.halfInput]}
-                autoCapitalize="words"
-                autoCompleteType="family-name"
-                returnKeyType="next"
-                disabled={isLoading}
-              />
+            {/* Name row */}
+            <View style={local.row}>
+              <View style={local.half}>
+                <PaperTextInput
+                  label="First Name"
+                  mode="outlined"
+                  value={formData.firstName}
+                  onChangeText={(v) => handleFieldChange('firstName', v)}
+                  autoCapitalize="words"
+                  autoComplete="given-name"
+                  error={!!errors.firstName}
+                  disabled={isLoading}
+                />
+                <HelperText type="error" visible={!!errors.firstName}>
+                  {errors.firstName}
+                </HelperText>
+              </View>
+              <View style={local.half}>
+                <PaperTextInput
+                  label="Last Name"
+                  mode="outlined"
+                  value={formData.lastName}
+                  onChangeText={(v) => handleFieldChange('lastName', v)}
+                  autoCapitalize="words"
+                  autoComplete="family-name"
+                  error={!!errors.lastName}
+                  disabled={isLoading}
+                />
+                <HelperText type="error" visible={!!errors.lastName}>
+                  {errors.lastName}
+                </HelperText>
+              </View>
             </View>
 
-            {/* Username */}
             <PaperTextInput
               label="Username"
               mode="outlined"
               value={formData.username}
               onChangeText={(v) => handleFieldChange('username', v)}
-              style={styles.input}
               autoCapitalize="none"
-              autoCompleteType="username"
-              returnKeyType="next"
+              autoComplete="username"
+              error={!!errors.username}
               disabled={isLoading}
             />
+            <HelperText type="error" visible={!!errors.username}>
+              {errors.username}
+            </HelperText>
 
-            {/* Email */}
             <PaperTextInput
               label="Email"
               mode="outlined"
               value={formData.email}
               onChangeText={(v) => handleFieldChange('email', v)}
-              style={styles.input}
               autoCapitalize="none"
               keyboardType="email-address"
-              autoCompleteType="email"
-              returnKeyType="next"
+              autoComplete="email"
+              error={!!errors.email}
               disabled={isLoading}
             />
+            <HelperText type="error" visible={!!errors.email}>
+              {errors.email}
+            </HelperText>
 
-            {/* Password */}
             <PaperTextInput
               label="Password"
               mode="outlined"
               value={formData.password}
               onChangeText={(v) => handleFieldChange('password', v)}
-              style={styles.input}
               secureTextEntry={!showPassword}
-              autoCompleteType="new-password"
-              returnKeyType="next"
+              autoComplete="new-password"
+              error={!!errors.password}
               disabled={isLoading}
-              right={
-                <View style={styles.eyeIcon}>
-                  <Text onPress={() => setShowPassword(!showPassword)} style={styles.eyeText}>
-                    {showPassword ? '🙈' : '👁️'}
-                  </Text>
-                </View>
-              }
+              right={eyeIcon}
             />
+            <HelperText type="error" visible={!!errors.password}>
+              {errors.password}
+            </HelperText>
 
-            {/* Confirm Password */}
             <PaperTextInput
               label="Confirm Password"
               mode="outlined"
               value={formData.confirmPassword}
               onChangeText={(v) => handleFieldChange('confirmPassword', v)}
-              style={styles.input}
-              secureTextEntry={!showConfirmPassword}
-              autoCompleteType="new-password"
-              returnKeyType="next"
+              secureTextEntry={!showPassword}
+              autoComplete="new-password"
+              error={!!errors.confirmPassword}
               disabled={isLoading}
-              right={
-                <View style={styles.eyeIcon}>
-                  <Text onPress={() => setShowConfirmPassword(!showConfirmPassword)} style={styles.eyeText}>
-                    {showConfirmPassword ? '🙈' : '👁️'}
-                  </Text>
-                </View>
-              }
+              right={eyeIcon}
+            />
+            <HelperText type="error" visible={!!errors.confirmPassword}>
+              {errors.confirmPassword}
+            </HelperText>
+
+            {/* Optional fields */}
+            <PaperTextInput
+              label="Age (optional)"
+              mode="outlined"
+              value={formData.age}
+              onChangeText={(v) => handleFieldChange('age', v)}
+              keyboardType="numeric"
+              error={!!errors.age}
+              disabled={isLoading}
+            />
+            <HelperText type="error" visible={!!errors.age}>
+              {errors.age}
+            </HelperText>
+
+            <Text style={local.label}>Gender</Text>
+            <SegmentedButtons
+              value={formData.gender}
+              onValueChange={(v) => handleFieldChange('gender', v)}
+              buttons={[
+                { value: 'male', label: 'Male' },
+                { value: 'female', label: 'Female' },
+              ]}
             />
 
-            {/* Optional Fields */}
-            <View style={styles.optionalRow}>
-              <PaperTextInput
-                label="Age (Optional)"
-                mode="outlined"
-                value={formData.age}
-                onChangeText={(v) => handleFieldChange('age', v)}
-                style={[styles.input, styles.halfInput]}
-                keyboardType="numeric"
-                returnKeyType="next"
-                disabled={isLoading}
-              />
-              <View style={[styles.halfInput, styles.genderSelector]}>
-                <Text style={styles.genderLabel}>Gender</Text>
-                <View style={styles.genderOptions}>
-                  <TouchableOpacity
-                    onPress={() => handleFieldChange('gender', 'male')}
-                    style={[
-                      styles.genderOption,
-                      formData.gender === 'male' && styles.genderOptionSelected,
-                    ]}
-                  >
-                    <Text style={[
-                      styles.genderOptionText,
-                      formData.gender === 'male' && styles.genderOptionTextSelected,
-                    ]}>♂ Male</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={() => handleFieldChange('gender', 'female')}
-                    style={[
-                      styles.genderOption,
-                      formData.gender === 'female' && styles.genderOptionSelected,
-                    ]}
-                  >
-                    <Text style={[
-                      styles.genderOptionText,
-                      formData.gender === 'female' && styles.genderOptionTextSelected,
-                    ]}>♀ Female</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </View>
-
-            {/* Terms Checkbox */}
-            <View style={styles.termsContainer}>
+            {/* Terms */}
+            <View style={local.terms}>
               <Checkbox
                 status={agreedToTerms ? 'checked' : 'unchecked'}
-                onPress={() => setAgreedToTerms(!agreedToTerms)}
-                style={styles.checkbox}
+                onPress={() => {
+                  setAgreedToTerms((v) => !v);
+                  setErrors((prev) => ({ ...prev, terms: undefined }));
+                }}
               />
-              <Text style={styles.termsText}>
-                I agree to the{' '}
-                <Text style={styles.linkText}>Terms of Service</Text>{' '}
-                and{' '}
-                <Text style={styles.linkText}>Privacy Policy</Text>
+              <Text style={local.termsText}>
+                I agree to the Terms of Service and Privacy Policy
               </Text>
             </View>
+            <HelperText type="error" visible={!!errors.terms}>
+              {errors.terms}
+            </HelperText>
 
-            {/* Register Button */}
+            {/* Server error (e.g. network problem) */}
+            {error && (
+              <View style={styles.errorContainer}>
+                <Text style={styles.errorText}>{error}</Text>
+              </View>
+            )}
+
             <Button
               mode="contained"
               onPress={handleRegister}
               loading={isLoading}
-              style={styles.registerButton}
               disabled={isLoading}
+              style={styles.loginButton}
               contentStyle={styles.buttonContent}
             >
-              {isLoading ? <ActivityIndicator color="white" size="small" /> : (
-                <Text style={styles.buttonText}>Create Account</Text>
-              )}
+              Create Account
             </Button>
 
-            {/* Login Link */}
-            <View style={styles.loginContainer}>
-              <Text style={styles.loginText}>Already have an account? </Text>
-              <TouchableOpacity onPress={() => router.replace('/(auth)/login')} style={styles.link}>
-                <Text style={styles.linkText}>Sign In</Text>
-              </TouchableOpacity>
+            <View style={styles.registerContainer}>
+              <Text style={styles.registerText}>Already have an account? </Text>
+              <Text style={styles.linkText} onPress={() => router.replace('/(auth)/login')}>
+                Sign In
+              </Text>
             </View>
           </Card.Content>
         </Card>
-
-        {/* Student Guide */}
-        <View style={styles.guideContainer}>
-          <Text style={styles.guideTitle}>📝 Student Implementation Guide</Text>
-          <Text style={styles.guideText}>
-            Complete the handleRegister function to:\n
-            1. Call authApi.register() with form data\n
-            2. Auto-login or redirect to login\n
-            3. Handle success/error states
-          </Text>
-        </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
-
-// Need to import TouchableOpacity for gender options
-import { TouchableOpacity } from 'react-native';

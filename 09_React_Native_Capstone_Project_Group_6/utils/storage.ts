@@ -9,6 +9,7 @@ import type { AuthUser } from '@/types/auth';
 const STORAGE_KEYS = {
   AUTH_USER: 'auth_user',
   FAVORITES: 'favorite_recipe_ids',
+  LOCAL_ACCOUNTS: 'local_accounts',
   SETTINGS: 'user_settings',
 } as const;
 
@@ -70,7 +71,7 @@ export async function getMultipleStorageItems<T extends Record<string, unknown>>
   try {
     const pairs = await AsyncStorage.multiGet(keys);
     const result = {} as T;
-    pairs.forEach(([key, value]) => {
+    pairs.forEach(([key, value]: [string, string | null]) => {
       (result as Record<string, unknown>)[key] = value ? JSON.parse(value) : null;
     });
     return result;
@@ -125,5 +126,25 @@ export const favoritesStorage = {
       await favoritesStorage.addId(id);
       return true;
     }
+  },
+};
+
+/**
+ * Accounts created on the Register screen. DummyJSON doesn't save new users,
+ * so we keep them on this device and check them at login.
+ * NOTE: the password is stored as plain text - acceptable for a class project,
+ * never for a real app.
+ */
+export interface LocalAccount {
+  password: string;
+  user: Omit<AuthUser, 'token' | 'refreshToken'>;
+}
+
+export const accountsStorage = {
+  getAll: async (): Promise<LocalAccount[]> =>
+    (await getStorageItem<LocalAccount[]>(STORAGE_KEYS.LOCAL_ACCOUNTS)) ?? [],
+  add: async (account: LocalAccount): Promise<void> => {
+    const all = await accountsStorage.getAll();
+    await setStorageItem(STORAGE_KEYS.LOCAL_ACCOUNTS, [...all, account]);
   },
 };

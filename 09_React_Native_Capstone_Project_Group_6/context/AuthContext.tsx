@@ -1,7 +1,7 @@
 /**
  * Auth Context with useReducer
- * Phase 1: hydration + session-expiry now work with async storage.
- * TODO (Phase 2): register
+ * Phase 1: hydration + session-expiry work with async storage.
+ * Phase 2: register (local accounts are never sent to the server).
  */
 
 import React, {
@@ -110,6 +110,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return;
         }
 
+        // Accounts created on this device have no server session to verify.
+        if (storedUser.isLocalAccount) {
+          dispatch({ type: 'AUTH_HYDRATE', payload: storedUser });
+          return;
+        }
+
         try {
           // getMe() goes through the interceptor, so an expired token is
           // refreshed automatically. Tokens may have changed, so re-read them.
@@ -150,9 +156,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const register = useCallback(async (data: RegisterData) => {
     dispatch({ type: 'AUTH_START' });
     try {
-      // TODO (Phase 2): const user = await authApi.register(data);
-      //                 dispatch({ type: 'AUTH_SUCCESS', payload: user });
-      await authApi.register(data);
+      const user = await authApi.register(data);
+      dispatch({ type: 'AUTH_SUCCESS', payload: user }); // auto-login
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Registration failed';
       dispatch({ type: 'AUTH_FAILURE', payload: message });
@@ -170,7 +175,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const refreshUser = useCallback(async () => {
-    if (!state.isAuthenticated) return;
+    // Local accounts have nothing to refresh from the server.
+    if (!state.isAuthenticated || state.user?.isLocalAccount) return;
     try {
       const user = await authApi.getMe();
       const storedUser = await authApi.getStoredUser();
@@ -186,7 +192,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch {
       // Silent: the interceptor handles 401s and logs out if refresh fails.
     }
-  }, [state.isAuthenticated]);
+  }, [state.isAuthenticated, state.user?.isLocalAccount]);
 
   return (
     <AuthContext.Provider
