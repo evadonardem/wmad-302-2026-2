@@ -3,6 +3,8 @@
  * Docs: https://dummyjson.com/docs/recipes
  */
 
+export type RecipeDifficulty = 'Easy' | 'Medium' | 'Hard';
+
 export interface Recipe {
   id: number;
   name: string;
@@ -11,7 +13,7 @@ export interface Recipe {
   prepTimeMinutes: number;
   cookTimeMinutes: number;
   servings: number;
-  difficulty: 'Easy' | 'Medium' | 'Hard';
+  difficulty: RecipeDifficulty;
   cuisine: string;
   caloriesPerServing: number;
   tags: string[];
@@ -29,15 +31,21 @@ export interface RecipesResponse {
   limit: number;
 }
 
-export interface RecipeSearchParams {
-  q?: string;
-  category?: string;
-  tag?: string;
-  limit?: number;
-  skip?: number;
-  select?: string;
-}
+// Fields the API can sort by (?sortBy=name&order=asc)
+export type RecipeSortField =
+  | 'name'
+  | 'rating'
+  | 'caloriesPerServing'
+  | 'prepTimeMinutes'
+  | 'cookTimeMinutes';
 
-export interface CategoryResponse {
-  [key: string]: string[];
+export type SortOrder = 'asc' | 'desc';
+
+// Query-string options shared by the list endpoints
+export interface RecipeQueryParams {
+  limit?: number; // 0 = return everything
+  skip?: number;
+  select?: string; // e.g. 'name,image'
+  sortBy?: RecipeSortField;
+  order?: SortOrder;
 }

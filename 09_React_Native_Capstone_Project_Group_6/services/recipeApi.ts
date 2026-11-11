@@ -1,12 +1,21 @@
 /**
  * Recipe API Service - DummyJSON Recipes
  * Docs: https://dummyjson.com/docs/recipes
+ *
+ * Endpoints used:
+ *   GET /recipes                      list (limit, skip, sortBy, order)
+ *   GET /recipes/{id}                 one recipe
+ *   GET /recipes/search?q=            text search
+ *   GET /recipes/tags                 all tags
+ *   GET /recipes/tag/{tag}            recipes with a tag
+ *   GET /recipes/meal-type/{type}     recipes for a meal type
+ * (DummyJSON has no "category" or "random" recipe endpoint.)
  */
 
 import axios, { AxiosInstance } from 'axios';
-import { Recipe, RecipesResponse, RecipeSearchParams } from '@/types/recipe';
+import { Recipe, RecipesResponse, RecipeQueryParams } from '@/types/recipe';
 
-const API_BASE_URL = 'https://dummyjson.com/recipes';
+const API_BASE_URL = 'https://dummyjson.com';
 
 class RecipeApiService {
   private client: AxiosInstance;
@@ -15,85 +24,62 @@ class RecipeApiService {
     this.client = axios.create({
       baseURL: API_BASE_URL,
       timeout: 10000,
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
     });
   }
 
-  /**
-   * Get all recipes with pagination
-   */
-  async getRecipes(params: RecipeSearchParams = {}): Promise<RecipesResponse> {
-    const response = await this.client.get<RecipesResponse>('/', { params });
+  /** Get recipes with pagination and sorting */
+  async getRecipes(params: RecipeQueryParams = {}): Promise<RecipesResponse> {
+    const response = await this.client.get<RecipesResponse>('/recipes', { params });
     return response.data;
   }
 
-  /**
-   * Get single recipe by ID
-   */
+  /** Get a single recipe by ID */
   async getRecipeById(id: number): Promise<Recipe> {
-    const response = await this.client.get<Recipe>(`/${id}`);
-    return response.data;
+    try {
+      const response = await this.client.get<Recipe>(`/recipes/${id}`);
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 404) {
+        throw new Error('Recipe not found');
+      }
+      throw error;
+    }
   }
 
-  /**
-   * Search recipes by query
-   */
-  async searchRecipes(query: string, params: RecipeSearchParams = {}): Promise<RecipesResponse> {
-    const response = await this.client.get<RecipesResponse>('/search', {
+  /** Search recipes by text */
+  async searchRecipes(query: string, params: RecipeQueryParams = {}): Promise<RecipesResponse> {
+    const response = await this.client.get<RecipesResponse>('/recipes/search', {
       params: { q: query, ...params },
     });
     return response.data;
   }
 
-  /**
-   * Get recipes by category
-   */
-  async getRecipesByCategory(category: string, params: RecipeSearchParams = {}): Promise<RecipesResponse> {
-    const response = await this.client.get<RecipesResponse>(`/category/${encodeURIComponent(category)}`, {
-      params,
-    });
+  /** Get every tag used by recipes */
+  async getTags(): Promise<string[]> {
+    const response = await this.client.get<string[]>('/recipes/tags');
     return response.data;
   }
 
-  /**
-   * Get recipes by tag/meal type
-   */
-  async getRecipesByTag(tag: string, params: RecipeSearchParams = {}): Promise<RecipesResponse> {
-    const response = await this.client.get<RecipesResponse>(`/tag/${encodeURIComponent(tag)}`, {
-      params,
-    });
+  /** Get recipes that have a given tag */
+  async getRecipesByTag(tag: string, params: RecipeQueryParams = {}): Promise<RecipesResponse> {
+    const response = await this.client.get<RecipesResponse>(
+      `/recipes/tag/${encodeURIComponent(tag)}`,
+      { params }
+    );
     return response.data;
   }
 
-  /**
-   * Get random recipe(s)
-   */
-  async getRandomRecipes(count: number = 1): Promise<Recipe[]> {
-    const response = await this.client.get<{ recipes: Recipe[] }>(`/random/${count}`);
-    return response.data.recipes;
-  }
-
-  /**
-   * Get all categories
-   */
-  async getCategories(): Promise<string[]> {
-    // DummyJSON doesn't have a categories endpoint for recipes
-    // Return static list based on known categories
-    return [
-      'Beef', 'Chicken', 'Dessert', 'Lamb', 'Pasta', 'Pork', 'Seafood', 'Vegetarian',
-      'Breakfast', 'Appetizer', 'Side Dish', 'Main Course', 'Soup', 'Salad', 'Drink',
-    ];
-  }
-
-  /**
-   * Get all meal types/tags
-   */
-  async getMealTypes(): Promise<string[]> {
-    return [
-      'Breakfast', 'Lunch', 'Dinner', 'Snack', 'Appetizer', 'Dessert', 'Drink',
-    ];
+  /** Get recipes for a meal type (e.g. "Dinner", "Snack") */
+  async getRecipesByMealType(
+    mealType: string,
+    params: RecipeQueryParams = {}
+  ): Promise<RecipesResponse> {
+    const response = await this.client.get<RecipesResponse>(
+      `/recipes/meal-type/${encodeURIComponent(mealType)}`,
+      { params }
+    );
+    return response.data;
   }
 }
 

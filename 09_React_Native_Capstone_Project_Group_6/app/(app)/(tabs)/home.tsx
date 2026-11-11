@@ -16,35 +16,10 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
-import { Card, Title, Subtitle, Chip, Avatar, Button } from 'react-native-paper';
+import { Card, Title, Chip, Avatar, Button } from 'react-native-paper';
+import { recipeApi } from '@/services/recipeApi';
+import { Recipe } from '@/types/recipe';
 import { styles } from './homeStyles';
-
-// Types for DummyJSON Recipes API
-interface Recipe {
-  id: number;
-  name: string;
-  ingredients: string[];
-  instructions: string[];
-  prepTimeMinutes: number;
-  cookTimeMinutes: number;
-  servings: number;
-  difficulty: 'Easy' | 'Medium' | 'Hard';
-  cuisine: string;
-  caloriesPerServing: number;
-  tags: string[];
-  userId: number;
-  image: string;
-  rating: number;
-  reviewCount: number;
-  mealType: string[];
-}
-
-interface RecipesResponse {
-  recipes: Recipe[];
-  total: number;
-  skip: number;
-  limit: number;
-}
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -59,10 +34,7 @@ export default function HomeScreen() {
       if (!isRefresh) setLoading(true);
       setError(null);
 
-      const response = await fetch('https://dummyjson.com/recipes?limit=20');
-      if (!response.ok) throw new Error('Failed to fetch recipes');
-
-      const data: RecipesResponse = await response.json();
+      const data = await recipeApi.getRecipes({ limit: 20 });
       setRecipes(data.recipes);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load recipes');
@@ -81,7 +53,7 @@ export default function HomeScreen() {
   const renderRecipe = ({ item }: { item: Recipe }) => (
     <TouchableOpacity
       style={styles.recipeCard}
-      onPress={() => router.push(`/(app)/(tabs)/recipe/${item.id}`)}
+      onPress={() => router.push(`/recipe/${item.id}`)}
       activeOpacity={0.8}
     >
       <Card style={styles.card} elevation={2}>
@@ -144,7 +116,7 @@ export default function HomeScreen() {
     return (
       <View style={styles.errorContainer}>
         <Text style={styles.errorText}>{error}</Text>
-        <Button mode="contained" onPress={fetchRecipes} style={styles.retryButton}>
+        <Button mode="contained" onPress={() => fetchRecipes()} style={styles.retryButton}>
           Retry
         </Button>
       </View>
