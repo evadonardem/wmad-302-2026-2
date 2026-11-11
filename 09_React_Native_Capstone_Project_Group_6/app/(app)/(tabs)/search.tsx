@@ -162,18 +162,6 @@ export default function SearchScreen() {
         )}
       </View>
 
-      {/* Student Guide */}
-      <View style={styles.guideContainer}>
-        <Text style={styles.guideTitle}>📝 Student Implementation Guide</Text>
-        <Text style={styles.guideText}>
-          Complete the search functionality:\n
-          1. Call GET /recipes/search?q={query}\n
-          2. Add category filter: &category={category}\n
-          3. Add pagination with skip/limit\n
-          4. Implement infinite scroll\n
-          5. Add sort options (rating, time, calories)
-        </Text>
-      </View>
     </ScrollView>
   );
 }
