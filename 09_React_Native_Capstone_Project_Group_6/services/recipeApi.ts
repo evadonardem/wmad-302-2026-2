@@ -19,6 +19,8 @@ const API_BASE_URL = 'https://dummyjson.com';
 
 class RecipeApiService {
   private client: AxiosInstance;
+  // Shared download of the whole catalog (see getAllRecipes)
+  private allRecipesPromise: Promise<Recipe[]> | null = null;
 
   constructor() {
     this.client = axios.create({
@@ -32,6 +34,22 @@ class RecipeApiService {
   async getRecipes(params: RecipeQueryParams = {}): Promise<RecipesResponse> {
     const response = await this.client.get<RecipesResponse>('/recipes', { params });
     return response.data;
+  }
+
+  /**
+   * Get every recipe (DummyJSON only has about 50). The result is cached so
+   * Home, Search and Categories share one download. Pass true to re-download.
+   */
+  getAllRecipes(forceRefresh = false): Promise<Recipe[]> {
+    if (!this.allRecipesPromise || forceRefresh) {
+      this.allRecipesPromise = this.getRecipes({ limit: 0 })
+        .then((response) => response.recipes)
+        .catch((error: unknown) => {
+          this.allRecipesPromise = null; // don't cache a failure
+          throw error;
+        });
+    }
+    return this.allRecipesPromise;
   }
 
   /** Get a single recipe by ID */

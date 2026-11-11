@@ -4,6 +4,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { getStorageItem, setStorageItem, StorageKey } from '@/utils/storage';
+import { recipeApi } from '@/services/recipeApi';
+import { Recipe } from '@/types/recipe';
 
 /**
  * Hook for async storage with state
@@ -54,4 +56,32 @@ export function useDebounce<T>(value: T, delay: number = 300): T {
   }, [value, delay]);
 
   return debouncedValue;
+}
+
+/**
+ * Hook that loads the whole recipe catalog (shared and cached by recipeApi).
+ * Used by Search, Categories and Home.
+ */
+export function useRecipeCatalog() {
+  const [recipes, setRecipes] = useState<Recipe[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const load = useCallback(async (forceRefresh = false) => {
+    setLoading(true);
+    setError(null);
+    try {
+      setRecipes(await recipeApi.getAllRecipes(forceRefresh));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load recipes');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  return { recipes, loading, error, reload: load };
 }

@@ -3,7 +3,7 @@
  * Students implement: Recipe grid, categories, featured recipes
  * API: https://dummyjson.com/docs/recipes
  */
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -18,6 +18,8 @@ import { useRouter } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
 import { Card, Title, Chip, Avatar, Button, IconButton } from 'react-native-paper';
 import { useFavorites } from '@/context/FavoritesContext';
+import { useRecipeCatalog } from '@/hooks';
+import { countBy } from '@/utils/recipeFilters';
 import { recipeApi } from '@/services/recipeApi';
 import { Recipe } from '@/types/recipe';
 import { styles } from './homeStyles';
@@ -26,6 +28,12 @@ export default function HomeScreen() {
   const router = useRouter();
   const { user } = useAuth();
   const { isFavorite, toggleFavorite } = useFavorites();
+  // Category chips: the 8 most common tags in the catalog
+  const { recipes: catalog } = useRecipeCatalog();
+  const topTags = useMemo(
+    () => countBy(catalog, (r) => r.tags).slice(0, 8).map((item) => item.name),
+    [catalog]
+  );
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -160,16 +168,14 @@ export default function HomeScreen() {
           <Title style={styles.sectionTitle}>Categories</Title>
         </View>
         <FlatList
-          data={[
-            'Beef', 'Chicken', 'Dessert', 'Lamb', 'Pasta', 'Pork', 'Seafood', 'Vegetarian',
-          ]}
+          data={topTags}
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.categoryList}
           renderItem={({ item }) => (
             <TouchableOpacity
               style={[styles.categoryChip, { backgroundColor: '#FFF3E0' }]}
-              onPress={() => router.push(`/(app)/(tabs)/search?category=${item}`)}
+              onPress={() => router.push(`/(app)/(tabs)/search?tag=${encodeURIComponent(item)}`)}
             >
               <Text style={styles.categoryChipText}>{item}</Text>
             </TouchableOpacity>
