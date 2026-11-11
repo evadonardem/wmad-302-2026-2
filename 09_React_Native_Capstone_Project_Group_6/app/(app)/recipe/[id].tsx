@@ -19,6 +19,7 @@ import {
 } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { recipeApi } from '@/services/recipeApi';
+import { useFavorites } from '@/context/FavoritesContext';
 import { Recipe } from '@/types/recipe';
 
 /** Five stars, filled according to the rating (supports half stars). */
@@ -51,6 +52,7 @@ export default function RecipeDetailScreen() {
     const router = useRouter();
     const theme = useTheme();
     const insets = useSafeAreaInsets();
+    const { isFavorite, toggleFavorite } = useFavorites();
 
     const [recipe, setRecipe] = useState<Recipe | null>(null);
     const [loading, setLoading] = useState(true);
@@ -269,6 +271,15 @@ export default function RecipeDetailScreen() {
             </ScrollView>
 
             {backButton}
+            <IconButton
+                icon={isFavorite(recipe.id) ? 'heart' : 'heart-outline'}
+                mode="contained"
+                containerColor="rgba(255,255,255,0.92)"
+                iconColor="#C62828"
+                onPress={() => toggleFavorite(recipe.id)}
+                accessibilityLabel={isFavorite(recipe.id) ? 'Remove from favorites' : 'Add to favorites'}
+                style={[styles.heartButton, { top: insets.top + 8 }]}
+            />
         </View>
     );
 }
@@ -278,6 +289,7 @@ const styles = StyleSheet.create({
     centerText: { marginTop: 16, textAlign: 'center' },
     retry: { marginTop: 16 },
     backButton: { position: 'absolute', left: 12 },
+    heartButton: { position: 'absolute', right: 12 },
     heroImage: { width: '100%', height: 280 },
     body: { padding: 20 },
     chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 12 },

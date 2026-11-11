@@ -16,7 +16,8 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
-import { Card, Title, Chip, Avatar, Button } from 'react-native-paper';
+import { Card, Title, Chip, Avatar, Button, IconButton } from 'react-native-paper';
+import { useFavorites } from '@/context/FavoritesContext';
 import { recipeApi } from '@/services/recipeApi';
 import { Recipe } from '@/types/recipe';
 import { styles } from './homeStyles';
@@ -24,6 +25,7 @@ import { styles } from './homeStyles';
 export default function HomeScreen() {
   const router = useRouter();
   const { user } = useAuth();
+  const { isFavorite, toggleFavorite } = useFavorites();
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -62,6 +64,16 @@ export default function HomeScreen() {
             source={{ uri: item.image }}
             style={styles.recipeImage}
             resizeMode="cover"
+          />
+          <IconButton
+            icon={isFavorite(item.id) ? 'heart' : 'heart-outline'}
+            mode="contained"
+            containerColor="rgba(255,255,255,0.92)"
+            iconColor="#C62828"
+            size={20}
+            onPress={() => toggleFavorite(item.id)}
+            accessibilityLabel={isFavorite(item.id) ? 'Remove from favorites' : 'Add to favorites'}
+            style={{ position: 'absolute', top: 4, left: 4 }}
           />
           <View style={styles.difficultyBadge}>
             <Chip

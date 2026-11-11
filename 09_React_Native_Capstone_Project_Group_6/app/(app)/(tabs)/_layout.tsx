@@ -1,14 +1,14 @@
 /**
  * Tabs Layout - Cookbook App Navigation
- * Tabs: Home (Discover), Search, Favorites, Profile
+ * Tabs: Discover, Search, Categories, Favorites (with count badge), Profile
  */
 import { Tabs } from 'expo-router';
 import React from 'react';
-import { useAuth } from '@/context/AuthContext';
+import { useFavorites } from '@/context/FavoritesContext';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 export default function TabsLayout() {
-  const { user } = useAuth();
+  const { count } = useFavorites();
 
   return (
     <Tabs
@@ -37,32 +37,30 @@ export default function TabsLayout() {
         name="home"
         options={{
           title: 'Discover',
-          tabBarIcon: ({ focused, color }) => (
-            <MaterialCommunityIcons
-              name="stove"
-              size={24}
-              color={color}
-            />
-          ),
+          tabBarIcon: ({ color }) => <MaterialCommunityIcons name="stove" size={24} color={color} />,
         }}
       />
       <Tabs.Screen
         name="search"
         options={{
           title: 'Search',
-          tabBarIcon: ({ focused, color }) => (
-            <MaterialCommunityIcons
-              name="magnify"
-              size={24}
-              color={color}
-            />
-          ),
+          tabBarIcon: ({ color }) => <MaterialCommunityIcons name="magnify" size={24} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="categories"
+        options={{
+          title: 'Categories',
+          tabBarIcon: ({ color }) => <MaterialCommunityIcons name="view-grid" size={24} color={color} />,
         }}
       />
       <Tabs.Screen
         name="favorites"
         options={{
           title: 'Favorites',
+          // Badge shows how many recipes are saved; hidden when there are none
+          tabBarBadge: count > 0 ? count : undefined,
+          tabBarBadgeStyle: { backgroundColor: '#C62828' },
           tabBarIcon: ({ focused, color }) => (
             <MaterialCommunityIcons
               name={focused ? 'heart' : 'heart-outline'}

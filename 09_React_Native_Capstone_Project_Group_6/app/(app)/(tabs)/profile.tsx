@@ -11,6 +11,7 @@ import React, { useState } from 'react';
 import { View, Text, ScrollView, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
+import { useFavorites } from '@/context/FavoritesContext';
 import { Card, Button, List, Avatar, Divider, Dialog, Portal } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { styles } from './profileStyles';
@@ -18,6 +19,7 @@ import { styles } from './profileStyles';
 export default function ProfileScreen() {
   const router = useRouter();
   const { user, logout, isAuthenticated } = useAuth();
+  const { count: favoritesCount } = useFavorites();
 
   // Alert.alert does nothing on web, so we use a Paper Dialog (works everywhere).
   const [confirmVisible, setConfirmVisible] = useState(false);
@@ -82,7 +84,7 @@ export default function ProfileScreen() {
           <Text style={styles.statLabel}>Recipes</Text>
         </View>
         <View style={styles.statItem}>
-          <Text style={styles.statValue}>0</Text>
+          <Text style={styles.statValue}>{favoritesCount}</Text>
           <Text style={styles.statLabel}>Favorites</Text>
         </View>
         <View style={styles.statItem}>
