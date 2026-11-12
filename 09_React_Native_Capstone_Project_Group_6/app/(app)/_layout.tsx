@@ -1,20 +1,26 @@
 /**
  * App Layout - Protected routes with auth guard
+ * Also exports an ErrorBoundary so a crash on one screen shows a friendly
+ * message and a "Try again" button instead of a blank app.
  */
-import { Stack } from 'expo-router';
-import { useAuth } from '@/context/AuthContext';
-import { Redirect } from 'expo-router';
 import React from 'react';
+import { Redirect, Stack, ErrorBoundaryProps } from 'expo-router';
+import { useAuth } from '@/context/AuthContext';
+import { ErrorFallback } from '@/components/CommonComponents';
+
+export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
+  return <ErrorFallback error={error} onRetry={retry} />;
+}
 
 export default function AppLayout() {
   const { isAuthenticated, isLoading } = useAuth();
 
-  // Show loading while checking auth
+  // Wait while the saved login is being checked
   if (isLoading) {
-    return null; // Or a loading screen
+    return null;
   }
 
-  // Redirect to login if not authenticated
+  // Not logged in: go to the login screen
   if (!isAuthenticated) {
     return <Redirect href="/(auth)/login" />;
   }
@@ -22,7 +28,6 @@ export default function AppLayout() {
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(tabs)" />
-      {/* Add other protected screens here */}
     </Stack>
   );
 }

@@ -1,382 +1,248 @@
 /**
  * Reusable UI Components
+ * Shared by Home, Search, Favorites and the error boundary so the screens look
+ * consistent and the markup lives in one place.
  */
 
-import React from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { Card, Title, Chip, Badge, Button } from 'react-native-paper';
+import React, { ComponentProps, useEffect } from 'react';
+import {
+  View,
+  Text,
+  Image,
+  StyleSheet,
+  StyleProp,
+  TouchableOpacity,
+  ActivityIndicator,
+  ViewStyle,
+} from 'react-native';
+import { Button, Card, Chip, IconButton, useTheme } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Recipe, RecipeDifficulty } from '@/types/recipe';
+import { totalTime } from '@/utils/recipeFilters';
+
+type IconName = ComponentProps<typeof MaterialCommunityIcons>['name'];
+
+const DIFFICULTY_COLORS: Record<RecipeDifficulty, { background: string; text: string }> = {
+  Easy: { background: '#E8F5E9', text: '#2E7D32' },
+  Medium: { background: '#FFF3E0', text: '#EF6C00' },
+  Hard: { background: '#FFEBEE', text: '#C62828' },
+};
+
+/* ------------------------------------------------------------------ */
+/* Recipe card (large) - used on Home                                  */
+/* ------------------------------------------------------------------ */
 
 interface RecipeCardProps {
-  recipe: {
-    id: number;
-    name: string;
-    image: string;
-    difficulty: string;
-    cuisine: string;
-    prepTimeMinutes: number;
-    cookTimeMinutes: number;
-    servings: number;
-    rating: number;
-    reviewCount: number;
-  };
+  recipe: Recipe;
   onPress: () => void;
-  style?: any;
+  isFavorite: boolean;
+  onToggleFavorite: () => void;
+  style?: StyleProp<ViewStyle>;
 }
 
-export function RecipeCard({ recipe, onPress, style }: RecipeCardProps) {
-  return (
-    <TouchableOpacity style={[styles.cardWrapper, style]} onPress={onPress} activeOpacity={0.8}>
-      <Card style={styles.card} elevation={2}>
-        <View style={styles.imageContainer}>
-          <Image source={{ uri: recipe.image }} style={styles.recipeImage} resizeMode="cover" />
-          <View style={styles.difficultyBadge}>
-            <Chip
-              style={[
-                styles.difficultyChip,
-                recipe.difficulty === 'Easy' && styles.easy,
-                recipe.difficulty === 'Medium' && styles.medium,
-                recipe.difficulty === 'Hard' && styles.hard,
-              ]}
-            >
-              {recipe.difficulty}
-            </Chip>
-          </View>
-        </View>
-        <Card.Content style={styles.cardContent}>
-          <Title style={styles.recipeTitle} numberOfLines={1}>
-            {recipe.name}
-          </Title>
-          <View style={styles.metaRow}>
-            <Text style={styles.metaText}>
-              ⏱️ {recipe.prepTimeMinutes + recipe.cookTimeMinutes} min
-            </Text>
-            <Text style={styles.metaText}>👥 {recipe.servings} servings</Text>
-            <Text style={styles.metaText}>🔥 {recipe.caloriesPerServing} cal</Text>
-          </View>
-          <View style={styles.cuisineRow}>
-            <Chip style={styles.cuisineChip}>{recipe.cuisine}</Chip>
-          </View>
-          <View style={styles.ratingRow}>
-            <Text style={styles.ratingText}>
-              ⭐ {recipe.rating.toFixed(1)} ({recipe.reviewCount} reviews)
-            </Text>
-          </View>
-        </Card.Content>
-      </Card>
-    </TouchableOpacity>
-  );
-}
-
-interface ProductCardProps {
-  product: {
-    id: number;
-    title: string;
-    thumbnail: string;
-    category: string;
-    price: number;
-    discountPercentage: number;
-    rating: number;
-    stock: number;
-  };
-  onPress: () => void;
-  style?: any;
-}
-
-export function ProductCard({ product, onPress, style }: ProductCardProps) {
-  const discountedPrice = product.price * (1 - product.discountPercentage / 100);
+export function RecipeCard({ recipe, onPress, isFavorite, onToggleFavorite, style }: RecipeCardProps) {
+  const theme = useTheme();
+  const difficulty = DIFFICULTY_COLORS[recipe.difficulty];
 
   return (
-    <TouchableOpacity style={[styles.cardWrapper, style]} onPress={onPress} activeOpacity={0.8}>
-      <Card style={styles.card} elevation={2}>
-        <View style={styles.imageContainer}>
-          <Image
-            source={{ uri: product.thumbnail }}
-            style={styles.productImage}
-            resizeMode="contain"
+    <TouchableOpacity style={style} onPress={onPress} activeOpacity={0.8}>
+      <Card style={cardStyles.card} elevation={2}>
+        <View>
+          <Image source={{ uri: recipe.image }} style={cardStyles.image} resizeMode="cover" />
+          <IconButton
+            icon={isFavorite ? 'heart' : 'heart-outline'}
+            mode="contained"
+            containerColor="rgba(255,255,255,0.92)"
+            iconColor={theme.colors.error}
+            size={20}
+            onPress={onToggleFavorite}
+            accessibilityLabel={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+            style={cardStyles.heart}
           />
-          {product.discountPercentage > 0 && (
-            <Badge style={styles.discountBadge} variant="primary">
-              -{Math.round(product.discountPercentage)}%
-            </Badge>
-          )}
+          <Chip
+            compact
+            style={[cardStyles.difficulty, { backgroundColor: difficulty.background }]}
+            textStyle={{ color: difficulty.text }}
+          >
+            {recipe.difficulty}
+          </Chip>
         </View>
-        <Card.Content style={styles.cardContent}>
-          <Text style={styles.productCategory}>{product.category}</Text>
-          <Title style={styles.productTitle} numberOfLines={2}>
-            {product.title}
-          </Title>
-          <View style={styles.priceRow}>
-            <Text style={styles.currentPrice}>${discountedPrice.toFixed(2)}</Text>
-            {product.discountPercentage > 0 && (
-              <Text style={styles.originalPrice}>${product.price.toFixed(2)}</Text>
-            )}
-          </View>
-          <View style={styles.ratingRow}>
-            <Text style={styles.ratingText}>
-              ⭐ {product.rating.toFixed(1)} · {product.stock > 0 ? 'In Stock' : 'Out of Stock'}
+        <Card.Content style={cardStyles.content}>
+          <Text style={[cardStyles.title, { color: theme.colors.onSurface }]} numberOfLines={1}>
+            {recipe.name}
+          </Text>
+          <View style={cardStyles.metaRow}>
+            <Text style={[cardStyles.meta, { color: theme.colors.onSurfaceVariant }]}>
+              ⏱️ {totalTime(recipe)} min
+            </Text>
+            <Text style={[cardStyles.meta, { color: theme.colors.onSurfaceVariant }]}>
+              👥 {recipe.servings} servings
+            </Text>
+            <Text style={[cardStyles.meta, { color: theme.colors.onSurfaceVariant }]}>
+              🔥 {recipe.caloriesPerServing} cal
             </Text>
           </View>
+          <View style={cardStyles.chips}>
+            <Chip compact>{recipe.cuisine}</Chip>
+            {recipe.mealType.slice(0, 2).map((meal) => (
+              <Chip key={meal} compact>
+                {meal}
+              </Chip>
+            ))}
+          </View>
+          <Text style={[cardStyles.rating, { color: theme.colors.onSurfaceVariant }]}>
+            ⭐ {recipe.rating.toFixed(1)} ({recipe.reviewCount} reviews)
+          </Text>
         </Card.Content>
       </Card>
     </TouchableOpacity>
   );
 }
 
-interface CategoryChipProps {
-  label: string;
-  selected?: boolean;
+/* ------------------------------------------------------------------ */
+/* Recipe list item (row) - used on Search and Favorites               */
+/* ------------------------------------------------------------------ */
+
+interface RecipeListItemProps {
+  recipe: Recipe;
   onPress: () => void;
-  icon?: string;
-  style?: any;
+  isFavorite: boolean;
+  onToggleFavorite: () => void;
+  style?: StyleProp<ViewStyle>;
 }
 
-export function CategoryChip({ label, selected, onPress, icon, style }: CategoryChipProps) {
+export function RecipeListItem({ recipe, onPress, isFavorite, onToggleFavorite, style }: RecipeListItemProps) {
+  const theme = useTheme();
+
   return (
-    <TouchableOpacity
-      style={[styles.categoryChip, selected && styles.categoryChipSelected, style]}
-      onPress={onPress}
-    >
-      {icon && (
-        <MaterialCommunityIcons
-          name={icon}
-          size={16}
-          color={selected ? '#FFFFFF' : '#E85D04'}
-          style={{ marginRight: 4 }}
-        />
-      )}
-      <Text style={[styles.categoryChipText, selected && styles.categoryChipTextSelected]}>
-        {label}
-      </Text>
+    <TouchableOpacity style={style} onPress={onPress} activeOpacity={0.8}>
+      <Card elevation={1}>
+        <View style={rowStyles.row}>
+          <Image source={{ uri: recipe.image }} style={rowStyles.image} resizeMode="cover" />
+          <View style={rowStyles.info}>
+            <Text style={[rowStyles.title, { color: theme.colors.onSurface }]} numberOfLines={1}>
+              {recipe.name}
+            </Text>
+            <View style={rowStyles.chips}>
+              <Chip compact>{recipe.difficulty}</Chip>
+              <Chip compact>{recipe.cuisine}</Chip>
+            </View>
+            <Text style={[rowStyles.details, { color: theme.colors.onSurfaceVariant }]}>
+              ⏱️ {totalTime(recipe)}min · 🔥 {recipe.caloriesPerServing} cal · ⭐ {recipe.rating.toFixed(1)}
+            </Text>
+          </View>
+          <IconButton
+            icon={isFavorite ? 'heart' : 'heart-outline'}
+            iconColor={theme.colors.error}
+            size={22}
+            onPress={onToggleFavorite}
+            accessibilityLabel={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+          />
+        </View>
+      </Card>
     </TouchableOpacity>
   );
 }
 
-interface LoadingOverlayProps {
-  visible: boolean;
-  message?: string;
-}
+/* ------------------------------------------------------------------ */
+/* Loading / empty / error states                                      */
+/* ------------------------------------------------------------------ */
 
-export function LoadingOverlay({ visible, message = 'Loading...' }: LoadingOverlayProps) {
-  if (!visible) return null;
-
+export function LoadingState({ message = 'Loading...' }: { message?: string }) {
+  const theme = useTheme();
   return (
-    <View style={styles.loadingOverlay}>
-      <ActivityIndicator size="large" color="#E85D04" />
-      <Text style={styles.loadingText}>{message}</Text>
+    <View style={stateStyles.center}>
+      <ActivityIndicator size="large" color={theme.colors.primary} />
+      <Text style={[stateStyles.message, { color: theme.colors.onSurfaceVariant }]}>{message}</Text>
     </View>
   );
 }
 
 interface EmptyStateProps {
-  icon: string;
+  icon: IconName;
   title: string;
-  message: string;
+  message?: string;
   actionLabel?: string;
   onAction?: () => void;
 }
 
 export function EmptyState({ icon, title, message, actionLabel, onAction }: EmptyStateProps) {
+  const theme = useTheme();
   return (
-    <View style={styles.emptyState}>
-      <MaterialCommunityIcons name={icon} size={80} color="#BCAAA4" />
-      <Text style={styles.emptyTitle}>{title}</Text>
-      <Text style={styles.emptyMessage}>{message}</Text>
-      {actionLabel && onAction && (
-        <Button mode="contained" onPress={onAction} style={styles.actionButton}>
+    <View style={stateStyles.center}>
+      <MaterialCommunityIcons name={icon} size={72} color={theme.colors.outline} />
+      <Text style={[stateStyles.title, { color: theme.colors.onSurface }]}>{title}</Text>
+      {message ? (
+        <Text style={[stateStyles.message, { color: theme.colors.onSurfaceVariant }]}>{message}</Text>
+      ) : null}
+      {actionLabel && onAction ? (
+        <Button mode="contained" onPress={onAction} style={stateStyles.action}>
           {actionLabel}
         </Button>
-      )}
+      ) : null}
     </View>
   );
 }
 
-interface SkeletonProps {
-  height?: number;
-  width?: number | string;
-  borderRadius?: number;
+export function ErrorState({ message, onRetry }: { message: string; onRetry?: () => void }) {
+  return (
+    <EmptyState
+      icon="alert-circle-outline"
+      title="Something went wrong"
+      message={message}
+      actionLabel={onRetry ? 'Try again' : undefined}
+      onAction={onRetry}
+    />
+  );
 }
 
-export function Skeleton({ height = 20, width = '100%', borderRadius = 8 }: SkeletonProps) {
-  return <View style={[styles.skeleton, { height, width, borderRadius }]} />;
+/**
+ * Friendly full-screen message shown by the error boundaries in the root and
+ * (app) layouts when a screen crashes while rendering.
+ */
+export function ErrorFallback({ error, onRetry }: { error: Error; onRetry: () => void }) {
+  useEffect(() => {
+    console.error('Unhandled screen error:', error);
+  }, [error]);
+
+  return (
+    <EmptyState
+      icon="emoticon-sad-outline"
+      title="Oops, something broke"
+      message="This screen ran into a problem. Please try again."
+      actionLabel="Try again"
+      onAction={onRetry}
+    />
+  );
 }
 
-const styles = StyleSheet.create({
-  cardWrapper: {
-    marginBottom: 12,
-  },
-  card: {
-    borderRadius: 16,
-    overflow: 'hidden',
-    backgroundColor: '#FFFFFF',
-  },
-  imageContainer: {
-    position: 'relative',
-    height: 180,
-  },
-  recipeImage: {
-    width: '100%',
-    height: '100%',
-  },
-  productImage: {
-    width: '100%',
-    height: '100%',
-    maxWidth: '90%',
-    maxHeight: '90%',
-  },
-  difficultyBadge: {
-    position: 'absolute',
-    top: 12,
-    right: 12,
-    zIndex: 1,
-  },
-  difficultyChip: {
-    borderRadius: 12,
-  },
-  easy: {
-    backgroundColor: '#E8F5E9',
-  },
-  medium: {
-    backgroundColor: '#FFF3E0',
-  },
-  hard: {
-    backgroundColor: '#FDEDED',
-  },
-  discountBadge: {
-    position: 'absolute',
-    top: 8,
-    left: 8,
-    zIndex: 1,
-  },
-  cardContent: {
-    padding: 16,
-  },
-  recipeTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#3E2723',
-    marginBottom: 8,
-  },
-  productTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#202124',
-    marginBottom: 8,
-  },
-  productCategory: {
-    fontSize: 12,
-    color: '#1A73E8',
-    fontWeight: '500',
-    marginBottom: 4,
-    textTransform: 'capitalize',
-  },
-  metaRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 12,
-  },
-  metaText: {
-    fontSize: 12,
-    color: '#8D6E63',
-    fontWeight: '500',
-  },
-  cuisineRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-    marginBottom: 8,
-  },
-  cuisineChip: {
-    backgroundColor: '#FFF3E0',
-  },
-  ratingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  ratingText: {
-    fontSize: 13,
-    color: '#8D6E63',
-    fontWeight: '500',
-  },
-  priceRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 8,
-  },
-  currentPrice: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#1A73E8',
-  },
-  originalPrice: {
-    fontSize: 14,
-    color: '#9E9E9E',
-    textDecorationLine: 'line-through',
-  },
-  categoryChip: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-    backgroundColor: '#FFFFFF',
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  categoryChipSelected: {
-    backgroundColor: '#E85D04',
-    borderColor: '#E85D04',
-  },
-  categoryChipText: {
-    fontSize: 13,
-    fontWeight: '500',
-    color: '#E85D04',
-  },
-  categoryChipTextSelected: {
-    color: '#FFFFFF',
-  },
-  loadingOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
-    zIndex: 100,
-  },
-  loadingText: {
-    marginTop: 12,
-    fontSize: 16,
-    color: '#8D6E63',
-  },
-  emptyState: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 32,
-  },
-  emptyTitle: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: '#3E2723',
-    marginTop: 20,
-  },
-  emptyMessage: {
-    fontSize: 16,
-    color: '#8D6E63',
-    marginTop: 8,
-    textAlign: 'center',
-  },
-  actionButton: {
-    marginTop: 24,
-    borderRadius: 12,
-    height: 52,
-  },
-  skeleton: {
-    backgroundColor: '#E0E0E0',
-    borderRadius: 8,
-  },
+/* ------------------------------------------------------------------ */
+
+const cardStyles = StyleSheet.create({
+  card: { borderRadius: 16, overflow: 'hidden' },
+  image: { width: '100%', height: 180 },
+  heart: { position: 'absolute', top: 4, left: 4 },
+  difficulty: { position: 'absolute', top: 12, right: 12 },
+  content: { paddingTop: 12, paddingBottom: 14 },
+  title: { fontSize: 16, fontWeight: '700', marginBottom: 8 },
+  metaRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginBottom: 8 },
+  meta: { fontSize: 12 },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 8 },
+  rating: { fontSize: 13 },
+});
+
+const rowStyles = StyleSheet.create({
+  row: { flexDirection: 'row', alignItems: 'center', padding: 10 },
+  image: { width: 80, height: 80, borderRadius: 10 },
+  info: { flex: 1, marginLeft: 12 },
+  title: { fontSize: 15, fontWeight: '700', marginBottom: 6 },
+  chips: { flexDirection: 'row', gap: 6, marginBottom: 6 },
+  details: { fontSize: 12 },
+});
+
+const stateStyles = StyleSheet.create({
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32 },
+  title: { fontSize: 20, fontWeight: '700', marginTop: 16, textAlign: 'center' },
+  message: { fontSize: 14, marginTop: 8, textAlign: 'center' },
+  action: { marginTop: 20 },
 });

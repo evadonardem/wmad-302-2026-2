@@ -6,23 +6,14 @@
  * - Sorting, "load more" as you scroll, favorite hearts, empty/error states
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import {
-  View,
-  Text,
-  FlatList,
-  Image,
-  ScrollView,
-  TouchableOpacity,
-  ActivityIndicator,
-  StyleSheet,
-} from 'react-native';
+import { View, FlatList, ScrollView, ActivityIndicator, StyleSheet } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Button, Card, Chip, IconButton, Searchbar, Title } from 'react-native-paper';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Button, Chip, Searchbar, Title } from 'react-native-paper';
 import { recipeApi } from '@/services/recipeApi';
 import { useDebounce, useRecipeCatalog } from '@/hooks';
 import { useFavorites } from '@/context/FavoritesContext';
 import { Recipe, RecipeDifficulty } from '@/types/recipe';
+import { EmptyState, ErrorState, LoadingState, RecipeListItem } from '@/components/CommonComponents';
 import {
   EMPTY_FILTERS,
   RecipeFilters,
@@ -30,7 +21,6 @@ import {
   filterRecipes,
   hasActiveFilters,
   sortRecipes,
-  totalTime,
   uniqueSorted,
 } from '@/utils/recipeFilters';
 import { styles } from './searchStyles';
@@ -68,11 +58,7 @@ function ChipRow<T extends string>({
   return (
     <View style={local.group}>
       <Title style={styles.filterTitle}>{label}</Title>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={local.chipRow}
-      >
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={local.chipRow}>
         {options.map((option) => (
           <Chip
             key={option}
@@ -149,21 +135,12 @@ export default function SearchScreen() {
   }, [debouncedQuery, filters, sort]);
 
   const base = searchResults ?? catalog.recipes;
-  const filtered = useMemo(
-    () => sortRecipes(filterRecipes(base, filters), sort),
-    [base, filters, sort],
-  );
+  const filtered = useMemo(() => sortRecipes(filterRecipes(base, filters), sort), [base, filters, sort]);
   const visible = filtered.slice(0, visibleCount);
 
   // Filter choices come from the data itself
-  const cuisines = useMemo(
-    () => uniqueSorted(catalog.recipes, (r) => [r.cuisine]),
-    [catalog.recipes],
-  );
-  const mealTypes = useMemo(
-    () => uniqueSorted(catalog.recipes, (r) => r.mealType),
-    [catalog.recipes],
-  );
+  const cuisines = useMemo(() => uniqueSorted(catalog.recipes, (r) => [r.cuisine]), [catalog.recipes]);
+  const mealTypes = useMemo(() => uniqueSorted(catalog.recipes, (r) => r.mealType), [catalog.recipes]);
   const tags = useMemo(() => uniqueSorted(catalog.recipes, (r) => r.tags), [catalog.recipes]);
 
   const setFilter = <K extends keyof RecipeFilters>(key: K, value: RecipeFilters[K]) =>
@@ -176,83 +153,30 @@ export default function SearchScreen() {
   };
 
   const renderResult = ({ item }: { item: Recipe }) => (
-    <TouchableOpacity style={styles.resultCard} onPress={() => router.push(`/recipe/${item.id}`)}>
-      <Card style={styles.card} elevation={1}>
-        <View style={styles.resultContent}>
-          <Image source={{ uri: item.image }} style={styles.resultImage} resizeMode="cover" />
-          <View style={styles.resultInfo}>
-            <Title style={styles.resultTitle} numberOfLines={1}>
-              {item.name}
-            </Title>
-            <View style={styles.resultMeta}>
-              <Chip compact style={styles.difficultyChip}>
-                {item.difficulty}
-              </Chip>
-              <Chip compact style={styles.cuisineChip}>
-                {item.cuisine}
-              </Chip>
-            </View>
-            <Text style={styles.resultDetails}>
-              ⏱️ {totalTime(item)}min · 🔥 {item.caloriesPerServing} cal · ⭐{' '}
-              {item.rating.toFixed(1)}
-            </Text>
-          </View>
-          <IconButton
-            icon={isFavorite(item.id) ? 'heart' : 'heart-outline'}
-            iconColor="#C62828"
-            size={22}
-            onPress={() => toggleFavorite(item.id)}
-            accessibilityLabel={isFavorite(item.id) ? 'Remove from favorites' : 'Add to favorites'}
-          />
-        </View>
-      </Card>
-    </TouchableOpacity>
+    <RecipeListItem
+      recipe={item}
+      style={styles.resultCard}
+      onPress={() => router.push(`/recipe/${item.id}`)}
+      isFavorite={isFavorite(item.id)}
+      onToggleFavorite={() => toggleFavorite(item.id)}
+    />
   );
 
   // Search bar, filters and sort sit in the list header so everything scrolls together
   const header = (
     <View>
       <View style={styles.searchBarContainer}>
-        <Searchbar
-          placeholder="Search recipes..."
-          value={query}
-          onChangeText={setQuery}
-          loading={searching}
-        />
+        <Searchbar placeholder="Search recipes..." value={query} onChangeText={setQuery} loading={searching} />
       </View>
 
-      <ChipRow
-        label="Cuisine"
-        options={cuisines}
-        selected={filters.cuisine}
-        onSelect={(v) => setFilter('cuisine', v)}
-      />
-      <ChipRow
-        label="Difficulty"
-        options={DIFFICULTIES}
-        selected={filters.difficulty}
-        onSelect={(v) => setFilter('difficulty', v)}
-      />
-      <ChipRow
-        label="Meal type"
-        options={mealTypes}
-        selected={filters.mealType}
-        onSelect={(v) => setFilter('mealType', v)}
-      />
-      <ChipRow
-        label="Tag"
-        options={tags}
-        selected={filters.tag}
-        onSelect={(v) => setFilter('tag', v)}
-      />
+      <ChipRow label="Cuisine" options={cuisines} selected={filters.cuisine} onSelect={(v) => setFilter('cuisine', v)} />
+      <ChipRow label="Difficulty" options={DIFFICULTIES} selected={filters.difficulty} onSelect={(v) => setFilter('difficulty', v)} />
+      <ChipRow label="Meal type" options={mealTypes} selected={filters.mealType} onSelect={(v) => setFilter('mealType', v)} />
+      <ChipRow label="Tag" options={tags} selected={filters.tag} onSelect={(v) => setFilter('tag', v)} />
 
       <View style={local.group}>
         <Title style={styles.filterTitle}>Sort by</Title>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={local.chipRow}
-        >
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={local.chipRow}>
           {SORTS.map((option) => (
             <Chip
               key={option.value}
@@ -275,42 +199,27 @@ export default function SearchScreen() {
       )}
 
       <Title style={styles.resultsTitle}>
-        {debouncedQuery.trim() ? `Results for "${debouncedQuery.trim()}"` : 'All recipes'} (
-        {filtered.length})
+        {debouncedQuery.trim() ? `Results for "${debouncedQuery.trim()}"` : 'All recipes'} ({filtered.length})
       </Title>
     </View>
   );
 
   const error = searchError ?? catalog.error;
 
-  let empty: React.ReactElement | null = null;
+  let empty: React.ReactElement;
   if (catalog.loading || (searching && searchResults === null)) {
-    empty = (
-      <View style={styles.loadingCenter}>
-        <ActivityIndicator size="large" color="#E85D04" />
-      </View>
-    );
+    empty = <LoadingState message="Searching..." />;
   } else if (error) {
-    empty = (
-      <View style={styles.emptyState}>
-        <MaterialCommunityIcons name="alert-circle-outline" size={64} color="#BCAAA4" />
-        <Text style={styles.emptyText}>Something went wrong</Text>
-        <Text style={styles.emptySubtext}>{error}</Text>
-        <Button mode="contained" onPress={() => catalog.reload(true)}>
-          Try again
-        </Button>
-      </View>
-    );
+    empty = <ErrorState message={error} onRetry={() => catalog.reload(true)} />;
   } else {
     empty = (
-      <View style={styles.emptyState}>
-        <MaterialCommunityIcons name="magnify" size={64} color="#BCAAA4" />
-        <Text style={styles.emptyText}>No recipes found</Text>
-        <Text style={styles.emptySubtext}>Try a different search or remove some filters</Text>
-        <Button mode="contained" onPress={clearAll}>
-          Clear search and filters
-        </Button>
-      </View>
+      <EmptyState
+        icon="magnify"
+        title="No recipes found"
+        message="Try a different search or remove some filters"
+        actionLabel="Clear search and filters"
+        onAction={clearAll}
+      />
     );
   }
 

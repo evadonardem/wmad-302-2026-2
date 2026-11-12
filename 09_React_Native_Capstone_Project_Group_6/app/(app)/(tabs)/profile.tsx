@@ -45,9 +45,19 @@ const local = StyleSheet.create({
 });
 
 // Menu row helpers
-const menuIcon = (name: IconName) => (props: { style?: object }) => (
-  <MaterialCommunityIcons name={name} size={24} color="#E85D04" style={props.style} />
-);
+// The inner function has a name (MenuIcon) so ESLint's react/display-name is satisfied.
+const menuIcon = (name: IconName) => {
+  const MenuIcon = (props: { style?: object }) => (
+    <MaterialCommunityIcons name={name} size={24} color="#E85D04" style={props.style} />
+  );
+  return MenuIcon;
+};
+
+// Created once at module level so they are not rebuilt on every render
+const favoritesIcon = menuIcon('heart');
+const editProfileIcon = menuIcon('account-edit');
+const settingsIcon = menuIcon('cog');
+
 const chevron = (props: { style?: object }) => (
   <MaterialCommunityIcons name="chevron-right" size={24} color="#8D6E63" style={props.style} />
 );
@@ -189,7 +199,7 @@ export default function ProfileScreen() {
               <List.Item
                 title="Favorites"
                 description="Your saved recipes"
-                left={menuIcon('heart')}
+                left={favoritesIcon}
                 right={chevron}
                 onPress={() => router.push('/(app)/(tabs)/favorites')}
               />
@@ -197,7 +207,7 @@ export default function ProfileScreen() {
               <List.Item
                 title="Edit Profile"
                 description="Update your name and email"
-                left={menuIcon('account-edit')}
+                left={editProfileIcon}
                 right={chevron}
                 onPress={openEdit}
               />
@@ -205,7 +215,7 @@ export default function ProfileScreen() {
               <List.Item
                 title="Settings"
                 description="Manage favorites, about the app"
-                left={menuIcon('cog')}
+                left={settingsIcon}
                 right={chevron}
                 onPress={() => setDialog('settings')}
               />
@@ -322,7 +332,7 @@ export default function ProfileScreen() {
         <Dialog visible={dialog === 'clearFavorites'} onDismiss={() => setDialog(null)}>
           <Dialog.Title>Clear favorites</Dialog.Title>
           <Dialog.Content>
-            <Text>Remove all {count} saved recipes? This can't be undone.</Text>
+            <Text>{`Remove all ${count} saved recipes? This cannot be undone.`}</Text>
           </Dialog.Content>
           <Dialog.Actions>
             <Button onPress={() => setDialog('settings')}>Cancel</Button>

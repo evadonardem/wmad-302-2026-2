@@ -5,21 +5,13 @@
  * "Undo" snackbar appears after removing.
  */
 import React, { useEffect, useRef, useState } from 'react';
-import {
-  View,
-  Text,
-  FlatList,
-  TouchableOpacity,
-  ActivityIndicator,
-  Image,
-  StyleSheet,
-} from 'react-native';
+import { View, Text, FlatList, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Card, Title, Chip, Button, IconButton, Snackbar } from 'react-native-paper';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Title, Button, Snackbar } from 'react-native-paper';
 import { useFavorites } from '@/context/FavoritesContext';
 import { recipeApi } from '@/services/recipeApi';
 import { Recipe } from '@/types/recipe';
+import { EmptyState, LoadingState, RecipeListItem } from '@/components/CommonComponents';
 import { styles } from './favoritesStyles';
 
 const local = StyleSheet.create({
@@ -77,9 +69,7 @@ export default function FavoritesScreen() {
         else failed += 1;
       });
       setRecipesById((prev) => ({ ...prev, ...loaded }));
-      setLoadError(
-        failed > 0 ? `${failed} recipe${failed > 1 ? 's' : ''} couldn't be loaded.` : null,
-      );
+      setLoadError(failed > 0 ? `${failed} recipe${failed > 1 ? 's' : ''} could not be loaded.` : null);
       setFetching(false);
     };
     load();
@@ -109,61 +99,30 @@ export default function FavoritesScreen() {
     .filter((recipe): recipe is Recipe => recipe !== undefined);
 
   const renderFavorite = ({ item }: { item: Recipe }) => (
-    <TouchableOpacity style={styles.favoriteCard} onPress={() => router.push(`/recipe/${item.id}`)}>
-      <Card style={styles.card} elevation={1}>
-        <View style={styles.cardContent}>
-          <Image source={{ uri: item.image }} style={styles.recipeImage} resizeMode="cover" />
-          <View style={styles.info}>
-            <Title style={styles.title} numberOfLines={1}>
-              {item.name}
-            </Title>
-            <View style={styles.meta}>
-              <Chip style={styles.difficultyChip}>{item.difficulty}</Chip>
-              <Chip style={styles.cuisineChip}>{item.cuisine}</Chip>
-            </View>
-            <Text style={styles.details}>
-              ⏱️ {item.prepTimeMinutes + item.cookTimeMinutes}min · 👥 {item.servings} · ⭐{' '}
-              {item.rating.toFixed(1)}
-            </Text>
-          </View>
-          <IconButton
-            icon="heart"
-            size={24}
-            iconColor="#C62828"
-            onPress={() => handleRemove(item)}
-            accessibilityLabel="Remove from favorites"
-          />
-        </View>
-      </Card>
-    </TouchableOpacity>
+    <RecipeListItem
+      recipe={item}
+      style={styles.favoriteCard}
+      onPress={() => router.push(`/recipe/${item.id}`)}
+      isFavorite
+      onToggleFavorite={() => handleRemove(item)}
+    />
   );
 
   // Still reading the saved list, or downloading the first batch of recipes
   if (idsLoading || (fetching && recipes.length === 0)) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#E85D04" />
-        <Text style={styles.loadingText}>Loading favorites...</Text>
-      </View>
-    );
+    return <LoadingState message="Loading favorites..." />;
   }
 
   return (
     <View style={styles.container}>
       {ids.length === 0 ? (
-        <View style={styles.emptyState}>
-          <MaterialCommunityIcons name="heart-outline" size={80} color="#BCAAA4" />
-          <Text style={styles.emptyTitle}>No Favorites Yet</Text>
-          <Text style={styles.emptyText}>Tap the heart on a recipe to save it here</Text>
-          <Button
-            mode="contained"
-            onPress={() => router.push('/(app)/(tabs)/home')}
-            style={styles.browseButton}
-            contentStyle={styles.buttonContent}
-          >
-            Browse Recipes
-          </Button>
-        </View>
+        <EmptyState
+          icon="heart-outline"
+          title="No Favorites Yet"
+          message="Tap the heart on a recipe to save it here"
+          actionLabel="Browse Recipes"
+          onAction={() => router.push('/(app)/(tabs)/home')}
+        />
       ) : (
         <FlatList
           data={recipes}
