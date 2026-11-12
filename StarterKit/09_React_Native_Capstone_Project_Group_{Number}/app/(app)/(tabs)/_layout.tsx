@@ -5,10 +5,12 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
 import { useAuth } from '@/context/AuthContext';
+import { useFavorites } from '@/context/FavoritesContext';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 export default function TabsLayout() {
   const { user } = useAuth();
+  const { count: favoritesCount } = useFavorites();
 
   return (
     <Tabs
@@ -60,9 +62,24 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="categories"
+        options={{
+          title: 'Categories',
+          tabBarIcon: ({ focused, color }) => (
+            <MaterialCommunityIcons
+              name={focused ? 'view-grid' : 'view-grid-outline'}
+              size={24}
+              color={color}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="favorites"
         options={{
           title: 'Favorites',
+          tabBarBadge: favoritesCount > 0 ? favoritesCount : undefined,
+          tabBarBadgeStyle: { backgroundColor: '#E85D04' },
           tabBarIcon: ({ focused, color }) => (
             <MaterialCommunityIcons
               name={focused ? 'heart' : 'heart-outline'}

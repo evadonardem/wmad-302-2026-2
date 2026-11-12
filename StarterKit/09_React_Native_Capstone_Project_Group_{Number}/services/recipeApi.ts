@@ -25,7 +25,7 @@ class RecipeApiService {
    * Get all recipes with pagination
    */
   async getRecipes(params: RecipeSearchParams = {}): Promise<RecipesResponse> {
-    const response = await this.client.get<RecipesResponse>('/', { params });
+    const response = await this.client.get<RecipesResponse>('', { params });
     return response.data;
   }
 
@@ -49,9 +49,11 @@ class RecipeApiService {
 
   /**
    * Get recipes by category
+   * DummyJSON has no /category endpoint for recipes, so a "category" is a tag
+   * (GET /recipes/tag/{tag}).
    */
   async getRecipesByCategory(category: string, params: RecipeSearchParams = {}): Promise<RecipesResponse> {
-    const response = await this.client.get<RecipesResponse>(`/category/${encodeURIComponent(category)}`, {
+    const response = await this.client.get<RecipesResponse>(`/tag/${encodeURIComponent(category)}`, {
       params,
     });
     return response.data;
@@ -68,23 +70,34 @@ class RecipeApiService {
   }
 
   /**
+   * Get recipes by meal type (GET /recipes/meal-type/{mealType})
+   */
+  async getRecipesByMealType(mealType: string, params: RecipeSearchParams = {}): Promise<RecipesResponse> {
+    const response = await this.client.get<RecipesResponse>(
+      `/meal-type/${encodeURIComponent(mealType)}`,
+      { params }
+    );
+    return response.data;
+  }
+
+  /**
    * Get random recipe(s)
+   * DummyJSON has no /random endpoint for recipes, so we pick random ids from the total.
    */
   async getRandomRecipes(count: number = 1): Promise<Recipe[]> {
-    const response = await this.client.get<{ recipes: Recipe[] }>(`/random/${count}`);
-    return response.data.recipes;
+    const { total } = await this.getRecipes({ limit: 1 });
+    const ids = Array.from({ length: count }, () => Math.floor(Math.random() * total) + 1);
+    return Promise.all(ids.map((id) => this.getRecipeById(id)));
   }
 
   /**
    * Get all categories
+   * DummyJSON doesn't have a categories endpoint for recipes,
+   * so we use its tag list (GET /recipes/tags) as the categories.
    */
   async getCategories(): Promise<string[]> {
-    // DummyJSON doesn't have a categories endpoint for recipes
-    // Return static list based on known categories
-    return [
-      'Beef', 'Chicken', 'Dessert', 'Lamb', 'Pasta', 'Pork', 'Seafood', 'Vegetarian',
-      'Breakfast', 'Appetizer', 'Side Dish', 'Main Course', 'Soup', 'Salad', 'Drink',
-    ];
+    const response = await this.client.get<string[]>('/tags');
+    return response.data;
   }
 
   /**

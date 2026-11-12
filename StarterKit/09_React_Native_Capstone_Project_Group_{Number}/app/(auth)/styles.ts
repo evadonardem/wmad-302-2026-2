@@ -129,4 +129,96 @@ export const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 18,
   },
+
+  // ---- Register screen styles ----
+  nameRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  halfInput: {
+    flex: 1,
+  },
+  optionalRow: {
+    flexDirection: 'row',
+    gap: 12,
+    alignItems: 'flex-start',
+  },
+  genderSelector: {
+    marginBottom: 16,
+  },
+  genderLabel: {
+    fontSize: 12,
+    color: '#8D6E63',
+    marginBottom: 6,
+  },
+  genderOptions: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  genderOption: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#D7CCC8',
+    alignItems: 'center',
+  },
+  genderOptionSelected: {
+    backgroundColor: '#E85D04',
+    borderColor: '#E85D04',
+  },
+  genderOptionText: {
+    fontSize: 13,
+    color: '#8D6E63',
+  },
+  genderOptionTextSelected: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+  },
+  termsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  checkbox: {
+    margin: 0,
+  },
+  termsText: {
+    flex: 1,
+    fontSize: 13,
+    color: '#8D6E63',
+    lineHeight: 18,
+  },
+  registerButton: {
+    marginTop: 8,
+    marginBottom: 16,
+    borderRadius: 12,
+    height: 52,
+  },
+  loginContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 4,
+  },
+  loginText: {
+    fontSize: 14,
+    color: '#8D6E63',
+  },
+  guideContainer: {
+    marginTop: 24,
+    padding: 16,
+    borderRadius: 12,
+    backgroundColor: '#FFF3E0',
+  },
+  guideTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#3E2723',
+    marginBottom: 6,
+  },
+  guideText: {
+    fontSize: 13,
+    color: '#8D6E63',
+    lineHeight: 20,
+  },
 });

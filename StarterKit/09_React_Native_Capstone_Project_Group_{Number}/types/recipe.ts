@@ -36,6 +36,8 @@ export interface RecipeSearchParams {
   limit?: number;
   skip?: number;
   select?: string;
+  sortBy?: string;
+  order?: 'asc' | 'desc';
 }
 
 export interface CategoryResponse {

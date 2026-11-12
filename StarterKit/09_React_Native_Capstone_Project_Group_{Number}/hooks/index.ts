@@ -4,7 +4,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { authStorage } from '@/utils/storage';
+import { authStorage, getStorageItem, setStorageItem } from '@/utils/storage';
+import type { StorageKey } from '@/utils/storage';
 
 /**
  * Hook for managing authentication state with persistence
@@ -37,14 +38,14 @@ export function useAuthPersistence() {
 /**
  * Hook for async storage with state
  */
-export function useAsyncStorage<T>(key: string, initialValue: T) {
+export function useAsyncStorage<T>(key: StorageKey, initialValue: T) {
   const [value, setValue] = useState<T>(initialValue);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const load = async () => {
       try {
-        const stored = await import('@/utils/storage').then((m) => m.getStorageItem<T>(key as any));
+        const stored = await getStorageItem<T>(key);
         if (stored !== null) setValue(stored);
       } catch (error) {
         console.error(`Failed to load ${key}:`, error);
@@ -60,7 +61,7 @@ export function useAsyncStorage<T>(key: string, initialValue: T) {
       const resolvedValue = newValue instanceof Function ? newValue(value) : newValue;
       setValue(resolvedValue);
       try {
-        await import('@/utils/storage').then((m) => m.setStorageItem(key as any, resolvedValue));
+        await setStorageItem(key, resolvedValue);
       } catch (error) {
         console.error(`Failed to save ${key}:`, error);
       }
@@ -87,6 +88,7 @@ export function useDebounce<T>(value: T, delay: number = 300): T {
 
 /**
  * Hook for infinite scroll pagination
+ * `fetchFn` must be stable (wrap it in useCallback) or the hook will see a new function every render.
  */
 export function useInfiniteScroll<T>(
   fetchFn: (page: number, limit: number) => Promise<{ data: T[]; hasMore: boolean }>,
@@ -116,12 +118,22 @@ export function useInfiniteScroll<T>(
     }
   }, [fetchFn, page, limit, loading, hasMore]);
 
+  // Reload from the first page (also used for the initial load)
   const refresh = useCallback(async () => {
-    setPage(0);
-    setData([]);
-    setHasMore(true);
-    await loadMore();
-  }, [loadMore]);
+    setLoading(true);
+    setError(null);
+
+    try {
+      const result = await fetchFn(0, limit);
+      setData(result.data);
+      setHasMore(result.hasMore);
+      setPage(1);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load');
+    } finally {
+      setLoading(false);
+    }
+  }, [fetchFn, limit]);
 
   return {
     data,
@@ -135,11 +147,17 @@ export function useInfiniteScroll<T>(
 
 /**
  * Hook for network status
+ * Uses browser online/offline events (web). On native there is no `window` event API,
+ * so it stays `true` there.
  */
 export function useNetworkStatus() {
   const [isOnline, setIsOnline] = useState(true);
 
   useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.addEventListener !== 'function') {
+      return;
+    }
+
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
 

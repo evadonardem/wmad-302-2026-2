@@ -1,3 +1,4 @@
+// FILE: app/(auth)/register.tsx
 /**
  * Register Screen - SKELETON WITH TODOs
  * Students complete this screen to learn auth flow
@@ -19,47 +20,83 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
-  ActivityIndicator,
+  TouchableOpacity,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
 import { Card, Button, TextInput as PaperTextInput, Checkbox } from 'react-native-paper';
 import { styles } from './styles';
 
+type Gender = 'male' | 'female';
+
+interface RegisterForm {
+  firstName: string;
+  lastName: string;
+  username: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+  age: string;
+  gender: Gender;
+}
+
+const INITIAL_FORM: RegisterForm = {
+  firstName: '',
+  lastName: '',
+  username: '',
+  email: '',
+  password: '',
+  confirmPassword: '',
+  age: '',
+  gender: 'male',
+};
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const MIN_AGE = 13;
+const MAX_AGE = 120;
+
 export default function RegisterScreen() {
   const router = useRouter();
+  // `register` from context creates the account AND signs the user in
+  // (it calls authApi.register(), which saves the session, then dispatches AUTH_SUCCESS).
   const { register, isLoading, error, clearError } = useAuth();
 
   // Form state
-  const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    username: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-    age: '',
-    gender: 'male' as 'male' | 'female',
-  });
+  const [formData, setFormData] = useState<RegisterForm>(INITIAL_FORM);
 
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  // Errors coming from authApi.register() (e.g. username already taken).
+  // Context `error` covers login failures, so we only alert once.
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   // Validation helpers
   const validateForm = (): string | null => {
     if (!formData.firstName.trim()) return 'First name is required';
     if (!formData.lastName.trim()) return 'Last name is required';
-    if (!formData.username.trim()) return 'Username is required';
-    if (formData.username.length < 3) return 'Username must be at least 3 characters';
-    if (!formData.email.trim()) return 'Email is required';
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) return 'Invalid email format';
+
+    const username = formData.username.trim();
+    if (!username) return 'Username is required';
+    if (username.length < 3) return 'Username must be at least 3 characters';
+
+    const email = formData.email.trim();
+    if (!email) return 'Email is required';
+    if (!EMAIL_PATTERN.test(email)) return 'Invalid email format';
+
     if (!formData.password) return 'Password is required';
     if (formData.password.length < 6) return 'Password must be at least 6 characters';
     if (formData.password !== formData.confirmPassword) return 'Passwords do not match';
-    if (formData.age && (parseInt(formData.age) < 13 || parseInt(formData.age) > 120)) {
-      return 'Age must be between 13 and 120';
+
+    const age = formData.age.trim();
+    if (age) {
+      const parsedAge = Number(age);
+      if (Number.isNaN(parsedAge)) return 'Age must be a number';
+      if (parsedAge < MIN_AGE || parsedAge > MAX_AGE) {
+        return `Age must be between ${MIN_AGE} and ${MAX_AGE}`;
+      }
     }
+
     if (!agreedToTerms) return 'You must agree to the Terms of Service';
     return null;
   };
@@ -71,45 +108,45 @@ export default function RegisterScreen() {
       return;
     }
 
-    // TODO: Student Implementation
-    // 1. Call authApi.register() with formData
-    //    - Import authApi from '@/services/authApi'
-    //    - Pass: firstName, lastName, username, password, email, age, gender
-    // 2. On success:
-    //    - Option A: Auto-login by calling context.login(username, password)
-    //    - Option B: Show success alert and navigate to login screen
-    // 3. On failure: Error is handled by context (shows in error state)
+    if (error) clearError();
+    setSubmitError(null);
 
+    const username = formData.username.trim();
+    const age = formData.age.trim();
+
+    // 1. Create the account (and sign in): POST /users/add, then demo login for tokens
     try {
-      // TODO: Replace with actual implementation
-      // const user = await authApi.register({
-      //   firstName: formData.firstName.trim(),
-      //   lastName: formData.lastName.trim(),
-      //   username: formData.username.trim(),
-      //   password: formData.password,
-      //   email: formData.email.trim(),
-      //   age: formData.age ? parseInt(formData.age) : undefined,
-      //   gender: formData.gender,
-      // });
-      // 
-      // // Auto-login after registration
-      // await login(formData.username.trim(), formData.password);
-      // router.replace('/(app)/(tabs)/home');
-
-      Alert.alert(
-        'TODO: Implement Register',
-        'Complete the register function by:\n1. Calling authApi.register()\n2. Auto-login or redirect to login\n3. Handle errors',
-        [{ text: 'OK' }]
-      );
+      await register({
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
+        username,
+        password: formData.password,
+        email: formData.email.trim(),
+        age: age ? Number(age) : undefined,
+        gender: formData.gender,
+      });
     } catch (err) {
-      // Error handled by context
-      console.error('Registration error:', err);
+      // Show register failures inline instead of a silent console.error
+      setSubmitError(
+        err instanceof Error
+          ? err.message
+          : 'Could not create your account. Please try again.'
+      );
+      return;
     }
+
+    // 2. Auto-login: the session is already saved by register(), so go straight to home
+    router.replace('/(app)/(tabs)/home');
   };
 
-  const handleFieldChange = (field: string, value: string) => {
+  // Generic over the form keys so we never index state with a plain `string`
+  const handleFieldChange = <K extends keyof RegisterForm>(
+    field: K,
+    value: RegisterForm[K]
+  ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     if (error) clearError();
+    if (submitError) setSubmitError(null);
   };
 
   React.useEffect(() => {
@@ -118,12 +155,18 @@ export default function RegisterScreen() {
     }
   }, [error, clearError]);
 
+  const displayError = submitError ?? error;
+
   return (
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
         {/* Logo/Brand */}
         <View style={styles.logoContainer}>
           <Text style={styles.logoText}>🍳</Text>
@@ -146,7 +189,8 @@ export default function RegisterScreen() {
                 onChangeText={(v) => handleFieldChange('firstName', v)}
                 style={[styles.input, styles.halfInput]}
                 autoCapitalize="words"
-                autoCompleteType="given-name"
+                // `autoComplete` replaces the removed `autoCompleteType` prop
+                autoComplete="given-name"
                 returnKeyType="next"
                 disabled={isLoading}
               />
@@ -157,7 +201,7 @@ export default function RegisterScreen() {
                 onChangeText={(v) => handleFieldChange('lastName', v)}
                 style={[styles.input, styles.halfInput]}
                 autoCapitalize="words"
-                autoCompleteType="family-name"
+                autoComplete="family-name"
                 returnKeyType="next"
                 disabled={isLoading}
               />
@@ -171,7 +215,8 @@ export default function RegisterScreen() {
               onChangeText={(v) => handleFieldChange('username', v)}
               style={styles.input}
               autoCapitalize="none"
-              autoCompleteType="username"
+              autoComplete="username"
+              autoCorrect={false}
               returnKeyType="next"
               disabled={isLoading}
             />
@@ -185,7 +230,8 @@ export default function RegisterScreen() {
               style={styles.input}
               autoCapitalize="none"
               keyboardType="email-address"
-              autoCompleteType="email"
+              autoComplete="email"
+              autoCorrect={false}
               returnKeyType="next"
               disabled={isLoading}
             />
@@ -198,15 +244,18 @@ export default function RegisterScreen() {
               onChangeText={(v) => handleFieldChange('password', v)}
               style={styles.input}
               secureTextEntry={!showPassword}
-              autoCompleteType="new-password"
+              autoComplete="new-password"
               returnKeyType="next"
               disabled={isLoading}
               right={
-                <View style={styles.eyeIcon}>
-                  <Text onPress={() => setShowPassword(!showPassword)} style={styles.eyeText}>
-                    {showPassword ? '🙈' : '👁️'}
-                  </Text>
-                </View>
+                <TouchableOpacity
+                  onPress={() => setShowPassword((prev) => !prev)}
+                  style={styles.eyeIcon}
+                  accessibilityRole="button"
+                  accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  <Text style={styles.eyeText}>{showPassword ? '🙈' : '👁️'}</Text>
+                </TouchableOpacity>
               }
             />
 
@@ -218,15 +267,22 @@ export default function RegisterScreen() {
               onChangeText={(v) => handleFieldChange('confirmPassword', v)}
               style={styles.input}
               secureTextEntry={!showConfirmPassword}
-              autoCompleteType="new-password"
+              autoComplete="new-password"
               returnKeyType="next"
               disabled={isLoading}
               right={
-                <View style={styles.eyeIcon}>
-                  <Text onPress={() => setShowConfirmPassword(!showConfirmPassword)} style={styles.eyeText}>
-                    {showConfirmPassword ? '🙈' : '👁️'}
-                  </Text>
-                </View>
+                <TouchableOpacity
+                  onPress={() => setShowConfirmPassword((prev) => !prev)}
+                  style={styles.eyeIcon}
+                  accessibilityRole="button"
+                  accessibilityLabel={
+                    showConfirmPassword
+                      ? 'Hide password confirmation'
+                      : 'Show password confirmation'
+                  }
+                >
+                  <Text style={styles.eyeText}>{showConfirmPassword ? '🙈' : '👁️'}</Text>
+                </TouchableOpacity>
               }
             />
 
@@ -247,27 +303,41 @@ export default function RegisterScreen() {
                 <View style={styles.genderOptions}>
                   <TouchableOpacity
                     onPress={() => handleFieldChange('gender', 'male')}
+                    disabled={isLoading}
+                    accessibilityRole="radio"
+                    accessibilityState={{ selected: formData.gender === 'male' }}
                     style={[
                       styles.genderOption,
                       formData.gender === 'male' && styles.genderOptionSelected,
                     ]}
                   >
-                    <Text style={[
-                      styles.genderOptionText,
-                      formData.gender === 'male' && styles.genderOptionTextSelected,
-                    ]}>♂ Male</Text>
+                    <Text
+                      style={[
+                        styles.genderOptionText,
+                        formData.gender === 'male' && styles.genderOptionTextSelected,
+                      ]}
+                    >
+                      ♂ Male
+                    </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     onPress={() => handleFieldChange('gender', 'female')}
+                    disabled={isLoading}
+                    accessibilityRole="radio"
+                    accessibilityState={{ selected: formData.gender === 'female' }}
                     style={[
                       styles.genderOption,
                       formData.gender === 'female' && styles.genderOptionSelected,
                     ]}
                   >
-                    <Text style={[
-                      styles.genderOptionText,
-                      formData.gender === 'female' && styles.genderOptionTextSelected,
-                    ]}>♀ Female</Text>
+                    <Text
+                      style={[
+                        styles.genderOptionText,
+                        formData.gender === 'female' && styles.genderOptionTextSelected,
+                      ]}
+                    >
+                      ♀ Female
+                    </Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -277,7 +347,8 @@ export default function RegisterScreen() {
             <View style={styles.termsContainer}>
               <Checkbox
                 status={agreedToTerms ? 'checked' : 'unchecked'}
-                onPress={() => setAgreedToTerms(!agreedToTerms)}
+                onPress={() => setAgreedToTerms((prev) => !prev)}
+                disabled={isLoading}
                 style={styles.checkbox}
               />
               <Text style={styles.termsText}>
@@ -288,6 +359,13 @@ export default function RegisterScreen() {
               </Text>
             </View>
 
+            {/* Inline Error */}
+            {displayError && (
+              <View style={styles.errorContainer}>
+                <Text style={styles.errorText}>{displayError}</Text>
+              </View>
+            )}
+
             {/* Register Button */}
             <Button
               mode="contained"
@@ -296,16 +374,18 @@ export default function RegisterScreen() {
               style={styles.registerButton}
               disabled={isLoading}
               contentStyle={styles.buttonContent}
+              labelStyle={styles.buttonText}
             >
-              {isLoading ? <ActivityIndicator color="white" size="small" /> : (
-                <Text style={styles.buttonText}>Create Account</Text>
-              )}
+              Create Account
             </Button>
 
             {/* Login Link */}
             <View style={styles.loginContainer}>
               <Text style={styles.loginText}>Already have an account? </Text>
-              <TouchableOpacity onPress={() => router.replace('/(auth)/login')} style={styles.link}>
+              <TouchableOpacity
+                onPress={() => router.replace('/(auth)/login')}
+                style={styles.link}
+              >
                 <Text style={styles.linkText}>Sign In</Text>
               </TouchableOpacity>
             </View>
@@ -316,9 +396,9 @@ export default function RegisterScreen() {
         <View style={styles.guideContainer}>
           <Text style={styles.guideTitle}>📝 Student Implementation Guide</Text>
           <Text style={styles.guideText}>
-            Complete the handleRegister function to:\n
-            1. Call authApi.register() with form data\n
-            2. Auto-login or redirect to login\n
+            Complete the handleRegister function to:{'\n'}
+            1. Call authApi.register() with form data{'\n'}
+            2. Auto-login or redirect to login{'\n'}
             3. Handle success/error states
           </Text>
         </View>
@@ -326,6 +406,3 @@ export default function RegisterScreen() {
     </KeyboardAvoidingView>
   );
 }
-
-// Need to import TouchableOpacity for gender options
-import { TouchableOpacity } from 'react-native';

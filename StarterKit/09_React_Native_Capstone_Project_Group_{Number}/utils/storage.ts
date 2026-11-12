@@ -4,6 +4,7 @@
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import type { AuthUser } from '@/types/auth';
 
 const STORAGE_KEYS = {
   AUTH_USER: 'auth_user',
@@ -87,7 +88,7 @@ export async function setMultipleStorageItems(
   items: Array<{ key: StorageKey; value: unknown }>
 ): Promise<void> {
   try {
-    const pairs = items.map(({ key, value }) => [key, JSON.stringify(value)]);
+    const pairs = items.map(({ key, value }): [string, string] => [key, JSON.stringify(value)]);
     await AsyncStorage.multiSet(pairs);
   } catch (error) {
     console.error('Failed to set multiple storage items:', error);
@@ -98,21 +99,14 @@ export async function setMultipleStorageItems(
 // Specific helpers for common use cases
 
 export const authStorage = {
-  getUser: () => getStorageItem<{
-    id: number;
-    username: string;
-    email: string;
-    firstName: string;
-    lastName: string;
-    token: string;
-    refreshToken: string;
-  }>(STORAGE_KEYS.AUTH_USER),
-  setUser: (user: unknown) => setStorageItem(STORAGE_KEYS.AUTH_USER, user),
+  getUser: () => getStorageItem<AuthUser>(STORAGE_KEYS.AUTH_USER),
+  setUser: (user: AuthUser) => setStorageItem(STORAGE_KEYS.AUTH_USER, user),
   clearUser: () => removeStorageItem(STORAGE_KEYS.AUTH_USER),
 };
 
 export const favoritesStorage = {
-  getIds: () => getStorageItem<number[]>(STORAGE_KEYS.FAVORITES) || Promise.resolve([]),
+  getIds: async (): Promise<number[]> =>
+    (await getStorageItem<number[]>(STORAGE_KEYS.FAVORITES)) ?? [],
   setIds: (ids: number[]) => setStorageItem(STORAGE_KEYS.FAVORITES, ids),
   addId: async (id: number) => {
     const ids = await favoritesStorage.getIds();
@@ -137,7 +131,8 @@ export const favoritesStorage = {
 };
 
 export const cartStorage = {
-  getCart: () => getStorageItem<CartItem[]>(STORAGE_KEYS.CART) || Promise.resolve([]),
+  getCart: async (): Promise<CartItem[]> =>
+    (await getStorageItem<CartItem[]>(STORAGE_KEYS.CART)) ?? [],
   setCart: (items: CartItem[]) => setStorageItem(STORAGE_KEYS.CART, items),
   addItem: async (item: CartItem) => {
     const items = await cartStorage.getCart();
@@ -168,5 +163,8 @@ export const cartStorage = {
   clear: () => removeStorageItem(STORAGE_KEYS.CART),
 };
 
-// Import CartItem type for cartStorage
-import type { CartItem } from '@/types/product';
+// CartItem type for cartStorage (defined here because types/product.ts doesn't exist in this project)
+interface CartItem {
+  productId: number;
+  quantity: number;
+}

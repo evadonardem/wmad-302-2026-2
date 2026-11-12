@@ -3,6 +3,7 @@
  */
 import { Stack } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
+import { FavoritesProvider } from '@/context/FavoritesContext';
 import { Redirect } from 'expo-router';
 import React from 'react';
 
@@ -20,9 +21,21 @@ export default function AppLayout() {
   }
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="(tabs)" />
-      {/* Add other protected screens here */}
-    </Stack>
+    <FavoritesProvider>
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="(tabs)" />
+        <Stack.Screen
+          name="recipe/[id]"
+          options={{
+            headerShown: true,
+            title: 'Recipe',
+            headerTintColor: '#E85D04',
+            headerStyle: { backgroundColor: '#FFFDF8' },
+            headerShadowVisible: false,
+          }}
+        />
+        {/* Add other protected screens here */}
+      </Stack>
+    </FavoritesProvider>
   );
 }

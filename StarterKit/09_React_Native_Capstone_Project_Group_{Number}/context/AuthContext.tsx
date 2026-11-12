@@ -11,7 +11,7 @@ import React, {
   useCallback,
   ReactNode,
 } from 'react';
-import { AuthState, AuthAction, AuthUser } from '@/types/auth';
+import { AuthState, AuthAction } from '@/types/auth';
 import { authApi } from '@/services/authApi';
 
 // Initial state
@@ -111,24 +111,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const hydrateAuth = async () => {
       try {
-        const storedUser = authApi.getStoredUser();
+        // Load the saved session from AsyncStorage into memory first
+        const storedUser = await authApi.loadStoredUser();
         if (storedUser?.token && storedUser?.refreshToken) {
           // Verify token still works by fetching user profile
           try {
             const freshUser = await authApi.getMe();
-            // Merge stored tokens with fresh user data
-            const mergedUser = {
-              ...freshUser,
-              token: storedUser.token,
-              refreshToken: storedUser.refreshToken,
-            };
+            // Saved profile wins (DummyJSON can't persist registered/edited users)
+            const mergedUser = { ...freshUser, ...storedUser };
             authApi.setTokens(mergedUser); // Update with fresh data
             dispatch({ type: 'AUTH_HYDRATE', payload: mergedUser });
           } catch {
             // Token expired, try refresh
             try {
               await authApi.refreshAccessToken();
-              const freshUser = await authApi.getMe();
+              await authApi.getMe();
               const storedAgain = authApi.getStoredUser();
               if (storedAgain) {
                 dispatch({ type: 'AUTH_HYDRATE', payload: storedAgain });
@@ -176,11 +173,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }) => {
       dispatch({ type: 'AUTH_START' });
       try {
-        // TODO: Student implementation
-        // 1. Call authApi.register(data) - implement in services/authApi.ts
-        // 2. On success, dispatch AUTH_SUCCESS
-        // 3. On failure, dispatch AUTH_FAILURE
-        throw new Error('TODO: Implement register in AuthContext - call authApi.register');
+        const user = await authApi.register(data);
+        dispatch({ type: 'AUTH_SUCCESS', payload: user });
       } catch (error: unknown) {
         const message = error instanceof Error ? error.message : 'Registration failed';
         dispatch({ type: 'AUTH_FAILURE', payload: message });
@@ -205,11 +199,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const user = await authApi.getMe();
       const storedUser = authApi.getStoredUser();
       if (storedUser) {
-        const mergedUser = {
-          ...user,
-          token: storedUser.token,
-          refreshToken: storedUser.refreshToken,
-        };
+        const mergedUser = { ...user, ...storedUser };
         authApi.setTokens(mergedUser);
         dispatch({ type: 'AUTH_SUCCESS', payload: mergedUser });
       }
