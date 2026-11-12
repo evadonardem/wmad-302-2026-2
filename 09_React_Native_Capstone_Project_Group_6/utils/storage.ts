@@ -71,7 +71,7 @@ export async function getMultipleStorageItems<T extends Record<string, unknown>>
   try {
     const pairs = await AsyncStorage.multiGet(keys);
     const result = {} as T;
-    pairs.forEach(([key, value]: [string, string | null]) => {
+    pairs.forEach(([key, value]) => {
       (result as Record<string, unknown>)[key] = value ? JSON.parse(value) : null;
     });
     return result;
@@ -146,5 +146,13 @@ export const accountsStorage = {
   add: async (account: LocalAccount): Promise<void> => {
     const all = await accountsStorage.getAll();
     await setStorageItem(STORAGE_KEYS.LOCAL_ACCOUNTS, [...all, account]);
+  },
+  /** Change profile fields of one saved account (used by Edit Profile). */
+  update: async (id: number, changes: Partial<LocalAccount['user']>): Promise<void> => {
+    const all = await accountsStorage.getAll();
+    const next = all.map((account) =>
+      account.user.id === id ? { ...account, user: { ...account.user, ...changes } } : account
+    );
+    await setStorageItem(STORAGE_KEYS.LOCAL_ACCOUNTS, next);
   },
 };

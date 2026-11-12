@@ -13,7 +13,7 @@ import React, {
   ReactNode,
 } from 'react';
 import { AuthState, AuthAction, AuthUser, RegisterData } from '@/types/auth';
-import { authApi } from '@/services/authApi';
+import { authApi, ProfileUpdate } from '@/services/authApi';
 
 // Initial state
 const initialState: AuthState = {
@@ -83,6 +83,7 @@ interface AuthContextType extends AuthState {
   login: (username: string, password: string) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
   logout: () => Promise<void>;
+  updateProfile: (changes: ProfileUpdate) => Promise<void>;
   clearError: () => void;
   refreshUser: () => Promise<void>;
 }
@@ -121,11 +122,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // refreshed automatically. Tokens may have changed, so re-read them.
           const freshUser = await authApi.getMe();
           const latest = (await authApi.getStoredUser()) ?? storedUser;
-          const mergedUser: AuthUser = {
-            ...freshUser,
-            token: latest.token,
-            refreshToken: latest.refreshToken,
-          };
+          // Stored values win, so profile edits aren't lost on reload
+          // (the server never keeps them)
+          const mergedUser: AuthUser = { ...freshUser, ...latest };
           await authApi.setTokens(mergedUser);
           dispatch({ type: 'AUTH_HYDRATE', payload: mergedUser });
         } catch {
@@ -170,6 +169,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'AUTH_LOGOUT' });
   }, []);
 
+  const updateProfile = useCallback(async (changes: ProfileUpdate) => {
+    const updated = await authApi.updateProfile(changes);
+    dispatch({ type: 'AUTH_UPDATE_USER', payload: updated });
+  }, []);
+
   const clearError = useCallback(() => {
     dispatch({ type: 'AUTH_CLEAR_ERROR' });
   }, []);
@@ -181,11 +185,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const user = await authApi.getMe();
       const storedUser = await authApi.getStoredUser();
       if (storedUser) {
-        const mergedUser: AuthUser = {
-          ...user,
-          token: storedUser.token,
-          refreshToken: storedUser.refreshToken,
-        };
+        const mergedUser: AuthUser = { ...user, ...storedUser };
         await authApi.setTokens(mergedUser);
         dispatch({ type: 'AUTH_SUCCESS', payload: mergedUser });
       }
@@ -196,7 +196,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ ...state, login, register, logout, clearError, refreshUser }}
+      value={{ ...state, login, register, logout, updateProfile, clearError, refreshUser }}
     >
       {children}
     </AuthContext.Provider>

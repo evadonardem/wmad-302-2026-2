@@ -24,7 +24,8 @@ interface FavoritesState {
 type FavoritesAction =
     | { type: 'FAVORITES_HYDRATE'; payload: number[] }
     | { type: 'FAVORITES_ADD'; payload: number }
-    | { type: 'FAVORITES_REMOVE'; payload: number };
+    | { type: 'FAVORITES_REMOVE'; payload: number }
+    | { type: 'FAVORITES_CLEAR' };
 
 const initialState: FavoritesState = { ids: [], isLoading: true };
 
@@ -41,6 +42,9 @@ export function favoritesReducer(state: FavoritesState, action: FavoritesAction)
         case 'FAVORITES_REMOVE':
             return { ...state, ids: state.ids.filter((id) => id !== action.payload) };
 
+        case 'FAVORITES_CLEAR':
+            return { ...state, ids: [] };
+
         default:
             return state;
     }
@@ -53,6 +57,7 @@ interface FavoritesContextType {
     isFavorite: (id: number) => boolean;
     toggleFavorite: (id: number) => void;
     removeFavorite: (id: number) => void;
+    clearFavorites: () => void;
 }
 
 const FavoritesContext = createContext<FavoritesContextType | undefined>(undefined);
@@ -98,6 +103,10 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
         dispatch({ type: 'FAVORITES_REMOVE', payload: id });
     }, []);
 
+    const clearFavorites = useCallback(() => {
+        dispatch({ type: 'FAVORITES_CLEAR' });
+    }, []);
+
     const value = useMemo<FavoritesContextType>(
         () => ({
             ids: state.ids,
@@ -106,8 +115,9 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
             isFavorite,
             toggleFavorite,
             removeFavorite,
+            clearFavorites,
         }),
-        [state.ids, state.isLoading, isFavorite, toggleFavorite, removeFavorite]
+        [state.ids, state.isLoading, isFavorite, toggleFavorite, removeFavorite, clearFavorites]
     );
 
     return <FavoritesContext.Provider value={value}>{children}</FavoritesContext.Provider>;

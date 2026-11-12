@@ -1,64 +1,85 @@
 /**
  * Home Screen - Cookbook Discover Tab
- * Students implement: Recipe grid, categories, featured recipes
- * API: https://dummyjson.com/docs/recipes
+ * Recipes load 10 at a time and more load as you scroll (GET /recipes?limit&skip).
+ * Pull down to refresh. Category chips open Search filtered by tag.
  */
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   View,
   Text,
-  ScrollView,
   FlatList,
   TouchableOpacity,
   Image,
   ActivityIndicator,
-  RefreshControl,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
-import { Card, Title, Chip, Avatar, Button, IconButton } from 'react-native-paper';
 import { useFavorites } from '@/context/FavoritesContext';
+import { Card, Chip, Avatar, Button, IconButton } from 'react-native-paper';
+import { recipeApi } from '@/services/recipeApi';
 import { useRecipeCatalog } from '@/hooks';
 import { countBy } from '@/utils/recipeFilters';
-import { recipeApi } from '@/services/recipeApi';
 import { Recipe } from '@/types/recipe';
 import { styles } from './homeStyles';
+
+const PAGE_SIZE = 10;
+
+type LoadMode = 'first' | 'more' | 'refresh';
 
 export default function HomeScreen() {
   const router = useRouter();
   const { user } = useAuth();
   const { isFavorite, toggleFavorite } = useFavorites();
+
   // Category chips: the 8 most common tags in the catalog
   const { recipes: catalog } = useRecipeCatalog();
   const topTags = useMemo(
     () => countBy(catalog, (r) => r.tags).slice(0, 8).map((item) => item.name),
     [catalog]
   );
+
   const [recipes, setRecipes] = useState<Recipe[]>([]);
+  const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const busy = useRef(false); // stops overlapping requests (e.g. fast scrolling)
 
-  const fetchRecipes = async (isRefresh = false) => {
+  const fetchPage = useCallback(async (skip: number, mode: LoadMode) => {
+    if (busy.current) return;
+    busy.current = true;
+    if (mode === 'first') setLoading(true);
+    if (mode === 'more') setLoadingMore(true);
+    setError(null);
     try {
-      if (!isRefresh) setLoading(true);
-      setError(null);
-
-      const data = await recipeApi.getRecipes({ limit: 20 });
-      setRecipes(data.recipes);
+      const data = await recipeApi.getRecipes({ limit: PAGE_SIZE, skip });
+      setTotal(data.total);
+      setRecipes((prev) => (mode === 'more' ? [...prev, ...data.recipes] : data.recipes));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load recipes');
     } finally {
       setLoading(false);
+      setLoadingMore(false);
       setRefreshing(false);
+      busy.current = false;
     }
-  };
-
-  useEffect(() => {
-    fetchRecipes();
   }, []);
 
-  const onRefresh = () => fetchRecipes(true);
+  useEffect(() => {
+    fetchPage(0, 'first');
+  }, [fetchPage]);
+
+  const hasMore = recipes.length < total;
+
+  const loadMore = () => {
+    if (hasMore && !error) fetchPage(recipes.length, 'more');
+  };
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchPage(0, 'refresh');
+  };
 
   const renderRecipe = ({ item }: { item: Recipe }) => (
     <TouchableOpacity
@@ -68,11 +89,7 @@ export default function HomeScreen() {
     >
       <Card style={styles.card} elevation={2}>
         <View style={styles.imageContainer}>
-          <Image
-            source={{ uri: item.image }}
-            style={styles.recipeImage}
-            resizeMode="cover"
-          />
+          <Image source={{ uri: item.image }} style={styles.recipeImage} resizeMode="cover" />
           <IconButton
             icon={isFavorite(item.id) ? 'heart' : 'heart-outline'}
             mode="contained"
@@ -97,20 +114,20 @@ export default function HomeScreen() {
           </View>
         </View>
         <Card.Content style={styles.cardContent}>
-          <Title style={styles.recipeTitle} numberOfLines={1}>
+          <Text style={styles.recipeTitle} numberOfLines={1}>
             {item.name}
-          </Title>
+          </Text>
           <View style={styles.metaRow}>
-            <Text style={styles.metaText}>
-              ⏱️ {item.prepTimeMinutes + item.cookTimeMinutes} min
-            </Text>
+            <Text style={styles.metaText}>⏱️ {item.prepTimeMinutes + item.cookTimeMinutes} min</Text>
             <Text style={styles.metaText}>👥 {item.servings} servings</Text>
             <Text style={styles.metaText}>🔥 {item.caloriesPerServing} cal</Text>
           </View>
           <View style={styles.cuisineRow}>
             <Chip style={styles.cuisineChip}>{item.cuisine}</Chip>
             {item.mealType.slice(0, 2).map((meal) => (
-              <Chip key={meal} style={styles.mealChip}>{meal}</Chip>
+              <Chip key={meal} style={styles.mealChip}>
+                {meal}
+              </Chip>
             ))}
           </View>
           <View style={styles.ratingRow}>
@@ -123,7 +140,8 @@ export default function HomeScreen() {
     </TouchableOpacity>
   );
 
-  if (loading) {
+  // First load
+  if (loading && recipes.length === 0) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#E85D04" />
@@ -132,25 +150,20 @@ export default function HomeScreen() {
     );
   }
 
-  if (error) {
+  // First load failed
+  if (error && recipes.length === 0) {
     return (
       <View style={styles.errorContainer}>
         <Text style={styles.errorText}>{error}</Text>
-        <Button mode="contained" onPress={() => fetchRecipes()} style={styles.retryButton}>
+        <Button mode="contained" onPress={() => fetchPage(0, 'first')} style={styles.retryButton}>
           Retry
         </Button>
       </View>
     );
   }
 
-  return (
-    <ScrollView
-      style={styles.scrollView}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#E85D04']} />
-      }
-      contentContainerStyle={styles.scrollContent}
-    >
+  const header = (
+    <View>
       {/* Welcome Header */}
       <View style={styles.welcomeContainer}>
         <View style={styles.welcomeTextContainer}>
@@ -165,7 +178,7 @@ export default function HomeScreen() {
       {/* Categories */}
       <View style={styles.sectionContainer}>
         <View style={styles.sectionHeader}>
-          <Title style={styles.sectionTitle}>Categories</Title>
+          <Text style={styles.sectionTitle}>Categories</Text>
         </View>
         <FlatList
           data={topTags}
@@ -184,26 +197,51 @@ export default function HomeScreen() {
         />
       </View>
 
-      {/* Featured Recipes */}
       <View style={styles.sectionContainer}>
         <View style={styles.sectionHeader}>
-          <Title style={styles.sectionTitle}>Featured Recipes</Title>
+          <Text style={styles.sectionTitle}>Featured Recipes</Text>
           <TouchableOpacity onPress={() => router.push('/(app)/(tabs)/search')} style={styles.seeAll}>
             <Text style={styles.seeAllText}>See All</Text>
           </TouchableOpacity>
         </View>
-        <FlatList
-          data={recipes.slice(0, 10)}
-          renderItem={renderRecipe}
-          keyExtractor={(item) => item.id.toString()}
-          ItemSeparatorComponent={() => <View style={styles.cardSeparator} />}
-          ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>No recipes found</Text>
-            </View>
-          }
-        />
       </View>
-    </ScrollView>
+    </View>
+  );
+
+  const footer = loadingMore ? (
+    <View style={styles.emptyContainer}>
+      <ActivityIndicator color="#E85D04" />
+    </View>
+  ) : error ? (
+    <View style={styles.emptyContainer}>
+      <Text style={styles.errorText}>Couldn't load more recipes</Text>
+      <Button onPress={() => fetchPage(recipes.length, 'more')}>Retry</Button>
+    </View>
+  ) : !hasMore && recipes.length > 0 ? (
+    <View style={styles.emptyContainer}>
+      <Text style={styles.emptyText}>You've seen all {total} recipes</Text>
+    </View>
+  ) : null;
+
+  return (
+    <FlatList
+      style={styles.scrollView}
+      contentContainerStyle={styles.scrollContent}
+      data={recipes}
+      renderItem={renderRecipe}
+      keyExtractor={(item) => item.id.toString()}
+      ListHeaderComponent={header}
+      ListFooterComponent={footer}
+      ListEmptyComponent={
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>No recipes found</Text>
+        </View>
+      }
+      ItemSeparatorComponent={() => <View style={styles.cardSeparator} />}
+      onEndReached={loadMore}
+      onEndReachedThreshold={0.5}
+      refreshing={refreshing}
+      onRefresh={onRefresh}
+    />
   );
 }

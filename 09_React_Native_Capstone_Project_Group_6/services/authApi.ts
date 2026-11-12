@@ -14,7 +14,11 @@ import { authStorage, accountsStorage, LocalAccount } from '@/utils/storage';
 const API_BASE_URL = 'https://dummyjson.com/auth';
 // Usernames that belong to real DummyJSON users we log in with (the demo
 // account). Registering with one would hide it on this device.
+const USERS_URL = 'https://dummyjson.com/users';
 const RESERVED_USERNAMES = ['emilys'];
+
+/** The profile fields a user can edit. */
+export type ProfileUpdate = Pick<AuthUser, 'firstName' | 'lastName' | 'email'>;
 
 // Axios config + a flag so a request is only retried once after a refresh.
 type RetriableRequest = InternalAxiosRequestConfig & { _retry?: boolean };
@@ -177,6 +181,40 @@ class AuthApiService {
     };
     await this.setTokens(user);
     return user;
+  }
+
+  /**
+   * Edit the logged-in user's profile.
+   * - Real DummyJSON users: PUT /users/{id}. DummyJSON only simulates the
+   *   update, so we also save the new values on this device.
+   * - Local (registered) accounts: saved on this device only.
+   */
+  async updateProfile(changes: ProfileUpdate): Promise<AuthUser> {
+    const stored = await this.getStoredUser();
+    if (!stored) {
+      throw new Error('You are not logged in');
+    }
+
+    if (stored.isLocalAccount) {
+      const other = await this.findLocalAccount(changes.email);
+      if (other && other.user.id !== stored.id) {
+        throw new Error('That email is already registered');
+      }
+      await accountsStorage.update(stored.id, changes);
+    } else {
+      try {
+        await axios.put(`${USERS_URL}/${stored.id}`, changes, {
+          timeout: 10000,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      } catch (error) {
+        throw new Error(getApiErrorMessage(error, 'Could not update profile'));
+      }
+    }
+
+    const updated: AuthUser = { ...stored, ...changes };
+    await this.setTokens(updated);
+    return updated;
   }
 
   /**
