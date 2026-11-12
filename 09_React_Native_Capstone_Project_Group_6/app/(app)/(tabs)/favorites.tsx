@@ -5,7 +5,15 @@
  * "Undo" snackbar appears after removing.
  */
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, Image, StyleSheet } from 'react-native';
+import {
+  View,
+  Text,
+  FlatList,
+  TouchableOpacity,
+  ActivityIndicator,
+  Image,
+  StyleSheet,
+} from 'react-native';
 import { useRouter } from 'expo-router';
 import { Card, Title, Chip, Button, IconButton, Snackbar } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -69,7 +77,9 @@ export default function FavoritesScreen() {
         else failed += 1;
       });
       setRecipesById((prev) => ({ ...prev, ...loaded }));
-      setLoadError(failed > 0 ? `${failed} recipe${failed > 1 ? 's' : ''} couldn't be loaded.` : null);
+      setLoadError(
+        failed > 0 ? `${failed} recipe${failed > 1 ? 's' : ''} couldn't be loaded.` : null,
+      );
       setFetching(false);
     };
     load();

@@ -33,11 +33,7 @@ export interface RecipesResponse {
 
 // Fields the API can sort by (?sortBy=name&order=asc)
 export type RecipeSortField =
-  | 'name'
-  | 'rating'
-  | 'caloriesPerServing'
-  | 'prepTimeMinutes'
-  | 'cookTimeMinutes';
+  'name' | 'rating' | 'caloriesPerServing' | 'prepTimeMinutes' | 'cookTimeMinutes';
 
 export type SortOrder = 'asc' | 'desc';
 

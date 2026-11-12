@@ -68,7 +68,11 @@ function ChipRow<T extends string>({
   return (
     <View style={local.group}>
       <Title style={styles.filterTitle}>{label}</Title>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={local.chipRow}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={local.chipRow}
+      >
         {options.map((option) => (
           <Chip
             key={option}
@@ -145,12 +149,21 @@ export default function SearchScreen() {
   }, [debouncedQuery, filters, sort]);
 
   const base = searchResults ?? catalog.recipes;
-  const filtered = useMemo(() => sortRecipes(filterRecipes(base, filters), sort), [base, filters, sort]);
+  const filtered = useMemo(
+    () => sortRecipes(filterRecipes(base, filters), sort),
+    [base, filters, sort],
+  );
   const visible = filtered.slice(0, visibleCount);
 
   // Filter choices come from the data itself
-  const cuisines = useMemo(() => uniqueSorted(catalog.recipes, (r) => [r.cuisine]), [catalog.recipes]);
-  const mealTypes = useMemo(() => uniqueSorted(catalog.recipes, (r) => r.mealType), [catalog.recipes]);
+  const cuisines = useMemo(
+    () => uniqueSorted(catalog.recipes, (r) => [r.cuisine]),
+    [catalog.recipes],
+  );
+  const mealTypes = useMemo(
+    () => uniqueSorted(catalog.recipes, (r) => r.mealType),
+    [catalog.recipes],
+  );
   const tags = useMemo(() => uniqueSorted(catalog.recipes, (r) => r.tags), [catalog.recipes]);
 
   const setFilter = <K extends keyof RecipeFilters>(key: K, value: RecipeFilters[K]) =>
@@ -180,7 +193,8 @@ export default function SearchScreen() {
               </Chip>
             </View>
             <Text style={styles.resultDetails}>
-              ⏱️ {totalTime(item)}min · 🔥 {item.caloriesPerServing} cal · ⭐ {item.rating.toFixed(1)}
+              ⏱️ {totalTime(item)}min · 🔥 {item.caloriesPerServing} cal · ⭐{' '}
+              {item.rating.toFixed(1)}
             </Text>
           </View>
           <IconButton
@@ -199,17 +213,46 @@ export default function SearchScreen() {
   const header = (
     <View>
       <View style={styles.searchBarContainer}>
-        <Searchbar placeholder="Search recipes..." value={query} onChangeText={setQuery} loading={searching} />
+        <Searchbar
+          placeholder="Search recipes..."
+          value={query}
+          onChangeText={setQuery}
+          loading={searching}
+        />
       </View>
 
-      <ChipRow label="Cuisine" options={cuisines} selected={filters.cuisine} onSelect={(v) => setFilter('cuisine', v)} />
-      <ChipRow label="Difficulty" options={DIFFICULTIES} selected={filters.difficulty} onSelect={(v) => setFilter('difficulty', v)} />
-      <ChipRow label="Meal type" options={mealTypes} selected={filters.mealType} onSelect={(v) => setFilter('mealType', v)} />
-      <ChipRow label="Tag" options={tags} selected={filters.tag} onSelect={(v) => setFilter('tag', v)} />
+      <ChipRow
+        label="Cuisine"
+        options={cuisines}
+        selected={filters.cuisine}
+        onSelect={(v) => setFilter('cuisine', v)}
+      />
+      <ChipRow
+        label="Difficulty"
+        options={DIFFICULTIES}
+        selected={filters.difficulty}
+        onSelect={(v) => setFilter('difficulty', v)}
+      />
+      <ChipRow
+        label="Meal type"
+        options={mealTypes}
+        selected={filters.mealType}
+        onSelect={(v) => setFilter('mealType', v)}
+      />
+      <ChipRow
+        label="Tag"
+        options={tags}
+        selected={filters.tag}
+        onSelect={(v) => setFilter('tag', v)}
+      />
 
       <View style={local.group}>
         <Title style={styles.filterTitle}>Sort by</Title>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={local.chipRow}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={local.chipRow}
+        >
           {SORTS.map((option) => (
             <Chip
               key={option.value}
@@ -232,7 +275,8 @@ export default function SearchScreen() {
       )}
 
       <Title style={styles.resultsTitle}>
-        {debouncedQuery.trim() ? `Results for "${debouncedQuery.trim()}"` : 'All recipes'} ({filtered.length})
+        {debouncedQuery.trim() ? `Results for "${debouncedQuery.trim()}"` : 'All recipes'} (
+        {filtered.length})
       </Title>
     </View>
   );

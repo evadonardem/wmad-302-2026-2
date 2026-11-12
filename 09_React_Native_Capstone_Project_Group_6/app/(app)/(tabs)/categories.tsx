@@ -5,7 +5,14 @@
  * that filter applied.
  */
 import React, { useMemo, useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, StyleSheet } from 'react-native';
+import {
+  View,
+  Text,
+  FlatList,
+  TouchableOpacity,
+  ActivityIndicator,
+  StyleSheet,
+} from 'react-native';
 import { useRouter } from 'expo-router';
 import { Button, Card, SegmentedButtons, Title } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -38,7 +45,7 @@ export default function CategoriesScreen() {
 
   const items = useMemo(
     () => countBy(recipes, (recipe) => (kind === 'mealType' ? recipe.mealType : recipe.tags)),
-    [recipes, kind]
+    [recipes, kind],
   );
 
   const onRefresh = async () => {
@@ -52,7 +59,11 @@ export default function CategoriesScreen() {
   };
 
   const renderCategory = ({ item }: { item: CountedItem }) => (
-    <TouchableOpacity style={styles.categoryCard} onPress={() => openCategory(item.name)} activeOpacity={0.8}>
+    <TouchableOpacity
+      style={styles.categoryCard}
+      onPress={() => openCategory(item.name)}
+      activeOpacity={0.8}
+    >
       <Card style={styles.card} elevation={1}>
         <Card.Content style={styles.cardContent}>
           <View style={styles.iconContainer}>

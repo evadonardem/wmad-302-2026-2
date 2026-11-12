@@ -4,14 +4,7 @@
  * Pull down to refresh. Category chips open Search filtered by tag.
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import {
-  View,
-  Text,
-  FlatList,
-  TouchableOpacity,
-  Image,
-  ActivityIndicator,
-} from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
 import { useFavorites } from '@/context/FavoritesContext';
@@ -34,8 +27,11 @@ export default function HomeScreen() {
   // Category chips: the 8 most common tags in the catalog
   const { recipes: catalog } = useRecipeCatalog();
   const topTags = useMemo(
-    () => countBy(catalog, (r) => r.tags).slice(0, 8).map((item) => item.name),
-    [catalog]
+    () =>
+      countBy(catalog, (r) => r.tags)
+        .slice(0, 8)
+        .map((item) => item.name),
+    [catalog],
   );
 
   const [recipes, setRecipes] = useState<Recipe[]>([]);
@@ -118,7 +114,9 @@ export default function HomeScreen() {
             {item.name}
           </Text>
           <View style={styles.metaRow}>
-            <Text style={styles.metaText}>⏱️ {item.prepTimeMinutes + item.cookTimeMinutes} min</Text>
+            <Text style={styles.metaText}>
+              ⏱️ {item.prepTimeMinutes + item.cookTimeMinutes} min
+            </Text>
             <Text style={styles.metaText}>👥 {item.servings} servings</Text>
             <Text style={styles.metaText}>🔥 {item.caloriesPerServing} cal</Text>
           </View>
@@ -200,7 +198,10 @@ export default function HomeScreen() {
       <View style={styles.sectionContainer}>
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Featured Recipes</Text>
-          <TouchableOpacity onPress={() => router.push('/(app)/(tabs)/search')} style={styles.seeAll}>
+          <TouchableOpacity
+            onPress={() => router.push('/(app)/(tabs)/search')}
+            style={styles.seeAll}
+          >
             <Text style={styles.seeAllText}>See All</Text>
           </TouchableOpacity>
         </View>

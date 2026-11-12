@@ -38,7 +38,7 @@ export function useAsyncStorage<T>(key: StorageKey, initialValue: T) {
         console.error(`Failed to save ${key}:`, error);
       }
     },
-    [key, value]
+    [key, value],
   );
 
   return [value, updateValue, loading] as const;

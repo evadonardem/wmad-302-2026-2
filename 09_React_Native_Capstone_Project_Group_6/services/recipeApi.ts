@@ -83,7 +83,7 @@ class RecipeApiService {
   async getRecipesByTag(tag: string, params: RecipeQueryParams = {}): Promise<RecipesResponse> {
     const response = await this.client.get<RecipesResponse>(
       `/recipes/tag/${encodeURIComponent(tag)}`,
-      { params }
+      { params },
     );
     return response.data;
   }
@@ -91,11 +91,11 @@ class RecipeApiService {
   /** Get recipes for a meal type (e.g. "Dinner", "Snack") */
   async getRecipesByMealType(
     mealType: string,
-    params: RecipeQueryParams = {}
+    params: RecipeQueryParams = {},
   ): Promise<RecipesResponse> {
     const response = await this.client.get<RecipesResponse>(
       `/recipes/meal-type/${encodeURIComponent(mealType)}`,
-      { params }
+      { params },
     );
     return response.data;
   }

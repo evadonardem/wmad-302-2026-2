@@ -26,25 +26,19 @@ interface RecipeCardProps {
 
 export function RecipeCard({ recipe, onPress, style }: RecipeCardProps) {
   return (
-    <TouchableOpacity
-      style={[styles.cardWrapper, style]}
-      onPress={onPress}
-      activeOpacity={0.8}
-    >
+    <TouchableOpacity style={[styles.cardWrapper, style]} onPress={onPress} activeOpacity={0.8}>
       <Card style={styles.card} elevation={2}>
         <View style={styles.imageContainer}>
-          <Image
-            source={{ uri: recipe.image }}
-            style={styles.recipeImage}
-            resizeMode="cover"
-          />
+          <Image source={{ uri: recipe.image }} style={styles.recipeImage} resizeMode="cover" />
           <View style={styles.difficultyBadge}>
-            <Chip style={[
-              styles.difficultyChip,
-              recipe.difficulty === 'Easy' && styles.easy,
-              recipe.difficulty === 'Medium' && styles.medium,
-              recipe.difficulty === 'Hard' && styles.hard,
-            ]}>
+            <Chip
+              style={[
+                styles.difficultyChip,
+                recipe.difficulty === 'Easy' && styles.easy,
+                recipe.difficulty === 'Medium' && styles.medium,
+                recipe.difficulty === 'Hard' && styles.hard,
+              ]}
+            >
               {recipe.difficulty}
             </Chip>
           </View>
@@ -93,11 +87,7 @@ export function ProductCard({ product, onPress, style }: ProductCardProps) {
   const discountedPrice = product.price * (1 - product.discountPercentage / 100);
 
   return (
-    <TouchableOpacity
-      style={[styles.cardWrapper, style]}
-      onPress={onPress}
-      activeOpacity={0.8}
-    >
+    <TouchableOpacity style={[styles.cardWrapper, style]} onPress={onPress} activeOpacity={0.8}>
       <Card style={styles.card} elevation={2}>
         <View style={styles.imageContainer}>
           <Image
@@ -144,11 +134,7 @@ interface CategoryChipProps {
 export function CategoryChip({ label, selected, onPress, icon, style }: CategoryChipProps) {
   return (
     <TouchableOpacity
-      style={[
-        styles.categoryChip,
-        selected && styles.categoryChipSelected,
-        style,
-      ]}
+      style={[styles.categoryChip, selected && styles.categoryChipSelected, style]}
       onPress={onPress}
     >
       {icon && (
@@ -159,10 +145,7 @@ export function CategoryChip({ label, selected, onPress, icon, style }: Category
           style={{ marginRight: 4 }}
         />
       )}
-      <Text style={[
-        styles.categoryChipText,
-        selected && styles.categoryChipTextSelected,
-      ]}>
+      <Text style={[styles.categoryChipText, selected && styles.categoryChipTextSelected]}>
         {label}
       </Text>
     </TouchableOpacity>
@@ -215,14 +198,7 @@ interface SkeletonProps {
 }
 
 export function Skeleton({ height = 20, width = '100%', borderRadius = 8 }: SkeletonProps) {
-  return (
-    <View
-      style={[
-        styles.skeleton,
-        { height, width, borderRadius },
-      ]}
-    />
-  );
+  return <View style={[styles.skeleton, { height, width, borderRadius }]} />;
 }
 
 const styles = StyleSheet.create({

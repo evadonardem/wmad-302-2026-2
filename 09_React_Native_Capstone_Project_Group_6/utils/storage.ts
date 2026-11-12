@@ -13,7 +13,7 @@ const STORAGE_KEYS = {
   SETTINGS: 'user_settings',
 } as const;
 
-export type StorageKey = typeof STORAGE_KEYS[keyof typeof STORAGE_KEYS];
+export type StorageKey = (typeof STORAGE_KEYS)[keyof typeof STORAGE_KEYS];
 
 /**
  * Get item from storage with type safety
@@ -66,7 +66,7 @@ export async function clearAllStorage(): Promise<void> {
  * Get multiple items at once
  */
 export async function getMultipleStorageItems<T extends Record<string, unknown>>(
-  keys: StorageKey[]
+  keys: StorageKey[],
 ): Promise<T> {
   try {
     const pairs = await AsyncStorage.multiGet(keys);
@@ -85,7 +85,7 @@ export async function getMultipleStorageItems<T extends Record<string, unknown>>
  * Set multiple items at once
  */
 export async function setMultipleStorageItems(
-  items: Array<{ key: StorageKey; value: unknown }>
+  items: Array<{ key: StorageKey; value: unknown }>,
 ): Promise<void> {
   try {
     const pairs: [string, string][] = items.map(({ key, value }) => [key, JSON.stringify(value)]);
@@ -105,7 +105,8 @@ export const authStorage = {
 };
 
 export const favoritesStorage = {
-  getIds: async (): Promise<number[]> => (await getStorageItem<number[]>(STORAGE_KEYS.FAVORITES)) ?? [],
+  getIds: async (): Promise<number[]> =>
+    (await getStorageItem<number[]>(STORAGE_KEYS.FAVORITES)) ?? [],
   setIds: (ids: number[]) => setStorageItem(STORAGE_KEYS.FAVORITES, ids),
   addId: async (id: number) => {
     const ids = await favoritesStorage.getIds();
@@ -151,7 +152,7 @@ export const accountsStorage = {
   update: async (id: number, changes: Partial<LocalAccount['user']>): Promise<void> => {
     const all = await accountsStorage.getAll();
     const next = all.map((account) =>
-      account.user.id === id ? { ...account, user: { ...account.user, ...changes } } : account
+      account.user.id === id ? { ...account, user: { ...account.user, ...changes } } : account,
     );
     await setStorageItem(STORAGE_KEYS.LOCAL_ACCOUNTS, next);
   },

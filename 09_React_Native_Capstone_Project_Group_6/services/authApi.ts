@@ -65,7 +65,12 @@ class AuthApiService {
         const originalRequest = error.config as RetriableRequest | undefined;
         const isRefreshCall = originalRequest?.url === '/refresh';
 
-        if (error.response?.status === 401 && originalRequest && !originalRequest._retry && !isRefreshCall) {
+        if (
+          error.response?.status === 401 &&
+          originalRequest &&
+          !originalRequest._retry &&
+          !isRefreshCall
+        ) {
           originalRequest._retry = true;
           try {
             const tokens = await this.refreshAccessToken();
@@ -79,7 +84,7 @@ class AuthApiService {
           }
         }
         return Promise.reject(error);
-      }
+      },
     );
   }
 
@@ -166,7 +171,7 @@ class AuthApiService {
     const accounts = await accountsStorage.getAll();
     return (
       accounts.find(
-        (a) => a.user.username.toLowerCase() === wanted || a.user.email.toLowerCase() === wanted
+        (a) => a.user.username.toLowerCase() === wanted || a.user.email.toLowerCase() === wanted,
       ) ?? null
     );
   }

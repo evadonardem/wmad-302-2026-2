@@ -108,9 +108,14 @@ export default function LoginScreen() {
               returnKeyType="go"
               onSubmitEditing={handleLogin}
               disabled={isLoading}
-              right={<TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
-                <Text style={styles.eyeText}>{showPassword ? '🙈' : '👁️'}</Text>
-              </TouchableOpacity>}
+              right={
+                <TouchableOpacity
+                  onPress={() => setShowPassword(!showPassword)}
+                  style={styles.eyeIcon}
+                >
+                  <Text style={styles.eyeText}>{showPassword ? '🙈' : '👁️'}</Text>
+                </TouchableOpacity>
+              }
             />
 
             {/* Error Display */}
@@ -139,7 +144,11 @@ export default function LoginScreen() {
             {/* Demo Login */}
             <View style={styles.demoContainer}>
               <Divider style={styles.divider} />
-              <TouchableOpacity onPress={handleDemoLogin} disabled={isLoading} style={styles.demoButton}>
+              <TouchableOpacity
+                onPress={handleDemoLogin}
+                disabled={isLoading}
+                style={styles.demoButton}
+              >
                 <Text style={styles.demoButtonText}>Try Demo Account (emilys / emilyspass)</Text>
               </TouchableOpacity>
             </View>
@@ -147,10 +156,7 @@ export default function LoginScreen() {
             {/* Register Link */}
             <View style={styles.registerContainer}>
               <Text style={styles.registerText}>Don't have an account? </Text>
-              <TouchableOpacity
-                onPress={() => router.push('/(auth)/register')}
-                style={styles.link}
-              >
+              <TouchableOpacity onPress={() => router.push('/(auth)/register')} style={styles.link}>
                 <Text style={styles.linkText}>Sign Up</Text>
               </TouchableOpacity>
             </View>

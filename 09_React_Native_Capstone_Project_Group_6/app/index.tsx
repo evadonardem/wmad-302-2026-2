@@ -4,5 +4,5 @@ import { Redirect } from 'expo-router';
 // If they aren't logged in, the guard in app/(app)/_layout.tsx
 // bounces them on to /login.
 export default function Index() {
-    return <Redirect href="/(app)/(tabs)/home" />;
+  return <Redirect href="/(app)/(tabs)/home" />;
 }

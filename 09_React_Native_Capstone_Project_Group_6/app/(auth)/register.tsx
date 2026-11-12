@@ -79,7 +79,8 @@ export default function RegisterScreen() {
     if (!formData.password) e.password = 'Password is required';
     else if (formData.password.length < 6) e.password = 'At least 6 characters';
 
-    if (formData.confirmPassword !== formData.password) e.confirmPassword = 'Passwords do not match';
+    if (formData.confirmPassword !== formData.password)
+      e.confirmPassword = 'Passwords do not match';
 
     if (formData.age.trim()) {
       const age = Number(formData.age);
