@@ -1,5 +1,5 @@
-import { ScrollView, StyleSheet, View } from 'react-native';
 import { Link } from 'expo-router';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { Divider, Text, useTheme } from 'react-native-paper';
 
 export default function AboutScreen() {
@@ -50,11 +50,11 @@ export default function AboutScreen() {
 
       <Divider style={styles.divider} />
 
-      {/* TODO 4.9 [Declarative Navigation]: Render a declarative <Link href="/"> below that jumps
-          back to the Search tab — the JSX-based counterpart to the imperative router.push calls
-          used elsewhere. Style it like a call-to-action (e.g. "Start exploring →"). */}
+      {/* TODO 4.9 [Declarative Navigation] */}
       <View style={styles.cta}>
-        {/* [Your <Link> here] */}
+        <Link href="/" style={{ color: theme.colors.primary, fontSize: 18, fontWeight: 'bold' }}>
+          Start exploring →
+        </Link>
       </View>
     </ScrollView>
   );

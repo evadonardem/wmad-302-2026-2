@@ -1,19 +1,15 @@
-import { StyleSheet, View } from 'react-native';
-import { router } from 'expo-router';
-import { Button, Text, useTheme } from 'react-native-paper';
 import { useSearchHistory } from '@/searchHistory';
+import { router } from 'expo-router';
+import { StyleSheet, View } from 'react-native';
+import { Button, Text, useTheme } from 'react-native-paper';
 
 export default function HistoryScreen() {
   const theme = useTheme();
   const { entries } = useSearchHistory();
 
   const handlePick = (city: string) => {
-    // TODO 5.3 [Cross-Screen Handoff]: Jump back to the Search tab carrying the chosen city as a
-    // route param so the dashboard re-runs the search (see TODO 5.4 over there):
-    //   router.navigate({ pathname: '/', params: { q: city } })
-    // Use router.navigate (not push) so this history screen is not left sitting underneath
-    // the returned stack entry.
-    // [Your code here]
+    // TODO 5.3 [Cross-Screen Handoff]
+    router.navigate({ pathname: '/', params: { q: city } });
   };
 
   return (
@@ -22,10 +18,18 @@ export default function HistoryScreen() {
         Tap a city to jump back into that search.
       </Text>
 
-      {/* TODO 5.2 [History List Mapping]: Map through 'entries' (most recent first) and render a
-          row per city — Paper <Button>, <List.Item>, or a plain Pressable all work. Each row's
-          onPress should call handlePick(entry) with that city. Give each row a unique key. */}
-      {/* [Your code here] */}
+      {/* TODO 5.2 [History List Mapping] */}
+      {entries.map((entry) => (
+        <Button
+          key={entry}
+          mode="outlined"
+          icon="city"
+          contentStyle={styles.rowContent}
+          onPress={() => handlePick(entry)}
+        >
+          {entry}
+        </Button>
+      ))}
 
       {entries.length === 0 && (
         <Text variant="bodyMedium" style={[styles.empty, { color: theme.colors.onSurfaceVariant }]}>
@@ -47,6 +51,10 @@ const styles = StyleSheet.create({
   },
   intro: {
     marginBottom: 8,
+  },
+  rowContent: {
+    justifyContent: 'flex-start',
+    paddingVertical: 4,
   },
   empty: {
     textAlign: 'center',

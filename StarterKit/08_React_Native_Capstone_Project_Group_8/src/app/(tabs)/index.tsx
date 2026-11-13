@@ -1,14 +1,67 @@
-import { useEffect, useState } from 'react';
-import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
-import { router, useLocalSearchParams } from 'expo-router';
-import { IconButton, Text, useTheme } from 'react-native-paper';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import AuroraBackground from '@/components/AuroraBackground';
 import LocationForm from '@/components/LocationForm';
 import MediaGallery from '@/components/MediaGallery';
-import { searchPhotosByLocation } from '@/services/geoPhotoService';
 import { usePhotos } from '@/photos';
 import { useSearchHistory } from '@/searchHistory';
+import { searchPhotosByLocation, type Photo } from '@/services/geoPhotoService';
 import { useThemeMode } from '@/themeMode';
+import { router, useLocalSearchParams } from 'expo-router';
+import { useEffect, useRef, useState } from 'react';
+import {
+  Animated,
+  Easing,
+  Platform,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  View,
+} from 'react-native';
+import { Chip, IconButton, Text, useTheme } from 'react-native-paper';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
+// Walking emoji: bobs and sways like the web version
+function WalkingEmoji() {
+  const t = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.timing(t, {
+        toValue: 1,
+        duration: 1200,
+        easing: Easing.inOut(Easing.ease),
+        useNativeDriver: Platform.OS !== 'web',
+      })
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [t]);
+
+  return (
+    <Animated.Text
+      style={{
+        fontSize: 34,
+        marginRight: 8,
+        transform: [
+          { translateX: t.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0, 8, 0] }) },
+          {
+            translateY: t.interpolate({
+              inputRange: [0, 0.25, 0.5, 0.75, 1],
+              outputRange: [0, -5, 0, -5, 0],
+            }),
+          },
+          {
+            rotate: t.interpolate({
+              inputRange: [0, 0.25, 0.5, 0.75, 1],
+              outputRange: ['0deg', '4deg', '0deg', '-4deg', '0deg'],
+            }),
+          },
+        ],
+      }}
+    >
+      🚶
+    </Animated.Text>
+  );
+}
 
 export default function SearchScreen() {
   const theme = useTheme();
@@ -16,93 +69,173 @@ export default function SearchScreen() {
   const { photos, setPhotos } = usePhotos();
   const { recordSearch } = useSearchHistory();
 
-  // TODO 3.7 [Global Search Coordination]: Replace the placeholder trackers below with real
-  // React state hooks managed by this dashboard (the photo list itself lives in the shared
-  // PhotosProvider — already wired above via usePhotos()):
-  // - 'loading': Toggles the boolean workflow flag while operations are in flight (default: false)
-  // - 'refreshing': Toggles while the pull-to-refresh gesture is running (default: false)
-  // - 'lastSearchedCity': Remembers the most recent search keyword so pull-to-refresh can re-run it (default: empty string)
-  const loading = false;
-  const refreshing = false;
-  const lastSearchedCity = '';
+  // TODO 3.7 [Global Search Coordination]
+  const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [lastSearchedCity, setLastSearchedCity] = useState('');
+
+  // Favorites (in-memory) + filter toggle
+  const [favorites, setFavorites] = useState<Photo[]>([]);
+  const [showFavorites, setShowFavorites] = useState(false);
 
   // City handed back from the History screen as a route param (see TODO 5.4)
   const { q } = useLocalSearchParams<{ q?: string }>();
 
-  const handleSearchSubmit = async (locationName: string) => {
-    // TODO 3.8 [Operational Async Glue Engine]:
-    // a. Shift the local 'loading' state tracker to true.
-    // b. Fire the async handler function 'searchPhotosByLocation(locationName)' inside an await statement.
-    // c. Capture the resulting photo dataset array into the shared store via setPhotos(...)
-    //    (from usePhotos()).
-    // d. Remember 'locationName' inside 'lastSearchedCity' (feeds the pull-to-refresh in TODO 4.6).
-    // e. Toggle the 'loading' tracker back to false inside a finally safety wrapper execution tier.
-    // [Your code here]
+  const handleToggleFavorite = (photo: Photo) => {
+    setFavorites((prev) =>
+      prev.some((p) => p.id === photo.id)
+        ? prev.filter((p) => p.id !== photo.id)
+        : [photo, ...prev]
+    );
+  };
 
-    // TODO 5.1 [History Recording]: Once the search above succeeds, record the searched city
-    // with recordSearch(locationName) from useSearchHistory() so the History screen can list it.
-    // [Your code here]
+  const handleSearchSubmit = async (locationName: string) => {
+    // TODO 3.8 [Operational Async Glue Engine]
+    setShowFavorites(false);
+    setLoading(true);
+    try {
+      const results = await searchPhotosByLocation(locationName);
+      setPhotos(results);
+      setLastSearchedCity(locationName);
+
+      // TODO 5.1 [History Recording]
+      if (results.length > 0) {
+        recordSearch(locationName);
+      }
+    } catch (error) {
+      console.error('Search failed:', error);
+      setPhotos([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleRefresh = async () => {
-    // TODO 4.6 [Pull-to-Refresh Workflow]: Implement the RefreshControl gesture handler below:
-    // a. Flip the 'refreshing' tracker to true.
-    // b. If 'lastSearchedCity' holds a value, re-run 'searchPhotosByLocation(lastSearchedCity)'
-    //    and swap the shared photo store with the fresh results via setPhotos(...).
-    // c. Flip 'refreshing' back to false inside a finally safety wrapper.
-    // [Your code here]
+    // TODO 4.6 [Pull-to-Refresh Workflow]
+    setRefreshing(true);
+    try {
+      if (lastSearchedCity) {
+        const results = await searchPhotosByLocation(lastSearchedCity);
+        setPhotos(results);
+      }
+    } catch (error) {
+      console.error('Refresh failed:', error);
+    } finally {
+      setRefreshing(false);
+    }
   };
 
   useEffect(() => {
-    // TODO 5.4 [Param-Driven Re-Search]: When the 'q' search param arrives or changes (the
-    // History screen navigates back here with it), and it holds a non-empty value, run the
-    // same search flow as TODO 3.8 with that city (locationName = q).
-    // [Your code here]
+    // TODO 5.4 [Param-Driven Re-Search]
+    if (typeof q === 'string' && q.trim()) {
+      handleSearchSubmit(q);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [q]);
 
+  const glassBg = isDarkMode ? 'rgba(25,28,45,0.6)' : 'rgba(255,255,255,0.65)';
+  const glassBorder = isDarkMode ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.8)';
+  const blue = isDarkMode ? '#7aa7ff' : '#0038A8';
+  const red = '#CE1126';
+
+  const visiblePhotos = showFavorites ? favorites : photos;
+  const galleryTitle = showFavorites
+    ? 'Your favorite spots'
+    : lastSearchedCity
+      ? `Tourist spots in ${lastSearchedCity}`
+      : undefined;
+
   return (
-    <SafeAreaView style={[styles.screen, { backgroundColor: theme.colors.background }]} edges={['top', 'left', 'right']}>
-      <View style={styles.header}>
-        <IconButton
-          icon="history"
-          iconColor={theme.colors.onBackground}
-          size={22}
-          onPress={() => router.push('/history')}
-          accessibilityLabel="Recent searches"
-        />
-        <IconButton
-          icon={isDarkMode ? 'weather-sunny' : 'weather-night'}
-          iconColor={theme.colors.onBackground}
-          size={24}
-          onPress={() => setIsDarkMode(!isDarkMode)}
-          accessibilityLabel="Toggle dark mode"
-        />
-      </View>
+    <View style={[styles.root, { backgroundColor: theme.colors.background }]}>
+      <AuroraBackground isDark={isDarkMode} />
 
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={theme.colors.primary} />
-        }
-      >
-        <Text variant="headlineMedium" style={[styles.title, { color: theme.colors.onBackground }]}>
-          🇵🇭 Lakbay PH
-        </Text>
-        <Text variant="bodyLarge" style={[styles.subtitle, { color: theme.colors.onSurfaceVariant }]}>
-          Explore tourist spots across regions, cities, and municipalities in the Philippines
-        </Text>
+      <SafeAreaView style={styles.screen} edges={['top', 'left', 'right']}>
+        <View style={styles.header}>
+          <IconButton
+            icon="history"
+            iconColor={theme.colors.onBackground}
+            size={22}
+            onPress={() => router.push('/history')}
+            accessibilityLabel="Recent searches"
+          />
+          <IconButton
+            icon={isDarkMode ? 'weather-sunny' : 'weather-night'}
+            iconColor={theme.colors.onBackground}
+            size={24}
+            onPress={() => setIsDarkMode(!isDarkMode)}
+            accessibilityLabel="Toggle dark mode"
+          />
+        </View>
 
-        {/* Connect the location selection input modules */}
-        <LocationForm onSearch={handleSearchSubmit} />
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              tintColor={theme.colors.primary}
+            />
+          }
+        >
+          {/* Glass header card */}
+          <View style={[styles.glassCard, { backgroundColor: glassBg, borderColor: glassBorder }]}>
+            <View style={styles.titleRow}>
+              <WalkingEmoji />
+              <Text variant="headlineMedium" style={styles.title}>
+                <Text variant="headlineMedium" style={[styles.title, { color: blue }]}>
+                  Lakbay{' '}
+                </Text>
+                <Text variant="headlineMedium" style={[styles.title, { color: red }]}>
+                  PH
+                </Text>
+              </Text>
+            </View>
+            <Text
+              variant="bodyLarge"
+              style={[styles.subtitle, { color: theme.colors.onSurfaceVariant }]}
+            >
+              Explore tourist spots across regions, cities, and municipalities in the Philippines
+            </Text>
 
-        {/* Connect presentation display layout nodes passing state parameters downstream */}
-        <MediaGallery photos={photos} loading={loading} />
-      </ScrollView>
-    </SafeAreaView>
+            {/* Connect the location selection input modules */}
+            <LocationForm onSearch={handleSearchSubmit} />
+          </View>
+
+          <View style={styles.favRow}>
+            <Chip
+              icon={showFavorites ? 'heart' : 'heart-outline'}
+              selected={showFavorites}
+              showSelectedOverlay
+              onPress={() => setShowFavorites((v) => !v)}
+            >
+              Favorites ({favorites.length})
+            </Chip>
+          </View>
+
+          {/* Connect presentation display layout nodes passing state parameters downstream */}
+          <MediaGallery
+            photos={visiblePhotos}
+            loading={loading && !showFavorites}
+            title={galleryTitle}
+            emptyMessage={
+              showFavorites
+                ? 'No favorites yet. Tap the heart on a photo to save it here.'
+                : 'No tourist spots found for this area yet.'
+            }
+            favorites={favorites}
+            onToggleFavorite={handleToggleFavorite}
+          />
+        </ScrollView>
+      </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+    width: '100%',
+  },
   screen: {
     flex: 1,
     width: '100%',
@@ -117,7 +250,18 @@ const styles = StyleSheet.create({
     maxWidth: 960,
     alignSelf: 'center',
     paddingHorizontal: 16,
-    paddingBottom: 24,
+    paddingBottom: 32,
+  },
+  glassCard: {
+    borderWidth: 1,
+    borderRadius: 28,
+    padding: 20,
+    marginBottom: 16,
+  },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   title: {
     fontWeight: 'bold',
@@ -125,6 +269,12 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     textAlign: 'center',
-    marginBottom: 24,
+    marginTop: 8,
+    marginBottom: 20,
+  },
+  favRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginBottom: 20,
   },
 });
