@@ -28,6 +28,12 @@ const DIFFICULTY_COLORS: Record<RecipeDifficulty, { background: string; text: st
   Hard: { background: '#FFEBEE', text: '#C62828' },
 };
 
+const DARK_DIFFICULTY_COLORS: Record<RecipeDifficulty, { background: string; text: string }> = {
+  Easy: { background: '#1B3320', text: '#81C784' },
+  Medium: { background: '#3A2412', text: '#FFB74D' },
+  Hard: { background: '#4A1C1C', text: '#FF8A80' },
+};
+
 /* ------------------------------------------------------------------ */
 /* Recipe card (large) - used on Home                                  */
 /* ------------------------------------------------------------------ */
@@ -42,7 +48,7 @@ interface RecipeCardProps {
 
 export function RecipeCard({ recipe, onPress, isFavorite, onToggleFavorite, style }: RecipeCardProps) {
   const theme = useTheme();
-  const difficulty = DIFFICULTY_COLORS[recipe.difficulty];
+  const difficulty = (theme.dark ? DARK_DIFFICULTY_COLORS : DIFFICULTY_COLORS)[recipe.difficulty];
 
   return (
     <TouchableOpacity style={style} onPress={onPress} activeOpacity={0.8}>

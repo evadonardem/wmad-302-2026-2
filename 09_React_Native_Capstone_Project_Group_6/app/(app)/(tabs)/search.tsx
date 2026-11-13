@@ -8,7 +8,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { View, FlatList, ScrollView, ActivityIndicator, StyleSheet } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Button, Chip, Searchbar, Title } from 'react-native-paper';
+import { Button, Chip, Searchbar, Title, useTheme } from 'react-native-paper';
 import { recipeApi } from '@/services/recipeApi';
 import { useDebounce, useRecipeCatalog } from '@/hooks';
 import { useFavorites } from '@/context/FavoritesContext';
@@ -23,7 +23,8 @@ import {
   sortRecipes,
   uniqueSorted,
 } from '@/utils/recipeFilters';
-import { styles } from './searchStyles';
+import { useThemedStyles } from '@/context/ThemeContext';
+import { styles as rawStyles } from './searchStyles';
 
 const PAGE_SIZE = 10;
 const DIFFICULTIES: readonly RecipeDifficulty[] = ['Easy', 'Medium', 'Hard'];
@@ -54,6 +55,7 @@ function ChipRow<T extends string>({
   selected: T | null;
   onSelect: (value: T | null) => void;
 }) {
+  const styles = useThemedStyles(rawStyles);
   if (options.length === 0) return null;
   return (
     <View style={local.group}>
@@ -76,6 +78,8 @@ function ChipRow<T extends string>({
 
 export default function SearchScreen() {
   const router = useRouter();
+  const styles = useThemedStyles(rawStyles);
+  const { colors } = useTheme();
   const params = useLocalSearchParams<{ tag?: string; mealType?: string }>();
   const { isFavorite, toggleFavorite } = useFavorites();
   const catalog = useRecipeCatalog();
@@ -236,7 +240,7 @@ export default function SearchScreen() {
       ListFooterComponent={
         visible.length < filtered.length ? (
           <View style={local.footer}>
-            <ActivityIndicator color="#E85D04" />
+            <ActivityIndicator color={colors.primary} />
           </View>
         ) : null
       }

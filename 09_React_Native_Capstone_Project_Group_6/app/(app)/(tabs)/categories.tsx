@@ -5,20 +5,14 @@
  * that filter applied.
  */
 import React, { useMemo, useState } from 'react';
-import {
-  View,
-  Text,
-  FlatList,
-  TouchableOpacity,
-  ActivityIndicator,
-  StyleSheet,
-} from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Button, Card, SegmentedButtons, Title } from 'react-native-paper';
+import { Button, Card, SegmentedButtons, Title, useTheme } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRecipeCatalog } from '@/hooks';
 import { CountedItem, countBy } from '@/utils/recipeFilters';
-import { styles } from './categoriesStyles';
+import { useThemedStyles } from '@/context/ThemeContext';
+import { styles as rawStyles } from './categoriesStyles';
 
 type Kind = 'mealType' | 'tag';
 type IconName = React.ComponentProps<typeof MaterialCommunityIcons>['name'];
@@ -39,13 +33,15 @@ const local = StyleSheet.create({
 
 export default function CategoriesScreen() {
   const router = useRouter();
+  const styles = useThemedStyles(rawStyles);
+  const { colors } = useTheme();
   const { recipes, loading, error, reload } = useRecipeCatalog();
   const [kind, setKind] = useState<Kind>('mealType');
   const [refreshing, setRefreshing] = useState(false);
 
   const items = useMemo(
     () => countBy(recipes, (recipe) => (kind === 'mealType' ? recipe.mealType : recipe.tags)),
-    [recipes, kind],
+    [recipes, kind]
   );
 
   const onRefresh = async () => {
@@ -59,18 +55,14 @@ export default function CategoriesScreen() {
   };
 
   const renderCategory = ({ item }: { item: CountedItem }) => (
-    <TouchableOpacity
-      style={styles.categoryCard}
-      onPress={() => openCategory(item.name)}
-      activeOpacity={0.8}
-    >
+    <TouchableOpacity style={styles.categoryCard} onPress={() => openCategory(item.name)} activeOpacity={0.8}>
       <Card style={styles.card} elevation={1}>
         <Card.Content style={styles.cardContent}>
           <View style={styles.iconContainer}>
             <MaterialCommunityIcons
               name={kind === 'mealType' ? (MEAL_TYPE_ICONS[item.name] ?? 'food') : 'tag-outline'}
               size={32}
-              color="#E85D04"
+              color={colors.primary}
             />
           </View>
           <Title style={styles.categoryName} numberOfLines={1}>
@@ -87,7 +79,7 @@ export default function CategoriesScreen() {
   if (loading && recipes.length === 0) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#E85D04" />
+        <ActivityIndicator size="large" color={colors.primary} />
         <Text style={styles.loadingText}>Loading categories...</Text>
       </View>
     );
@@ -120,7 +112,6 @@ export default function CategoriesScreen() {
       />
 
       <FlatList
-        style={{ flex: 1 }}
         key={kind}
         data={items}
         renderItem={renderCategory}

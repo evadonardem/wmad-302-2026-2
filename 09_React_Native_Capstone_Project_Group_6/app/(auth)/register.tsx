@@ -15,8 +15,10 @@ import {
   HelperText,
   SegmentedButtons,
   TextInput as PaperTextInput,
+  useTheme,
 } from 'react-native-paper';
-import { styles } from './styles';
+import { useThemedStyles } from '@/context/ThemeContext';
+import { styles as rawStyles } from './styles';
 
 type Gender = 'male' | 'female';
 
@@ -41,13 +43,15 @@ const local = StyleSheet.create({
   row: { flexDirection: 'row', gap: 12 },
   half: { flex: 1 },
   fieldGap: { marginBottom: 4 },
-  label: { fontSize: 12, color: '#8D6E63', marginBottom: 6 },
+  label: { fontSize: 12, marginBottom: 6 },
   terms: { flexDirection: 'row', alignItems: 'center', marginTop: 8 },
-  termsText: { flex: 1, fontSize: 13, color: '#5D4037' },
+  termsText: { flex: 1, fontSize: 13 },
 });
 
 export default function RegisterScreen() {
   const router = useRouter();
+  const styles = useThemedStyles(rawStyles);
+  const { colors } = useTheme();
   const { register, isLoading, error, clearError } = useAuth();
 
   const [formData, setFormData] = useState<FormData>({
@@ -79,8 +83,7 @@ export default function RegisterScreen() {
     if (!formData.password) e.password = 'Password is required';
     else if (formData.password.length < 6) e.password = 'At least 6 characters';
 
-    if (formData.confirmPassword !== formData.password)
-      e.confirmPassword = 'Passwords do not match';
+    if (formData.confirmPassword !== formData.password) e.confirmPassword = 'Passwords do not match';
 
     if (formData.age.trim()) {
       const age = Number(formData.age);
@@ -251,7 +254,7 @@ export default function RegisterScreen() {
               {errors.age}
             </HelperText>
 
-            <Text style={local.label}>Gender</Text>
+            <Text style={[local.label, { color: colors.onSurfaceVariant }]}>Gender</Text>
             <SegmentedButtons
               value={formData.gender}
               onValueChange={(v) => handleFieldChange('gender', v)}
@@ -270,7 +273,7 @@ export default function RegisterScreen() {
                   setErrors((prev) => ({ ...prev, terms: undefined }));
                 }}
               />
-              <Text style={local.termsText}>
+              <Text style={[local.termsText, { color: colors.onSurfaceVariant }]}>
                 I agree to the Terms of Service and Privacy Policy
               </Text>
             </View>

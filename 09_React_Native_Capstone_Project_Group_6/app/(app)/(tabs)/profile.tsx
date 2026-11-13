@@ -11,7 +11,7 @@ import { useRouter } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
 import { useFavorites } from '@/context/FavoritesContext';
 import { useRecipeCatalog } from '@/hooks';
-import { ThemeMode, useThemeMode } from '@/context/ThemeContext';
+import { ThemeMode, useThemeMode, useThemedStyles } from '@/context/ThemeContext';
 import {
   Avatar,
   Button,
@@ -25,9 +25,10 @@ import {
   Snackbar,
   Text as PaperText,
   TextInput as PaperTextInput,
+  useTheme,
 } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { styles } from './profileStyles';
+import { styles as rawStyles } from './profileStyles';
 
 type DialogName = 'logout' | 'edit' | 'settings' | 'clearFavorites' | null;
 type IconName = React.ComponentProps<typeof MaterialCommunityIcons>['name'];
@@ -42,25 +43,38 @@ type EditErrors = Partial<Record<keyof EditForm, string>>;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const local = StyleSheet.create({
-  saveError: { color: '#C62828', fontSize: 13, marginTop: 4 },
+  saveError: { fontSize: 13, marginTop: 4 },
   settingsRow: { marginBottom: 12 },
   aboutText: { fontSize: 13, marginTop: 4 },
   appearanceLabel: { marginBottom: 8 },
 });
 
-// Menu row helpers
-const menuIcon = (name: IconName) => (props: { style?: object }) => (
-  <MaterialCommunityIcons name={name} size={24} color="#E85D04" style={props.style} />
-);
-const chevron = (props: { style?: object }) => (
-  <MaterialCommunityIcons name="chevron-right" size={24} color="#8D6E63" style={props.style} />
-);
-
 export default function ProfileScreen() {
   const router = useRouter();
+  const styles = useThemedStyles(rawStyles);
+  const { colors } = useTheme();
   const { user, logout, isAuthenticated, updateProfile } = useAuth();
   const { ids, count, clearFavorites } = useFavorites();
-  const { mode, setMode } = useThemeMode();
+  const { mode, setMode, isDark } = useThemeMode();
+
+  // Menu row icons (colors follow the theme)
+  const menuIcon = (name: IconName) =>
+    function MenuIcon(props: { style?: object }) {
+      return (
+        <MaterialCommunityIcons name={name} size={24} color={colors.primary} style={props.style} />
+      );
+    };
+  const chevron = function Chevron(props: { style?: object }) {
+    return (
+      <MaterialCommunityIcons
+        name="chevron-right"
+        size={24}
+        color={colors.onSurfaceVariant}
+        style={props.style}
+      />
+    );
+  };
+  
   const { recipes: catalog } = useRecipeCatalog();
 
   const [dialog, setDialog] = useState<DialogName>(null);
@@ -223,11 +237,11 @@ export default function ProfileScreen() {
           <Button
             mode="outlined"
             onPress={() => setDialog('logout')}
-            style={styles.logoutButton}
+            style={[styles.logoutButton, isDark && { borderColor: colors.primary }]}
             contentStyle={styles.logoutButtonContent}
             icon="logout"
           >
-            <Text style={styles.logoutButtonText}>Logout</Text>
+            <Text style={[styles.logoutButtonText, isDark && { color: colors.onSurface }]}>Logout</Text>
           </Button>
         </View>
 
@@ -288,7 +302,9 @@ export default function ProfileScreen() {
             <HelperText type="error" visible={!!formErrors.email}>
               {formErrors.email}
             </HelperText>
-            {saveError && <Text style={local.saveError}>{saveError}</Text>}
+            {saveError && (
+              <PaperText style={[local.saveError, { color: colors.error }]}>{saveError}</PaperText>
+            )}
           </Dialog.Content>
           <Dialog.Actions>
             <Button onPress={() => setDialog(null)} disabled={saving}>

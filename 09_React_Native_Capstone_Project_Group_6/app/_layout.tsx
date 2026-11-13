@@ -6,6 +6,7 @@
 import React, { useEffect } from 'react';
 import { Stack, ErrorBoundaryProps } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
+import { useTheme } from 'react-native-paper';
 import { Providers } from './providers';
 import { useAuth } from '@/context/AuthContext';
 import { ErrorFallback } from '@/components/CommonComponents';
@@ -19,6 +20,7 @@ export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
 // Lives inside the providers so it can read the auth state
 function AppShell() {
   const { isLoading } = useAuth();
+  const { colors } = useTheme();
 
   useEffect(() => {
     if (!isLoading) {
@@ -27,7 +29,7 @@ function AppShell() {
   }, [isLoading]);
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
+    <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }}>
       <Stack.Screen name="(auth)" />
       <Stack.Screen name="(app)" />
     </Stack>

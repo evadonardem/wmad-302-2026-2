@@ -8,7 +8,8 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useS
 import type { ReactNode } from 'react';
 import { useColorScheme } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { PaperProvider } from 'react-native-paper';
+import { PaperProvider, useTheme } from 'react-native-paper';
+import type { MD3Theme } from 'react-native-paper';
 import { darkTheme, lightTheme } from '@/constants/theme';
 import { getStorageItem, setStorageItem } from '@/utils/storage';
 
@@ -82,4 +83,77 @@ export function useThemeMode(): ThemeContextType {
     throw new Error('useThemeMode must be used within a ThemeProvider');
   }
   return context;
+}
+
+/* ------------------------------------------------------------------ */
+/* Themed styles                                                       */
+/* ------------------------------------------------------------------ */
+/**
+ * The screens' style files use fixed light colors (e.g. '#FFFDF8'). In dark
+ * mode this swaps each of those colors for the matching dark-theme color, so
+ * the style files themselves don't need to change. In light mode the styles
+ * are returned untouched.
+ */
+type Palette = MD3Theme['colors'];
+
+const COLOR_PROP = /color$/i;
+
+export function remapColor(value: string, prop: string, c: Palette): string {
+  switch (value.toUpperCase()) {
+    case '#FFFDF8':
+      return c.background;
+    case '#FFFFFF':
+      // White text (e.g. on orange buttons) stays white; white backgrounds become dark
+      return prop === 'color' ? value : c.surface;
+    case '#3E2723':
+    case '#202124':
+      return c.onSurface;
+    case '#8D6E63':
+    case '#5D4037':
+      return c.onSurfaceVariant;
+    case '#FFF3E0':
+      return c.primaryContainer;
+    case '#E85D04':
+      return c.primary;
+    case '#C62828':
+      return c.error;
+    case '#FDEDED':
+      return c.errorContainer;
+    case '#E8F5E9':
+      return c.tertiaryContainer;
+    case '#FFCC80':
+    case '#E0E0E0':
+      return c.outlineVariant;
+    case '#BCAAA4':
+    case '#9E9E9E':
+      return c.outline;
+    case '#1A73E8':
+      return '#8AB4F8';
+    default:
+      return value;
+  }
+}
+
+/** Pure version (exported for tests): returns a copy with colors swapped. */
+export function themeStyles<T extends Record<string, object>>(styles: T, colors: Palette): T {
+  const result: Record<string, unknown> = {};
+  Object.keys(styles).forEach((name) => {
+    const style = styles[name] as unknown as Record<string, unknown>;
+    const copy: Record<string, unknown> = {};
+    Object.keys(style).forEach((prop) => {
+      const value = style[prop];
+      copy[prop] =
+        typeof value === 'string' && value.startsWith('#') && COLOR_PROP.test(prop)
+          ? remapColor(value, prop, colors)
+          : value;
+    });
+    result[name] = copy;
+  });
+  return result as T;
+}
+
+/** Use inside a component: const styles = useThemedStyles(rawStyles); */
+export function useThemedStyles<T extends Record<string, object>>(styles: T): T {
+  const theme = useTheme();
+  return useMemo(() => (theme.dark ? themeStyles(styles, theme.colors) : styles), [styles, theme]);
 }

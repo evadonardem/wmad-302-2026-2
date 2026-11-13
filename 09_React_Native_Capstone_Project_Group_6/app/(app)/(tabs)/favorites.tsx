@@ -7,12 +7,13 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, FlatList, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Title, Button, Snackbar } from 'react-native-paper';
+import { Title, Button, Snackbar, useTheme } from 'react-native-paper';
 import { useFavorites } from '@/context/FavoritesContext';
 import { recipeApi } from '@/services/recipeApi';
 import { Recipe } from '@/types/recipe';
 import { EmptyState, LoadingState, RecipeListItem } from '@/components/CommonComponents';
-import { styles } from './favoritesStyles';
+import { useThemedStyles } from '@/context/ThemeContext';
+import { styles as rawStyles } from './favoritesStyles';
 
 const local = StyleSheet.create({
   errorBanner: {
@@ -30,6 +31,8 @@ const local = StyleSheet.create({
 
 export default function FavoritesScreen() {
   const router = useRouter();
+  const styles = useThemedStyles(rawStyles);
+  const { colors } = useTheme();
   const { ids, isLoading: idsLoading, toggleFavorite, removeFavorite } = useFavorites();
 
   // Recipe details we've downloaded, keyed by id
@@ -136,8 +139,8 @@ export default function FavoritesScreen() {
                 <Title style={styles.headerTitle}>Your Favorites ({ids.length})</Title>
               </View>
               {loadError && (
-                <View style={local.errorBanner}>
-                  <Text style={local.errorText}>{loadError}</Text>
+                <View style={[local.errorBanner, { backgroundColor: colors.errorContainer }]}>
+                  <Text style={[local.errorText, { color: colors.error }]}>{loadError}</Text>
                   <Button onPress={retry}>Retry</Button>
                 </View>
               )}

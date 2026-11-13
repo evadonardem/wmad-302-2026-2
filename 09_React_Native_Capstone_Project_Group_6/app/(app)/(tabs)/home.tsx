@@ -6,7 +6,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Avatar, Button } from 'react-native-paper';
+import { Avatar, Button, useTheme } from 'react-native-paper';
 import { useAuth } from '@/context/AuthContext';
 import { useFavorites } from '@/context/FavoritesContext';
 import { recipeApi } from '@/services/recipeApi';
@@ -14,7 +14,8 @@ import { useRecipeCatalog } from '@/hooks';
 import { countBy } from '@/utils/recipeFilters';
 import { Recipe } from '@/types/recipe';
 import { RecipeCard, LoadingState, ErrorState } from '@/components/CommonComponents';
-import { styles } from './homeStyles';
+import { useThemedStyles } from '@/context/ThemeContext';
+import { styles as rawStyles } from './homeStyles';
 
 const PAGE_SIZE = 10;
 
@@ -22,6 +23,8 @@ type LoadMode = 'first' | 'more' | 'refresh';
 
 export default function HomeScreen() {
   const router = useRouter();
+  const styles = useThemedStyles(rawStyles);
+  const { colors } = useTheme();
   const { user } = useAuth();
   const { isFavorite, toggleFavorite } = useFavorites();
 
@@ -110,7 +113,7 @@ export default function HomeScreen() {
           contentContainerStyle={styles.categoryList}
           renderItem={({ item }) => (
             <TouchableOpacity
-              style={[styles.categoryChip, { backgroundColor: '#FFF3E0' }]}
+              style={[styles.categoryChip, { backgroundColor: colors.primaryContainer }]}
               onPress={() => router.push(`/(app)/(tabs)/search?tag=${encodeURIComponent(item)}`)}
             >
               <Text style={styles.categoryChipText}>{item}</Text>
@@ -135,7 +138,7 @@ export default function HomeScreen() {
   if (loadingMore) {
     footer = (
       <View style={styles.emptyContainer}>
-        <ActivityIndicator color="#E85D04" />
+        <ActivityIndicator color={colors.primary} />
       </View>
     );
   } else if (error) {

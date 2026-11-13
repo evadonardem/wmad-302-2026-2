@@ -5,6 +5,7 @@
  */
 import React from 'react';
 import { Redirect, Stack, ErrorBoundaryProps } from 'expo-router';
+import { useTheme } from 'react-native-paper';
 import { useAuth } from '@/context/AuthContext';
 import { ErrorFallback } from '@/components/CommonComponents';
 
@@ -14,6 +15,7 @@ export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
 
 export default function AppLayout() {
   const { isAuthenticated, isLoading } = useAuth();
+  const { colors } = useTheme();
 
   // Wait while the saved login is being checked
   if (isLoading) {
@@ -26,7 +28,7 @@ export default function AppLayout() {
   }
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
+    <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }}>
       <Stack.Screen name="(tabs)" />
     </Stack>
   );
