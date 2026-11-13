@@ -1,5 +1,9 @@
 /**
  * Home Screen Styles - Cookbook
+ * Only hex colors that already exist in the project's style files are used
+ * here, so useThemedStyles can convert them for dark mode. Anything that must
+ * follow the theme exactly (hero background, dark pill) is set in home.tsx
+ * with useTheme().
  */
 import { StyleSheet } from 'react-native';
 
@@ -37,33 +41,30 @@ export const styles = StyleSheet.create({
   retryButton: {
     marginTop: 8,
   },
-  welcomeContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+
+  // ---- Hero banner ----
+  hero: {
+    marginHorizontal: 16,
+    marginTop: 8,
+    marginBottom: 24,
     paddingHorizontal: 20,
-    paddingVertical: 20,
-    backgroundColor: '#FFF3E0',
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
-    marginBottom: 16,
+    paddingVertical: 28,
+    borderRadius: 24,
+    overflow: 'hidden',
+    justifyContent: 'center',
   },
-  welcomeTextContainer: {
-    flex: 1,
-  },
-  welcomeGreeting: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#3E2723',
-  },
-  welcomeSubtitle: {
+  heroGreeting: {
     fontSize: 14,
-    color: '#8D6E63',
-    marginTop: 4,
+    fontWeight: '500',
+    marginBottom: 8,
   },
-  welcomeAvatar: {
-    backgroundColor: '#E85D04',
+  heroTitle: {
+    fontSize: 32,
+    lineHeight: 38,
+    fontWeight: '800',
   },
+
+  // ---- Sections ----
   sectionContainer: {
     paddingHorizontal: 16,
     marginBottom: 24,
@@ -72,20 +73,88 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 4,
   },
   sectionTitle: {
     fontSize: 20,
     fontWeight: '700',
     color: '#3E2723',
   },
+  centerTitle: {
+    fontSize: 22,
+    fontWeight: '800',
+    textAlign: 'center',
+    marginBottom: 16,
+  },
   seeAll: {
-    paddingVertical: 4,
+    minHeight: 44, // comfortable thumb target
+    justifyContent: 'center',
+    paddingLeft: 12,
   },
   seeAllText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#E85D04',
+  },
+
+  // ---- Pill chips ----
+  // One swipeable row that runs to the screen edges (cancels the section padding)
+  chipScroll: {
+    marginHorizontal: -16,
+  },
+  chipRow: {
+    flexDirection: 'row',
+    gap: 10,
+    paddingHorizontal: 16,
+  },
+  // Photo category tiles (the "Categories" row)
+  tileRow: {
+    flexDirection: 'row',
+    gap: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 4,
+  },
+  categoryTile: {
+    width: 104,
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    borderRadius: 16,
+    elevation: 2,
+    shadowColor: '#3E2723',
+    shadowOpacity: 0.12,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+  },
+  categoryImage: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    marginBottom: 8,
+  },
+  categoryImageFallback: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
+  },
+  categoryName: {
+    fontSize: 13,
+    fontWeight: '700',
+    textAlign: 'center',
+    alignSelf: 'stretch',
+  },
+  chip: {
+    minHeight: 44, // comfortable thumb target
+    justifyContent: 'center',
+    paddingHorizontal: 18,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    backgroundColor: '#FFFFFF',
+  },
+  chipText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#3E2723',
   },
   categoryList: {
     paddingHorizontal: 4,
@@ -103,6 +172,8 @@ export const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#E85D04',
   },
+
+  // ---- Cards (kept for RecipeCard and any other users of this file) ----
   recipeCard: {
     marginBottom: 12,
   },

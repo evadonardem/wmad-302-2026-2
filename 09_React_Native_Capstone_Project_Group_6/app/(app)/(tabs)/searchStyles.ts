@@ -1,5 +1,7 @@
 /**
- * Search Screen Styles - Shared base
+ * Search Screen Styles - Cookbook
+ * Only hex colors already used elsewhere in the project, so useThemedStyles
+ * can convert them for dark mode. Theme-exact colors are set in search.tsx.
  */
 import { StyleSheet } from 'react-native';
 
@@ -10,209 +12,84 @@ export const styles = StyleSheet.create({
   },
   content: {
     paddingHorizontal: 16,
-    paddingBottom: 100,
+    paddingTop: 8,
+    paddingBottom: 100, // Space for tab bar
   },
-  searchBarContainer: {
+
+  pageTitle: {
+    fontSize: 26,
+    fontWeight: '800',
     marginBottom: 16,
   },
-  searchInput: {
-    height: 52,
+
+  // Search bar
+  searchBarContainer: {
+    marginBottom: 20,
+  },
+  searchBar: {
+    borderRadius: 999,
     backgroundColor: '#FFFFFF',
-    borderRadius: 12,
     borderWidth: 1,
     borderColor: '#E0E0E0',
-    paddingHorizontal: 16,
-    fontSize: 16,
+  },
+  searchInput: {
+    fontSize: 15,
     color: '#3E2723',
   },
-  clearButton: {
-    padding: 8,
-  },
-  searchButton: {
-    backgroundColor: '#E85D04',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 4,
-  },
-  filterSection: {
-    marginBottom: 20,
-  },
-  sortSection: {
-    marginBottom: 20,
+
+  // Filters
+  filterGroup: {
+    marginBottom: 16,
   },
   filterTitle: {
-    fontSize: 16,
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#8D6E63',
+    marginBottom: 8,
+  },
+  // Rows run to the screen edges (cancels the list's side padding) so they swipe naturally
+  pillScroll: {
+    marginHorizontal: -16,
+  },
+  pillRow: {
+    flexDirection: 'row',
+    gap: 8,
+    paddingHorizontal: 16,
+  },
+  pill: {
+    minHeight: 44, // comfortable thumb target
+    justifyContent: 'center',
+    paddingHorizontal: 18,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    backgroundColor: '#FFFFFF',
+  },
+  pillText: {
+    fontSize: 14,
     fontWeight: '600',
     color: '#3E2723',
-    marginBottom: 12,
   },
-  filterList: {
-    paddingHorizontal: 4,
-    gap: 8,
+  clearRow: {
+    alignItems: 'flex-start',
+    marginBottom: 4,
   },
-  filterChip: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-    backgroundColor: '#FFFFFF',
-  },
-  filterChipSelected: {
-    backgroundColor: '#E85D04',
-    borderColor: '#E85D04',
-  },
-  filterChipText: {
-    fontSize: 13,
-    fontWeight: '500',
-    color: '#E85D04',
-  },
-  filterChipTextSelected: {
-    color: '#FFFFFF',
-  },
-  sortOptions: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  sortChip: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-    backgroundColor: '#FFFFFF',
-  },
-  sortChipSelected: {
-    backgroundColor: '#E85D04',
-    borderColor: '#E85D04',
-  },
-  sortChipText: {
-    fontSize: 13,
-    fontWeight: '500',
-    color: '#E85D04',
-  },
-  sortChipTextSelected: {
-    color: '#FFFFFF',
-  },
-  resultsSection: {
-    marginTop: 8,
-  },
+
+  // Results
   resultsTitle: {
     fontSize: 18,
     fontWeight: '700',
     color: '#3E2723',
+    marginTop: 8,
     marginBottom: 16,
-  },
-  resultsList: {
-    paddingBottom: 20,
   },
   resultCard: {
     marginBottom: 8,
   },
-  card: {
-    borderRadius: 12,
-    backgroundColor: '#FFFFFF',
-  },
-  resultContent: {
-    flexDirection: 'row',
-    padding: 12,
-  },
-  resultImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 8,
-    marginRight: 12,
-  },
-  resultInfo: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-  resultCategory: {
-    fontSize: 11,
-    color: '#1A73E8',
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    marginBottom: 4,
-  },
-  resultTitle: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#3E2723',
-    marginBottom: 4,
-  },
-  resultPrice: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 4,
-  },
-  currentPrice: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#1A73E8',
-  },
-  originalPrice: {
-    fontSize: 13,
-    color: '#9E9E9E',
-    textDecorationLine: 'line-through',
-  },
-  resultMeta: {
-    flexDirection: 'row',
-    gap: 6,
-    marginBottom: 4,
-  },
-  difficultyChip: {
-    backgroundColor: '#FFF3E0',
-  },
-  cuisineChip: {
-    backgroundColor: '#E8F5E9',
-  },
-  resultDetails: {
-    fontSize: 12,
-    color: '#8D6E63',
-  },
-  loadingCenter: {
-    paddingVertical: 40,
-    alignItems: 'center',
-  },
-  emptyState: {
-    paddingVertical: 60,
-    alignItems: 'center',
-  },
-  emptyText: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#3E2723',
-    marginTop: 16,
-  },
-  emptySubtext: {
-    fontSize: 14,
-    color: '#8D6E63',
-    marginTop: 4,
-  },
   separator: {
     height: 8,
   },
-  guideContainer: {
-    marginTop: 24,
-    padding: 16,
-    backgroundColor: '#FFF3E0',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#FFCC80',
-  },
-  guideTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#E85D04',
-    marginBottom: 8,
-  },
-  guideText: {
-    fontSize: 13,
-    color: '#5D4037',
-    lineHeight: 20,
+  footer: {
+    paddingVertical: 16,
   },
 });

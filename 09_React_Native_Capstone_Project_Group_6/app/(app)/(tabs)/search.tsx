@@ -4,11 +4,14 @@
  * - Filters: cuisine, difficulty, meal type, tag (tag/meal type can arrive
  *   from the Categories tab or Home via ?tag= / ?mealType=)
  * - Sorting, "load more" as you scroll, favorite hearts, empty/error states
+ *
+ * Design: pill search bar, pill filter rows (selected = dark pill, same as
+ * Home), clean results list. Colors come from Paper's theme.
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { View, FlatList, ScrollView, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, FlatList, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Button, Chip, Searchbar, Title, useTheme } from 'react-native-paper';
+import { Button, Searchbar, useTheme } from 'react-native-paper';
 import { recipeApi } from '@/services/recipeApi';
 import { useDebounce, useRecipeCatalog } from '@/hooks';
 import { useFavorites } from '@/context/FavoritesContext';
@@ -36,15 +39,36 @@ const SORTS: { value: SortOption; label: string }[] = [
   { value: 'name', label: 'A–Z' },
 ];
 
-const local = StyleSheet.create({
-  chipRow: { flexDirection: 'row', gap: 8, paddingRight: 16 },
-  group: { marginBottom: 12 },
-  clearRow: { alignItems: 'flex-start', marginBottom: 4 },
-  footer: { paddingVertical: 16 },
-});
+/** One rounded pill. Selected = dark pill (onSurface background). */
+function Pill({
+  label,
+  selected,
+  onPress,
+}: {
+  label: string;
+  selected: boolean;
+  onPress: () => void;
+}) {
+  const styles = useThemedStyles(rawStyles);
+  const { colors } = useTheme();
+  return (
+    <TouchableOpacity
+      activeOpacity={0.8}
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityState={{ selected }}
+      style={[
+        styles.pill,
+        selected && { backgroundColor: colors.onSurface, borderColor: colors.onSurface },
+      ]}
+    >
+      <Text style={[styles.pillText, selected && { color: colors.surface }]}>{label}</Text>
+    </TouchableOpacity>
+  );
+}
 
-/** A titled, horizontally scrolling row of single-select chips. */
-function ChipRow<T extends string>({
+/** A titled, horizontally scrolling row of single-select pills. */
+function PillRow<T extends string>({
   label,
   options,
   selected,
@@ -58,18 +82,21 @@ function ChipRow<T extends string>({
   const styles = useThemedStyles(rawStyles);
   if (options.length === 0) return null;
   return (
-    <View style={local.group}>
-      <Title style={styles.filterTitle}>{label}</Title>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={local.chipRow}>
+    <View style={styles.filterGroup}>
+      <Text style={styles.filterTitle}>{label}</Text>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.pillScroll}
+        contentContainerStyle={styles.pillRow}
+      >
         {options.map((option) => (
-          <Chip
+          <Pill
             key={option}
+            label={option}
             selected={selected === option}
-            showSelectedOverlay
             onPress={() => onSelect(selected === option ? null : option)}
-          >
-            {option}
-          </Chip>
+          />
         ))}
       </ScrollView>
     </View>
@@ -169,42 +196,58 @@ export default function SearchScreen() {
   // Search bar, filters and sort sit in the list header so everything scrolls together
   const header = (
     <View>
+      <Text style={[styles.pageTitle, { color: colors.onSurface }]}>
+        Find a <Text style={{ color: colors.primary }}>recipe</Text>
+      </Text>
+
       <View style={styles.searchBarContainer}>
-        <Searchbar placeholder="Search recipes..." value={query} onChangeText={setQuery} loading={searching} />
+        <Searchbar
+          placeholder="Search recipes..."
+          value={query}
+          onChangeText={setQuery}
+          loading={searching}
+          elevation={0}
+          style={styles.searchBar}
+          inputStyle={styles.searchInput}
+        />
       </View>
 
-      <ChipRow label="Cuisine" options={cuisines} selected={filters.cuisine} onSelect={(v) => setFilter('cuisine', v)} />
-      <ChipRow label="Difficulty" options={DIFFICULTIES} selected={filters.difficulty} onSelect={(v) => setFilter('difficulty', v)} />
-      <ChipRow label="Meal type" options={mealTypes} selected={filters.mealType} onSelect={(v) => setFilter('mealType', v)} />
-      <ChipRow label="Tag" options={tags} selected={filters.tag} onSelect={(v) => setFilter('tag', v)} />
+      <PillRow label="Cuisine" options={cuisines} selected={filters.cuisine} onSelect={(v) => setFilter('cuisine', v)} />
+      <PillRow label="Difficulty" options={DIFFICULTIES} selected={filters.difficulty} onSelect={(v) => setFilter('difficulty', v)} />
+      <PillRow label="Meal type" options={mealTypes} selected={filters.mealType} onSelect={(v) => setFilter('mealType', v)} />
+      <PillRow label="Tag" options={tags} selected={filters.tag} onSelect={(v) => setFilter('tag', v)} />
 
-      <View style={local.group}>
-        <Title style={styles.filterTitle}>Sort by</Title>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={local.chipRow}>
+      <View style={styles.filterGroup}>
+        <Text style={styles.filterTitle}>Sort by</Text>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.pillScroll}
+          contentContainerStyle={styles.pillRow}
+        >
           {SORTS.map((option) => (
-            <Chip
+            <Pill
               key={option.value}
+              label={option.label}
               selected={sort === option.value}
-              showSelectedOverlay
               onPress={() => setSort(option.value)}
-            >
-              {option.label}
-            </Chip>
+            />
           ))}
         </ScrollView>
       </View>
 
       {(hasActiveFilters(filters) || query !== '' || sort !== 'default') && (
-        <View style={local.clearRow}>
-          <Button icon="filter-remove-outline" onPress={clearAll}>
+        <View style={styles.clearRow}>
+          <Button icon="filter-remove-outline" textColor={colors.primary} onPress={clearAll}>
             Clear search and filters
           </Button>
         </View>
       )}
 
-      <Title style={styles.resultsTitle}>
-        {debouncedQuery.trim() ? `Results for "${debouncedQuery.trim()}"` : 'All recipes'} ({filtered.length})
-      </Title>
+      <Text style={styles.resultsTitle}>
+        {debouncedQuery.trim() ? `Results for "${debouncedQuery.trim()}"` : 'All recipes'}
+        <Text style={{ color: colors.onSurfaceVariant }}>{`  ${filtered.length}`}</Text>
+      </Text>
     </View>
   );
 
@@ -239,7 +282,7 @@ export default function SearchScreen() {
       ItemSeparatorComponent={() => <View style={styles.separator} />}
       ListFooterComponent={
         visible.length < filtered.length ? (
-          <View style={local.footer}>
+          <View style={styles.footer}>
             <ActivityIndicator color={colors.primary} />
           </View>
         ) : null
