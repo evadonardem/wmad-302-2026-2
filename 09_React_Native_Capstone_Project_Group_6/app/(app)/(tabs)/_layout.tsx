@@ -1,30 +1,32 @@
 /**
  * Tabs Layout - Cookbook App Navigation
  * Tabs: Discover, Search, Categories, Favorites (with count badge), Profile
- * Safe areas: every screen is pushed below the status bar, and the tab bar
- * grows by the phone's bottom inset, so nothing is cut off on any device.
+ * Safe areas: screens sit below the status bar and the tab bar grows by the
+ * phone's bottom inset. Colors come from the active (light/dark) theme.
  */
 import { Tabs } from 'expo-router';
 import React from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTheme } from 'react-native-paper';
 import { useFavorites } from '@/context/FavoritesContext';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 export default function TabsLayout() {
   const { count } = useFavorites();
   const insets = useSafeAreaInsets();
+  const { colors } = useTheme();
   const bottomPadding = Math.max(insets.bottom, 8);
 
   return (
     <Tabs
       // Keeps every screen below the status bar / notch
-      sceneContainerStyle={{ backgroundColor: '#FFFDF8', paddingTop: insets.top }}
+      sceneContainerStyle={{ backgroundColor: colors.background, paddingTop: insets.top }}
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#E85D04',
-        tabBarInactiveTintColor: '#8D6E63',
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.onSurfaceVariant,
         tabBarStyle: {
-          backgroundColor: '#FFFFFF',
+          backgroundColor: colors.surface,
           borderTopWidth: 0,
           elevation: 8,
           shadowColor: '#000',
@@ -69,7 +71,7 @@ export default function TabsLayout() {
           title: 'Favorites',
           // Badge shows how many recipes are saved; hidden when there are none
           tabBarBadge: count > 0 ? count : undefined,
-          tabBarBadgeStyle: { backgroundColor: '#C62828' },
+          tabBarBadgeStyle: { backgroundColor: colors.error },
           tabBarIcon: ({ focused, color }) => (
             <MaterialCommunityIcons
               name={focused ? 'heart' : 'heart-outline'}

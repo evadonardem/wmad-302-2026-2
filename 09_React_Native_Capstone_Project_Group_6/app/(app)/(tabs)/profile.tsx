@@ -11,6 +11,7 @@ import { useRouter } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
 import { useFavorites } from '@/context/FavoritesContext';
 import { useRecipeCatalog } from '@/hooks';
+import { ThemeMode, useThemeMode } from '@/context/ThemeContext';
 import {
   Avatar,
   Button,
@@ -20,7 +21,9 @@ import {
   HelperText,
   List,
   Portal,
+  SegmentedButtons,
   Snackbar,
+  Text as PaperText,
   TextInput as PaperTextInput,
 } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -41,23 +44,14 @@ const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const local = StyleSheet.create({
   saveError: { color: '#C62828', fontSize: 13, marginTop: 4 },
   settingsRow: { marginBottom: 12 },
-  aboutText: { color: '#5D4037', fontSize: 13, marginTop: 4 },
+  aboutText: { fontSize: 13, marginTop: 4 },
+  appearanceLabel: { marginBottom: 8 },
 });
 
 // Menu row helpers
-// The inner function has a name (MenuIcon) so ESLint's react/display-name is satisfied.
-const menuIcon = (name: IconName) => {
-  const MenuIcon = (props: { style?: object }) => (
-    <MaterialCommunityIcons name={name} size={24} color="#E85D04" style={props.style} />
-  );
-  return MenuIcon;
-};
-
-// Created once at module level so they are not rebuilt on every render
-const favoritesIcon = menuIcon('heart');
-const editProfileIcon = menuIcon('account-edit');
-const settingsIcon = menuIcon('cog');
-
+const menuIcon = (name: IconName) => (props: { style?: object }) => (
+  <MaterialCommunityIcons name={name} size={24} color="#E85D04" style={props.style} />
+);
 const chevron = (props: { style?: object }) => (
   <MaterialCommunityIcons name="chevron-right" size={24} color="#8D6E63" style={props.style} />
 );
@@ -66,6 +60,7 @@ export default function ProfileScreen() {
   const router = useRouter();
   const { user, logout, isAuthenticated, updateProfile } = useAuth();
   const { ids, count, clearFavorites } = useFavorites();
+  const { mode, setMode } = useThemeMode();
   const { recipes: catalog } = useRecipeCatalog();
 
   const [dialog, setDialog] = useState<DialogName>(null);
@@ -199,7 +194,7 @@ export default function ProfileScreen() {
               <List.Item
                 title="Favorites"
                 description="Your saved recipes"
-                left={favoritesIcon}
+                left={menuIcon('heart')}
                 right={chevron}
                 onPress={() => router.push('/(app)/(tabs)/favorites')}
               />
@@ -207,7 +202,7 @@ export default function ProfileScreen() {
               <List.Item
                 title="Edit Profile"
                 description="Update your name and email"
-                left={editProfileIcon}
+                left={menuIcon('account-edit')}
                 right={chevron}
                 onPress={openEdit}
               />
@@ -215,7 +210,7 @@ export default function ProfileScreen() {
               <List.Item
                 title="Settings"
                 description="Manage favorites, about the app"
-                left={settingsIcon}
+                left={menuIcon('cog')}
                 right={chevron}
                 onPress={() => setDialog('settings')}
               />
@@ -246,7 +241,7 @@ export default function ProfileScreen() {
         <Dialog visible={dialog === 'logout'} onDismiss={() => setDialog(null)}>
           <Dialog.Title>Logout</Dialog.Title>
           <Dialog.Content>
-            <Text>Are you sure you want to logout?</Text>
+            <PaperText>Are you sure you want to logout?</PaperText>
           </Dialog.Content>
           <Dialog.Actions>
             <Button onPress={() => setDialog(null)}>Cancel</Button>
@@ -309,6 +304,19 @@ export default function ProfileScreen() {
         <Dialog visible={dialog === 'settings'} onDismiss={() => setDialog(null)}>
           <Dialog.Title>Settings</Dialog.Title>
           <Dialog.Content>
+            <PaperText variant="titleSmall" style={local.appearanceLabel}>
+              Appearance
+            </PaperText>
+            <SegmentedButtons
+              style={local.settingsRow}
+              value={mode}
+              onValueChange={(value) => setMode(value as ThemeMode)}
+              buttons={[
+                { value: 'light', label: 'Light', icon: 'white-balance-sunny' },
+                { value: 'dark', label: 'Dark', icon: 'weather-night' },
+                { value: 'system', label: 'System' },
+              ]}
+            />
             <View style={local.settingsRow}>
               <Button
                 mode="outlined"
@@ -320,8 +328,8 @@ export default function ProfileScreen() {
               </Button>
             </View>
             <Divider />
-            <Text style={local.aboutText}>Cookbook v1.0.0</Text>
-            <Text style={local.aboutText}>Recipe data from DummyJSON</Text>
+            <PaperText style={local.aboutText}>Cookbook v1.0.0</PaperText>
+            <PaperText style={local.aboutText}>Recipe data from DummyJSON</PaperText>
           </Dialog.Content>
           <Dialog.Actions>
             <Button onPress={() => setDialog(null)}>Close</Button>
@@ -332,7 +340,7 @@ export default function ProfileScreen() {
         <Dialog visible={dialog === 'clearFavorites'} onDismiss={() => setDialog(null)}>
           <Dialog.Title>Clear favorites</Dialog.Title>
           <Dialog.Content>
-            <Text>{`Remove all ${count} saved recipes? This cannot be undone.`}</Text>
+            <PaperText>{`Remove all ${count} saved recipes? This cannot be undone.`}</PaperText>
           </Dialog.Content>
           <Dialog.Actions>
             <Button onPress={() => setDialog('settings')}>Cancel</Button>
