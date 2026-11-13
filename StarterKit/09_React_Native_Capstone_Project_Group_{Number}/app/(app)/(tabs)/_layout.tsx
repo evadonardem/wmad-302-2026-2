@@ -39,9 +39,9 @@ export default function TabsLayout() {
         name="home"
         options={{
           title: 'Discover',
-          tabBarIcon: ({ focused, color }) => (
+          tabBarIcon: ({ color }) => (
             <MaterialCommunityIcons
-              name={focused ? 'stove' : 'stove-outline'}
+              name="stove"
               size={24}
               color={color}
             />
@@ -52,9 +52,9 @@ export default function TabsLayout() {
         name="search"
         options={{
           title: 'Search',
-          tabBarIcon: ({ focused, color }) => (
+          tabBarIcon: ({ color }) => (
             <MaterialCommunityIcons
-              name={focused ? 'magnify' : 'magnify-outline'}
+              name="magnify"
               size={24}
               color={color}
             />
