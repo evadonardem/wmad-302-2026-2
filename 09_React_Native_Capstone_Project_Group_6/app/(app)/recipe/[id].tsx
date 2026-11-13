@@ -2,10 +2,11 @@
  * Recipe Detail Screen  -  route: /recipe/{id}
  * Shows the full recipe: image, quick facts, rating, nutrition, ingredients
  * (tick them off as you cook), step-by-step instructions (with optional
- * cooking timers) and tags.
+ * cooking timers) and tags. The share button sends the recipe as text through
+ * the phone's share sheet.
  */
 import React, { useCallback, useEffect, useState } from 'react';
-import { View, ScrollView, Image, StyleSheet } from 'react-native';
+import { View, ScrollView, Image, Share, StyleSheet } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
@@ -15,6 +16,7 @@ import {
   Chip,
   Divider,
   IconButton,
+  Snackbar,
   Text,
   useTheme,
 } from 'react-native-paper';
@@ -23,6 +25,7 @@ import { recipeApi } from '@/services/recipeApi';
 import { useFavorites } from '@/context/FavoritesContext';
 import { Recipe } from '@/types/recipe';
 import { StepTimer } from '@/components/StepTimer';
+import { buildShareMessage } from '@/utils/shareRecipe';
 
 /** Five stars, filled according to the rating (supports half stars). */
 function Stars({ rating }: { rating: number }) {
@@ -67,6 +70,8 @@ export default function RecipeDetailScreen() {
   const [error, setError] = useState<string | null>(null);
   // Indexes of ingredients the user has ticked off
   const [checked, setChecked] = useState<Set<number>>(new Set());
+  // Small message at the bottom (e.g. when sharing isn't possible)
+  const [message, setMessage] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     const recipeId = Number(id);
@@ -94,6 +99,16 @@ export default function RecipeDetailScreen() {
   const goBack = () => {
     if (router.canGoBack()) router.back();
     else router.replace('/(app)/(tabs)/home');
+  };
+
+  // Opens the phone's share sheet with the recipe as text
+  const handleShare = async () => {
+    if (!recipe) return;
+    try {
+      await Share.share({ title: recipe.name, message: buildShareMessage(recipe) });
+    } catch {
+      setMessage("Sharing isn't available on this device");
+    }
   };
 
   const toggleIngredient = (index: number) => {
@@ -291,6 +306,15 @@ export default function RecipeDetailScreen() {
 
       {backButton}
       <IconButton
+        icon="share-variant"
+        mode="contained"
+        containerColor="rgba(255,255,255,0.92)"
+        iconColor={theme.colors.onSurface}
+        onPress={handleShare}
+        accessibilityLabel="Share recipe"
+        style={[styles.shareButton, { top: insets.top + 8 }]}
+      />
+      <IconButton
         icon={isFavorite(recipe.id) ? 'heart' : 'heart-outline'}
         mode="contained"
         containerColor="rgba(255,255,255,0.92)"
@@ -299,6 +323,10 @@ export default function RecipeDetailScreen() {
         accessibilityLabel={isFavorite(recipe.id) ? 'Remove from favorites' : 'Add to favorites'}
         style={[styles.heartButton, { top: insets.top + 8 }]}
       />
+
+      <Snackbar visible={message !== null} onDismiss={() => setMessage(null)} duration={3000}>
+        {message}
+      </Snackbar>
     </View>
   );
 }
@@ -309,6 +337,7 @@ const styles = StyleSheet.create({
   retry: { marginTop: 16 },
   backButton: { position: 'absolute', left: 12 },
   heartButton: { position: 'absolute', right: 12 },
+  shareButton: { position: 'absolute', right: 60 },
   heroImage: { width: '100%', height: 280 },
   body: { padding: 20 },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 12 },
