@@ -9,8 +9,11 @@ export const styles = StyleSheet.create({
     backgroundColor: '#FFFDF8',
   },
   content: {
+    flexGrow: 1,
+    alignItems: 'stretch',
     paddingHorizontal: 16,
     paddingBottom: 100,
+    minWidth: 0,
   },
   searchBarContainer: {
     marginBottom: 16,
@@ -26,11 +29,13 @@ export const styles = StyleSheet.create({
   },
   searchInput: {
     flex: 1,
+    minWidth: 0,
     height: 52,
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
     borderWidth: 0,
     paddingHorizontal: 16,
+    marginRight: 8,
     fontSize: 16,
     color: '#3E2723',
   },
@@ -40,10 +45,19 @@ export const styles = StyleSheet.create({
   searchButton: {
     backgroundColor: '#E85D04',
     borderRadius: 12,
-    paddingHorizontal: 16,
+    minWidth: 92,
+    height: 44,
+    flexDirection: 'row',
+    gap: 6,
     justifyContent: 'center',
     alignItems: 'center',
+    paddingHorizontal: 12,
     marginRight: 4,
+  },
+  searchButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
   },
   filterSection: {
     marginBottom: 20,
@@ -59,6 +73,11 @@ export const styles = StyleSheet.create({
   },
   filterList: {
     paddingHorizontal: 4,
+    gap: 8,
+  },
+  difficultyFilters: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 8,
   },
   filterChip: {
@@ -108,6 +127,7 @@ export const styles = StyleSheet.create({
   },
   resultsSection: {
     marginTop: 8,
+    minWidth: 0,
   },
   resultsTitle: {
     fontSize: 18,
@@ -119,15 +139,20 @@ export const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   resultCard: {
+    alignSelf: 'stretch',
     marginBottom: 8,
+    minWidth: 0,
   },
   card: {
+    width: '100%',
     borderRadius: 12,
     backgroundColor: '#FFFFFF',
   },
   resultContent: {
     flexDirection: 'row',
+    alignItems: 'center',
     padding: 12,
+    minWidth: 0,
   },
   resultImage: {
     width: 80,
@@ -138,6 +163,7 @@ export const styles = StyleSheet.create({
   resultInfo: {
     flex: 1,
     justifyContent: 'center',
+    minWidth: 0,
   },
   resultCategory: {
     fontSize: 11,
@@ -170,6 +196,7 @@ export const styles = StyleSheet.create({
   },
   resultMeta: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 6,
     marginBottom: 4,
   },
@@ -182,6 +209,7 @@ export const styles = StyleSheet.create({
   resultDetails: {
     fontSize: 12,
     color: '#8D6E63',
+    flexShrink: 1,
   },
   loadingCenter: {
     paddingVertical: 40,
@@ -201,6 +229,19 @@ export const styles = StyleSheet.create({
     fontSize: 14,
     color: '#8D6E63',
     marginTop: 4,
+  },
+  errorText: {
+    fontSize: 14,
+    color: '#C62828',
+    textAlign: 'center',
+  },
+  retryButton: {
+    marginTop: 8,
+  },
+  footerContainer: {
+    alignItems: 'center',
+    paddingVertical: 16,
+    gap: 8,
   },
   separator: {
     height: 8,

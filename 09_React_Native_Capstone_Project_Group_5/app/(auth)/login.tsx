@@ -15,7 +15,8 @@ import {
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
-import { Card, Button, TextInput as PaperTextInput, Divider } from 'react-native-paper';
+import { authApi } from '@/services/authApi';
+import { Card, Button, TextInput as PaperTextInput } from 'react-native-paper';
 import { styles } from './styles';
 
 export default function LoginScreen() {
@@ -24,8 +25,10 @@ export default function LoginScreen() {
   const { redirect } = useLocalSearchParams<{ redirect?: string }>();
 
   const [username, setUsername] = useState('');
+  const [isRememberedUsername, setIsRememberedUsername] = useState(false);
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const usernameEdited = React.useRef(false);
 
   const handleLogin = async () => {
     if (!username.trim() || !password.trim()) {
@@ -42,23 +45,29 @@ export default function LoginScreen() {
     }
   };
 
-  const handleDemoLogin = async () => {
-    // DummyJSON test credentials: emilys / emilyspass
-    setUsername('emilys');
-    setPassword('emilyspass');
-    try {
-      await login('emilys', 'emilyspass');
-      router.replace(redirect || '/(app)/(tabs)/home');
-    } catch {
-      // Error handled in context
-    }
-  };
-
   React.useEffect(() => {
     if (error) {
       Alert.alert('Login Failed', error, [{ text: 'OK', onPress: clearError }]);
     }
   }, [error, clearError]);
+
+  React.useEffect(() => {
+    let active = true;
+    void authApi.getLastLoginUsername()
+      .then((savedUsername) => {
+        if (active && savedUsername && !usernameEdited.current) {
+          setUsername(savedUsername);
+          setIsRememberedUsername(true);
+        }
+      })
+      .catch((storageError: unknown) => {
+        console.warn('Unable to load the last login username:', storageError);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   return (
     <KeyboardAvoidingView
@@ -85,7 +94,11 @@ export default function LoginScreen() {
               label="Username or Email"
               mode="outlined"
               value={username}
-              onChangeText={setUsername}
+              onChangeText={(value) => {
+                usernameEdited.current = true;
+                setIsRememberedUsername(false);
+                setUsername(value);
+              }}
               style={styles.input}
               autoCapitalize="none"
               autoComplete="username"
@@ -93,6 +106,11 @@ export default function LoginScreen() {
               returnKeyType="next"
               disabled={isLoading}
             />
+            {isRememberedUsername ? (
+              <Text style={styles.savedUsernameHint}>
+                Username remembered from your last login. Your password is not saved.
+              </Text>
+            ) : null}
 
             {/* Password Field */}
             <PaperTextInput
@@ -134,14 +152,6 @@ export default function LoginScreen() {
                 <Text style={styles.buttonText}>Sign In</Text>
               )}
             </Button>
-
-            {/* Demo Login */}
-            <View style={styles.demoContainer}>
-              <Divider style={styles.divider} />
-              <TouchableOpacity onPress={handleDemoLogin} disabled={isLoading} style={styles.demoButton}>
-                <Text style={styles.demoButtonText}>Try Demo Account (emilys / emilyspass)</Text>
-              </TouchableOpacity>
-            </View>
 
             {/* Register Link */}
             <View style={styles.registerContainer}>

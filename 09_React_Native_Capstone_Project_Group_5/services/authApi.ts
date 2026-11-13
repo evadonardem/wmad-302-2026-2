@@ -13,6 +13,7 @@ import { LoginCredentials, RegisterData, AuthUser, RefreshTokenResponse } from '
 const API_BASE_URL = 'https://dummyjson.com/auth';
 const AUTH_STORAGE_KEY = 'auth_user';
 const LOCAL_ACCOUNTS_KEY = 'local_auth_accounts';
+const LAST_LOGIN_USERNAME_KEY = 'last_login_username';
 
 interface LocalAccount {
   id: number;
@@ -104,6 +105,18 @@ class AuthApiService {
     return storedAccounts ? (JSON.parse(storedAccounts) as LocalAccount[]) : [];
   }
 
+  async getLastLoginUsername(): Promise<string | null> {
+    return AsyncStorage.getItem(LAST_LOGIN_USERNAME_KEY);
+  }
+
+  private async saveLastLoginUsername(username: string): Promise<void> {
+    try {
+      await AsyncStorage.setItem(LAST_LOGIN_USERNAME_KEY, username);
+    } catch (error) {
+      console.warn('Unable to save the last login username:', error);
+    }
+  }
+
   private async createLocalSession(account: LocalAccount): Promise<AuthUser> {
     return {
       id: account.id,
@@ -153,6 +166,7 @@ class AuthApiService {
 
       const user = await this.createLocalSession(localAccount);
       await this.setTokens(user);
+      await this.saveLastLoginUsername(user.username);
       return user;
     }
 
@@ -163,6 +177,7 @@ class AuthApiService {
     });
 
     await this.setTokens(response.data);
+    await this.saveLastLoginUsername(response.data.username);
     return response.data;
   }
 
@@ -193,6 +208,7 @@ class AuthApiService {
     await AsyncStorage.setItem(LOCAL_ACCOUNTS_KEY, JSON.stringify([...accounts, account]));
     const user = await this.createLocalSession(account);
     await this.setTokens(user);
+    await this.saveLastLoginUsername(user.username);
     return user;
   }
 

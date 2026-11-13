@@ -49,9 +49,11 @@ export const styles = StyleSheet.create({
     fontWeight: '600',
   },
   listContent: {
+    alignItems: 'stretch',
     paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: 120,
+    minWidth: 0,
   },
   header: {
     paddingHorizontal: 16,
@@ -63,7 +65,9 @@ export const styles = StyleSheet.create({
     color: '#3E2723',
   },
   favoriteCard: {
+    alignSelf: 'stretch',
     marginBottom: 8,
+    minWidth: 0,
   },
   favoriteRemoveButton: {
     justifyContent: 'center',
@@ -71,12 +75,15 @@ export const styles = StyleSheet.create({
     padding: 8,
   },
   card: {
+    width: '100%',
     borderRadius: 12,
     backgroundColor: '#FFFFFF',
   },
   cardContent: {
     flexDirection: 'row',
+    alignItems: 'center',
     padding: 12,
+    minWidth: 0,
   },
   recipeImage: {
     width: 80,
@@ -87,6 +94,7 @@ export const styles = StyleSheet.create({
   info: {
     flex: 1,
     justifyContent: 'center',
+    minWidth: 0,
   },
   title: {
     fontSize: 15,
@@ -96,6 +104,7 @@ export const styles = StyleSheet.create({
   },
   meta: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 6,
     marginBottom: 4,
   },
@@ -108,6 +117,7 @@ export const styles = StyleSheet.create({
   details: {
     fontSize: 12,
     color: '#8D6E63',
+    flexShrink: 1,
   },
   separator: {
     height: 8,

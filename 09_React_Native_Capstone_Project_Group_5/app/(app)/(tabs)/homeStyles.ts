@@ -10,6 +10,8 @@ export const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingBottom: 100, // Space for tab bar
+    alignItems: 'stretch',
+    minWidth: 0,
   },
   loadingContainer: {
     flex: 1,
@@ -50,6 +52,7 @@ export const styles = StyleSheet.create({
   },
   welcomeTextContainer: {
     flex: 1,
+    minWidth: 0,
   },
   welcomeGreeting: {
     fontSize: 24,
@@ -67,6 +70,7 @@ export const styles = StyleSheet.create({
   sectionContainer: {
     paddingHorizontal: 16,
     marginBottom: 24,
+    minWidth: 0,
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -104,9 +108,12 @@ export const styles = StyleSheet.create({
     color: '#E85D04',
   },
   recipeCard: {
+    alignSelf: 'stretch',
     marginBottom: 12,
+    minWidth: 0,
   },
   card: {
+    width: '100%',
     borderRadius: 16,
     overflow: 'hidden',
     backgroundColor: '#FFFFFF',
@@ -143,6 +150,7 @@ export const styles = StyleSheet.create({
   },
   cardContent: {
     padding: 16,
+    minWidth: 0,
   },
   recipeTitle: {
     fontSize: 16,
@@ -165,13 +173,16 @@ export const styles = StyleSheet.create({
   },
   metaRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    justifyContent: 'flex-start',
+    gap: 8,
     marginBottom: 12,
   },
   metaText: {
     fontSize: 12,
     color: '#8D6E63',
     fontWeight: '500',
+    flexShrink: 1,
   },
   cuisineRow: {
     flexDirection: 'row',
@@ -193,6 +204,7 @@ export const styles = StyleSheet.create({
     fontSize: 13,
     color: '#8D6E63',
     fontWeight: '500',
+    flexShrink: 1,
   },
   priceRow: {
     flexDirection: 'row',
@@ -218,6 +230,11 @@ export const styles = StyleSheet.create({
   },
   cardSeparator: {
     height: 8,
+  },
+  footerContainer: {
+    alignItems: 'center',
+    paddingVertical: 16,
+    gap: 8,
   },
   emptyContainer: {
     paddingVertical: 40,

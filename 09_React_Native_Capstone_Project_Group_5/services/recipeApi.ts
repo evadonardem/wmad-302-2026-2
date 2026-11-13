@@ -5,6 +5,7 @@
 
 import axios, { AxiosInstance } from 'axios';
 import { Recipe, RecipesResponse, RecipeSearchParams } from '@/types/recipe';
+import { RECIPE_CATEGORIES } from '@/utils/recipeCategories';
 
 const API_BASE_URL = 'https://dummyjson.com/recipes';
 
@@ -81,10 +82,7 @@ class RecipeApiService {
   async getCategories(): Promise<string[]> {
     // DummyJSON doesn't have a categories endpoint for recipes
     // Return static list based on known categories
-    return [
-      'Beef', 'Chicken', 'Dessert', 'Lamb', 'Pasta', 'Pork', 'Seafood', 'Vegetarian',
-      'Breakfast', 'Appetizer', 'Side Dish', 'Main Course', 'Soup', 'Salad', 'Drink',
-    ];
+    return [...RECIPE_CATEGORIES];
   }
 
   /**

@@ -56,6 +56,12 @@ export const styles = StyleSheet.create({
   input: {
     marginBottom: 16,
   },
+  savedUsernameHint: {
+    color: '#8D6E63',
+    fontSize: 12,
+    marginTop: -12,
+    marginBottom: 12,
+  },
   fieldError: {
     color: '#C62828',
     fontSize: 12,
@@ -185,21 +191,6 @@ export const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     letterSpacing: 0.5,
-  },
-  demoContainer: {
-    marginTop: 8,
-  },
-  divider: {
-    marginVertical: 16,
-  },
-  demoButton: {
-    paddingVertical: 12,
-    alignItems: 'center',
-  },
-  demoButtonText: {
-    fontSize: 14,
-    color: '#E85D04',
-    fontWeight: '500',
   },
   registerContainer: {
     flexDirection: 'row',

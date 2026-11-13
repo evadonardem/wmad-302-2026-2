@@ -56,7 +56,7 @@ A React Native + Expo + React Native Paper cookbook application using the [Dummy
 #### 4. Authentication & Security (10 pts)
 | Criterion | Points | Expectation |
 |-----------|--------|-------------|
-| Login Flow | 3 | Working login, validation, error messages, demo account |
+| Login Flow | 3 | Working login, validation, and error messages |
 | Register Flow | 3 | Complete implementation, validation, auto-login |
 | Token Management | 2 | Auto-refresh on 401, secure storage, logout clears tokens |
 | Protected Routes | 2 | Auth guard redirects unauthenticated users |
@@ -236,7 +236,7 @@ npm run web
 ### Core Features (Required)
 - [ ] **Recipe Discovery** - Browse recipes with pagination
 - [ ] **Recipe Search** - Search by query, filter by category/cuisine/difficulty
-- [ ] **Recipe Details** - Full recipe with ingredients, instructions, nutrition
+- [ ] **Recipe Details** - Full recipe with measured ingredient amounts and units, instructions, and nutrition. Use reliable recipe sources for quantities; never guess or fabricate amounts.
 - [ ] **Favorites** - Save/remove recipes (AsyncStorage persistence)
 - [ ] **Categories** - Browse by category (Beef, Chicken, Dessert, etc.)
 - [ ] **User Profile** - View/edit profile, stats, settings

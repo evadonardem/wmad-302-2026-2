@@ -8,6 +8,7 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { Card, Title } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { recipeApi } from '@/services/recipeApi';
+import { getRecipeCategoryCounts } from '@/utils/recipeCategories';
 import { styles } from './categoriesStyles';
 
 interface Category {
@@ -25,26 +26,8 @@ export default function CategoriesScreen() {
     setLoading(true);
     setError(null);
     try {
-      const [categoryNames, response] = await Promise.all([
-        recipeApi.getCategories(),
-        recipeApi.getRecipes({ limit: 50 }),
-      ]);
-      const recipes = response.recipes;
-      const aliases: Record<string, string[]> = { Seafood: ['shrimp'] };
-      const categoriesWithCounts = categoryNames.map((name) => {
-        const normalizedName = name.toLowerCase();
-        const searchTerms = [normalizedName, ...(aliases[name] ?? [])];
-        const count = recipes.filter((recipe) => {
-          const tags = recipe.tags.map((tag) => tag.toLowerCase());
-          if (tags.includes(normalizedName)) return true;
-
-          const recipeText = [recipe.name, ...recipe.ingredients].join(' ').toLowerCase();
-          return searchTerms.some((term) => recipeText.includes(term));
-        }).length;
-
-        return { name, count };
-      });
-      setCategories(categoriesWithCounts);
+      const response = await recipeApi.getRecipes({ limit: 50 });
+      setCategories(getRecipeCategoryCounts(response.recipes).filter(({ count }) => count > 0));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load categories');
     } finally {

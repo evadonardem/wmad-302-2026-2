@@ -24,9 +24,15 @@ export default function TabsLayout() {
           paddingTop: 8,
           paddingBottom: 8,
         },
+        tabBarItemStyle: {
+          flex: 1,
+          minWidth: 0,
+          paddingHorizontal: 0,
+        },
         tabBarLabelStyle: {
-          fontSize: 12,
+          fontSize: 10,
           fontWeight: '500',
+          flexShrink: 1,
         },
       }}
     >

@@ -9,9 +9,12 @@ export const styles = StyleSheet.create({
     backgroundColor: '#FFFDF8',
   },
   content: {
+    flexGrow: 1,
+    alignItems: 'stretch',
     paddingHorizontal: 16,
     paddingTop: 20,
     paddingBottom: 120,
+    minWidth: 0,
   },
   centerContainer: {
     flex: 1,
@@ -27,6 +30,7 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 24,
     paddingVertical: 8,
+    minWidth: 0,
   },
   avatar: {
     marginRight: 16,
@@ -34,35 +38,42 @@ export const styles = StyleSheet.create({
   },
   nameContainer: {
     flex: 1,
+    minWidth: 0,
   },
   name: {
     fontSize: 24,
     fontWeight: '700',
     color: '#3E2723',
+    flexShrink: 1,
   },
   username: {
     fontSize: 14,
     color: '#E85D04',
     fontWeight: '500',
     marginTop: 2,
+    flexShrink: 1,
   },
   email: {
     fontSize: 13,
     color: '#8D6E63',
     marginTop: 2,
+    flexShrink: 1,
   },
   statsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
+    alignSelf: 'stretch',
     backgroundColor: '#FFF3E0',
     borderRadius: 16,
     paddingVertical: 20,
     marginBottom: 24,
+    minWidth: 0,
   },
   statItem: {
+    flex: 1,
     alignItems: 'center',
-    minWidth: 76,
     paddingHorizontal: 6,
+    minWidth: 0,
   },
   statValue: {
     fontSize: 24,
@@ -76,10 +87,14 @@ export const styles = StyleSheet.create({
   },
   section: {
     marginBottom: 16,
+    alignSelf: 'stretch',
+    minWidth: 0,
   },
   menuCard: {
+    alignSelf: 'stretch',
     borderRadius: 16,
     overflow: 'hidden',
+    minWidth: 0,
   },
   divider: {
     marginLeft: 56,
@@ -131,6 +146,13 @@ export const styles = StyleSheet.create({
   },
   dialogInput: {
     marginBottom: 12,
+  },
+  dialog: {
+    width: '90%',
+    maxWidth: 400,
+    alignSelf: 'center',
+    marginHorizontal: 0,
+    borderRadius: 16,
   },
   dialogError: {
     color: '#C62828',

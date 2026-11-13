@@ -3,19 +3,19 @@
  * Students implement: Recipe grid, categories, featured recipes
  * API: https://dummyjson.com/docs/recipes
  */
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import {
   View,
   Text,
-  ScrollView,
   FlatList,
   TouchableOpacity,
   Image,
   ActivityIndicator,
-  RefreshControl,
 } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
+import { recipeApi } from '@/services/recipeApi';
+import type { Recipe } from '@/types/recipe';
 import { getStorageItem } from '@/utils/storage';
 import { Card, Title, Chip, Avatar, Button } from 'react-native-paper';
 import { styles } from './homeStyles';
@@ -30,33 +30,6 @@ const DEFAULT_RECIPE_DISPLAY_PREFERENCES: RecipeDisplayPreferences = {
   showNutritionInfo: true,
 };
 
-// Types for DummyJSON Recipes API
-interface Recipe {
-  id: number;
-  name: string;
-  ingredients: string[];
-  instructions: string[];
-  prepTimeMinutes: number;
-  cookTimeMinutes: number;
-  servings: number;
-  difficulty: 'Easy' | 'Medium' | 'Hard';
-  cuisine: string;
-  caloriesPerServing: number;
-  tags: string[];
-  userId: number;
-  image: string;
-  rating: number;
-  reviewCount: number;
-  mealType: string[];
-}
-
-interface RecipesResponse {
-  recipes: Recipe[];
-  total: number;
-  skip: number;
-  limit: number;
-}
-
 export default function HomeScreen() {
   const router = useRouter();
   const { user } = useAuth();
@@ -64,31 +37,48 @@ export default function HomeScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [loadMoreError, setLoadMoreError] = useState<string | null>(null);
   const [displayPreferences, setDisplayPreferences] = useState(DEFAULT_RECIPE_DISPLAY_PREFERENCES);
+  const nextSkipRef = useRef(0);
+  const hasMoreRef = useRef(true);
+  const loadingMoreRef = useRef(false);
 
-  const fetchRecipes = useCallback(async (isRefresh = false) => {
+  const fetchRecipes = useCallback(async (mode: 'initial' | 'refresh' | 'more' = 'initial') => {
+    if (mode === 'more' && (!hasMoreRef.current || loadingMoreRef.current)) return;
+    if (mode === 'more') loadingMoreRef.current = true;
+    const skip = mode === 'more' ? nextSkipRef.current : 0;
+
     try {
-      if (!isRefresh) setLoading(true);
-      setError(null);
-
-      const response = await fetch('https://dummyjson.com/recipes?limit=50');
-      if (!response.ok) throw new Error('Failed to fetch recipes');
-
-      const data: RecipesResponse = await response.json();
-      const shuffledRecipes = [...data.recipes];
-      for (let index = shuffledRecipes.length - 1; index > 0; index -= 1) {
-        const randomIndex = Math.floor(Math.random() * (index + 1));
-        [shuffledRecipes[index], shuffledRecipes[randomIndex]] = [
-          shuffledRecipes[randomIndex],
-          shuffledRecipes[index],
-        ];
+      if (mode === 'initial') {
+        setLoading(true);
+        setError(null);
+      } else if (mode === 'refresh') {
+        setRefreshing(true);
+        setError(null);
+      } else {
+        setLoadingMore(true);
+        setLoadMoreError(null);
       }
-      setRecipes(shuffledRecipes);
+
+      const data = await recipeApi.getRecipes({ limit: 10, skip });
+      setRecipes((currentRecipes) => (
+        mode === 'more' ? [...currentRecipes, ...data.recipes] : data.recipes
+      ));
+      nextSkipRef.current = skip + data.recipes.length;
+      hasMoreRef.current = nextSkipRef.current < data.total;
+
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load recipes');
+      const message = err instanceof Error ? err.message : 'Failed to load recipes';
+      if (mode === 'more') setLoadMoreError(message);
+      else setError(message);
     } finally {
       setLoading(false);
       setRefreshing(false);
+      if (mode === 'more') {
+        loadingMoreRef.current = false;
+        setLoadingMore(false);
+      }
     }
   }, []);
 
@@ -100,7 +90,7 @@ export default function HomeScreen() {
   }, [fetchRecipes]));
 
   const onRefresh = () => {
-    void fetchRecipes(true);
+    void fetchRecipes('refresh');
   };
 
   const renderRecipe = ({ item }: { item: Recipe }) => (
@@ -130,7 +120,7 @@ export default function HomeScreen() {
           </View>
         </View>
         <Card.Content style={styles.cardContent}>
-          <Title style={styles.recipeTitle} numberOfLines={1}>
+          <Title style={styles.recipeTitle} numberOfLines={2}>
             {item.name}
           </Title>
           <View style={styles.metaRow}>
@@ -181,87 +171,99 @@ export default function HomeScreen() {
   }
 
   return (
-    <ScrollView
+    <FlatList
       style={styles.scrollView}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#E85D04']} />
-      }
+      data={recipes}
+      renderItem={renderRecipe}
+      keyExtractor={(item) => item.id.toString()}
       contentContainerStyle={styles.scrollContent}
-    >
-      {/* Welcome Header */}
-      <View style={styles.welcomeContainer}>
-        <View style={styles.welcomeTextContainer}>
-          <Text style={styles.welcomeGreeting}>
-            {user ? `Welcome back, ${user.firstName}!` : 'Welcome to Cookbook!'}
-          </Text>
-          <Text style={styles.welcomeSubtitle}>Discover delicious recipes</Text>
-        </View>
-        <TouchableOpacity
-          accessibilityRole="button"
-          accessibilityLabel="Open profile"
-          onPress={() => router.push('/(app)/(tabs)/profile')}
-        >
-          <Avatar.Icon size={56} icon="chef-hat" style={styles.welcomeAvatar} />
-        </TouchableOpacity>
-      </View>
-
-      {/* Categories */}
-      <View style={styles.sectionContainer}>
-        <View style={styles.sectionHeader}>
-          <Title style={styles.sectionTitle}>Categories</Title>
-          <TouchableOpacity
-            accessibilityRole="button"
-            onPress={() => router.push('/(app)/(tabs)/categories')}
-            style={styles.seeAll}
-          >
-            <Text style={styles.seeAllText}>See All</Text>
-          </TouchableOpacity>
-        </View>
-        <FlatList
-          data={[
-            'Beef', 'Chicken', 'Dessert', 'Lamb', 'Pasta', 'Pork', 'Seafood', 'Vegetarian',
-          ]}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.categoryList}
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              style={[styles.categoryChip, { backgroundColor: '#FFF3E0' }]}
-              onPress={() => router.push({
-                pathname: '/(app)/(tabs)/search',
-                params: { category: item, view: 'category' },
-              })}
-            >
-              <Text style={styles.categoryChipText}>{item}</Text>
-            </TouchableOpacity>
-          )}
-          keyExtractor={(item) => item}
-        />
-      </View>
-
-      {/* Featured Recipes */}
-      <View style={styles.sectionContainer}>
-        <View style={styles.sectionHeader}>
-          <Title style={styles.sectionTitle}>Featured Recipes</Title>
-          <TouchableOpacity
-            onPress={() => router.push({ pathname: '/(app)/(tabs)/search', params: { view: 'all' } })}
-            style={styles.seeAll}
-          >
-            <Text style={styles.seeAllText}>See All</Text>
-          </TouchableOpacity>
-        </View>
-        <FlatList
-          data={recipes.slice(0, 10)}
-          renderItem={renderRecipe}
-          keyExtractor={(item) => item.id.toString()}
-          ItemSeparatorComponent={() => <View style={styles.cardSeparator} />}
-          ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>No recipes found</Text>
+      ItemSeparatorComponent={() => <View style={styles.cardSeparator} />}
+      ListHeaderComponent={
+        <>
+          <View style={styles.welcomeContainer}>
+            <View style={styles.welcomeTextContainer}>
+              <Text style={styles.welcomeGreeting}>
+                {user ? `Welcome back, ${user.firstName}!` : 'Welcome to Cookbook!'}
+              </Text>
+              <Text style={styles.welcomeSubtitle}>Discover delicious recipes</Text>
             </View>
-          }
-        />
-      </View>
-    </ScrollView>
+            <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel="Open profile"
+              onPress={() => router.push('/(app)/(tabs)/profile')}
+            >
+              <Avatar.Icon size={56} icon="chef-hat" style={styles.welcomeAvatar} />
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.sectionContainer}>
+            <View style={styles.sectionHeader}>
+              <Title style={styles.sectionTitle}>Categories</Title>
+              <TouchableOpacity
+                accessibilityRole="button"
+                onPress={() => router.push('/(app)/(tabs)/categories')}
+                style={styles.seeAll}
+              >
+                <Text style={styles.seeAllText}>See All</Text>
+              </TouchableOpacity>
+            </View>
+            <FlatList
+              data={[
+                'Beef', 'Chicken', 'Dessert', 'Lamb', 'Pasta', 'Pork', 'Seafood', 'Vegetarian',
+              ]}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.categoryList}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={[styles.categoryChip, { backgroundColor: '#FFF3E0' }]}
+                  onPress={() => router.push({
+                    pathname: '/(app)/(tabs)/search',
+                    params: { category: item, view: 'category' },
+                  })}
+                >
+                  <Text style={styles.categoryChipText}>{item}</Text>
+                </TouchableOpacity>
+              )}
+              keyExtractor={(item) => item}
+            />
+          </View>
+
+          <View style={styles.sectionContainer}>
+            <View style={styles.sectionHeader}>
+              <Title style={styles.sectionTitle}>Featured Recipes</Title>
+              <TouchableOpacity
+                onPress={() => router.push({ pathname: '/(app)/(tabs)/search', params: { view: 'all' } })}
+                style={styles.seeAll}
+              >
+                <Text style={styles.seeAllText}>See All</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </>
+      }
+      ListEmptyComponent={
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>No recipes found</Text>
+        </View>
+      }
+      ListFooterComponent={(
+        <View style={styles.footerContainer}>
+          {loadingMore ? <ActivityIndicator size="small" color="#E85D04" /> : null}
+          {loadMoreError ? (
+            <>
+              <Text style={styles.errorText}>{loadMoreError}</Text>
+              <Button mode="contained" onPress={() => void fetchRecipes('more')} style={styles.retryButton}>
+                Retry
+              </Button>
+            </>
+          ) : null}
+        </View>
+      )}
+      onEndReached={() => void fetchRecipes('more')}
+      onEndReachedThreshold={0.5}
+      refreshing={refreshing}
+      onRefresh={onRefresh}
+    />
   );
 }

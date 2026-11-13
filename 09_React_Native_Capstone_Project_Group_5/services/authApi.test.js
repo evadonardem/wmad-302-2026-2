@@ -52,6 +52,7 @@ describe('local account registration', () => {
     expect(accounts[0]).not.toHaveProperty('password');
     expect(accounts[0].passwordHash).toMatch(/^\$2[aby]\$/);
     expect(JSON.stringify(accounts)).not.toContain(registration.password);
+    await expect(service.getLastLoginUsername()).resolves.toBe(registration.username);
 
     const restoredService = new AuthApiService();
     const restoredUser = await restoredService.hydrateFromStorage();
@@ -59,6 +60,7 @@ describe('local account registration', () => {
     await expect(restoredService.getMe()).resolves.toMatchObject({ username: registration.username });
 
     await restoredService.logout();
+    await expect(restoredService.getLastLoginUsername()).resolves.toBe(registration.username);
     const loggedInUser = await restoredService.login({
       username: registration.username,
       password: registration.password,

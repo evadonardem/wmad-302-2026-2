@@ -78,12 +78,12 @@ export default function FavoritesScreen() {
         <View style={styles.cardContent}>
           <Image source={{ uri: item.image }} style={styles.recipeImage} resizeMode="cover" />
           <View style={styles.info}>
-            <Title style={styles.title} numberOfLines={1}>{item.name}</Title>
+            <Title style={styles.title} numberOfLines={2}>{item.name}</Title>
             <View style={styles.meta}>
               <Chip style={styles.difficultyChip}>{item.difficulty}</Chip>
               <Chip style={styles.cuisineChip}>{item.cuisine}</Chip>
             </View>
-            <Text style={styles.details}>
+            <Text style={styles.details} numberOfLines={2}>
               ⏱️ {item.prepTimeMinutes + item.cookTimeMinutes}min · 👥 {item.servings} · ⭐ {item.rating}
             </Text>
           </View>

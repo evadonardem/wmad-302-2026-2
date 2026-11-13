@@ -178,6 +178,8 @@ export default function ProfileScreen() {
             <List.Item
               title="Browse Recipes"
               description="Explore the recipe collection"
+              titleNumberOfLines={1}
+              descriptionNumberOfLines={2}
               left={(props) => (
                 <MaterialCommunityIcons name="book-edit" size={24} color="#E85D04" style={props.style} />
               )}
@@ -188,6 +190,8 @@ export default function ProfileScreen() {
             <List.Item
               title="My Cookbook"
               description="Open your saved recipes"
+              titleNumberOfLines={1}
+              descriptionNumberOfLines={2}
               left={(props) => (
                 <MaterialCommunityIcons name="book" size={24} color="#E85D04" style={props.style} />
               )}
@@ -198,6 +202,8 @@ export default function ProfileScreen() {
             <List.Item
               title="Favorites"
               description="Your saved recipes"
+              titleNumberOfLines={1}
+              descriptionNumberOfLines={2}
               left={(props) => (
                 <MaterialCommunityIcons name="heart" size={24} color="#E85D04" style={props.style} />
               )}
@@ -214,6 +220,8 @@ export default function ProfileScreen() {
             <List.Item
               title="Edit Profile"
               description="Update your information"
+              titleNumberOfLines={1}
+              descriptionNumberOfLines={2}
               left={(props) => (
                 <MaterialCommunityIcons name="account-edit" size={24} color="#E85D04" style={props.style} />
               )}
@@ -224,6 +232,8 @@ export default function ProfileScreen() {
             <List.Item
               title="Settings"
               description="Notifications, theme, privacy"
+              titleNumberOfLines={1}
+              descriptionNumberOfLines={2}
               left={(props) => (
                 <MaterialCommunityIcons name="cog" size={24} color="#E85D04" style={props.style} />
               )}
@@ -251,7 +261,7 @@ export default function ProfileScreen() {
       </View>
     </ScrollView>
     <Portal>
-      <Dialog visible={editVisible} onDismiss={() => setEditVisible(false)}>
+      <Dialog visible={editVisible} onDismiss={() => setEditVisible(false)} style={styles.dialog}>
         <Dialog.Title>Edit Profile</Dialog.Title>
         <Dialog.Content>
           <TextInput
@@ -290,7 +300,7 @@ export default function ProfileScreen() {
         </Dialog.Actions>
       </Dialog>
 
-      <Dialog visible={settingsVisible} onDismiss={() => setSettingsVisible(false)}>
+      <Dialog visible={settingsVisible} onDismiss={() => setSettingsVisible(false)} style={styles.dialog}>
         <Dialog.Title>Recipe Display</Dialog.Title>
         <Dialog.Content>
           <List.Item
@@ -320,7 +330,7 @@ export default function ProfileScreen() {
         </Dialog.Actions>
       </Dialog>
 
-      <Dialog visible={logoutVisible} onDismiss={() => setLogoutVisible(false)}>
+      <Dialog visible={logoutVisible} onDismiss={() => setLogoutVisible(false)} style={styles.dialog}>
         <Dialog.Title>Log out?</Dialog.Title>
         <Dialog.Content>
           <Text>You will need to sign in again to access your cookbook.</Text>
