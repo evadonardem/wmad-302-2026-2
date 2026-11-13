@@ -1,7 +1,8 @@
 /**
  * Recipe Detail Screen  -  route: /recipe/{id}
  * Shows the full recipe: image, quick facts, rating, nutrition, ingredients
- * (tick them off as you cook), step-by-step instructions and tags.
+ * (tick them off as you cook), step-by-step instructions (with optional
+ * cooking timers) and tags.
  */
 import React, { useCallback, useEffect, useState } from 'react';
 import { View, ScrollView, Image, StyleSheet } from 'react-native';
@@ -21,6 +22,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { recipeApi } from '@/services/recipeApi';
 import { useFavorites } from '@/context/FavoritesContext';
 import { Recipe } from '@/types/recipe';
+import { StepTimer } from '@/components/StepTimer';
 
 /** Five stars, filled according to the rating (supports half stars). */
 function Stars({ rating }: { rating: number }) {
@@ -261,12 +263,13 @@ export default function RecipeDetailScreen() {
                   {index + 1}
                 </Text>
               </View>
-              <Text
-                variant="bodyLarge"
-                style={[styles.stepText, { color: theme.colors.onSurface }]}
-              >
-                {step}
-              </Text>
+              <View style={styles.stepBody}>
+                <Text variant="bodyLarge" style={{ color: theme.colors.onSurface }}>
+                  {step}
+                </Text>
+                {/* Optional timer: only shows when the step mentions a time */}
+                <StepTimer text={step} />
+              </View>
             </View>
           ))}
 
@@ -328,5 +331,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  stepText: { flex: 1 },
+  stepBody: { flex: 1, gap: 8 },
 });
