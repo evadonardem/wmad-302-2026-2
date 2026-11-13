@@ -94,6 +94,14 @@ export default function TabsLayout() {
           ),
         }}
       />
+
+      {/* The style files live in this folder, so hide them from the tab bar */}
+      <Tabs.Screen name="homeStyles" options={{ href: null }} />
+      <Tabs.Screen name="searchStyles" options={{ href: null }} />
+      <Tabs.Screen name="categoriesStyles" options={{ href: null }} />
+      <Tabs.Screen name="favoritesStyles" options={{ href: null }} />
+      <Tabs.Screen name="profileStyles" options={{ href: null }} />
+      
     </Tabs>
   );
 }

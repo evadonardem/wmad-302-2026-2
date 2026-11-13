@@ -37,7 +37,11 @@
     "extra": {
       "router": {
         "origin": false
+      },
+      "eas": {
+        "projectId": "adc8e5ba-815a-4d28-9eb2-1b62ec446643"
       }
-    }
+    },
+    "owner": "jec-a"
   }
 }
