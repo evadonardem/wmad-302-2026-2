@@ -1,9 +1,9 @@
 /**
  * Profile Screen - Cookbook
  * - Shows the logged-in user and real stats taken from their favorites
- * - Dark mode switch right on the screen (Settings still has Light / Dark / System)
+ * - Dark mode switch right on the screen
  * - Edit profile (PUT /users/{id}; saved on the device too, see authApi)
- * - Settings (appearance, clear favorites, about) and logout
+ * - Settings (clear favorites, about) and logout
  * Dialogs are used instead of Alert.alert because Alert does nothing on web.
  */
 import React, { useMemo, useState } from 'react';
@@ -12,7 +12,7 @@ import { useRouter } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
 import { useFavorites } from '@/context/FavoritesContext';
 import { useRecipeCatalog } from '@/hooks';
-import { ThemeMode, useThemeMode, useThemedStyles } from '@/context/ThemeContext';
+import { useThemeMode, useThemedStyles } from '@/context/ThemeContext';
 import {
   Avatar,
   Button,
@@ -22,7 +22,6 @@ import {
   HelperText,
   List,
   Portal,
-  SegmentedButtons,
   Snackbar,
   Switch,
   Text as PaperText,
@@ -46,9 +45,10 @@ const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const local = StyleSheet.create({
   saveError: { fontSize: 13, marginTop: 4 },
-  settingsRow: { marginBottom: 12 },
-  aboutText: { fontSize: 13, marginTop: 4 },
-  appearanceLabel: { marginBottom: 8 },
+  // Popups: a normal corner radius (Paper's default is a very round blob here)
+  dialog: { borderRadius: 24 },
+  settingsRow: { marginBottom: 20 },
+  aboutText: { fontSize: 13, marginTop: 10 },
   // Dark pill, same look as the buttons on Home and Login
   logoutButton: { borderRadius: 999 },
   logoutContent: { height: 52 },
@@ -251,7 +251,7 @@ export default function ProfileScreen() {
               <Divider style={styles.divider} />
               <List.Item
                 title="Settings"
-                description="Appearance, favorites, about the app"
+                description="Clear favorites, about the app"
                 left={menuIcon('cog')}
                 right={chevron}
                 onPress={() => setDialog('settings')}
@@ -283,7 +283,11 @@ export default function ProfileScreen() {
 
       <Portal>
         {/* Logout */}
-        <Dialog visible={dialog === 'logout'} onDismiss={() => setDialog(null)}>
+        <Dialog
+          visible={dialog === 'logout'}
+          onDismiss={() => setDialog(null)}
+          style={local.dialog}
+        >
           <Dialog.Title>Logout</Dialog.Title>
           <Dialog.Content>
             <PaperText>Are you sure you want to logout?</PaperText>
@@ -295,7 +299,11 @@ export default function ProfileScreen() {
         </Dialog>
 
         {/* Edit profile */}
-        <Dialog visible={dialog === 'edit'} onDismiss={() => !saving && setDialog(null)}>
+        <Dialog
+          visible={dialog === 'edit'}
+          onDismiss={() => !saving && setDialog(null)}
+          style={local.dialog}
+        >
           <Dialog.Title>Edit Profile</Dialog.Title>
           <Dialog.Content>
             <PaperTextInput
@@ -348,22 +356,13 @@ export default function ProfileScreen() {
         </Dialog>
 
         {/* Settings */}
-        <Dialog visible={dialog === 'settings'} onDismiss={() => setDialog(null)}>
+        <Dialog
+          visible={dialog === 'settings'}
+          onDismiss={() => setDialog(null)}
+          style={local.dialog}
+        >
           <Dialog.Title>Settings</Dialog.Title>
           <Dialog.Content>
-            <PaperText variant="titleSmall" style={local.appearanceLabel}>
-              Appearance
-            </PaperText>
-            <SegmentedButtons
-              style={local.settingsRow}
-              value={mode}
-              onValueChange={(value) => setMode(value as ThemeMode)}
-              buttons={[
-                { value: 'light', label: 'Light', icon: 'white-balance-sunny' },
-                { value: 'dark', label: 'Dark', icon: 'weather-night' },
-                { value: 'system', label: 'System' },
-              ]}
-            />
             <View style={local.settingsRow}>
               <Button
                 mode="outlined"
@@ -384,7 +383,11 @@ export default function ProfileScreen() {
         </Dialog>
 
         {/* Confirm clearing favorites */}
-        <Dialog visible={dialog === 'clearFavorites'} onDismiss={() => setDialog(null)}>
+        <Dialog
+          visible={dialog === 'clearFavorites'}
+          onDismiss={() => setDialog(null)}
+          style={local.dialog}
+        >
           <Dialog.Title>Clear favorites</Dialog.Title>
           <Dialog.Content>
             <PaperText>{`Remove all ${count} saved recipes? This cannot be undone.`}</PaperText>
