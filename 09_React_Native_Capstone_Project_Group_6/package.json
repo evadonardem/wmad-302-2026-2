@@ -38,6 +38,7 @@
   "devDependencies": {
     "@babel/core": "^7.24.0",
     "@testing-library/react-native": "^12.4.0",
+    "@types/jest": "^29.5.14",
     "@types/react": "~18.2.0",
     "@types/react-native": "^0.73.0",
     "babel-plugin-module-resolver": "^5.0.2",
@@ -51,7 +52,18 @@
     "typescript": "~5.3.0"
   },
   "jest": {
-    "preset": "jest-expo"
+    "preset": "jest-expo",
+    "moduleNameMapper": {
+      "^@/(.*)$": "<rootDir>/$1"
+    },
+    "collectCoverageFrom": [
+      "utils/**/*.{ts,tsx}",
+      "context/**/*.{ts,tsx}",
+      "hooks/**/*.{ts,tsx}",
+      "services/**/*.{ts,tsx}",
+      "components/**/*.{ts,tsx}",
+      "!**/__tests__/**"
+    ]
   },
   "private": true
 }
