@@ -11,7 +11,7 @@ import React, {
   useCallback,
   ReactNode,
 } from 'react';
-import { AuthState, AuthAction } from '@/types/auth';
+import { AuthState, AuthAction, ProfileUpdate } from '@/types/auth';
 import { authApi } from '@/services/authApi';
 
 // Initial state
@@ -99,6 +99,7 @@ interface AuthContextType extends AuthState {
   logout: () => void;
   clearError: () => void;
   refreshUser: () => Promise<void>;
+  updateUser: (data: ProfileUpdate) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -208,6 +209,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [state.isAuthenticated]);
 
+  // Edit profile: PUT /users/{id}, then save the change in state and storage
+  const updateUser = useCallback(
+    async (data: ProfileUpdate) => {
+      if (!state.user) return;
+      await authApi.updateProfile(state.user.id, data);
+      authApi.setTokens({ ...state.user, ...data });
+      dispatch({ type: 'AUTH_UPDATE_USER', payload: data });
+    },
+    [state.user]
+  );
+
   return (
     <AuthContext.Provider
       value={{
@@ -217,6 +229,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         logout,
         clearError,
         refreshUser,
+        updateUser,
       }}
     >
       {children}
