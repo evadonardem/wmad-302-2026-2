@@ -120,6 +120,7 @@ export default function CategoriesScreen() {
       />
 
       <FlatList
+        style={{ flex: 1 }}
         key={kind}
         data={items}
         renderItem={renderCategory}

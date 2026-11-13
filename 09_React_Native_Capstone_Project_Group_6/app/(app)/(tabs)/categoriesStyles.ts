@@ -8,8 +8,7 @@ export const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FFFDF8',
     paddingHorizontal: 16,
-    paddingTop: 20,
-    paddingBottom: 100,
+    paddingTop: 12,
   },
   pageTitle: {
     fontSize: 28,
@@ -35,7 +34,6 @@ export const styles = StyleSheet.create({
   card: {
     borderRadius: 16,
     backgroundColor: '#FFFFFF',
-    height: '100%',
   },
   cardContent: {
     padding: 20,
