@@ -1,5 +1,7 @@
 /**
- * Categories Screen Styles
+ * Categories Screen Styles - Cookbook
+ * Only hex colors already used elsewhere in the project, so useThemedStyles
+ * can convert them for dark mode. Theme-exact colors are set in categories.tsx.
  */
 import { StyleSheet } from 'react-native';
 
@@ -7,100 +9,102 @@ export const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FFFDF8',
-    paddingHorizontal: 16,
-    paddingTop: 12,
   },
-  pageTitle: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#3E2723',
-    marginBottom: 4,
-  },
-  pageSubtitle: {
-    fontSize: 16,
-    color: '#8D6E63',
-    marginBottom: 20,
-  },
-  gridWrapper: {
-    justifyContent: 'space-between',
-  },
-  gridContent: {
-    paddingBottom: 20,
-  },
-  categoryCard: {
-    width: '48%',
-    marginBottom: 16,
-  },
-  card: {
-    borderRadius: 16,
-    backgroundColor: '#FFFFFF',
-  },
-  cardContent: {
-    padding: 20,
-    alignItems: 'center',
-  },
-  iconContainer: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: '#FFF3E0',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  categoryName: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#3E2723',
-    textAlign: 'center',
-    marginBottom: 4,
-  },
-  categoryCount: {
-    fontSize: 12,
-    color: '#8D6E63',
-  },
-  separator: {
-    height: 8,
-    width: '100%',
-  },
-  loadingContainer: {
+  centerContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    padding: 24,
+    backgroundColor: '#FFFDF8',
   },
-  loadingText: {
+  centerText: {
     marginTop: 16,
     fontSize: 16,
     color: '#8D6E63',
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 24,
-  },
-  errorText: {
-    fontSize: 16,
-    color: '#C62828',
     textAlign: 'center',
   },
-  guideContainer: {
-    marginTop: 24,
-    padding: 16,
-    backgroundColor: '#FFF3E0',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#FFCC80',
+  retry: {
+    marginTop: 16,
+    borderRadius: 999,
   },
-  guideTitle: {
+
+  // Header
+  pageTitle: {
+    fontSize: 26,
+    fontWeight: '800',
+  },
+  pageSubtitle: {
     fontSize: 14,
-    fontWeight: '700',
-    color: '#E85D04',
-    marginBottom: 8,
+    color: '#8D6E63',
+    marginTop: 4,
+    marginBottom: 16,
   },
-  guideText: {
+
+  // Meal types / Tags toggle
+  toggleRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 20,
+  },
+  toggle: {
+    flex: 1,
+    minHeight: 44, // comfortable thumb target
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    backgroundColor: '#FFFFFF',
+  },
+  toggleText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#3E2723',
+  },
+
+  // Grid
+  gridContent: {
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 100, // Space for tab bar
+  },
+  gridWrapper: {
+    gap: 12,
+  },
+  separator: {
+    height: 12,
+  },
+  // maxWidth keeps a lone last tile from stretching across the whole row
+  tile: {
+    flex: 1,
+    maxWidth: '48.5%',
+    alignItems: 'center',
+    padding: 16,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    backgroundColor: '#FFFFFF',
+  },
+  photo: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    marginBottom: 12,
+  },
+  iconCircle: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tileName: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#3E2723',
+    alignSelf: 'stretch',
+    textAlign: 'center',
+  },
+  tileCount: {
     fontSize: 13,
-    color: '#5D4037',
-    lineHeight: 20,
+    color: '#8D6E63',
+    marginTop: 2,
   },
 });

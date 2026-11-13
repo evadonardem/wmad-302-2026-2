@@ -1,5 +1,7 @@
 /**
- * Profile Screen Styles - Shared
+ * Profile Screen Styles - Cookbook
+ * Covers every key profile.tsx uses. Only hex colors already used elsewhere
+ * in the project, so useThemedStyles can convert them for dark mode.
  */
 import { StyleSheet } from 'react-native';
 
@@ -10,121 +12,102 @@ export const styles = StyleSheet.create({
   },
   content: {
     paddingHorizontal: 16,
-    paddingTop: 20,
-    paddingBottom: 120,
+    paddingTop: 8,
+    paddingBottom: 100, // Space for tab bar
   },
   centerContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    padding: 24,
+    backgroundColor: '#FFFDF8',
   },
   notLoggedIn: {
     fontSize: 16,
     color: '#8D6E63',
+    textAlign: 'center',
   },
+
+  // Header: centered avatar, name underneath
   header: {
-    flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 24,
-    paddingVertical: 8,
+    marginBottom: 20,
   },
   avatar: {
-    marginRight: 16,
-    backgroundColor: '#FFF3E0',
+    backgroundColor: '#E85D04',
+    marginBottom: 14,
   },
   nameContainer: {
-    flex: 1,
+    alignItems: 'center',
   },
   name: {
     fontSize: 24,
-    fontWeight: '700',
+    fontWeight: '800',
     color: '#3E2723',
+    textAlign: 'center',
   },
   username: {
     fontSize: 14,
+    fontWeight: '600',
     color: '#E85D04',
-    fontWeight: '500',
     marginTop: 2,
   },
   email: {
-    fontSize: 13,
-    color: '#8D6E63',
-    marginTop: 2,
-  },
-  statsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    backgroundColor: '#FFF3E0',
-    borderRadius: 16,
-    paddingVertical: 20,
-    marginBottom: 24,
-  },
-  statItem: {
-    alignItems: 'center',
-  },
-  statValue: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#E85D04',
-  },
-  statLabel: {
-    fontSize: 12,
+    fontSize: 14,
     color: '#8D6E63',
     marginTop: 4,
   },
+
+  // Stats: three equal rounded tiles
+  statsContainer: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 20,
+  },
+  statItem: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 16,
+    borderRadius: 20,
+    backgroundColor: '#FFF3E0',
+  },
+  statValue: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: '#3E2723',
+  },
+  statLabel: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: '#8D6E63',
+    marginTop: 2,
+  },
+
+  // Menu card
   section: {
-    marginBottom: 16,
+    marginBottom: 24,
   },
   menuCard: {
-    borderRadius: 16,
+    borderRadius: 20,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
     overflow: 'hidden',
   },
   divider: {
-    marginLeft: 56,
+    marginHorizontal: 16,
   },
+
+  // Logout (the button itself is styled in profile.tsx)
   logoutContainer: {
-    marginTop: 24,
-    marginBottom: 24,
-  },
-  logoutButton: {
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#C62828',
-    height: 52,
-  },
-  logoutButtonContent: {
-    paddingHorizontal: 24,
-  },
-  logoutButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#C62828',
-  },
-  guideContainer: {
-    marginTop: 16,
-    padding: 16,
-    backgroundColor: '#FFF3E0',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#FFCC80',
-  },
-  guideTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#E85D04',
-    marginBottom: 8,
-  },
-  guideText: {
-    fontSize: 13,
-    color: '#5D4037',
-    lineHeight: 20,
+    marginBottom: 16,
   },
   version: {
     alignItems: 'center',
-    paddingVertical: 24,
+    marginTop: 8,
   },
   versionText: {
-    fontSize: 12,
-    color: '#BCAAA4',
+    fontSize: 13,
+    color: '#8D6E63',
   },
 });

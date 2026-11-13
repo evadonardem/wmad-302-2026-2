@@ -3,11 +3,14 @@
  * Lists the recipes the user has saved (IDs come from FavoritesContext, recipe
  * details are fetched from the API and cached). Remove with the heart; an
  * "Undo" snackbar appears after removing.
+ *
+ * Design: "Your favorites" header with a saved-count, rounded error banner and
+ * dark pill actions. Colors come from Paper's theme so light and dark work.
  */
 import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, FlatList, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Title, Button, Snackbar, useTheme } from 'react-native-paper';
+import { Button, Snackbar, useTheme } from 'react-native-paper';
 import { useFavorites } from '@/context/FavoritesContext';
 import { recipeApi } from '@/services/recipeApi';
 import { Recipe } from '@/types/recipe';
@@ -20,13 +23,12 @@ const local = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#FDEDED',
-    borderRadius: 8,
-    paddingLeft: 12,
-    marginHorizontal: 16,
-    marginTop: 8,
+    borderRadius: 16,
+    paddingLeft: 16,
+    paddingRight: 4,
+    marginBottom: 16,
   },
-  errorText: { flex: 1, color: '#C62828', fontSize: 13 },
+  errorText: { flex: 1, fontSize: 14 },
 });
 
 export default function FavoritesScreen() {
@@ -121,9 +123,9 @@ export default function FavoritesScreen() {
       {ids.length === 0 ? (
         <EmptyState
           icon="heart-outline"
-          title="No Favorites Yet"
+          title="No favorites yet"
           message="Tap the heart on a recipe to save it here"
-          actionLabel="Browse Recipes"
+          actionLabel="Browse recipes"
           onAction={() => router.push('/(app)/(tabs)/home')}
         />
       ) : (
@@ -136,12 +138,19 @@ export default function FavoritesScreen() {
           ListHeaderComponent={
             <View>
               <View style={styles.header}>
-                <Title style={styles.headerTitle}>Your Favorites ({ids.length})</Title>
+                <Text style={[styles.headerTitle, { color: colors.onSurface }]}>
+                  Your <Text style={{ color: colors.primary }}>favorites</Text>
+                </Text>
+                <Text style={styles.headerSubtitle}>
+                  {ids.length} saved {ids.length === 1 ? 'recipe' : 'recipes'}
+                </Text>
               </View>
               {loadError && (
                 <View style={[local.errorBanner, { backgroundColor: colors.errorContainer }]}>
                   <Text style={[local.errorText, { color: colors.error }]}>{loadError}</Text>
-                  <Button onPress={retry}>Retry</Button>
+                  <Button textColor={colors.error} onPress={retry}>
+                    Retry
+                  </Button>
                 </View>
               )}
             </View>

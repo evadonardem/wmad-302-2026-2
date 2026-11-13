@@ -1,8 +1,9 @@
 /**
  * Profile Screen - Cookbook
  * - Shows the logged-in user and real stats taken from their favorites
+ * - Dark mode switch right on the screen (Settings still has Light / Dark / System)
  * - Edit profile (PUT /users/{id}; saved on the device too, see authApi)
- * - Settings (clear favorites, about) and logout
+ * - Settings (appearance, clear favorites, about) and logout
  * Dialogs are used instead of Alert.alert because Alert does nothing on web.
  */
 import React, { useMemo, useState } from 'react';
@@ -23,6 +24,7 @@ import {
   Portal,
   SegmentedButtons,
   Snackbar,
+  Switch,
   Text as PaperText,
   TextInput as PaperTextInput,
   useTheme,
@@ -47,6 +49,10 @@ const local = StyleSheet.create({
   settingsRow: { marginBottom: 12 },
   aboutText: { fontSize: 13, marginTop: 4 },
   appearanceLabel: { marginBottom: 8 },
+  // Dark pill, same look as the buttons on Home and Login
+  logoutButton: { borderRadius: 999 },
+  logoutContent: { height: 52 },
+  logoutLabel: { fontSize: 15, fontWeight: '700' },
 });
 
 export default function ProfileScreen() {
@@ -74,7 +80,18 @@ export default function ProfileScreen() {
       />
     );
   };
-  
+  // Dark mode switch shown at the right of its menu row
+  const darkSwitch = function DarkSwitch() {
+    return (
+      <Switch
+        value={isDark}
+        onValueChange={(on) => setMode(on ? 'dark' : 'light')}
+        color={colors.primary}
+        accessibilityLabel="Dark mode"
+      />
+    );
+  };
+
   const { recipes: catalog } = useRecipeCatalog();
 
   const [dialog, setDialog] = useState<DialogName>(null);
@@ -166,6 +183,9 @@ export default function ProfileScreen() {
 
   const initials = `${user?.firstName?.[0] ?? ''}${user?.lastName?.[0] ?? ''}`.toUpperCase() || '?';
 
+  const themeDescription =
+    mode === 'system' ? 'Following your device setting' : isDark ? 'On' : 'Off';
+
   return (
     <>
       <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -222,8 +242,16 @@ export default function ProfileScreen() {
               />
               <Divider style={styles.divider} />
               <List.Item
+                title="Dark mode"
+                description={themeDescription}
+                left={menuIcon(isDark ? 'weather-night' : 'white-balance-sunny')}
+                right={darkSwitch}
+                onPress={() => setMode(isDark ? 'light' : 'dark')}
+              />
+              <Divider style={styles.divider} />
+              <List.Item
                 title="Settings"
-                description="Manage favorites, about the app"
+                description="Appearance, favorites, about the app"
                 left={menuIcon('cog')}
                 right={chevron}
                 onPress={() => setDialog('settings')}
@@ -235,13 +263,16 @@ export default function ProfileScreen() {
         {/* Logout Button */}
         <View style={styles.logoutContainer}>
           <Button
-            mode="outlined"
+            mode="contained"
             onPress={() => setDialog('logout')}
-            style={[styles.logoutButton, isDark && { borderColor: colors.primary }]}
-            contentStyle={styles.logoutButtonContent}
+            buttonColor={colors.onSurface}
+            textColor={colors.surface}
+            style={local.logoutButton}
+            contentStyle={local.logoutContent}
+            labelStyle={local.logoutLabel}
             icon="logout"
           >
-            <Text style={[styles.logoutButtonText, isDark && { color: colors.onSurface }]}>Logout</Text>
+            Logout
           </Button>
         </View>
 
