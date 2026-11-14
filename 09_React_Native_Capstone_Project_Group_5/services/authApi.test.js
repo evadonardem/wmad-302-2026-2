@@ -80,6 +80,23 @@ describe('local account registration', () => {
     ).rejects.toThrow('Incorrect username or password.');
   });
 
+  it('preserves passwords with leading or trailing spaces during login', async () => {
+    const service = new AuthApiService();
+    const accountWithSpacedPassword = {
+      ...registration,
+      username: 'spacedcook',
+      email: 'spaced@example.com',
+      password: ' Kitchen123! ',
+    };
+
+    await service.register(accountWithSpacedPassword);
+    await service.logout();
+
+    await expect(
+      service.login({ username: accountWithSpacedPassword.username, password: accountWithSpacedPassword.password })
+    ).resolves.toMatchObject({ username: accountWithSpacedPassword.username, authProvider: 'local' });
+  });
+
   it('suggests signing up when remote login credentials are rejected', async () => {
     const service = new AuthApiService();
     service.client.post = jest.fn().mockRejectedValue({

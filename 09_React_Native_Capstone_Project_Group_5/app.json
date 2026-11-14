@@ -5,7 +5,9 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.wmad302.cookbook"
@@ -26,9 +28,9 @@
         "origin": false
       },
       "eas": {
-        "projectId": "cookbook-capstone"
+        "projectId": "04585b86-7835-4075-911e-977ae521008d"
       }
     },
-    "owner": "wmad302"
+    "owner": "jdbdudh"
   }
 }

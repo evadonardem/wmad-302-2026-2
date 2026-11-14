@@ -4,6 +4,10 @@
 import { StyleSheet } from 'react-native';
 
 export const styles = StyleSheet.create({
+  screenContainer: {
+    flex: 1,
+    backgroundColor: '#FFFDF8',
+  },
   container: {
     flex: 1,
     backgroundColor: '#FFFDF8',
@@ -264,5 +268,21 @@ export const styles = StyleSheet.create({
     fontSize: 13,
     color: '#5D4037',
     lineHeight: 20,
+  },
+  scrollToTopButton: {
+    position: 'absolute',
+    right: 20,
+    bottom: 24,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: '#E85D04',
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 5,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
   },
 });

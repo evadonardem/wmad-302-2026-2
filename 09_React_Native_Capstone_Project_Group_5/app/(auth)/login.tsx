@@ -31,13 +31,13 @@ export default function LoginScreen() {
   const usernameEdited = React.useRef(false);
 
   const handleLogin = async () => {
-    if (!username.trim() || !password.trim()) {
+    if (!username.trim() || !password) {
       Alert.alert('Error', 'Please enter both username and password');
       return;
     }
 
     try {
-      await login(username.trim(), password.trim());
+      await login(username.trim(), password);
       // Redirect to intended page or home
       router.replace(redirect || '/(app)/(tabs)/home');
     } catch {

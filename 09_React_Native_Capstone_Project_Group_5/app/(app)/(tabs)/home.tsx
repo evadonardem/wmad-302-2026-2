@@ -18,6 +18,7 @@ import { recipeApi } from '@/services/recipeApi';
 import type { Recipe } from '@/types/recipe';
 import { getStorageItem } from '@/utils/storage';
 import { Card, Title, Chip, Avatar, Button } from 'react-native-paper';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { styles } from './homeStyles';
 
 interface RecipeDisplayPreferences {
@@ -39,7 +40,9 @@ export default function HomeScreen() {
   const [error, setError] = useState<string | null>(null);
   const [loadingMore, setLoadingMore] = useState(false);
   const [loadMoreError, setLoadMoreError] = useState<string | null>(null);
+  const [showScrollToTop, setShowScrollToTop] = useState(false);
   const [displayPreferences, setDisplayPreferences] = useState(DEFAULT_RECIPE_DISPLAY_PREFERENCES);
+  const listRef = useRef<FlatList<Recipe>>(null);
   const nextSkipRef = useRef(0);
   const hasMoreRef = useRef(true);
   const loadingMoreRef = useRef(false);
@@ -171,15 +174,17 @@ export default function HomeScreen() {
   }
 
   return (
-    <FlatList
-      style={styles.scrollView}
-      data={recipes}
-      renderItem={renderRecipe}
-      keyExtractor={(item) => item.id.toString()}
-      contentContainerStyle={styles.scrollContent}
-      ItemSeparatorComponent={() => <View style={styles.cardSeparator} />}
-      ListHeaderComponent={
-        <>
+    <View style={styles.screenContainer}>
+      <FlatList
+        ref={listRef}
+        style={styles.scrollView}
+        data={recipes}
+        renderItem={renderRecipe}
+        keyExtractor={(item) => item.id.toString()}
+        contentContainerStyle={styles.scrollContent}
+        ItemSeparatorComponent={() => <View style={styles.cardSeparator} />}
+        ListHeaderComponent={
+          <>
           <View style={styles.welcomeContainer}>
             <View style={styles.welcomeTextContainer}>
               <Text style={styles.welcomeGreeting}>
@@ -240,14 +245,14 @@ export default function HomeScreen() {
               </TouchableOpacity>
             </View>
           </View>
-        </>
-      }
-      ListEmptyComponent={
+          </>
+        }
+        ListEmptyComponent={
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyText}>No recipes found</Text>
         </View>
-      }
-      ListFooterComponent={(
+        }
+        ListFooterComponent={(
         <View style={styles.footerContainer}>
           {loadingMore ? <ActivityIndicator size="small" color="#E85D04" /> : null}
           {loadMoreError ? (
@@ -259,11 +264,27 @@ export default function HomeScreen() {
             </>
           ) : null}
         </View>
-      )}
-      onEndReached={() => void fetchRecipes('more')}
-      onEndReachedThreshold={0.5}
-      refreshing={refreshing}
-      onRefresh={onRefresh}
-    />
+        )}
+        onEndReached={() => void fetchRecipes('more')}
+        onEndReachedThreshold={0.5}
+        onScroll={(event) => {
+          const shouldShow = event.nativeEvent.contentOffset.y > 400;
+          setShowScrollToTop((current) => (current === shouldShow ? current : shouldShow));
+        }}
+        scrollEventThrottle={16}
+        refreshing={refreshing}
+        onRefresh={onRefresh}
+      />
+      {showScrollToTop ? (
+        <TouchableOpacity
+          style={styles.scrollToTopButton}
+          accessibilityRole="button"
+          accessibilityLabel="Scroll to top of recipes"
+          onPress={() => listRef.current?.scrollToOffset({ offset: 0, animated: true })}
+        >
+          <MaterialCommunityIcons name="arrow-up" size={24} color="#FFFFFF" />
+        </TouchableOpacity>
+      ) : null}
+    </View>
   );
 }

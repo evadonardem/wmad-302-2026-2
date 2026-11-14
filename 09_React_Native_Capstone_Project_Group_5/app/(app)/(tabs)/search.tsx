@@ -57,6 +57,7 @@ export default function SearchScreen() {
   const [searchButtonLoading, setSearchButtonLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [showScrollToTop, setShowScrollToTop] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loadMoreError, setLoadMoreError] = useState<string | null>(null);
   const [showRecipeRatings, setShowRecipeRatings] = useState<boolean | null>(null);
@@ -78,6 +79,7 @@ export default function SearchScreen() {
   const recipePageCacheRef = useRef(new Map<number, RecipesResponse>());
   const filterTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const retryModeRef = useRef<'initial' | 'refresh' | 'more'>('initial');
+  const listRef = useRef<FlatList<Recipe>>(null);
   const selectedCountry = COUNTRY_FILTERS.find(({ cuisine }) => cuisine === selectedCuisine)?.country ?? null;
   const activeFilters = [
     selectedCategory,
@@ -329,15 +331,17 @@ export default function SearchScreen() {
   };
 
   return (
-    <FlatList
-      style={styles.container}
-      data={results}
-      renderItem={renderResult}
-      keyExtractor={(item) => item.id.toString()}
-      contentContainerStyle={styles.content}
-      ItemSeparatorComponent={() => <View style={styles.separator} />}
-      ListHeaderComponent={
-        <>
+    <View style={styles.screenContainer}>
+      <FlatList
+        ref={listRef}
+        style={styles.container}
+        data={results}
+        renderItem={renderResult}
+        keyExtractor={(item) => item.id.toString()}
+        contentContainerStyle={styles.content}
+        ItemSeparatorComponent={() => <View style={styles.separator} />}
+        ListHeaderComponent={
+          <>
           <View style={styles.searchBarContainer}>
             <View style={styles.searchInputWrap}>
               <TextInput
@@ -464,9 +468,9 @@ export default function SearchScreen() {
                       : 'All Recipes'}
             </Title>
           </View>
-        </>
-      }
-      ListEmptyComponent={
+          </>
+        }
+        ListEmptyComponent={
         <View style={styles.emptyState}>
           {loading ? (
             <ActivityIndicator size="large" color="#E85D04" />
@@ -497,8 +501,8 @@ export default function SearchScreen() {
             </>
           )}
         </View>
-      }
-      ListFooterComponent={(
+        }
+        ListFooterComponent={(
         <View style={styles.footerContainer}>
           {loadingMore ? <ActivityIndicator size="small" color="#E85D04" /> : null}
           {loadMoreError && results.length > 0 ? (
@@ -510,8 +514,8 @@ export default function SearchScreen() {
             </>
           ) : null}
         </View>
-      )}
-      onEndReached={() => {
+        )}
+        onEndReached={() => {
         if (results.length > 0 && !loading && !error) {
           void fetchPage(
             'more',
@@ -521,17 +525,33 @@ export default function SearchScreen() {
             selectedCuisine
           );
         }
-      }}
-      onEndReachedThreshold={0.5}
-      refreshing={refreshing}
-      onRefresh={() => void fetchPage(
+        }}
+        onEndReachedThreshold={0.5}
+        onScroll={(event) => {
+          const shouldShow = event.nativeEvent.contentOffset.y > 400;
+          setShowScrollToTop((current) => (current === shouldShow ? current : shouldShow));
+        }}
+        scrollEventThrottle={16}
+        refreshing={refreshing}
+        onRefresh={() => void fetchPage(
         'refresh',
         query.trim(),
         selectedCategory,
         selectedDifficulty,
         selectedCuisine
-      )}
-      keyboardShouldPersistTaps="handled"
-    />
+        )}
+        keyboardShouldPersistTaps="handled"
+      />
+      {showScrollToTop ? (
+        <TouchableOpacity
+          style={styles.scrollToTopButton}
+          accessibilityRole="button"
+          accessibilityLabel="Scroll to top of recipes"
+          onPress={() => listRef.current?.scrollToOffset({ offset: 0, animated: true })}
+        >
+          <MaterialCommunityIcons name="arrow-up" size={24} color="#FFFFFF" />
+        </TouchableOpacity>
+      ) : null}
+    </View>
   );
 }
