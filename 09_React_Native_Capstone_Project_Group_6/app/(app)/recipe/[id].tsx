@@ -4,7 +4,8 @@
  * (tick them off as you cook), step-by-step instructions (with optional
  * cooking timers) and tags. The share button sends the recipe as text through
  * the phone's share sheet. Buttons under the quick facts save the recipe to a
- * collection, the meal plan or the shopping list.
+ * collection, the meal plan or the shopping list. "Cooking mode" opens the
+ * steps one at a time (route /cook/{id}).
  */
 import React, { useCallback, useEffect, useState } from 'react';
 import { View, ScrollView, Image, Share, StyleSheet } from 'react-native';
@@ -302,9 +303,19 @@ export default function RecipeDetailScreen() {
           <Divider style={styles.divider} />
 
           {/* Instructions */}
-          <Text variant="titleLarge" style={styles.sectionTitle}>
-            Instructions
-          </Text>
+          <View style={styles.ingredientsHeader}>
+            <Text variant="titleLarge" style={styles.ingredientsTitle}>
+              Instructions
+            </Text>
+            <Button
+              mode="contained-tonal"
+              compact
+              icon="chef-hat"
+              onPress={() => router.push(`/cook/${recipe.id}`)}
+            >
+              Cooking mode
+            </Button>
+          </View>
           {recipe.instructions.map((step, index) => (
             <View key={`${index}-${step.slice(0, 12)}`} style={styles.stepRow}>
               <View style={[styles.stepNumber, { backgroundColor: theme.colors.primary }]}>
