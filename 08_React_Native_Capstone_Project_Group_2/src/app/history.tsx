@@ -24,16 +24,28 @@ export default function HistoryScreen() {
         <List.Item
           key={entry}
           title={entry}
-          left={(props) => <List.Icon {...props} icon="city-variant-outline" />}
+          titleStyle={[styles.itemTitle, { color: theme.colors.onSurface }]}
+          style={[
+            styles.item,
+            { backgroundColor: theme.colors.surface, borderColor: theme.colors.outlineVariant },
+          ]}
+          left={(props) => (
+            <List.Icon {...props} icon="city-variant-outline" color={theme.colors.primary} />
+          )}
+          right={(props) => (
+            <List.Icon {...props} icon="chevron-right" color={theme.colors.onSurfaceVariant} />
+          )}
           onPress={() => handlePick(entry)}
           accessibilityLabel={`Search ${entry} again`}
         />
       ))}
 
       {entries.length === 0 && (
-        <Text variant="bodyMedium" style={[styles.empty, { color: theme.colors.onSurfaceVariant }]}>
-          No searches yet — run a search on the Search tab first.
-        </Text>
+        <View style={[styles.emptyBox, { borderColor: theme.colors.outlineVariant }]}>
+          <Text variant="bodyMedium" style={[styles.empty, { color: theme.colors.onSurfaceVariant }]}>
+            No searches yet — run a search on the Search tab first.
+          </Text>
+        </View>
       )}
     </View>
   );
@@ -43,16 +55,32 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
     width: '100%',
-    maxWidth: 720,
+    maxWidth: 820,
     alignSelf: 'center',
     padding: 20,
-    gap: 8,
+    gap: 10,
   },
   intro: {
     marginBottom: 8,
   },
+  item: {
+    borderWidth: 1,
+    borderRadius: 14,
+    overflow: 'hidden',
+    paddingVertical: 2,
+  },
+  itemTitle: {
+    fontWeight: '600',
+  },
+  emptyBox: {
+    borderWidth: 2,
+    borderStyle: 'dashed',
+    borderRadius: 14,
+    paddingVertical: 48,
+    paddingHorizontal: 16,
+    marginTop: 12,
+  },
   empty: {
     textAlign: 'center',
-    marginTop: 24,
   },
 });

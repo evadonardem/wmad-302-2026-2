@@ -7,6 +7,7 @@ import {
   type City,
   type Region,
 } from '@/services/geoPhotoService';
+import { useBreakpoint } from '@/useBreakpoint';
 
 type IslandFilter = 'all' | 'luzon' | 'visayas' | 'mindanao';
 
@@ -18,6 +19,10 @@ const ISLAND_FILTERS: { value: IslandFilter; label: string }[] = [
 ];
 
 export default function LocationForm({ onSearch }: { onSearch: (cityName: string) => void }) {
+  // Phones stack the search bar; tablets and up lay it out in a single row.
+  const { isPhone } = useBreakpoint();
+  const wide = !isPhone;
+
   // TODO 2.1 [State Trackers]
   const [regions, setRegions] = useState<Region[]>([]);
   const [cities, setCities] = useState<City[]>([]);
@@ -73,8 +78,12 @@ export default function LocationForm({ onSearch }: { onSearch: (cityName: string
   }, [selectedRegion]);
 
   // TODO 2.9 b: filtered region list (the region menu maps over THIS, not the raw array)
+  // Sorted A–Z so the region names appear in alphabetical order.
   const filteredRegions = useMemo(
-    () => (islandFilter === 'all' ? regions : regions.filter((r) => r.islandGroupCode === islandFilter)),
+    () =>
+      [...(islandFilter === 'all' ? regions : regions.filter((r) => r.islandGroupCode === islandFilter))].sort(
+        (a, b) => a.name.localeCompare(b.name),
+      ),
     [regions, islandFilter],
   );
 
@@ -105,28 +114,38 @@ export default function LocationForm({ onSearch }: { onSearch: (cityName: string
     <View style={styles.form}>
       {/* TODO 2.9 c: island-group chips */}
       <View style={styles.filterRow}>
-        {ISLAND_FILTERS.map((filter) => (
-          <Chip
-            key={filter.value}
-            selected={islandFilter === filter.value}
-            showSelectedOverlay
-            onPress={() => handleFilterChange(filter.value)}
-          >
-            {filter.label}
-          </Chip>
-        ))}
+        {ISLAND_FILTERS.map((filter) => {
+          const active = islandFilter === filter.value;
+          return (
+            <Chip
+              key={filter.value}
+              selected={active}
+              showSelectedOverlay
+              onPress={() => handleFilterChange(filter.value)}
+              style={[styles.chip, active && styles.chipActive]}
+              textStyle={[styles.chipText, active && styles.chipTextActive]}
+              selectedColor={active ? '#0b2545' : '#ffffff'}
+            >
+              {filter.label}
+            </Chip>
+          );
+        })}
       </View>
 
-      <View style={styles.row}>
-        <View style={styles.field}>
+      {/* White search bar floating on the hero */}
+      <View style={[styles.row, wide && styles.rowWide]}>
+        <View style={[styles.field, wide && styles.fieldWide]}>
           <Menu
             visible={regionMenuVisible}
             onDismiss={() => setRegionMenuVisible(false)}
+            contentStyle={styles.menu}
             anchor={
               <Button
                 mode="outlined"
                 icon="menu-down"
+                textColor="#0b2545"
                 contentStyle={styles.buttonContent}
+                labelStyle={styles.buttonLabel}
                 style={styles.button}
                 onPress={() => setRegionMenuVisible(true)}
               >
@@ -148,16 +167,21 @@ export default function LocationForm({ onSearch }: { onSearch: (cityName: string
           </Menu>
         </View>
 
-        <View style={styles.field}>
+        <View style={[styles.divider, wide && styles.dividerWide]} />
+
+        <View style={[styles.field, wide && styles.fieldWide]}>
           <Menu
             visible={cityMenuVisible}
             onDismiss={() => setCityMenuVisible(false)}
+            contentStyle={styles.menu}
             anchor={
               <Button
                 mode="outlined"
                 icon="menu-down"
                 disabled={!selectedRegion}
+                textColor="#0b2545"
                 contentStyle={styles.buttonContent}
+                labelStyle={styles.buttonLabel}
                 style={styles.button}
                 onPress={() => setCityMenuVisible(true)}
               >
@@ -183,8 +207,11 @@ export default function LocationForm({ onSearch }: { onSearch: (cityName: string
           mode="contained"
           icon="magnify"
           disabled={!selectedCityName}
+          buttonColor="#0e7c86"
+          textColor="#ffffff"
           contentStyle={styles.buttonContent}
-          style={styles.searchButton}
+          labelStyle={styles.searchLabel}
+          style={[styles.searchButton, wide && styles.searchButtonWide]}
           onPress={handleSubmit}
         >
           Search
@@ -197,30 +224,95 @@ export default function LocationForm({ onSearch }: { onSearch: (cityName: string
 const styles = StyleSheet.create({
   form: {
     width: '100%',
-    marginBottom: 24,
   },
   filterRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
     marginBottom: 14,
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
+  },
+  chip: {
+    backgroundColor: 'rgba(255, 255, 255, 0.14)',
+    borderRadius: 99,
+    borderWidth: 0,
+  },
+  chipActive: {
+    backgroundColor: '#ffffff',
+  },
+  chipText: {
+    color: '#ffffff',
+    fontWeight: '500',
+    fontSize: 13,
+  },
+  chipTextActive: {
+    color: '#0b2545',
+    fontWeight: '600',
   },
   row: {
     flexDirection: 'column',
-    gap: 12,
+    gap: 8,
     alignItems: 'stretch',
+    maxWidth: 640,
+    padding: 8,
+    backgroundColor: '#ffffff',
+    borderRadius: 14,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.25,
+    shadowRadius: 30,
+    elevation: 8,
+  },
+  rowWide: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    maxWidth: 920,
   },
   field: {
     width: '100%',
   },
+  fieldWide: {
+    flex: 1,
+    width: 'auto',
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#e3e8ee',
+    marginHorizontal: 12,
+  },
+  dividerWide: {
+    width: 1,
+    height: 28,
+    marginHorizontal: 0,
+  },
+  menu: {
+    borderRadius: 12,
+  },
   button: {
     width: '100%',
+    borderWidth: 0,
+    borderRadius: 10,
+    backgroundColor: 'transparent',
   },
   buttonContent: {
-    paddingVertical: 6,
+    height: 44,
+    flexDirection: 'row-reverse',
+    justifyContent: 'space-between',
+  },
+  buttonLabel: {
+    fontSize: 15,
+    fontWeight: '400',
   },
   searchButton: {
     width: '100%',
+    borderRadius: 10,
+  },
+  searchButtonWide: {
+    width: 'auto',
+    paddingHorizontal: 12,
+  },
+  searchLabel: {
+    fontSize: 15,
+    fontWeight: '600',
   },
 });

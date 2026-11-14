@@ -12,10 +12,21 @@ export default function TabsLayout() {
       screenOptions={{
         tabBarActiveTintColor: theme.colors.primary,
         tabBarInactiveTintColor: theme.colors.onSurfaceVariant,
-        tabBarStyle: { backgroundColor: theme.colors.surface },
-        headerStyle: { backgroundColor: theme.colors.surface },
+        tabBarStyle: {
+          backgroundColor: theme.colors.surface,
+          borderTopColor: theme.colors.outlineVariant,
+          borderTopWidth: 1,
+        },
+        tabBarLabelStyle: { fontWeight: '600', fontSize: 12 },
+        headerStyle: {
+          backgroundColor: theme.colors.surface,
+          borderBottomColor: theme.colors.outlineVariant,
+          borderBottomWidth: 1,
+          shadowOpacity: 0,
+          elevation: 0,
+        },
         headerTintColor: theme.colors.onSurface,
-        headerTitleStyle: { fontWeight: 'bold' },
+        headerTitleStyle: { fontWeight: '800', letterSpacing: -0.3 },
       }}
     >
       {/* TODO 4.2 [Tab Screen Registration] */}

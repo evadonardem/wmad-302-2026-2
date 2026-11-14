@@ -9,6 +9,7 @@ import { searchPhotosByLocation } from '@/services/geoPhotoService';
 import { usePhotos } from '@/photos';
 import { useSearchHistory } from '@/searchHistory';
 import { useThemeMode } from '@/themeMode';
+import { MAX_CONTENT_WIDTH, useBreakpoint } from '@/useBreakpoint';
 import React from 'react';
 
 export default function SearchScreen() {
@@ -16,6 +17,7 @@ export default function SearchScreen() {
   const { isDarkMode, setIsDarkMode } = useThemeMode();
   const { photos, setPhotos } = usePhotos();
   const { recordSearch } = useSearchHistory();
+  const { isPhone, isDesktop, pad } = useBreakpoint();
 
   // Handoff from the History screen arrives as ?q=<city>
   const { q } = useLocalSearchParams<{ q?: string }>();
@@ -75,28 +77,55 @@ export default function SearchScreen() {
         contentContainerStyle={styles.content}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
       >
-        <View style={styles.toolbar}>
-          <IconButton
-            icon="history"
-            accessibilityLabel="Recent searches"
-            onPress={() => router.push('/history')}
-          />
-          <IconButton
-            icon={isDarkMode ? 'white-balance-sunny' : 'moon-waning-crescent'}
-            accessibilityLabel="Toggle dark mode"
-            onPress={() => setIsDarkMode((prev) => !prev)}
-          />
+        {/* Hero: navy → teal with an amber glow, as in the redesign */}
+        <View style={[styles.hero, { paddingHorizontal: pad, paddingBottom: isPhone ? 36 : 56 }]}>
+          <View pointerEvents="none" style={styles.heroGlow} />
+          <View style={styles.heroInner}>
+            <View style={styles.toolbar}>
+              <IconButton
+                icon="history"
+                size={20}
+                iconColor="#ffffff"
+                style={styles.toolbarButton}
+                accessibilityLabel="Recent searches"
+                onPress={() => router.push('/history')}
+              />
+              <IconButton
+                icon={isDarkMode ? 'white-balance-sunny' : 'moon-waning-crescent'}
+                size={20}
+                iconColor="#ffffff"
+                style={styles.toolbarButton}
+                accessibilityLabel="Toggle dark mode"
+                onPress={() => setIsDarkMode((prev) => !prev)}
+              />
+            </View>
+
+            <View style={styles.pill}>
+              <Text variant="labelMedium" style={styles.pillText}>
+                Travel Guide 2026
+              </Text>
+            </View>
+
+            <Text
+              variant="headlineMedium"
+              style={[
+                styles.title,
+                isPhone ? { fontSize: 30, lineHeight: 36 } : isDesktop ? { fontSize: 52, lineHeight: 58 } : { fontSize: 42, lineHeight: 48 },
+              ]}
+            >
+              🇵🇭 Lakbay PH
+            </Text>
+            <Text variant="bodyLarge" style={styles.subtitle}>
+              Explore tourist spots across regions, cities, and municipalities in the Philippines
+            </Text>
+
+            <LocationForm onSearch={runSearch} />
+          </View>
         </View>
 
-        <Text variant="headlineMedium" style={[styles.title, { color: theme.colors.onBackground }]}>
-          🇵🇭 Lakbay PH
-        </Text>
-        <Text variant="bodyMedium" style={[styles.subtitle, { color: theme.colors.onSurfaceVariant }]}>
-          Explore tourist spots across regions, cities, and municipalities in the Philippines
-        </Text>
-
-        <LocationForm onSearch={runSearch} />
-        <MediaGallery photos={photos} loading={loading} />
+        <View style={[styles.main, { paddingHorizontal: pad }]}>
+          <MediaGallery photos={photos} loading={loading} />
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -107,22 +136,72 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
+    flexGrow: 1,
+  },
+  hero: {
     width: '100%',
-    maxWidth: 1100,
+    overflow: 'hidden',
+    backgroundColor: '#0c4158', // midpoint of #0b2545 → #0e5a6b
+    paddingTop: 12,
+  },
+  heroGlow: {
+    position: 'absolute',
+    top: -140,
+    right: -100,
+    width: 380,
+    height: 380,
+    borderRadius: 190,
+    backgroundColor: 'rgba(245, 158, 11, 0.22)',
+  },
+  heroInner: {
+    width: '100%',
+    maxWidth: MAX_CONTENT_WIDTH,
     alignSelf: 'center',
-    padding: 20,
   },
   toolbar: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
+    gap: 8,
+  },
+  toolbarButton: {
+    margin: 0,
+    width: 38,
+    height: 38,
+    borderRadius: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.14)',
+  },
+  pill: {
+    alignSelf: 'flex-start',
+    backgroundColor: 'rgba(255, 255, 255, 0.14)',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 99,
+    marginTop: 8,
+    marginBottom: 16,
+  },
+  pillText: {
+    color: '#ffffff',
+    fontWeight: '600',
   },
   title: {
-    fontWeight: 'bold',
-    textAlign: 'center',
+    color: '#ffffff',
+    fontWeight: '800',
+    letterSpacing: -0.8,
+    fontSize: 36,
+    lineHeight: 42,
   },
   subtitle: {
-    textAlign: 'center',
-    marginTop: 4,
-    marginBottom: 20,
+    color: '#cfe3ea',
+    marginTop: 10,
+    marginBottom: 26,
+    maxWidth: 520,
   },
-});
+  main: {
+    width: '100%',
+    maxWidth: MAX_CONTENT_WIDTH,
+    alignSelf: 'center',
+    paddingTop: 32,
+    paddingBottom: 56,
+  },
+}
+);
