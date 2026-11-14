@@ -3,9 +3,12 @@
  */
 
 import React from 'react';
+import type { DimensionValue } from 'react-native';
 import { View, Text, StyleSheet, Image, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Card, Title, Chip, Badge, Button } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+
+type MaterialCommunityIconName = React.ComponentProps<typeof MaterialCommunityIcons>['name'];
 
 interface RecipeCardProps {
   recipe: {
@@ -17,6 +20,7 @@ interface RecipeCardProps {
     prepTimeMinutes: number;
     cookTimeMinutes: number;
     servings: number;
+    caloriesPerServing: number;
     rating: number;
     reviewCount: number;
   };
@@ -106,8 +110,8 @@ export function ProductCard({ product, onPress, style }: ProductCardProps) {
             resizeMode="contain"
           />
           {product.discountPercentage > 0 && (
-            <Badge style={styles.discountBadge} variant="primary">
-              -{Math.round(product.discountPercentage)}%
+            <Badge style={styles.discountBadge}>
+              {`-${Math.round(product.discountPercentage)}%`}
             </Badge>
           )}
         </View>
@@ -137,7 +141,7 @@ interface CategoryChipProps {
   label: string;
   selected?: boolean;
   onPress: () => void;
-  icon?: string;
+  icon?: MaterialCommunityIconName;
   style?: any;
 }
 
@@ -186,7 +190,7 @@ export function LoadingOverlay({ visible, message = 'Loading...' }: LoadingOverl
 }
 
 interface EmptyStateProps {
-  icon: string;
+  icon: MaterialCommunityIconName;
   title: string;
   message: string;
   actionLabel?: string;
@@ -210,7 +214,7 @@ export function EmptyState({ icon, title, message, actionLabel, onAction }: Empt
 
 interface SkeletonProps {
   height?: number;
-  width?: number | string;
+  width?: DimensionValue;
   borderRadius?: number;
 }
 
