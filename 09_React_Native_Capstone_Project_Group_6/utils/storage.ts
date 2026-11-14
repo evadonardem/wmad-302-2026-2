@@ -5,15 +5,21 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { AuthUser } from '@/types/auth';
+import type { Recipe } from '@/types/recipe';
+import type { Collection, CookbookData, PlannedMeal, ShoppingItem } from '@/types/cookbook';
 
 const STORAGE_KEYS = {
   AUTH_USER: 'auth_user',
   FAVORITES: 'favorite_recipe_ids',
   LOCAL_ACCOUNTS: 'local_accounts',
   SETTINGS: 'user_settings',
+  COLLECTIONS: 'cookbook_collections',
+  MEAL_PLAN: 'cookbook_meal_plan',
+  SHOPPING: 'cookbook_shopping',
+  RECIPE_CACHE: 'recipes_offline_cache',
 } as const;
 
-export type StorageKey = (typeof STORAGE_KEYS)[keyof typeof STORAGE_KEYS];
+export type StorageKey = typeof STORAGE_KEYS[keyof typeof STORAGE_KEYS];
 
 /**
  * Get item from storage with type safety
@@ -66,7 +72,7 @@ export async function clearAllStorage(): Promise<void> {
  * Get multiple items at once
  */
 export async function getMultipleStorageItems<T extends Record<string, unknown>>(
-  keys: StorageKey[],
+  keys: StorageKey[]
 ): Promise<T> {
   try {
     const pairs = await AsyncStorage.multiGet(keys);
@@ -105,8 +111,7 @@ export const authStorage = {
 };
 
 export const favoritesStorage = {
-  getIds: async (): Promise<number[]> =>
-    (await getStorageItem<number[]>(STORAGE_KEYS.FAVORITES)) ?? [],
+  getIds: async (): Promise<number[]> => (await getStorageItem<number[]>(STORAGE_KEYS.FAVORITES)) ?? [],
   setIds: (ids: number[]) => setStorageItem(STORAGE_KEYS.FAVORITES, ids),
   addId: async (id: number) => {
     const ids = await favoritesStorage.getIds();
@@ -152,8 +157,26 @@ export const accountsStorage = {
   update: async (id: number, changes: Partial<LocalAccount['user']>): Promise<void> => {
     const all = await accountsStorage.getAll();
     const next = all.map((account) =>
-      account.user.id === id ? { ...account, user: { ...account.user, ...changes } } : account,
+      account.user.id === id ? { ...account, user: { ...account.user, ...changes } } : account
     );
     await setStorageItem(STORAGE_KEYS.LOCAL_ACCOUNTS, next);
   },
+};
+
+/** Collections, meal plan and shopping list (see CookbookContext). */
+export const cookbookStorage = {
+  load: async (): Promise<CookbookData> => ({
+    collections: (await getStorageItem<Collection[]>(STORAGE_KEYS.COLLECTIONS)) ?? [],
+    mealPlan: (await getStorageItem<PlannedMeal[]>(STORAGE_KEYS.MEAL_PLAN)) ?? [],
+    shopping: (await getStorageItem<ShoppingItem[]>(STORAGE_KEYS.SHOPPING)) ?? [],
+  }),
+  saveCollections: (value: Collection[]) => setStorageItem(STORAGE_KEYS.COLLECTIONS, value),
+  saveMealPlan: (value: PlannedMeal[]) => setStorageItem(STORAGE_KEYS.MEAL_PLAN, value),
+  saveShopping: (value: ShoppingItem[]) => setStorageItem(STORAGE_KEYS.SHOPPING, value),
+};
+
+/** Copy of the recipe catalog so recipes can be opened without internet. */
+export const recipeCacheStorage = {
+  get: async (): Promise<Recipe[]> => (await getStorageItem<Recipe[]>(STORAGE_KEYS.RECIPE_CACHE)) ?? [],
+  set: (recipes: Recipe[]) => setStorageItem(STORAGE_KEYS.RECIPE_CACHE, recipes),
 };
