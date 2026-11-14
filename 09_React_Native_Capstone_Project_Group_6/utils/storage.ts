@@ -23,6 +23,7 @@ const STORAGE_KEYS = {
   MEAL_PLAN: 'cookbook_meal_plan',
   SHOPPING: 'cookbook_shopping',
   NOTES: 'cookbook_notes',
+  CALORIE_GOAL: 'cookbook_calorie_goal',
   RECIPE_CACHE: 'recipes_offline_cache',
 } as const;
 
@@ -177,11 +178,13 @@ export const cookbookStorage = {
     mealPlan: (await getStorageItem<PlannedMeal[]>(STORAGE_KEYS.MEAL_PLAN)) ?? [],
     shopping: (await getStorageItem<ShoppingItem[]>(STORAGE_KEYS.SHOPPING)) ?? [],
     notes: (await getStorageItem<RecipeNotes>(STORAGE_KEYS.NOTES)) ?? {},
+    calorieGoal: (await getStorageItem<number>(STORAGE_KEYS.CALORIE_GOAL)) ?? null,
   }),
   saveCollections: (value: Collection[]) => setStorageItem(STORAGE_KEYS.COLLECTIONS, value),
   saveMealPlan: (value: PlannedMeal[]) => setStorageItem(STORAGE_KEYS.MEAL_PLAN, value),
   saveShopping: (value: ShoppingItem[]) => setStorageItem(STORAGE_KEYS.SHOPPING, value),
   saveNotes: (value: RecipeNotes) => setStorageItem(STORAGE_KEYS.NOTES, value),
+  saveCalorieGoal: (value: number | null) => setStorageItem(STORAGE_KEYS.CALORIE_GOAL, value),
 };
 
 /** Copy of the recipe catalog so recipes can be opened without internet. */

@@ -3,6 +3,8 @@
  * A weekly planner (Monday to Sunday). Each day has Breakfast / Lunch /
  * Dinner / Snack slots. Use the arrows to look at other weeks, and send the
  * week's ingredients to the shopping list in one tap.
+ * A Calories card compares the plan with a daily goal for a day, the week or
+ * the month (each planned meal counts as 1 serving).
  */
 import React, { useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
@@ -13,10 +15,14 @@ import {
   Button,
   Card,
   Dialog,
+  HelperText,
   IconButton,
   Portal,
+  ProgressBar,
+  SegmentedButtons,
   Snackbar,
   Text,
+  TextInput,
   useTheme,
 } from 'react-native-paper';
 import { useCookbook } from '@/context/CookbookContext';
@@ -24,6 +30,16 @@ import { useRecipeCatalog } from '@/hooks';
 import { OfflineBanner } from '@/components/OfflineBanner';
 import { RecipePickerDialog } from '@/components/RecipePickerDialog';
 import { MEAL_SLOTS, type MealSlot } from '@/types/cookbook';
+import {
+  type CaloriePeriod,
+  formatKcal,
+  goalForPeriod,
+  goalProgress,
+  monthDateKeys,
+  monthLabel,
+  parseCalorieGoal,
+  totalCalories,
+} from '@/utils/calories';
 import {
   DAY_NAMES,
   addWeeks,
@@ -43,19 +59,70 @@ export default function MealPlanScreen() {
   const router = useRouter();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
-  const { mealPlan, planMeal, unplanMeal, clearPlanDates, addRecipesToShopping } = useCookbook();
+  const {
+    mealPlan,
+    planMeal,
+    unplanMeal,
+    clearPlanDates,
+    addRecipesToShopping,
+    calorieGoal,
+    setCalorieGoal,
+  } = useCookbook();
   const { recipes, loading } = useRecipeCatalog();
 
   const [weekOffset, setWeekOffset] = useState(0);
   const [pickTarget, setPickTarget] = useState<PickTarget | null>(null);
   const [confirmClear, setConfirmClear] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [period, setPeriod] = useState<CaloriePeriod>('week');
+  const [goalDialog, setGoalDialog] = useState(false);
+  const [goalText, setGoalText] = useState('');
+  const [goalError, setGoalError] = useState<string | null>(null);
 
   const byId = useMemo(() => new Map(recipes.map((r) => [r.id, r])), [recipes]);
   const days = useMemo(() => getWeekDays(addWeeks(new Date(), weekOffset)), [weekOffset]);
   const dateKeys = useMemo(() => days.map(toDateKey), [days]);
   const todayKey = toDateKey(new Date());
   const plannedCount = mealPlan.filter((m) => dateKeys.includes(m.date)).length;
+
+  // ---- calories ----
+  const caloriesById = useMemo(() => new Map(recipes.map((r) => [r.id, r.caloriesPerServing])), [recipes]);
+
+  // Which days the Calories card adds up
+  const summaryKeys = useMemo(() => {
+    if (period === 'week') return dateKeys;
+    if (period === 'month') return monthDateKeys(days[0]);
+    return [dateKeys.includes(todayKey) ? todayKey : dateKeys[0]]; // today, or Monday of another week
+  }, [period, dateKeys, days, todayKey]);
+  const summaryTotal = totalCalories(mealPlan, summaryKeys, caloriesById);
+  const summaryGoal = goalForPeriod(calorieGoal, summaryKeys.length);
+  const progress = summaryGoal !== null ? goalProgress(summaryTotal, summaryGoal) : null;
+  const summaryLabel =
+    period === 'week'
+      ? formatWeekRange(days)
+      : period === 'month'
+        ? monthLabel(days[0])
+        : (() => {
+          const day = days.find((d) => toDateKey(d) === summaryKeys[0]) ?? days[0];
+          return `${DAY_NAMES[day.getDay()]} · ${formatDayShort(day)}`;
+        })();
+
+  const openGoalDialog = () => {
+    setGoalText(calorieGoal !== null ? String(calorieGoal) : '');
+    setGoalError(null);
+    setGoalDialog(true);
+  };
+
+  const saveGoal = () => {
+    const result = parseCalorieGoal(goalText);
+    if (result.error) {
+      setGoalError(result.error);
+      return;
+    }
+    setCalorieGoal(result.value);
+    setGoalDialog(false);
+    setMessage(result.value === null ? 'Calorie goal removed' : `Daily goal set to ${formatKcal(result.value)} kcal`);
+  };
 
   const goBack = () => {
     if (router.canGoBack()) router.back();
@@ -89,6 +156,69 @@ export default function MealPlanScreen() {
       <ScrollView contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 24 }]}>
         <OfflineBanner />
 
+        {/* Calories: plan vs. daily goal */}
+        <Card style={styles.calorieCard} mode="outlined">
+          <Card.Content>
+            <View style={styles.calorieHeader}>
+              <Text variant="titleMedium" style={{ color: colors.onSurface }}>
+                Calories
+              </Text>
+              <Button
+                compact
+                icon={calorieGoal !== null ? 'pencil-outline' : 'target'}
+                onPress={openGoalDialog}
+              >
+                {calorieGoal !== null ? `${formatKcal(calorieGoal)} / day` : 'Set daily goal'}
+              </Button>
+            </View>
+            <SegmentedButtons
+              value={period}
+              onValueChange={(value) => setPeriod(value as CaloriePeriod)}
+              density="small"
+              buttons={[
+                { value: 'day', label: 'Day' },
+                { value: 'week', label: 'Week' },
+                { value: 'month', label: 'Month' },
+              ]}
+            />
+            <Text variant="headlineSmall" style={[styles.calorieTotal, { color: colors.onSurface }]}>
+              {formatKcal(summaryTotal)} kcal
+              {summaryGoal !== null && (
+                <Text variant="titleMedium" style={{ color: colors.onSurfaceVariant }}>
+                  {` / ${formatKcal(summaryGoal)}`}
+                </Text>
+              )}
+            </Text>
+            <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant }}>
+              {summaryLabel}
+            </Text>
+            {progress ? (
+              <>
+                <ProgressBar
+                  progress={progress.fraction}
+                  color={progress.over ? colors.error : colors.primary}
+                  style={styles.calorieBar}
+                />
+                <Text
+                  variant="labelLarge"
+                  style={{ color: progress.over ? colors.error : colors.onSurfaceVariant }}
+                >
+                  {progress.over
+                    ? `${formatKcal(-progress.remaining)} kcal over your goal`
+                    : `${formatKcal(progress.remaining)} kcal left (${progress.percent}%)`}
+                </Text>
+              </>
+            ) : (
+              <Text variant="bodySmall" style={[styles.calorieHint, { color: colors.onSurfaceVariant }]}>
+                Set a daily goal to see how your plan compares.
+              </Text>
+            )}
+            <Text variant="bodySmall" style={[styles.calorieHint, { color: colors.outline }]}>
+              Each planned meal counts as 1 serving.
+            </Text>
+          </Card.Content>
+        </Card>
+
         {/* Week switcher */}
         <View style={styles.weekRow}>
           <IconButton icon="chevron-left" onPress={() => setWeekOffset((w) => w - 1)} accessibilityLabel="Previous week" />
@@ -109,6 +239,7 @@ export default function MealPlanScreen() {
         {days.map((day) => {
           const key = toDateKey(day);
           const isToday = key === todayKey;
+          const dayKcal = totalCalories(mealPlan, [key], caloriesById);
           return (
             <Card
               key={key}
@@ -116,10 +247,20 @@ export default function MealPlanScreen() {
               style={[styles.dayCard, isToday && { borderColor: colors.primary, borderWidth: 2 }]}
             >
               <Card.Content>
-                <Text variant="titleMedium" style={{ color: isToday ? colors.primary : colors.onSurface }}>
-                  {DAY_NAMES[day.getDay()]} · {formatDayShort(day)}
-                  {isToday ? ' (today)' : ''}
-                </Text>
+                <View style={styles.dayHeader}>
+                  <Text
+                    variant="titleMedium"
+                    style={[styles.flex, { color: isToday ? colors.primary : colors.onSurface }]}
+                  >
+                    {DAY_NAMES[day.getDay()]} · {formatDayShort(day)}
+                    {isToday ? ' (today)' : ''}
+                  </Text>
+                  {dayKcal > 0 && (
+                    <Text variant="labelLarge" style={{ color: colors.onSurfaceVariant }}>
+                      {formatKcal(dayKcal)} kcal
+                    </Text>
+                  )}
+                </View>
 
                 {MEAL_SLOTS.map((slot) => {
                   const meals = mealPlan.filter((m) => m.date === key && m.slot === slot);
@@ -198,6 +339,33 @@ export default function MealPlanScreen() {
       />
 
       <Portal>
+        <Dialog visible={goalDialog} onDismiss={() => setGoalDialog(false)} style={styles.dialog}>
+          <Dialog.Title>Daily calorie goal</Dialog.Title>
+          <Dialog.Content>
+            <TextInput
+              label="Calories per day (kcal)"
+              mode="outlined"
+              keyboardType="number-pad"
+              value={goalText}
+              onChangeText={(text) => {
+                setGoalText(text);
+                setGoalError(null);
+              }}
+              onSubmitEditing={saveGoal}
+              error={!!goalError}
+              autoFocus
+              maxLength={5}
+            />
+            <HelperText type={goalError ? 'error' : 'info'} visible>
+              {goalError ?? 'Leave empty and save to remove the goal.'}
+            </HelperText>
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={() => setGoalDialog(false)}>Cancel</Button>
+            <Button onPress={saveGoal}>Save</Button>
+          </Dialog.Actions>
+        </Dialog>
+
         <Dialog visible={confirmClear} onDismiss={() => setConfirmClear(false)} style={styles.dialog}>
           <Dialog.Title>Clear this week</Dialog.Title>
           <Dialog.Content>
@@ -231,6 +399,12 @@ const styles = StyleSheet.create({
   weekRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 },
   weekLabel: { alignItems: 'center' },
   dayCard: { marginBottom: 12 },
+  dayHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
+  calorieCard: { marginBottom: 12 },
+  calorieHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 },
+  calorieTotal: { marginTop: 12 },
+  calorieBar: { height: 8, borderRadius: 4, marginTop: 12, marginBottom: 8 },
+  calorieHint: { marginTop: 6 },
   slotRow: { flexDirection: 'row', alignItems: 'center', marginTop: 6 },
   slotName: { width: 84 },
   mealRow: { flexDirection: 'row', alignItems: 'center' },

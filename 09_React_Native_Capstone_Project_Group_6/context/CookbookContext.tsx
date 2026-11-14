@@ -30,6 +30,7 @@ interface CookbookContextType {
   mealPlan: PlannedMeal[];
   shopping: ShoppingItem[];
   notes: RecipeNotes;
+  calorieGoal: number | null;
 
   createCollection: (name: string) => string; // returns the new id
   renameCollection: (id: string, name: string) => void;
@@ -51,6 +52,9 @@ interface CookbookContextType {
 
   /** Save a personal note for a recipe (empty text deletes it) */
   setNote: (recipeId: number, text: string) => void;
+
+  /** Set the daily calorie goal in kcal (null removes it) */
+  setCalorieGoal: (kcal: number | null) => void;
 }
 
 const CookbookContext = createContext<CookbookContextType | undefined>(undefined);
@@ -77,7 +81,7 @@ export function CookbookProvider({ children }: { children: ReactNode }) {
         if (active)
           dispatch({
             type: 'COOKBOOK_HYDRATE',
-            payload: { collections: [], mealPlan: [], shopping: [], notes: {} },
+            payload: { collections: [], mealPlan: [], shopping: [], notes: {}, calorieGoal: null },
           });
       });
     return () => {
@@ -103,6 +107,11 @@ export function CookbookProvider({ children }: { children: ReactNode }) {
     if (state.isLoading) return;
     cookbookStorage.saveNotes(state.notes).catch(() => undefined);
   }, [state.notes, state.isLoading]);
+
+  useEffect(() => {
+    if (state.isLoading) return;
+    cookbookStorage.saveCalorieGoal(state.calorieGoal).catch(() => undefined);
+  }, [state.calorieGoal, state.isLoading]);
 
   const createCollection = useCallback(
     (name: string) => {
@@ -161,6 +170,11 @@ export function CookbookProvider({ children }: { children: ReactNode }) {
   const clearCheckedShopping = useCallback(() => dispatch({ type: 'SHOPPING_CLEAR_CHECKED' }), []);
   const clearShopping = useCallback(() => dispatch({ type: 'SHOPPING_CLEAR' }), []);
 
+  const setCalorieGoal = useCallback(
+    (kcal: number | null) => dispatch({ type: 'GOAL_SET', payload: kcal }),
+    []
+  );
+
   const setNote = useCallback(
     (recipeId: number, text: string) => dispatch({ type: 'NOTE_SET', payload: { recipeId, text } }),
     []
@@ -173,6 +187,7 @@ export function CookbookProvider({ children }: { children: ReactNode }) {
       mealPlan: state.mealPlan,
       shopping: state.shopping,
       notes: state.notes,
+      calorieGoal: state.calorieGoal,
       createCollection,
       renameCollection,
       deleteCollection,
@@ -189,6 +204,7 @@ export function CookbookProvider({ children }: { children: ReactNode }) {
       clearCheckedShopping,
       clearShopping,
       setNote,
+      setCalorieGoal,
     }),
     [
       state,
@@ -208,6 +224,7 @@ export function CookbookProvider({ children }: { children: ReactNode }) {
       clearCheckedShopping,
       clearShopping,
       setNote,
+      setCalorieGoal,
     ]
   );
 

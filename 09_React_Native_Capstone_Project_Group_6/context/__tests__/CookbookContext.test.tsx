@@ -20,6 +20,7 @@ describe('cookbookReducer - collections', () => {
         mealPlan: [],
         shopping: [],
         notes: {},
+        calorieGoal: null,
       },
     });
     expect(next.isLoading).toBe(false);
@@ -144,6 +145,27 @@ describe('cookbookReducer - notes', () => {
   });
 });
 
+describe('cookbookReducer - calorie goal', () => {
+  it('sets the goal', () => {
+    expect(cookbookReducer(loaded, { type: 'GOAL_SET', payload: 2000 }).calorieGoal).toBe(2000);
+  });
+
+  it('rounds a decimal goal', () => {
+    expect(cookbookReducer(loaded, { type: 'GOAL_SET', payload: 1850.6 }).calorieGoal).toBe(1851);
+  });
+
+  it('null removes the goal', () => {
+    const withGoal = cookbookReducer(loaded, { type: 'GOAL_SET', payload: 2000 });
+    expect(cookbookReducer(withGoal, { type: 'GOAL_SET', payload: null }).calorieGoal).toBeNull();
+  });
+
+  it('ignores zero, negative and non-numeric goals', () => {
+    expect(cookbookReducer(loaded, { type: 'GOAL_SET', payload: 0 }).calorieGoal).toBeNull();
+    expect(cookbookReducer(loaded, { type: 'GOAL_SET', payload: -5 }).calorieGoal).toBeNull();
+    expect(cookbookReducer(loaded, { type: 'GOAL_SET', payload: NaN }).calorieGoal).toBeNull();
+  });
+});
+
 describe('CookbookProvider / useCookbook', () => {
   const wrapper = ({ children }: { children: React.ReactNode }) => (
     <CookbookProvider>{children}</CookbookProvider>
@@ -199,6 +221,20 @@ describe('CookbookProvider / useCookbook', () => {
       const saved = JSON.parse((await AsyncStorage.getItem('cookbook_notes')) as string);
       expect(saved[3]).toBe('Used oat milk');
     });
+  });
+
+  it('saves the calorie goal and restores it on the next start', async () => {
+    const first = renderHook(() => useCookbook(), { wrapper });
+    await waitFor(() => expect(first.result.current.isLoading).toBe(false));
+    act(() => first.result.current.setCalorieGoal(1800));
+    await waitFor(async () => {
+      expect(await AsyncStorage.getItem('cookbook_calorie_goal')).toBe('1800');
+    });
+    first.unmount();
+
+    const second = renderHook(() => useCookbook(), { wrapper });
+    await waitFor(() => expect(second.result.current.isLoading).toBe(false));
+    expect(second.result.current.calorieGoal).toBe(1800);
   });
 
   it('plans a meal and adds recipe ingredients to the list', async () => {

@@ -33,6 +33,8 @@ export interface CookbookData {
   mealPlan: PlannedMeal[];
   shopping: ShoppingItem[];
   notes: RecipeNotes;
+  /** Daily calorie goal in kcal, or null when not set */
+  calorieGoal: number | null;
 }
 
 /** Personal note per recipe id, e.g. { 12: "Add less salt next time" } */

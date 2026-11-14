@@ -1,13 +1,13 @@
 /**
  * Home Screen - Cookbook Discover Tab
- * Recipes load 10 at a time and more load as you scroll (GET /recipes?limit&skip).
- * Pull down to refresh. Category chips open Search filtered by tag.
+ * The cached recipe catalog is shown 10 at a time as you scroll. Pull down to
+ * refresh it. Category chips open Search filtered by tag.
  *
  * Design: soft hero banner, a centered "Categories" row of photo tiles you swipe
  * sideways, then the recipe feed. Colors come from Paper's theme so light and
  * dark both work.
  */
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   AccessibilityInfo,
   Animated,
@@ -20,7 +20,6 @@ import {
   Image,
   ScrollView,
   TouchableOpacity,
-  ActivityIndicator,
   useWindowDimensions,
 } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -28,10 +27,8 @@ import { Button, useTheme } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '@/context/AuthContext';
 import { useFavorites } from '@/context/FavoritesContext';
-import { recipeApi } from '@/services/recipeApi';
 import { useRecipeCatalog } from '@/hooks';
 import { countBy } from '@/utils/recipeFilters';
-import { Recipe } from '@/types/recipe';
 import { RecipeCard, LoadingState, ErrorState } from '@/components/CommonComponents';
 import { CartButton } from '@/components/CartButton';
 import { useThemeMode, useThemedStyles } from '@/context/ThemeContext';
@@ -157,8 +154,6 @@ const bgStyles = StyleSheet.create({
 
 const PAGE_SIZE = 10;
 
-type LoadMode = 'first' | 'more' | 'refresh';
-
 export default function HomeScreen() {
   const router = useRouter();
   const styles = useThemedStyles(rawStyles);
@@ -170,7 +165,12 @@ export default function HomeScreen() {
 
   // Category tiles: the 8 most common tags, each shown with the photo of the
   // first recipe that has that tag
-  const { recipes: catalog } = useRecipeCatalog();
+  const {
+    recipes: catalog,
+    loading,
+    error,
+    reload,
+  } = useRecipeCatalog();
   const topCategories = useMemo(
     () =>
       countBy(catalog, (r) => r.tags)
@@ -182,47 +182,19 @@ export default function HomeScreen() {
     [catalog]
   );
 
-  const [recipes, setRecipes] = useState<Recipe[]>([]);
-  const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const busy = useRef(false); // stops overlapping requests (e.g. fast scrolling)
-
-  const fetchPage = useCallback(async (skip: number, mode: LoadMode) => {
-    if (busy.current) return;
-    busy.current = true;
-    if (mode === 'first') setLoading(true);
-    if (mode === 'more') setLoadingMore(true);
-    setError(null);
-    try {
-      const data = await recipeApi.getRecipes({ limit: PAGE_SIZE, skip });
-      setTotal(data.total);
-      setRecipes((prev) => (mode === 'more' ? [...prev, ...data.recipes] : data.recipes));
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load recipes');
-    } finally {
-      setLoading(false);
-      setLoadingMore(false);
-      setRefreshing(false);
-      busy.current = false;
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchPage(0, 'first');
-  }, [fetchPage]);
-
+  const recipes = useMemo(() => catalog.slice(0, visibleCount), [catalog, visibleCount]);
+  const total = catalog.length;
   const hasMore = recipes.length < total;
 
   const loadMore = () => {
-    if (hasMore && !error) fetchPage(recipes.length, 'more');
+    if (hasMore && !loading) setVisibleCount((count) => Math.min(count + PAGE_SIZE, total));
   };
 
   const onRefresh = () => {
     setRefreshing(true);
-    fetchPage(0, 'refresh');
+    reload(true).finally(() => setRefreshing(false));
   };
 
   // First load
@@ -232,7 +204,7 @@ export default function HomeScreen() {
 
   // First load failed
   if (error && recipes.length === 0) {
-    return <ErrorState message={error} onRetry={() => fetchPage(0, 'first')} />;
+    return <ErrorState message={error} onRetry={() => reload(true)} />;
   }
 
   const header = (
@@ -308,17 +280,11 @@ export default function HomeScreen() {
   );
 
   let footer: React.ReactElement | null = null;
-  if (loadingMore) {
-    footer = (
-      <View style={styles.emptyContainer}>
-        <ActivityIndicator color={colors.primary} />
-      </View>
-    );
-  } else if (error) {
+  if (error) {
     footer = (
       <View style={styles.emptyContainer}>
         <Text style={styles.errorText}>{'Couldn’t load more recipes'}</Text>
-        <Button onPress={() => fetchPage(recipes.length, 'more')}>Retry</Button>
+        <Button onPress={() => reload(true)}>Retry</Button>
       </View>
     );
   } else if (!hasMore && recipes.length > 0) {

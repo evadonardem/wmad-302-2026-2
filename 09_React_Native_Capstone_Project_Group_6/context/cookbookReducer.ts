@@ -30,13 +30,16 @@ export type CookbookAction =
   | { type: 'SHOPPING_CLEAR_CHECKED' }
   | { type: 'SHOPPING_CLEAR' }
   // personal notes
-  | { type: 'NOTE_SET'; payload: { recipeId: number; text: string } };
+  | { type: 'NOTE_SET'; payload: { recipeId: number; text: string } }
+  // daily calorie goal (null = not set)
+  | { type: 'GOAL_SET'; payload: number | null };
 
 export const initialCookbookState: CookbookState = {
   collections: [],
   mealPlan: [],
   shopping: [],
   notes: {},
+  calorieGoal: null,
   isLoading: true,
 };
 
@@ -142,6 +145,13 @@ export function cookbookReducer(state: CookbookState, action: CookbookAction): C
       if (text) notes[action.payload.recipeId] = text;
       else delete notes[action.payload.recipeId]; // an empty note removes it
       return { ...state, notes };
+    }
+
+    // ---- calorie goal ----
+    case 'GOAL_SET': {
+      const goal = action.payload;
+      const valid = goal !== null && Number.isFinite(goal) && goal > 0;
+      return { ...state, calorieGoal: valid ? Math.round(goal) : null };
     }
 
     default:
