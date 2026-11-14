@@ -239,7 +239,8 @@ npm run web
 - [ ] **Recipe Details** - Full recipe with ingredients, instructions, nutrition
 - [ ] **Favorites** - Save/remove recipes (AsyncStorage persistence)
 - [ ] **Categories** - Browse by category (Beef, Chicken, Dessert, etc.)
-- [ ] **User Profile** - View/edit profile, stats, settings
+- [ ] **User Profile** - View/edit profile and stats
+- [x] **Settings** - Save notification, theme, and privacy preferences per account
 
 ### Bonus Features
 - [ ] **Meal Planning** - Weekly meal planner

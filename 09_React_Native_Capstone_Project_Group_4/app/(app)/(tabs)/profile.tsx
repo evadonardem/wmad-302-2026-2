@@ -1,14 +1,15 @@
 /**
  * Profile Screen - Cookbook
  * Still TODO (features, not bugs): edit profile (PUT /users/{id}), real stats,
- * settings, my recipes, personal cookbook.
+ * my recipes, personal cookbook.
  */
 import React from 'react';
 import { View, Text, ScrollView, Alert, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
+import { useSettings } from '@/context/SettingsContext';
 import { Card, Button, List, Avatar, Divider } from 'react-native-paper';
-import { styles } from './profileStyles';
+import { getProfileStyles } from './profileStyles';
 
 // Alert.alert with buttons does nothing on react-native-web, so use the browser's dialogs there.
 type WebDialogs = { confirm?: (message: string) => boolean; alert?: (message: string) => void };
@@ -36,6 +37,8 @@ function notify(title: string, message: string) {
 export default function ProfileScreen() {
   const router = useRouter();
   const { user, logout, isAuthenticated } = useAuth();
+  const { settings } = useSettings();
+  const styles = getProfileStyles(settings.darkModeEnabled);
 
   const handleLogout = () => {
     confirmAction('Logout', 'Are you sure you want to logout?', 'Logout', logout);
@@ -47,8 +50,7 @@ export default function ProfileScreen() {
   };
 
   const handleSettings = () => {
-    // TODO: Navigate to settings
-    notify('TODO', 'Implement settings screen');
+    router.push('/settings');
   };
 
   const handleMyRecipes = () => {

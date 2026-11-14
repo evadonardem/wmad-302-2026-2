@@ -24,7 +24,8 @@ import {
 import { useRouter } from 'expo-router';
 import { Card, Title, Chip, TextInput, Button } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { styles } from './searchStyles';
+import { useSettings } from '@/context/SettingsContext';
+import { getSearchStyles } from './searchStyles';
 
 interface Recipe {
   id: number;
@@ -108,6 +109,8 @@ async function fetchPage(opts: {
 
 export default function SearchScreen() {
   const router = useRouter();
+  const { settings } = useSettings();
+  const styles = getSearchStyles(settings.darkModeEnabled);
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState<string | null>(null);
   const [sort, setSort] = useState<SortKey>('default');

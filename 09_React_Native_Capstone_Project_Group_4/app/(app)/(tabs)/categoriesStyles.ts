@@ -2,6 +2,7 @@
  * Categories Screen Styles
  */
 import { StyleSheet } from 'react-native';
+import { appColors } from '@/constants/theme';
 
 export const styles = StyleSheet.create({
   container: {
@@ -106,3 +107,37 @@ export const styles = StyleSheet.create({
     lineHeight: 20,
   },
 });
+
+const darkStyles = StyleSheet.create({
+  container: { backgroundColor: appColors.dark.background },
+  loadingContainer: { backgroundColor: appColors.dark.background },
+  errorContainer: { backgroundColor: appColors.dark.background },
+  pageTitle: { color: appColors.dark.text },
+  pageSubtitle: { color: appColors.dark.muted },
+  card: { backgroundColor: appColors.dark.surface },
+  iconContainer: { backgroundColor: appColors.dark.surfaceAlt },
+  categoryName: { color: appColors.dark.text },
+  categoryCount: { color: appColors.dark.muted },
+  loadingText: { color: appColors.dark.muted },
+  errorText: { color: appColors.dark.error },
+  guideContainer: {
+    backgroundColor: appColors.dark.surfaceAlt,
+    borderColor: appColors.dark.accentSoft,
+  },
+  guideTitle: { color: appColors.dark.accent },
+  guideText: { color: appColors.dark.muted },
+});
+
+export function getCategoriesStyles(isDarkMode: boolean) {
+  if (!isDarkMode) return styles;
+
+  return {
+    ...styles,
+    ...Object.fromEntries(
+      Object.entries(darkStyles).map(([key, value]) => [
+        key,
+        [styles[key as keyof typeof styles], value],
+      ])
+    ),
+  };
+}

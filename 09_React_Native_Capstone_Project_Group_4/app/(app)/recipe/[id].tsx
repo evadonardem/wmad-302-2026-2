@@ -17,8 +17,10 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button } from 'react-native-paper';
 import { LinearGradient } from 'expo-linear-gradient';
-import { GlassBackground, GlassCard, GlassIconButton, GLASS } from '@/components/Glass';
-import { favoritesStorage } from '@/utils/storage';
+import { GlassBackground, GlassCard, GlassIconButton } from '@/components/Glass';
+import { useFavorites } from '@/context/FavoritesContext';
+import { useSettings } from '@/context/SettingsContext';
+import { appColors } from '@/constants/theme';
 
 interface Recipe {
   id: number;
@@ -44,11 +46,14 @@ export default function RecipeDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { isFavorite, isLoaded, toggleFavorite } = useFavorites();
+  const { settings } = useSettings();
+  const colors = settings.darkModeEnabled ? appColors.dark : appColors.light;
+  const styles = createRecipeStyles(colors);
 
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isFavorite, setIsFavorite] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
@@ -74,22 +79,6 @@ export default function RecipeDetailScreen() {
     };
   }, [id, retryCount]);
 
-  useEffect(() => {
-    favoritesStorage
-      .getIds()
-      .then((ids) => setIsFavorite(ids.includes(Number(id))))
-      .catch(() => {});
-  }, [id]);
-
-  const toggleFavorite = async () => {
-    try {
-      const nowFavorite = await favoritesStorage.toggleId(Number(id));
-      setIsFavorite(nowFavorite);
-    } catch {
-      // Ignore storage errors; the heart just won't change
-    }
-  };
-
   const goBack = () => {
     if (router.canGoBack()) router.back();
     else router.replace('/(app)/(tabs)/home');
@@ -98,12 +87,12 @@ export default function RecipeDetailScreen() {
   const topBar = (
     <View style={[styles.topBar, { top: insets.top + 8 }]}>
       <GlassIconButton icon="arrow-left" onPress={goBack} label="Go back" />
-      {recipe && (
+      {recipe && isLoaded && (
         <GlassIconButton
-          icon={isFavorite ? 'heart' : 'heart-outline'}
-          color={isFavorite ? '#C62828' : GLASS.text}
-          onPress={toggleFavorite}
-          label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+          icon={isFavorite(recipe.id) ? 'heart' : 'heart-outline'}
+          color={isFavorite(recipe.id) ? colors.error : colors.text}
+          onPress={() => toggleFavorite(recipe.id)}
+          label={isFavorite(recipe.id) ? 'Remove from favorites' : 'Add to favorites'}
         />
       )}
     </View>
@@ -114,7 +103,7 @@ export default function RecipeDetailScreen() {
       <GlassBackground>
         {topBar}
         <View style={styles.center}>
-          <ActivityIndicator size="large" color={GLASS.accent} />
+          <ActivityIndicator size="large" color={colors.accent} />
         </View>
       </GlassBackground>
     );
@@ -175,12 +164,12 @@ export default function RecipeDetailScreen() {
 
         {/* Quick stats */}
         <GlassCard style={styles.section} contentStyle={styles.statsRow}>
-          <Stat emoji="⏱️" value={`${totalTime} min`} label="Total" />
-          <Stat emoji="🔪" value={`${recipe.prepTimeMinutes} min`} label="Prep" />
-          <Stat emoji="🍳" value={`${recipe.cookTimeMinutes} min`} label="Cook" />
-          <Stat emoji="👥" value={String(recipe.servings)} label="Servings" />
+          <Stat emoji="⏱️" value={`${totalTime} min`} label="Total" colors={colors} />
+          <Stat emoji="🔪" value={`${recipe.prepTimeMinutes} min`} label="Prep" colors={colors} />
+          <Stat emoji="🍳" value={`${recipe.cookTimeMinutes} min`} label="Cook" colors={colors} />
+          <Stat emoji="👥" value={String(recipe.servings)} label="Servings" colors={colors} />
           {recipe.caloriesPerServing != null && (
-            <Stat emoji="🔥" value={String(recipe.caloriesPerServing)} label="Cal" />
+            <Stat emoji="🔥" value={String(recipe.caloriesPerServing)} label="Cal" colors={colors} />
           )}
         </GlassCard>
 
@@ -214,17 +203,30 @@ export default function RecipeDetailScreen() {
   );
 }
 
-function Stat({ emoji, value, label }: { emoji: string; value: string; label: string }) {
+function Stat({
+  emoji,
+  value,
+  label,
+  colors,
+}: {
+  emoji: string;
+  value: string;
+  label: string;
+  colors: typeof appColors.light | typeof appColors.dark;
+}) {
   return (
-    <View style={styles.stat}>
-      <Text style={styles.statEmoji}>{emoji}</Text>
-      <Text style={styles.statValue}>{value}</Text>
-      <Text style={styles.statLabel}>{label}</Text>
+    <View style={{ alignItems: 'center', minWidth: 52 }}>
+      <Text style={{ fontSize: 20 }}>{emoji}</Text>
+      <Text style={{ fontSize: 14, fontWeight: '700', color: colors.text, marginTop: 4 }}>
+        {value}
+      </Text>
+      <Text style={{ fontSize: 11, color: colors.muted }}>{label}</Text>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+function createRecipeStyles(colors: typeof appColors.light | typeof appColors.dark) {
+  return StyleSheet.create({
   scroll: {
     paddingBottom: 40,
   },
@@ -260,12 +262,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: '800',
-    color: GLASS.text,
+    color: colors.text,
     marginBottom: 6,
   },
   subtitle: {
     fontSize: 14,
-    color: GLASS.textMuted,
+    color: colors.muted,
     fontWeight: '500',
   },
   tagRow: {
@@ -278,13 +280,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
-    backgroundColor: 'rgba(255,255,255,0.45)',
+    backgroundColor: colors.surfaceAlt,
     borderWidth: 1,
-    borderColor: GLASS.border,
+    borderColor: colors.border,
   },
   tagText: {
     fontSize: 12,
-    color: GLASS.text,
+    color: colors.text,
     fontWeight: '600',
   },
   section: {
@@ -306,17 +308,17 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 14,
     fontWeight: '700',
-    color: GLASS.text,
+    color: colors.text,
     marginTop: 4,
   },
   statLabel: {
     fontSize: 11,
-    color: GLASS.textMuted,
+    color: colors.muted,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: '800',
-    color: GLASS.text,
+    color: colors.text,
     marginBottom: 12,
   },
   ingredientRow: {
@@ -328,7 +330,7 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: GLASS.accent,
+    backgroundColor: colors.accent,
     marginTop: 7,
     marginRight: 10,
   },
@@ -336,7 +338,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 15,
     lineHeight: 22,
-    color: GLASS.text,
+    color: colors.text,
   },
   stepRow: {
     flexDirection: 'row',
@@ -347,7 +349,7 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: GLASS.accent,
+    backgroundColor: colors.accent,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -362,7 +364,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 15,
     lineHeight: 22,
-    color: GLASS.text,
+    color: colors.text,
   },
   messageCard: {
     width: '100%',
@@ -375,15 +377,16 @@ const styles = StyleSheet.create({
   messageTitle: {
     fontSize: 18,
     fontWeight: '800',
-    color: GLASS.text,
+    color: colors.text,
   },
   messageText: {
     fontSize: 14,
-    color: GLASS.textMuted,
+    color: colors.muted,
     marginTop: 6,
     textAlign: 'center',
   },
   retry: {
     marginTop: 16,
   },
-});
+  });
+}

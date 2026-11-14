@@ -18,6 +18,8 @@ import {
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useSettings } from '@/context/SettingsContext';
+import { appColors } from '@/constants/theme';
 
 type IconName = React.ComponentProps<typeof MaterialCommunityIcons>['name'];
 
@@ -36,18 +38,39 @@ interface GlassBackgroundProps {
 }
 
 export function GlassBackground({ children, style }: GlassBackgroundProps) {
+  const { settings } = useSettings();
+  const isDarkMode = settings.darkModeEnabled;
+
   return (
     <View style={[glass.fill, style]}>
       <LinearGradient
-        colors={GLASS.gradient}
+        colors={isDarkMode ? ['#171717', '#2A2019', '#1D1925'] : GLASS.gradient}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={StyleSheet.absoluteFill}
       />
       {/* Soft color blobs give the blur something to frost */}
-      <View style={[glass.blob, glass.blobOne]} />
-      <View style={[glass.blob, glass.blobTwo]} />
-      <View style={[glass.blob, glass.blobThree]} />
+      <View
+        style={[
+          glass.blob,
+          glass.blobOne,
+          isDarkMode && { backgroundColor: 'rgba(255,154,77,0.12)' },
+        ]}
+      />
+      <View
+        style={[
+          glass.blob,
+          glass.blobTwo,
+          isDarkMode && { backgroundColor: 'rgba(232,93,4,0.14)' },
+        ]}
+      />
+      <View
+        style={[
+          glass.blob,
+          glass.blobThree,
+          isDarkMode && { backgroundColor: 'rgba(142,68,173,0.12)' },
+        ]}
+      />
       {children}
     </View>
   );
@@ -61,10 +84,19 @@ interface GlassCardProps {
 }
 
 export function GlassCard({ children, style, contentStyle, intensity = 35 }: GlassCardProps) {
+  const { settings } = useSettings();
+  const isDarkMode = settings.darkModeEnabled;
+  const colors = isDarkMode ? appColors.dark : appColors.light;
+
   return (
-    <View style={[glass.card, style]}>
-      <BlurView intensity={intensity} tint="light" style={StyleSheet.absoluteFill} />
-      <View style={[StyleSheet.absoluteFill, { backgroundColor: GLASS.tint }]} />
+    <View style={[glass.card, { borderColor: colors.border }, style]}>
+      <BlurView intensity={intensity} tint={isDarkMode ? 'dark' : 'light'} style={StyleSheet.absoluteFill} />
+      <View
+        style={[
+          StyleSheet.absoluteFill,
+          { backgroundColor: isDarkMode ? 'rgba(30,30,30,0.72)' : GLASS.tint },
+        ]}
+      />
       <View style={[glass.cardContent, contentStyle]}>{children}</View>
     </View>
   );
@@ -79,17 +111,26 @@ interface GlassIconButtonProps {
 }
 
 export function GlassIconButton({ icon, onPress, color, label, style }: GlassIconButtonProps) {
+  const { settings } = useSettings();
+  const isDarkMode = settings.darkModeEnabled;
+  const colors = isDarkMode ? appColors.dark : appColors.light;
+
   return (
     <TouchableOpacity
       onPress={onPress}
       activeOpacity={0.8}
       accessibilityRole="button"
       accessibilityLabel={label}
-      style={[glass.iconButton, style]}
+      style={[glass.iconButton, { borderColor: colors.border }, style]}
     >
-      <BlurView intensity={40} tint="light" style={StyleSheet.absoluteFill} />
-      <View style={[StyleSheet.absoluteFill, { backgroundColor: GLASS.tint }]} />
-      <MaterialCommunityIcons name={icon} size={22} color={color ?? GLASS.text} />
+      <BlurView intensity={40} tint={isDarkMode ? 'dark' : 'light'} style={StyleSheet.absoluteFill} />
+      <View
+        style={[
+          StyleSheet.absoluteFill,
+          { backgroundColor: isDarkMode ? 'rgba(30,30,30,0.72)' : GLASS.tint },
+        ]}
+      />
+      <MaterialCommunityIcons name={icon} size={22} color={color ?? colors.text} />
     </TouchableOpacity>
   );
 }

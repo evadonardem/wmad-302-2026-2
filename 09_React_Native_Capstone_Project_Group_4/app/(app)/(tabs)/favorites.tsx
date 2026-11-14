@@ -21,13 +21,16 @@ import { useRouter } from 'expo-router';
 import { Card, Title, Chip, Button, IconButton } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useFavorites } from '@/context/FavoritesContext';
+import { useSettings } from '@/context/SettingsContext';
 import { recipeApi } from '@/services/recipeApi';
 import { Recipe } from '@/types/recipe';
-import { styles } from './favoritesStyles';
+import { getFavoritesStyles } from './favoritesStyles';
 
 export default function FavoritesScreen() {
   const router = useRouter();
   const { ids, isLoaded, removeFavorite } = useFavorites();
+  const { settings } = useSettings();
+  const styles = getFavoritesStyles(settings.darkModeEnabled);
 
   const cacheRef = useRef(new Map<number, Recipe>());
   const [recipes, setRecipes] = useState<Recipe[]>([]);

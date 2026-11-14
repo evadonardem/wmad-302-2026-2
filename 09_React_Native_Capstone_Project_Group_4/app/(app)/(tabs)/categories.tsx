@@ -22,7 +22,8 @@ import { useRouter } from 'expo-router';
 import { Card, Title, Button } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { recipeApi } from '@/services/recipeApi';
-import { styles } from './categoriesStyles';
+import { useSettings } from '@/context/SettingsContext';
+import { getCategoriesStyles } from './categoriesStyles';
 
 type IconName = React.ComponentProps<typeof MaterialCommunityIcons>['name'];
 
@@ -64,6 +65,8 @@ function getCategoryIcon(category: string): IconName {
 
 export default function CategoriesScreen() {
   const router = useRouter();
+  const { settings } = useSettings();
+  const styles = getCategoriesStyles(settings.darkModeEnabled);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);

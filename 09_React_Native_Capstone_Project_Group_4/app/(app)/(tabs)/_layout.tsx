@@ -5,19 +5,23 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
 import { useFavorites } from '@/context/FavoritesContext';
+import { useSettings } from '@/context/SettingsContext';
+import { appColors } from '@/constants/theme';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 export default function TabsLayout() {
   const { count: favoritesCount } = useFavorites();
+  const { settings } = useSettings();
+  const colors = settings.darkModeEnabled ? appColors.dark : appColors.light;
 
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#E85D04',
-        tabBarInactiveTintColor: '#8D6E63',
+        tabBarActiveTintColor: colors.accent,
+        tabBarInactiveTintColor: colors.muted,
         tabBarStyle: {
-          backgroundColor: '#FFFFFF',
+          backgroundColor: colors.surface,
           borderTopWidth: 0,
           elevation: 8,
           shadowColor: '#000',
@@ -64,7 +68,10 @@ export default function TabsLayout() {
         options={{
           title: 'Favorites',
           tabBarBadge: favoritesCount > 0 ? favoritesCount : undefined,
-          tabBarBadgeStyle: { backgroundColor: '#E85D04', color: '#FFFFFF' },
+          tabBarBadgeStyle: {
+            backgroundColor: colors.accent,
+            color: settings.darkModeEnabled ? '#24170F' : '#FFFFFF',
+          },
           tabBarIcon: ({ focused, color }) => (
             <MaterialCommunityIcons
               name={focused ? 'heart' : 'heart-outline'}

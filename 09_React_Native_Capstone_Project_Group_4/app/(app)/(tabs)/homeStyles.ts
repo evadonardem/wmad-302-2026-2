@@ -2,6 +2,7 @@
  * Home Screen Styles - Cookbook
  */
 import { StyleSheet } from 'react-native';
+import { appColors } from '@/constants/theme';
 
 export const styles = StyleSheet.create({
   scrollView: {
@@ -97,6 +98,7 @@ export const styles = StyleSheet.create({
     borderRadius: 20,
     borderWidth: 1,
     borderColor: '#FFCC80',
+    backgroundColor: '#FFF3E0',
   },
   categoryChipText: {
     fontSize: 13,
@@ -228,3 +230,49 @@ export const styles = StyleSheet.create({
     color: '#8D6E63',
   },
 });
+
+const darkStyles = StyleSheet.create({
+  scrollView: { backgroundColor: appColors.dark.background },
+  loadingContainer: { backgroundColor: appColors.dark.background },
+  errorContainer: { backgroundColor: appColors.dark.background },
+  loadingText: { color: appColors.dark.muted },
+  errorText: { color: appColors.dark.error },
+  welcomeContainer: { backgroundColor: appColors.dark.surfaceAlt },
+  welcomeGreeting: { color: appColors.dark.text },
+  welcomeSubtitle: { color: appColors.dark.muted },
+  welcomeAvatar: { backgroundColor: appColors.dark.accent },
+  sectionTitle: { color: appColors.dark.text },
+  seeAllText: { color: appColors.dark.accent },
+  categoryChip: {
+    borderColor: appColors.dark.accentSoft,
+    backgroundColor: appColors.dark.surfaceAlt,
+  },
+  categoryChipText: { color: appColors.dark.accent },
+  card: { backgroundColor: appColors.dark.surface },
+  easy: { backgroundColor: appColors.dark.positiveSurface },
+  medium: { backgroundColor: appColors.dark.surfaceAlt },
+  hard: { backgroundColor: appColors.dark.errorSurface },
+  recipeTitle: { color: appColors.dark.text },
+  productTitle: { color: appColors.dark.text },
+  productCategory: { color: '#8AB4F8' },
+  metaText: { color: appColors.dark.muted },
+  cuisineChip: { backgroundColor: appColors.dark.surfaceAlt },
+  mealChip: { backgroundColor: appColors.dark.positiveSurface },
+  ratingText: { color: appColors.dark.muted },
+  currentPrice: { color: '#8AB4F8' },
+  emptyText: { color: appColors.dark.muted },
+});
+
+export function getHomeStyles(isDarkMode: boolean) {
+  if (!isDarkMode) return styles;
+
+  return {
+    ...styles,
+    ...Object.fromEntries(
+      Object.entries(darkStyles).map(([key, value]) => [
+        key,
+        [styles[key as keyof typeof styles], value],
+      ])
+    ),
+  };
+}

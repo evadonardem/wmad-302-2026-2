@@ -2,6 +2,7 @@
  * Favorites Screen Styles - Cookbook
  */
 import { StyleSheet } from 'react-native';
+import { appColors } from '@/constants/theme';
 
 export const styles = StyleSheet.create({
   container: {
@@ -127,3 +128,37 @@ export const styles = StyleSheet.create({
     lineHeight: 20,
   },
 });
+
+const darkStyles = StyleSheet.create({
+  container: { backgroundColor: appColors.dark.background },
+  loadingContainer: { backgroundColor: appColors.dark.background },
+  loadingText: { color: appColors.dark.muted },
+  emptyTitle: { color: appColors.dark.text },
+  emptyText: { color: appColors.dark.muted },
+  headerTitle: { color: appColors.dark.text },
+  card: { backgroundColor: appColors.dark.surface },
+  title: { color: appColors.dark.text },
+  difficultyChip: { backgroundColor: appColors.dark.surfaceAlt },
+  cuisineChip: { backgroundColor: appColors.dark.positiveSurface },
+  details: { color: appColors.dark.muted },
+  guideContainer: {
+    backgroundColor: appColors.dark.surfaceAlt,
+    borderColor: appColors.dark.accentSoft,
+  },
+  guideTitle: { color: appColors.dark.accent },
+  guideText: { color: appColors.dark.muted },
+});
+
+export function getFavoritesStyles(isDarkMode: boolean) {
+  if (!isDarkMode) return styles;
+
+  return {
+    ...styles,
+    ...Object.fromEntries(
+      Object.entries(darkStyles).map(([key, value]) => [
+        key,
+        [styles[key as keyof typeof styles], value],
+      ])
+    ),
+  };
+}

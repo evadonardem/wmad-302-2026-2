@@ -16,9 +16,10 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
+import { useSettings } from '@/context/SettingsContext';
 import { Card, Title, Chip, Avatar, Button } from 'react-native-paper';
 import { FavoriteButton } from '@/components/FavoriteButton';
-import { styles } from './homeStyles';
+import { getHomeStyles } from './homeStyles';
 
 // Types for DummyJSON Recipes API
 interface Recipe {
@@ -50,6 +51,8 @@ interface RecipesResponse {
 export default function HomeScreen() {
   const router = useRouter();
   const { user } = useAuth();
+  const { settings } = useSettings();
+  const styles = getHomeStyles(settings.darkModeEnabled);
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -189,7 +192,7 @@ export default function HomeScreen() {
           contentContainerStyle={styles.categoryList}
           renderItem={({ item }) => (
             <TouchableOpacity
-              style={[styles.categoryChip, { backgroundColor: '#FFF3E0' }]}
+              style={styles.categoryChip}
               onPress={() => router.push(`/(app)/(tabs)/search?category=${item}`)}
             >
               <Text style={styles.categoryChipText}>{item}</Text>

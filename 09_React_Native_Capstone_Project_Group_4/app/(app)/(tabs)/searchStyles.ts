@@ -2,6 +2,7 @@
  * Search Screen Styles - Shared base
  */
 import { StyleSheet } from 'react-native';
+import { appColors } from '@/constants/theme';
 
 export const styles = StyleSheet.create({
   container: {
@@ -216,3 +217,55 @@ export const styles = StyleSheet.create({
     lineHeight: 20,
   },
 });
+
+const darkStyles = StyleSheet.create({
+  container: { backgroundColor: appColors.dark.background },
+  searchInput: {
+    backgroundColor: appColors.dark.surface,
+    borderColor: appColors.dark.border,
+    color: appColors.dark.text,
+  },
+  filterTitle: { color: appColors.dark.text },
+  filterChip: {
+    borderColor: appColors.dark.border,
+    backgroundColor: appColors.dark.surface,
+  },
+  filterChipSelected: { backgroundColor: appColors.dark.accent, borderColor: appColors.dark.accent },
+  filterChipText: { color: appColors.dark.accent },
+  sortChip: {
+    borderColor: appColors.dark.border,
+    backgroundColor: appColors.dark.surface,
+  },
+  sortChipSelected: { backgroundColor: appColors.dark.accent, borderColor: appColors.dark.accent },
+  sortChipText: { color: appColors.dark.accent },
+  resultsTitle: { color: appColors.dark.text },
+  card: { backgroundColor: appColors.dark.surface },
+  resultCategory: { color: '#8AB4F8' },
+  resultTitle: { color: appColors.dark.text },
+  currentPrice: { color: '#8AB4F8' },
+  resultDetails: { color: appColors.dark.muted },
+  difficultyChip: { backgroundColor: appColors.dark.surfaceAlt },
+  cuisineChip: { backgroundColor: appColors.dark.positiveSurface },
+  emptyText: { color: appColors.dark.text },
+  emptySubtext: { color: appColors.dark.muted },
+  guideContainer: {
+    backgroundColor: appColors.dark.surfaceAlt,
+    borderColor: appColors.dark.accentSoft,
+  },
+  guideTitle: { color: appColors.dark.accent },
+  guideText: { color: appColors.dark.muted },
+});
+
+export function getSearchStyles(isDarkMode: boolean) {
+  if (!isDarkMode) return styles;
+
+  return {
+    ...styles,
+    ...Object.fromEntries(
+      Object.entries(darkStyles).map(([key, value]) => [
+        key,
+        [styles[key as keyof typeof styles], value],
+      ])
+    ),
+  };
+}

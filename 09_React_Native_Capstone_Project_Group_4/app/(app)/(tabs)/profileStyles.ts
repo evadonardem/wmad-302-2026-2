@@ -2,6 +2,7 @@
  * Profile Screen Styles - Shared
  */
 import { StyleSheet } from 'react-native';
+import { appColors } from '@/constants/theme';
 
 export const styles = StyleSheet.create({
   container: {
@@ -128,3 +129,37 @@ export const styles = StyleSheet.create({
     color: '#BCAAA4',
   },
 });
+
+const darkStyles = StyleSheet.create({
+  container: { backgroundColor: appColors.dark.background },
+  centerContainer: { backgroundColor: appColors.dark.background },
+  notLoggedIn: { color: appColors.dark.muted },
+  avatar: { backgroundColor: appColors.dark.surfaceAlt },
+  name: { color: appColors.dark.text },
+  username: { color: appColors.dark.accent },
+  email: { color: appColors.dark.muted },
+  statsContainer: { backgroundColor: appColors.dark.surfaceAlt },
+  statValue: { color: appColors.dark.accent },
+  statLabel: { color: appColors.dark.muted },
+  guideContainer: {
+    backgroundColor: appColors.dark.surfaceAlt,
+    borderColor: appColors.dark.accentSoft,
+  },
+  guideTitle: { color: appColors.dark.accent },
+  guideText: { color: appColors.dark.muted },
+  versionText: { color: appColors.dark.muted },
+});
+
+export function getProfileStyles(isDarkMode: boolean) {
+  if (!isDarkMode) return styles;
+
+  return {
+    ...styles,
+    ...Object.fromEntries(
+      Object.entries(darkStyles).map(([key, value]) => [
+        key,
+        [styles[key as keyof typeof styles], value],
+      ])
+    ),
+  };
+}
