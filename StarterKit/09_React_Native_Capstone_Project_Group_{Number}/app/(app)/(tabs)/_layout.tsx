@@ -1,15 +1,9 @@
-/**
- * Tabs Layout - Cookbook App Navigation
- * Tabs: Home (Discover), Search, Favorites, Profile
- */
-import { Tabs } from 'expo-router';
+
 import React from 'react';
-import { useAuth } from '@/context/AuthContext';
+import { Tabs } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 export default function TabsLayout() {
-  const { user } = useAuth();
-
   return (
     <Tabs
       screenOptions={{
@@ -39,26 +33,28 @@ export default function TabsLayout() {
           title: 'Discover',
           tabBarIcon: ({ focused, color }) => (
             <MaterialCommunityIcons
-              name={focused ? 'stove' : 'stove-outline'}
+              name={focused ? 'store' : 'store-outline'}
               size={24}
               color={color}
             />
           ),
         }}
       />
+
       <Tabs.Screen
         name="search"
         options={{
           title: 'Search',
-          tabBarIcon: ({ focused, color }) => (
+          tabBarIcon: ({ color }) => (
             <MaterialCommunityIcons
-              name={focused ? 'magnify' : 'magnify-outline'}
+              name="magnify"
               size={24}
               color={color}
             />
           ),
         }}
       />
+
       <Tabs.Screen
         name="favorites"
         options={{
@@ -72,6 +68,7 @@ export default function TabsLayout() {
           ),
         }}
       />
+
       <Tabs.Screen
         name="profile"
         options={{
@@ -85,6 +82,14 @@ export default function TabsLayout() {
           ),
         }}
       />
+
+      <Tabs.Screen
+        name="categories"
+        options={{
+          href: null,
+        }}
+      />
     </Tabs>
   );
 }
+

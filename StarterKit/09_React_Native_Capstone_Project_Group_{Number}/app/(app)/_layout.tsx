@@ -1,20 +1,21 @@
-/**
- * App Layout - Protected routes with auth guard
- */
-import { Stack } from 'expo-router';
-import { useAuth } from '@/context/AuthContext';
-import { Redirect } from 'expo-router';
+
 import React from 'react';
+import { Stack, Redirect } from 'expo-router';
+import { ActivityIndicator } from 'react-native-paper';
+import { View, StyleSheet } from 'react-native';
+import { useAuth } from '@/context/AuthContext';
 
 export default function AppLayout() {
   const { isAuthenticated, isLoading } = useAuth();
 
-  // Show loading while checking auth
   if (isLoading) {
-    return null; // Or a loading screen
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#E85D04" />
+      </View>
+    );
   }
 
-  // Redirect to login if not authenticated
   if (!isAuthenticated) {
     return <Redirect href="/(auth)/login" />;
   }
@@ -22,7 +23,17 @@ export default function AppLayout() {
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(tabs)" />
-      {/* Add other protected screens here */}
+      <Stack.Screen name="settings" />
+      <Stack.Screen name="recipe/[id]" />
     </Stack>
   );
 }
+
+const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#FFFDF8',
+  },
+});
