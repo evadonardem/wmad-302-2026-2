@@ -108,6 +108,9 @@ interface AuthContextType extends AuthState {
   login: (username: string, password: string) => Promise<void>;
   /** Creates the account, then signs in. Throws AccountCreatedError if only the sign-in step fails. */
   register: (data: RegisterData) => Promise<void>;
+  updateProfile: (
+    changes: Pick<AuthUser, 'firstName' | 'lastName' | 'email'>
+  ) => Promise<void>;
   logout: () => void;
   clearError: () => void;
   refreshUser: () => Promise<void>;
@@ -152,6 +155,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
           const mergedUser: AuthUser = {
             ...freshUser,
+            // DummyJSON simulates profile updates, so preserve locally saved edits.
+            firstName: current.firstName,
+            lastName: current.lastName,
+            email: current.email,
             token: current.token,
             refreshToken: current.refreshToken,
           };
@@ -211,6 +218,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const updateProfile = useCallback(
+    async (changes: Pick<AuthUser, 'firstName' | 'lastName' | 'email'>) => {
+      if (!state.user) throw new Error('You must be signed in to update your profile');
+      const updatedUser = await authApi.updateProfile(state.user.id, changes);
+      dispatch({ type: 'AUTH_UPDATE_USER', payload: updatedUser });
+    },
+    [state.user]
+  );
+
   const logout = useCallback(() => {
     authApi.logout();
     dispatch({ type: 'AUTH_LOGOUT' });
@@ -229,6 +245,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (current) {
         const mergedUser: AuthUser = {
           ...user,
+          firstName: current.firstName,
+          lastName: current.lastName,
+          email: current.email,
           token: current.token,
           refreshToken: current.refreshToken,
         };
@@ -245,11 +264,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       ...state,
       login,
       register,
+      updateProfile,
       logout,
       clearError,
       refreshUser,
     }),
-    [state, login, register, logout, clearError, refreshUser]
+    [state, login, register, updateProfile, logout, clearError, refreshUser]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

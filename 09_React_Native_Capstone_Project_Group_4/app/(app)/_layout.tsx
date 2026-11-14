@@ -22,7 +22,9 @@ export default function AppLayout() {
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(tabs)" />
-      {/* Add other protected screens here */}
+      <Stack.Screen name="edit-profile" />
+      <Stack.Screen name="my-recipes" />
+      <Stack.Screen name="my-cookbook" />
     </Stack>
   );
 }

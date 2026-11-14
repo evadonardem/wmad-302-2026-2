@@ -1,7 +1,6 @@
 /**
  * Profile Screen - Cookbook
- * Still TODO (features, not bugs): edit profile (PUT /users/{id}), real stats,
- * my recipes, personal cookbook.
+ * Still TODO (features, not bugs): real profile stats.
  */
 import React from 'react';
 import { View, Text, ScrollView, Alert, Platform } from 'react-native';
@@ -12,7 +11,7 @@ import { Card, Button, List, Avatar, Divider } from 'react-native-paper';
 import { getProfileStyles } from './profileStyles';
 
 // Alert.alert with buttons does nothing on react-native-web, so use the browser's dialogs there.
-type WebDialogs = { confirm?: (message: string) => boolean; alert?: (message: string) => void };
+type WebDialogs = { confirm?: (message: string) => boolean };
 const webDialogs = globalThis as unknown as WebDialogs;
 
 function confirmAction(title: string, message: string, confirmLabel: string, onConfirm: () => void) {
@@ -26,14 +25,6 @@ function confirmAction(title: string, message: string, confirmLabel: string, onC
   ]);
 }
 
-function notify(title: string, message: string) {
-  if (Platform.OS === 'web') {
-    webDialogs.alert?.(`${title}\n\n${message}`);
-    return;
-  }
-  Alert.alert(title, message);
-}
-
 export default function ProfileScreen() {
   const router = useRouter();
   const { user, logout, isAuthenticated } = useAuth();
@@ -45,8 +36,7 @@ export default function ProfileScreen() {
   };
 
   const handleEditProfile = () => {
-    // TODO: Navigate to edit profile screen
-    notify('TODO', 'Implement edit profile: PUT /users/{id}');
+    router.push('/edit-profile');
   };
 
   const handleSettings = () => {
@@ -54,13 +44,11 @@ export default function ProfileScreen() {
   };
 
   const handleMyRecipes = () => {
-    // TODO: Navigate to user's created recipes
-    notify('TODO', 'Implement my recipes screen');
+    router.push('/my-recipes');
   };
 
   const handleCookbook = () => {
-    // TODO: Navigate to personal cookbook/collections
-    notify('TODO', 'Implement personal cookbook');
+    router.push('/my-cookbook');
   };
 
   if (!isAuthenticated) {

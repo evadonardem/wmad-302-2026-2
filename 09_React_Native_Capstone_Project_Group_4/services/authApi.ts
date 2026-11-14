@@ -169,6 +169,35 @@ class AuthApiService {
     return data as PublicUser;
   }
 
+  /** Update profile fields. DummyJSON simulates this endpoint without server persistence. */
+  async updateProfile(
+    userId: number,
+    changes: Pick<AuthUser, 'firstName' | 'lastName' | 'email'>
+  ): Promise<AuthUser> {
+    try {
+      const { data } = await this.client.put(`/users/${userId}`, changes);
+      const current = this.user;
+      if (!current || current.id !== userId) {
+        throw new Error('The signed-in user changed while the profile was being updated');
+      }
+
+      const updatedUser: AuthUser = {
+        ...current,
+        ...data,
+        ...changes,
+        token: current.token,
+        refreshToken: current.refreshToken,
+      };
+      await authStorage.setUser(updatedUser);
+      this.user = updatedUser;
+      this.accessToken = updatedUser.token;
+      this.refreshToken = updatedUser.refreshToken;
+      return updatedUser;
+    } catch (error) {
+      throw new Error(apiMessage(error, 'Could not update your profile'));
+    }
+  }
+
   logout(): void {
     this.clearSession();
   }

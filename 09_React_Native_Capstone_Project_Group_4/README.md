@@ -239,13 +239,16 @@ npm run web
 - [ ] **Recipe Details** - Full recipe with ingredients, instructions, nutrition
 - [ ] **Favorites** - Save/remove recipes (AsyncStorage persistence)
 - [ ] **Categories** - Browse by category (Beef, Chicken, Dessert, etc.)
-- [ ] **User Profile** - View/edit profile and stats
+- [ ] **User Profile** - View profile and real stats
+- [x] **My Recipes** - View recipes associated with the signed-in user
+- [x] **Edit Profile** - Update name and email
+- [x] **My Cookbook** - Organize favorites into collections and a weekly meal plan
 - [x] **Settings** - Save notification, theme, and privacy preferences per account
 
 ### Bonus Features
-- [ ] **Meal Planning** - Weekly meal planner
+- [x] **Meal Planning** - Weekly meal planner
 - [ ] **Shopping List** - Generate from selected recipes
-- [ ] **Collections** - Custom recipe folders (Breakfast, Dinner, etc.)
+- [x] **Collections** - Custom recipe folders (Breakfast, Dinner, etc.)
 - [ ] **Offline Support** - Cache recipes for offline viewing
 - [ ] **Share Recipes** - Share via native share sheet
 - [ ] **Dark Mode** - Theme switching
