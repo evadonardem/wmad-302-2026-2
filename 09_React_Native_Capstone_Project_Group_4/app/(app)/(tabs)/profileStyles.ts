@@ -60,6 +60,13 @@ export const styles = StyleSheet.create({
     paddingVertical: 20,
     marginBottom: 24,
   },
+  statsError: {
+    color: '#C62828',
+    fontSize: 12,
+    marginTop: -16,
+    marginBottom: 16,
+    textAlign: 'center',
+  },
   statItem: {
     alignItems: 'center',
   },
@@ -139,6 +146,7 @@ const darkStyles = StyleSheet.create({
   username: { color: appColors.dark.accent },
   email: { color: appColors.dark.muted },
   statsContainer: { backgroundColor: appColors.dark.surfaceAlt },
+  statsError: { color: appColors.dark.error },
   statValue: { color: appColors.dark.accent },
   statLabel: { color: appColors.dark.muted },
   guideContainer: {
