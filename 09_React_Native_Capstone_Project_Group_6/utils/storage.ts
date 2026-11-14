@@ -6,7 +6,13 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { AuthUser } from '@/types/auth';
 import type { Recipe } from '@/types/recipe';
-import type { Collection, CookbookData, PlannedMeal, ShoppingItem } from '@/types/cookbook';
+import type {
+  Collection,
+  CookbookData,
+  PlannedMeal,
+  RecipeNotes,
+  ShoppingItem,
+} from '@/types/cookbook';
 
 const STORAGE_KEYS = {
   AUTH_USER: 'auth_user',
@@ -16,6 +22,7 @@ const STORAGE_KEYS = {
   COLLECTIONS: 'cookbook_collections',
   MEAL_PLAN: 'cookbook_meal_plan',
   SHOPPING: 'cookbook_shopping',
+  NOTES: 'cookbook_notes',
   RECIPE_CACHE: 'recipes_offline_cache',
 } as const;
 
@@ -169,10 +176,12 @@ export const cookbookStorage = {
     collections: (await getStorageItem<Collection[]>(STORAGE_KEYS.COLLECTIONS)) ?? [],
     mealPlan: (await getStorageItem<PlannedMeal[]>(STORAGE_KEYS.MEAL_PLAN)) ?? [],
     shopping: (await getStorageItem<ShoppingItem[]>(STORAGE_KEYS.SHOPPING)) ?? [],
+    notes: (await getStorageItem<RecipeNotes>(STORAGE_KEYS.NOTES)) ?? {},
   }),
   saveCollections: (value: Collection[]) => setStorageItem(STORAGE_KEYS.COLLECTIONS, value),
   saveMealPlan: (value: PlannedMeal[]) => setStorageItem(STORAGE_KEYS.MEAL_PLAN, value),
   saveShopping: (value: ShoppingItem[]) => setStorageItem(STORAGE_KEYS.SHOPPING, value),
+  saveNotes: (value: RecipeNotes) => setStorageItem(STORAGE_KEYS.NOTES, value),
 };
 
 /** Copy of the recipe catalog so recipes can be opened without internet. */

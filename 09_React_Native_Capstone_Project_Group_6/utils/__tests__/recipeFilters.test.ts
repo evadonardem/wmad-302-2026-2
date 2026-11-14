@@ -7,6 +7,8 @@ import {
   sortRecipes,
   totalTime,
   uniqueSorted,
+  DEFAULT_SORT,
+  SORT_OPTIONS,
 } from '@/utils/recipeFilters';
 import { SAMPLE_RECIPES } from '../../test-utils/fixtures';
 
@@ -112,5 +114,21 @@ describe('recipeFilters', () => {
     it('handles an empty list', () => {
       expect(countBy([], (r) => r.tags)).toEqual([]);
     });
+  });
+});
+
+describe('sort menu options', () => {
+  it('A–Z is the default sort', () => {
+    expect(DEFAULT_SORT).toBe('name');
+    expect(ids(sortRecipes(SAMPLE_RECIPES, DEFAULT_SORT))).toEqual([3, 2, 1]);
+  });
+
+  it('lists every sort once, with A–Z first', () => {
+    const values = SORT_OPTIONS.map((option) => option.value);
+    expect(values[0]).toBe(DEFAULT_SORT);
+    expect(new Set(values).size).toBe(values.length);
+    expect(values).toEqual(
+      expect.arrayContaining(['name', 'rating', 'time', 'calories', 'default'])
+    );
   });
 });

@@ -6,6 +6,18 @@ import type { Recipe, RecipeDifficulty } from '@/types/recipe';
 
 export type SortOption = 'default' | 'rating' | 'time' | 'calories' | 'name';
 
+/** Choices for the sort menu on the Search screen. A–Z is the default. */
+export const SORT_OPTIONS: { value: SortOption; label: string }[] = [
+  { value: 'name', label: 'A–Z' },
+  { value: 'rating', label: 'Top rated' },
+  { value: 'time', label: 'Quickest' },
+  { value: 'calories', label: 'Lowest calories' },
+  { value: 'default', label: 'Original order' },
+];
+
+export const DEFAULT_SORT: SortOption = 'name';
+
+
 export interface RecipeFilters {
   cuisine: string | null;
   difficulty: RecipeDifficulty | null;

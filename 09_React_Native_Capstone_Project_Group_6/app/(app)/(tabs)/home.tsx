@@ -33,6 +33,7 @@ import { useRecipeCatalog } from '@/hooks';
 import { countBy } from '@/utils/recipeFilters';
 import { Recipe } from '@/types/recipe';
 import { RecipeCard, LoadingState, ErrorState } from '@/components/CommonComponents';
+import { CartButton } from '@/components/CartButton';
 import { useThemeMode, useThemedStyles } from '@/context/ThemeContext';
 import { styles as rawStyles } from './homeStyles';
 
@@ -149,6 +150,9 @@ function FoodBackground({ count = ITEMS.length }: { count?: number }) {
 
 const bgStyles = StyleSheet.create({
   item: { position: 'absolute', top: 0 },
+  // Shopping cart icon in the corner of the hero banner
+  cart: { position: 'absolute', top: 8, right: 8 },
+  greetingSpace: { paddingRight: 48 }, // keeps a long greeting clear of the cart
 });
 
 const PAGE_SIZE = 10;
@@ -237,7 +241,13 @@ export default function HomeScreen() {
       <View style={[styles.hero, { backgroundColor: colors.primaryContainer }]}>
         {/* Floating food inside the banner (clipped by the rounded corners) */}
         <FoodBackground count={6} />
-        <Text style={[styles.heroGreeting, { color: colors.onSurfaceVariant }]}>
+        <CartButton
+          mode="contained"
+          containerColor={colors.surface}
+          iconColor={colors.onSurface}
+          style={bgStyles.cart}
+        />
+        <Text style={[styles.heroGreeting, { color: colors.onSurfaceVariant }, bgStyles.greetingSpace]}>
           {user ? `Welcome back, ${user.firstName}` : 'Welcome to Cookbook'}
         </Text>
         <Text

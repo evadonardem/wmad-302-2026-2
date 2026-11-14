@@ -15,7 +15,13 @@ import React, {
   ReactNode,
 } from 'react';
 import { cookbookStorage } from '@/utils/storage';
-import type { Collection, MealSlot, PlannedMeal, ShoppingItem } from '@/types/cookbook';
+import type {
+  Collection,
+  MealSlot,
+  PlannedMeal,
+  RecipeNotes,
+  ShoppingItem,
+} from '@/types/cookbook';
 import { cookbookReducer, initialCookbookState } from '@/context/cookbookReducer';
 
 interface CookbookContextType {
@@ -23,6 +29,7 @@ interface CookbookContextType {
   collections: Collection[];
   mealPlan: PlannedMeal[];
   shopping: ShoppingItem[];
+  notes: RecipeNotes;
 
   createCollection: (name: string) => string; // returns the new id
   renameCollection: (id: string, name: string) => void;
@@ -41,6 +48,9 @@ interface CookbookContextType {
   removeShoppingItem: (id: string) => void;
   clearCheckedShopping: () => void;
   clearShopping: () => void;
+
+  /** Save a personal note for a recipe (empty text deletes it) */
+  setNote: (recipeId: number, text: string) => void;
 }
 
 const CookbookContext = createContext<CookbookContextType | undefined>(undefined);
@@ -67,7 +77,7 @@ export function CookbookProvider({ children }: { children: ReactNode }) {
         if (active)
           dispatch({
             type: 'COOKBOOK_HYDRATE',
-            payload: { collections: [], mealPlan: [], shopping: [] },
+            payload: { collections: [], mealPlan: [], shopping: [], notes: {} },
           });
       });
     return () => {
@@ -88,6 +98,11 @@ export function CookbookProvider({ children }: { children: ReactNode }) {
     if (state.isLoading) return;
     cookbookStorage.saveShopping(state.shopping).catch(() => undefined);
   }, [state.shopping, state.isLoading]);
+
+  useEffect(() => {
+    if (state.isLoading) return;
+    cookbookStorage.saveNotes(state.notes).catch(() => undefined);
+  }, [state.notes, state.isLoading]);
 
   const createCollection = useCallback(
     (name: string) => {
@@ -146,12 +161,18 @@ export function CookbookProvider({ children }: { children: ReactNode }) {
   const clearCheckedShopping = useCallback(() => dispatch({ type: 'SHOPPING_CLEAR_CHECKED' }), []);
   const clearShopping = useCallback(() => dispatch({ type: 'SHOPPING_CLEAR' }), []);
 
+  const setNote = useCallback(
+    (recipeId: number, text: string) => dispatch({ type: 'NOTE_SET', payload: { recipeId, text } }),
+    []
+  );
+
   const value = useMemo<CookbookContextType>(
     () => ({
       isLoading: state.isLoading,
       collections: state.collections,
       mealPlan: state.mealPlan,
       shopping: state.shopping,
+      notes: state.notes,
       createCollection,
       renameCollection,
       deleteCollection,
@@ -167,6 +188,7 @@ export function CookbookProvider({ children }: { children: ReactNode }) {
       removeShoppingItem,
       clearCheckedShopping,
       clearShopping,
+      setNote,
     }),
     [
       state,
@@ -185,6 +207,7 @@ export function CookbookProvider({ children }: { children: ReactNode }) {
       removeShoppingItem,
       clearCheckedShopping,
       clearShopping,
+      setNote,
     ]
   );
 

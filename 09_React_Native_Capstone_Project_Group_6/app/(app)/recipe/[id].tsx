@@ -29,6 +29,9 @@ import { StepTimer } from '@/components/StepTimer';
 import { buildShareMessage } from '@/utils/shareRecipe';
 import { RecipeActions } from '@/components/RecipeActions';
 import { OfflineBanner } from '@/components/OfflineBanner';
+import { RecipeNotes } from '@/components/RecipeNotes';
+import { CartButton } from '@/components/CartButton';
+import { useCookbook } from '@/context/CookbookContext';
 
 /** Five stars, filled according to the rating (supports half stars). */
 function Stars({ rating }: { rating: number }) {
@@ -67,6 +70,7 @@ export default function RecipeDetailScreen() {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   const { isFavorite, toggleFavorite } = useFavorites();
+  const { addRecipesToShopping } = useCookbook();
 
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [loading, setLoading] = useState(true);
@@ -121,6 +125,22 @@ export default function RecipeDetailScreen() {
       else next.add(index);
       return next;
     });
+  };
+
+  // Ticked ingredients = "I already have this", so the button adds the ones
+  // that are NOT ticked. With nothing ticked it adds every ingredient.
+  const addIngredientsToList = () => {
+    if (!recipe) return;
+    const needed =
+      checked.size > 0
+        ? recipe.ingredients.filter((_, index) => !checked.has(index))
+        : recipe.ingredients;
+    if (needed.length === 0) {
+      setMessage('You ticked everything, so nothing to add');
+      return;
+    }
+    addRecipesToShopping([{ id: recipe.id, ingredients: needed }]);
+    setMessage(`Added ${needed.length} ${needed.length === 1 ? 'ingredient' : 'ingredients'} to your shopping list`);
   };
 
   const backButton = (
@@ -251,9 +271,14 @@ export default function RecipeDetailScreen() {
           </View>
 
           {/* Ingredients */}
-          <Text variant="titleLarge" style={styles.sectionTitle}>
-            Ingredients ({recipe.ingredients.length})
-          </Text>
+          <View style={styles.ingredientsHeader}>
+            <Text variant="titleLarge" style={styles.ingredientsTitle}>
+              Ingredients ({recipe.ingredients.length})
+            </Text>
+            <Button mode="text" compact icon="cart-plus" onPress={addIngredientsToList}>
+              {checked.size > 0 ? `Add ${recipe.ingredients.length - checked.size} missing` : 'Add all to list'}
+            </Button>
+          </View>
           {recipe.ingredients.map((ingredient, index) => (
             <View key={`${ingredient}-${index}`} style={styles.ingredientRow}>
               <Checkbox
@@ -299,6 +324,11 @@ export default function RecipeDetailScreen() {
 
           <Divider style={styles.divider} />
 
+          {/* Personal note, saved on this device */}
+          <RecipeNotes recipeId={recipe.id} onMessage={setMessage} />
+
+          <Divider style={styles.divider} />
+
           {/* Tags */}
           <Text variant="titleLarge" style={styles.sectionTitle}>
             Tags
@@ -322,6 +352,12 @@ export default function RecipeDetailScreen() {
         onPress={handleShare}
         accessibilityLabel="Share recipe"
         style={[styles.shareButton, { top: insets.top + 8 }]}
+      />
+      <CartButton
+        mode="contained"
+        containerColor="rgba(255,255,255,0.92)"
+        iconColor={theme.colors.onSurface}
+        style={[styles.cartButton, { top: insets.top + 8 }]}
       />
       <IconButton
         icon={isFavorite(recipe.id) ? 'heart' : 'heart-outline'}
@@ -347,6 +383,7 @@ const styles = StyleSheet.create({
   backButton: { position: 'absolute', left: 12 },
   heartButton: { position: 'absolute', right: 12 },
   shareButton: { position: 'absolute', right: 60 },
+  cartButton: { position: 'absolute', right: 108 },
   heroImage: { width: '100%', height: 280 },
   body: { padding: 20 },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 12 },
@@ -355,6 +392,14 @@ const styles = StyleSheet.create({
   factsCard: { borderRadius: 12, padding: 14, marginTop: 18, gap: 10 },
   fact: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   sectionTitle: { marginTop: 24, marginBottom: 10 },
+  ingredientsHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 24,
+    marginBottom: 6,
+  },
+  ingredientsTitle: { flexShrink: 1 },
   nutritionRow: { flexDirection: 'row', gap: 12 },
   nutritionTile: { flex: 1, borderRadius: 12, padding: 14, alignItems: 'center' },
   ingredientRow: { flexDirection: 'row', alignItems: 'center' },

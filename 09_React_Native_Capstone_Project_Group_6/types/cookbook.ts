@@ -32,4 +32,8 @@ export interface CookbookData {
   collections: Collection[];
   mealPlan: PlannedMeal[];
   shopping: ShoppingItem[];
+  notes: RecipeNotes;
 }
+
+/** Personal note per recipe id, e.g. { 12: "Add less salt next time" } */
+export type RecipeNotes = Record<number, string>;

@@ -15,7 +15,12 @@ describe('cookbookReducer - collections', () => {
   it('HYDRATE loads data and stops loading', () => {
     const next = cookbookReducer(initialCookbookState, {
       type: 'COOKBOOK_HYDRATE',
-      payload: { collections: [{ id: 'c', name: 'A', recipeIds: [] }], mealPlan: [], shopping: [] },
+      payload: {
+        collections: [{ id: 'c', name: 'A', recipeIds: [] }],
+        mealPlan: [],
+        shopping: [],
+        notes: {},
+      },
     });
     expect(next.isLoading).toBe(false);
     expect(next.collections).toHaveLength(1);
@@ -113,6 +118,32 @@ describe('cookbookReducer - shopping list', () => {
   });
 });
 
+describe('cookbookReducer - notes', () => {
+  it('saves a trimmed note for a recipe', () => {
+    const s = cookbookReducer(loaded, { type: 'NOTE_SET', payload: { recipeId: 5, text: '  Less salt  ' } });
+    expect(s.notes).toEqual({ 5: 'Less salt' });
+  });
+
+  it('replaces an existing note', () => {
+    let s = cookbookReducer(loaded, { type: 'NOTE_SET', payload: { recipeId: 5, text: 'a' } });
+    s = cookbookReducer(s, { type: 'NOTE_SET', payload: { recipeId: 5, text: 'b' } });
+    expect(s.notes).toEqual({ 5: 'b' });
+  });
+
+  it('an empty note deletes it and leaves other notes alone', () => {
+    let s = cookbookReducer(loaded, { type: 'NOTE_SET', payload: { recipeId: 5, text: 'a' } });
+    s = cookbookReducer(s, { type: 'NOTE_SET', payload: { recipeId: 6, text: 'b' } });
+    s = cookbookReducer(s, { type: 'NOTE_SET', payload: { recipeId: 5, text: '   ' } });
+    expect(s.notes).toEqual({ 6: 'b' });
+  });
+
+  it('does not change the previous state object', () => {
+    const before = { ...loaded, notes: { 1: 'x' } };
+    cookbookReducer(before, { type: 'NOTE_SET', payload: { recipeId: 1, text: '' } });
+    expect(before.notes).toEqual({ 1: 'x' });
+  });
+});
+
 describe('CookbookProvider / useCookbook', () => {
   const wrapper = ({ children }: { children: React.ReactNode }) => (
     <CookbookProvider>{children}</CookbookProvider>
@@ -157,6 +188,17 @@ describe('CookbookProvider / useCookbook', () => {
     const { result } = renderHook(() => useCookbook(), { wrapper });
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.shopping[0].name).toBe('Rice');
+  });
+
+  it('saves a note and writes it to storage', async () => {
+    const { result } = renderHook(() => useCookbook(), { wrapper });
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    act(() => result.current.setNote(3, 'Used oat milk'));
+    expect(result.current.notes[3]).toBe('Used oat milk');
+    await waitFor(async () => {
+      const saved = JSON.parse((await AsyncStorage.getItem('cookbook_notes')) as string);
+      expect(saved[3]).toBe('Used oat milk');
+    });
   });
 
   it('plans a meal and adds recipe ingredients to the list', async () => {

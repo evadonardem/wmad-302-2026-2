@@ -28,12 +28,15 @@ export type CookbookAction =
   | { type: 'SHOPPING_TOGGLE'; payload: string }
   | { type: 'SHOPPING_REMOVE'; payload: string }
   | { type: 'SHOPPING_CLEAR_CHECKED' }
-  | { type: 'SHOPPING_CLEAR' };
+  | { type: 'SHOPPING_CLEAR' }
+  // personal notes
+  | { type: 'NOTE_SET'; payload: { recipeId: number; text: string } };
 
 export const initialCookbookState: CookbookState = {
   collections: [],
   mealPlan: [],
   shopping: [],
+  notes: {},
   isLoading: true,
 };
 
@@ -131,6 +134,15 @@ export function cookbookReducer(state: CookbookState, action: CookbookAction): C
       return { ...state, shopping: state.shopping.filter((i) => !i.checked) };
     case 'SHOPPING_CLEAR':
       return { ...state, shopping: [] };
+
+    // ---- personal notes ----
+    case 'NOTE_SET': {
+      const text = action.payload.text.trim();
+      const notes = { ...state.notes };
+      if (text) notes[action.payload.recipeId] = text;
+      else delete notes[action.payload.recipeId]; // an empty note removes it
+      return { ...state, notes };
+    }
 
     default:
       return state;
