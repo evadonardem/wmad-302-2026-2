@@ -104,6 +104,12 @@ export const styles = StyleSheet.create({
     fontSize: 12,
     color: '#8D6E63',
   },
+  removeButton: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 8,
+    marginLeft: 8,
+  },
   separator: {
     height: 8,
   },

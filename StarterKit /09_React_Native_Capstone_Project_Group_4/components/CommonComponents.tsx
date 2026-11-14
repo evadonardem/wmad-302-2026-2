@@ -2,7 +2,7 @@
  * Reusable UI Components
  */
 
-import React from 'react';
+import React, { type ComponentProps } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Card, Title, Chip, Badge, Button } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -19,6 +19,7 @@ interface RecipeCardProps {
     servings: number;
     rating: number;
     reviewCount: number;
+    caloriesPerServing: number;
   };
   onPress: () => void;
   style?: any;
@@ -106,9 +107,7 @@ export function ProductCard({ product, onPress, style }: ProductCardProps) {
             resizeMode="contain"
           />
           {product.discountPercentage > 0 && (
-            <Badge style={styles.discountBadge} variant="primary">
-              -{Math.round(product.discountPercentage)}%
-            </Badge>
+            <Badge style={styles.discountBadge}>{'-' + Math.round(product.discountPercentage) + '%'}</Badge>
           )}
         </View>
         <Card.Content style={styles.cardContent}>
@@ -153,7 +152,7 @@ export function CategoryChip({ label, selected, onPress, icon, style }: Category
     >
       {icon && (
         <MaterialCommunityIcons
-          name={icon}
+          name={icon as ComponentProps<typeof MaterialCommunityIcons>['name']}
           size={16}
           color={selected ? '#FFFFFF' : '#E85D04'}
           style={{ marginRight: 4 }}
@@ -196,7 +195,7 @@ interface EmptyStateProps {
 export function EmptyState({ icon, title, message, actionLabel, onAction }: EmptyStateProps) {
   return (
     <View style={styles.emptyState}>
-      <MaterialCommunityIcons name={icon} size={80} color="#BCAAA4" />
+      <MaterialCommunityIcons name={icon as ComponentProps<typeof MaterialCommunityIcons>['name']} size={80} color="#BCAAA4" />
       <Text style={styles.emptyTitle}>{title}</Text>
       <Text style={styles.emptyMessage}>{message}</Text>
       {actionLabel && onAction && (
@@ -219,7 +218,7 @@ export function Skeleton({ height = 20, width = '100%', borderRadius = 8 }: Skel
     <View
       style={[
         styles.skeleton,
-        { height, width, borderRadius },
+        { height, width: width as any, borderRadius },
       ]}
     />
   );

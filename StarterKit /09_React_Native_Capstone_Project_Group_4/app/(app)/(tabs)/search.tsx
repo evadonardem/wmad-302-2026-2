@@ -1,16 +1,20 @@
 /**
  * Search Screen - Cookbook
- * TODO: Students implement
- * - Search recipes by query (GET /recipes/search?q=)
- * - Filter by category, cuisine, difficulty
- * - Filter by meal type, prep time
- * - Sort by rating, time, calories
- * - Infinite scroll pagination
  */
-import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TextInput, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  ScrollView,
+  TextInput,
+  FlatList,
+  TouchableOpacity,
+  ActivityIndicator,
+  Image,
+  Alert,
+} from 'react-native';
 import { useRouter } from 'expo-router';
-import { Card, Title, Chip, Button } from 'react-native-paper';
+import { Card, Title, Chip } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { styles } from './searchStyles';
 
@@ -41,13 +45,13 @@ export default function SearchScreen() {
     if (!query.trim()) return;
     setLoading(true);
     try {
-      // TODO: Student implementation
-      // const response = await fetch(`https://dummyjson.com/recipes/search?q=${encodeURIComponent(query)}`);
-      // const data = await response.json();
-      // setResults(data.recipes || []);
-      Alert.alert('TODO', 'Implement search: GET /recipes/search?q=' + query);
+      const response = await fetch(`https://dummyjson.com/recipes/search?q=${encodeURIComponent(query)}`);
+      const data = await response.json();
+      const recipes = Array.isArray(data?.recipes) ? data.recipes : [];
+      setResults(recipes);
     } catch {
-      // Handle error
+      Alert.alert('Search Error', 'Unable to search recipes at the moment.');
+      setResults([]);
     } finally {
       setLoading(false);
     }
@@ -76,39 +80,32 @@ export default function SearchScreen() {
     </TouchableOpacity>
   );
 
-  // Import Alert for TODO alert
-  const { Alert } = require('react-native');
-
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      {/* Search Bar */}
       <View style={styles.searchBarContainer}>
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search recipes..."
-          value={query}
-          onChangeText={setQuery}
-          onSubmitEditing={handleSearch}
-          left={<MaterialCommunityIcons name="magnify" size={24} color="#8D6E63" style={{ marginLeft: 12 }} />}
-          right={
-            query ? (
-              <TouchableOpacity onPress={() => setQuery('')} style={styles.clearButton}>
-                <MaterialCommunityIcons name="close" size={24} color="#8D6E63" style={{ marginRight: 12 }} />
-              </TouchableOpacity>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <View style={{ flex: 1 }}>
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search recipes..."
+              value={query}
+              onChangeText={setQuery}
+              onSubmitEditing={handleSearch}
+            />
+          </View>
+          <TouchableOpacity onPress={() => setQuery('')} style={styles.clearButton} disabled={!query}>
+            <MaterialCommunityIcons name="close" size={24} color="#8D6E63" />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={handleSearch} disabled={loading} style={styles.searchButton}>
+            {loading ? (
+              <ActivityIndicator size="small" color="white" />
             ) : (
-              <TouchableOpacity onPress={handleSearch} disabled={loading} style={styles.searchButton}>
-                {loading ? (
-                  <ActivityIndicator size="small" color="white" />
-                ) : (
-                  <MaterialCommunityIcons name="magnify" size={24} color="white" />
-                )}
-              </TouchableOpacity>
-            )
-          }
-        />
+              <MaterialCommunityIcons name="magnify" size={24} color="white" />
+            )}
+          </TouchableOpacity>
+        </View>
       </View>
 
-      {/* Category Filters */}
       <View style={styles.filterSection}>
         <Title style={styles.filterTitle}>Categories</Title>
         <FlatList
@@ -136,10 +133,9 @@ export default function SearchScreen() {
         />
       </View>
 
-      {/* Results */}
       <View style={styles.resultsSection}>
         <Title style={styles.resultsTitle}>
-          Results {query ? `for "${query}"` : ''} {results.length > 0 && `(${results.length})`}
+          Results {query ? `for "${query}"` : ''}{results.length > 0 ? ` (${results.length})` : ''}
         </Title>
         {loading ? (
           <View style={styles.loadingCenter}>
@@ -162,21 +158,17 @@ export default function SearchScreen() {
         )}
       </View>
 
-      {/* Student Guide */}
       <View style={styles.guideContainer}>
         <Text style={styles.guideTitle}>📝 Student Implementation Guide</Text>
         <Text style={styles.guideText}>
-          Complete the search functionality:\n
-          1. Call GET /recipes/search?q={query}\n
-          2. Add category filter: &category={category}\n
-          3. Add pagination with skip/limit\n
-          4. Implement infinite scroll\n
-          5. Add sort options (rating, time, calories)
+          Complete the search functionality:
+          {'\n'}1. Call GET /recipes/search?q={'{query}'}
+          {'\n'}2. Add category filter: &category={'{category}'}
+          {'\n'}3. Add pagination with skip/limit
+          {'\n'}4. Implement infinite scroll
+          {'\n'}5. Add sort options (rating, time, calories)
         </Text>
       </View>
     </ScrollView>
   );
 }
-
-// Need Image import
-import { Image } from 'react-native';

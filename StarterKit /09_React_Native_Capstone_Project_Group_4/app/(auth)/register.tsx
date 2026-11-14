@@ -20,6 +20,7 @@ import {
   Platform,
   Alert,
   ActivityIndicator,
+  TouchableOpacity,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
@@ -71,38 +72,24 @@ export default function RegisterScreen() {
       return;
     }
 
-    // TODO: Student Implementation
-    // 1. Call authApi.register() with formData
-    //    - Import authApi from '@/services/authApi'
-    //    - Pass: firstName, lastName, username, password, email, age, gender
-    // 2. On success:
-    //    - Option A: Auto-login by calling context.login(username, password)
-    //    - Option B: Show success alert and navigate to login screen
-    // 3. On failure: Error is handled by context (shows in error state)
-
     try {
-      // TODO: Replace with actual implementation
-      // const user = await authApi.register({
-      //   firstName: formData.firstName.trim(),
-      //   lastName: formData.lastName.trim(),
-      //   username: formData.username.trim(),
-      //   password: formData.password,
-      //   email: formData.email.trim(),
-      //   age: formData.age ? parseInt(formData.age) : undefined,
-      //   gender: formData.gender,
-      // });
-      // 
-      // // Auto-login after registration
-      // await login(formData.username.trim(), formData.password);
-      // router.replace('/(app)/(tabs)/home');
+    await register({
+      firstName: formData.firstName.trim(),
+      lastName: formData.lastName.trim(),
+      username: formData.username.trim(),
+      password: formData.password,
+      email: formData.email.trim(),
+      age: formData.age ? parseInt(formData.age, 10) : undefined,
+      gender: formData.gender,
+    });
 
-      Alert.alert(
-        'TODO: Implement Register',
-        'Complete the register function by:\n1. Calling authApi.register()\n2. Auto-login or redirect to login\n3. Handle errors',
-        [{ text: 'OK' }]
-      );
+    Alert.alert('Account created', 'Your account has been created successfully.', [
+      {
+        text: 'OK',
+        onPress: () => router.replace('/(auth)/login'),
+      },
+    ]);
     } catch (err) {
-      // Error handled by context
       console.error('Registration error:', err);
     }
   };
@@ -146,7 +133,6 @@ export default function RegisterScreen() {
                 onChangeText={(v) => handleFieldChange('firstName', v)}
                 style={[styles.input, styles.halfInput]}
                 autoCapitalize="words"
-                autoCompleteType="given-name"
                 returnKeyType="next"
                 disabled={isLoading}
               />
@@ -157,7 +143,6 @@ export default function RegisterScreen() {
                 onChangeText={(v) => handleFieldChange('lastName', v)}
                 style={[styles.input, styles.halfInput]}
                 autoCapitalize="words"
-                autoCompleteType="family-name"
                 returnKeyType="next"
                 disabled={isLoading}
               />
@@ -171,7 +156,6 @@ export default function RegisterScreen() {
               onChangeText={(v) => handleFieldChange('username', v)}
               style={styles.input}
               autoCapitalize="none"
-              autoCompleteType="username"
               returnKeyType="next"
               disabled={isLoading}
             />
@@ -185,7 +169,6 @@ export default function RegisterScreen() {
               style={styles.input}
               autoCapitalize="none"
               keyboardType="email-address"
-              autoCompleteType="email"
               returnKeyType="next"
               disabled={isLoading}
             />
@@ -198,7 +181,6 @@ export default function RegisterScreen() {
               onChangeText={(v) => handleFieldChange('password', v)}
               style={styles.input}
               secureTextEntry={!showPassword}
-              autoCompleteType="new-password"
               returnKeyType="next"
               disabled={isLoading}
               right={
@@ -218,7 +200,6 @@ export default function RegisterScreen() {
               onChangeText={(v) => handleFieldChange('confirmPassword', v)}
               style={styles.input}
               secureTextEntry={!showConfirmPassword}
-              autoCompleteType="new-password"
               returnKeyType="next"
               disabled={isLoading}
               right={
@@ -278,7 +259,6 @@ export default function RegisterScreen() {
               <Checkbox
                 status={agreedToTerms ? 'checked' : 'unchecked'}
                 onPress={() => setAgreedToTerms(!agreedToTerms)}
-                style={styles.checkbox}
               />
               <Text style={styles.termsText}>
                 I agree to the{' '}
@@ -326,6 +306,3 @@ export default function RegisterScreen() {
     </KeyboardAvoidingView>
   );
 }
-
-// Need to import TouchableOpacity for gender options
-import { TouchableOpacity } from 'react-native';

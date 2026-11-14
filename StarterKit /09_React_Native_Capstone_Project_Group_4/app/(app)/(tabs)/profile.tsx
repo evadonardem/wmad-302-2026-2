@@ -106,7 +106,7 @@ export default function ProfileScreen() {
               title="My Cookbook"
               description="Personal collections & meal plans"
               left={(props) => (
-                <MaterialCommunityIcons name="book-heart" size={24} color="#E85D04" style={props.style} />
+                <MaterialCommunityIcons name="book-open-variant" size={24} color="#E85D04" style={props.style} />
               )}
               right={(props) => <MaterialCommunityIcons name="chevron-right" size={24} color="#8D6E63" style={props.style} />}
               onPress={handleCookbook}
@@ -168,12 +168,12 @@ export default function ProfileScreen() {
       <View style={styles.guideContainer}>
         <Text style={styles.guideTitle}>📝 Student Implementation Guide</Text>
         <Text style={styles.guideText}>
-          Complete the profile functionality:\n
-          1. Edit profile: PUT /users/{id}\n
-          2. Fetch user stats (recipes, favorites)\n
-          3. Settings: theme, notifications, privacy\n
-          4. My Recipes: filter by userId\n
-          5. Cookbook: create collections/folders
+          Complete the profile functionality:{'\n'}
+          {'\n'}1. Edit profile: PUT /users/{'{id}'}
+          {'\n'}2. Fetch user stats (recipes, favorites)
+          {'\n'}3. Settings: theme, notifications, privacy
+          {'\n'}4. My Recipes: filter by userId
+          {'\n'}5. Cookbook: create collections/folders
         </Text>
       </View>
 

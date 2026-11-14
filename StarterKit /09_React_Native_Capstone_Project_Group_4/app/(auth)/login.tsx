@@ -89,8 +89,6 @@ export default function LoginScreen() {
               onChangeText={setUsername}
               style={styles.input}
               autoCapitalize="none"
-              autoCompleteType="username"
-              textContentType="username"
               returnKeyType="next"
               disabled={isLoading}
             />
@@ -103,8 +101,6 @@ export default function LoginScreen() {
               onChangeText={setPassword}
               style={styles.input}
               secureTextEntry={!showPassword}
-              autoCompleteType="password"
-              textContentType="password"
               returnKeyType="go"
               onSubmitEditing={handleLogin}
               disabled={isLoading}

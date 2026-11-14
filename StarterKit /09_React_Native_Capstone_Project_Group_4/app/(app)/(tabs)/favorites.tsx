@@ -8,9 +8,9 @@
  * - Create collections/folders
  */
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, Alert, Image } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Card, Title, Chip, Button, IconButton } from 'react-native-paper';
+import { Card, Title, Chip, Button } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { styles } from './favoritesStyles';
 
@@ -99,13 +99,13 @@ export default function FavoritesScreen() {
               ⏱️ {item.prepTimeMinutes + item.cookTimeMinutes}min · 👥 {item.servings} · ⭐ {item.rating}
             </Text>
           </View>
-          <IconButton
-            icon="heart"
-            size={24}
-            color="#C62828"
+          <TouchableOpacity
             onPress={() => removeFavorite(item.id)}
             accessibilityLabel="Remove from favorites"
-          />
+            style={styles.removeButton}
+          >
+            <MaterialCommunityIcons name="heart" size={24} color="#C62828" />
+          </TouchableOpacity>
         </View>
       </Card>
     </TouchableOpacity>
@@ -166,5 +166,3 @@ export default function FavoritesScreen() {
     </View>
   );
 }
-
-import { Image } from 'react-native';

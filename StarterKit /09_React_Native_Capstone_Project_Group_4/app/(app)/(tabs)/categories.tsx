@@ -2,7 +2,7 @@
  * Categories Screen - Cookbook
  * Browse recipes by category
  */
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, type ComponentProps } from 'react';
 import { View, Text, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Card, Title } from 'react-native-paper';
@@ -120,22 +120,22 @@ export default function CategoriesScreen() {
   );
 }
 
-function getCategoryIcon(category: string): string {
-  const icons: Record<string, string> = {
+function getCategoryIcon(category: string): ComponentProps<typeof MaterialCommunityIcons>['name'] {
+  const icons: Record<string, ComponentProps<typeof MaterialCommunityIcons>['name']> = {
     Beef: 'cow',
-    Chicken: 'chicken',
+    Chicken: 'food',
     Dessert: 'cake',
     Lamb: 'sheep',
     Pasta: 'noodles',
     Pork: 'pig',
     Seafood: 'fish',
     Vegetarian: 'leaf',
-    Breakfast: 'sunrise',
+    Breakfast: 'food',
     Appetizer: 'silverware-fork-knife',
     'Side Dish': 'bowl',
-    'Main Course': 'plate',
-    Soup: 'bowl-outline',
-    Salad: 'leaf-circle',
+    'Main Course': 'silverware-fork-knife',
+    Soup: 'bowl',
+    Salad: 'leaf',
     Drink: 'glass-mug',
   };
   return icons[category] || 'food';

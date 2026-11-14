@@ -5,6 +5,7 @@
  */
 
 import axios, { AxiosInstance, InternalAxiosRequestConfig } from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LoginCredentials, RegisterData, AuthUser, RefreshTokenResponse } from '@/types/auth';
 
 const API_BASE_URL = 'https://dummyjson.com/auth';
@@ -24,8 +25,8 @@ class AuthApiService {
 
     // Request interceptor to add auth token
     this.client.interceptors.request.use(
-      (config: InternalAxiosRequestConfig) => {
-        const token = this.getAccessToken();
+      async (config: InternalAxiosRequestConfig) => {
+        const token = await this.getAccessToken();
         if (token && config.headers) {
           config.headers.Authorization = `Bearer ${token}`;
         }
@@ -62,38 +63,34 @@ class AuthApiService {
     );
   }
 
-  private getAccessToken(): string | null {
+  private async getAccessToken(): Promise<string | null> {
     try {
-      const userData = localStorage.getItem('auth_user');
-      if (userData) {
-        const user = JSON.parse(userData);
-        return user.token || user.accessToken || null;
-      }
+      const userData = await AsyncStorage.getItem('auth_user');
+      if (!userData) return null;
+      const user = JSON.parse(userData) as Partial<AuthUser>;
+      return user.token || (user as { accessToken?: string }).accessToken || null;
     } catch {
       return null;
     }
-    return null;
   }
 
-  private getRefreshToken(): string | null {
+  private async getRefreshToken(): Promise<string | null> {
     try {
-      const userData = localStorage.getItem('auth_user');
-      if (userData) {
-        const user = JSON.parse(userData);
-        return user.refreshToken || null;
-      }
+      const userData = await AsyncStorage.getItem('auth_user');
+      if (!userData) return null;
+      const user = JSON.parse(userData) as Partial<AuthUser>;
+      return user.refreshToken || null;
     } catch {
       return null;
     }
-    return null;
   }
 
-  private setTokens(user: AuthUser): void {
-    localStorage.setItem('auth_user', JSON.stringify(user));
+  async setTokens(user: AuthUser): Promise<void> {
+    await AsyncStorage.setItem('auth_user', JSON.stringify(user));
   }
 
-  private clearTokens(): void {
-    localStorage.removeItem('auth_user');
+  async clearTokens(): Promise<void> {
+    await AsyncStorage.removeItem('auth_user');
   }
 
   /**
@@ -106,21 +103,29 @@ class AuthApiService {
       password: credentials.password,
       expiresInMins: credentials.expiresInMins || 60,
     });
-    this.setTokens(response.data);
+    await this.setTokens(response.data);
     return response.data;
   }
 
   /**
    * Register new user
    * POST /auth/register
-   * TODO: Students to complete this implementation
    */
   async register(data: RegisterData): Promise<AuthUser> {
-    // TODO: Student implementation
-    // 1. Call POST /auth/register with data
-    // 2. On success, call login() to get tokens
-    // 3. Return user with tokens
-    throw new Error('TODO: Implement register - call /auth/register then login');
+    const response = await this.client.post<AuthUser>('/register', {
+      firstName: data.firstName,
+      lastName: data.lastName,
+      username: data.username,
+      password: data.password,
+      email: data.email,
+      age: data.age,
+      gender: data.gender,
+      image: data.image,
+    });
+
+    const user = response.data;
+    await this.setTokens(user);
+    return user;
   }
 
   /**
@@ -137,12 +142,11 @@ class AuthApiService {
    * POST /auth/refresh
    */
   async refreshAccessToken(): Promise<RefreshTokenResponse> {
-    // Prevent multiple simultaneous refresh calls
     if (this.refreshTokenPromise) {
       return this.refreshTokenPromise;
     }
 
-    const refreshToken = this.getRefreshToken();
+    const refreshToken = await this.getRefreshToken();
     if (!refreshToken) {
       throw new Error('No refresh token available');
     }
@@ -152,21 +156,20 @@ class AuthApiService {
         refreshToken,
         expiresInMins: 60,
       })
-      .then((response) => {
-        // Update stored tokens with new ones
-        const currentUser = this.getStoredUser();
+      .then(async (response) => {
+        const currentUser = await this.getStoredUser();
         if (currentUser) {
           const updatedUser = {
             ...currentUser,
             token: response.data.accessToken,
             refreshToken: response.data.refreshToken,
           };
-          this.setTokens(updatedUser);
+          await this.setTokens(updatedUser);
         }
         return response.data;
       })
-      .catch((error) => {
-        this.clearTokens();
+      .catch(async (error) => {
+        await this.clearTokens();
         throw error;
       })
       .finally(() => {
@@ -179,9 +182,9 @@ class AuthApiService {
   /**
    * Get stored user data
    */
-  getStoredUser(): AuthUser | null {
+  async getStoredUser(): Promise<AuthUser | null> {
     try {
-      const userData = localStorage.getItem('auth_user');
+      const userData = await AsyncStorage.getItem('auth_user');
       return userData ? JSON.parse(userData) : null;
     } catch {
       return null;
@@ -192,15 +195,15 @@ class AuthApiService {
    * Logout - clear local tokens
    * Note: DummyJSON doesn't have a logout endpoint, so this is client-side only
    */
-  logout(): void {
-    this.clearTokens();
+  async logout(): Promise<void> {
+    await this.clearTokens();
   }
 
   /**
    * Check if user has valid tokens stored
    */
-  hasValidTokens(): boolean {
-    const user = this.getStoredUser();
+  async hasValidTokens(): Promise<boolean> {
+    const user = await this.getStoredUser();
     return !!(user?.token && user?.refreshToken);
   }
 }

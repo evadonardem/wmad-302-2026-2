@@ -16,7 +16,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
-import { Card, Title, Subtitle, Chip, Avatar, Button } from 'react-native-paper';
+import { Card, Title, Chip, Avatar, Button } from 'react-native-paper';
 import { styles } from './homeStyles';
 
 // Types for DummyJSON Recipes API
@@ -144,7 +144,7 @@ export default function HomeScreen() {
     return (
       <View style={styles.errorContainer}>
         <Text style={styles.errorText}>{error}</Text>
-        <Button mode="contained" onPress={fetchRecipes} style={styles.retryButton}>
+        <Button mode="contained" onPress={() => fetchRecipes()} style={styles.retryButton}>
           Retry
         </Button>
       </View>
