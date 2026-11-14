@@ -1,5 +1,5 @@
 /**
- * Register Screen - SKELETON WITH TODOs
+ * Register Screen - validated registration with automatic sign-in
  * Students complete this screen to learn auth flow
  * 
  * TODO LIST:
@@ -71,38 +71,18 @@ export default function RegisterScreen() {
       return;
     }
 
-    // TODO: Student Implementation
-    // 1. Call authApi.register() with formData
-    //    - Import authApi from '@/services/authApi'
-    //    - Pass: firstName, lastName, username, password, email, age, gender
-    // 2. On success:
-    //    - Option A: Auto-login by calling context.login(username, password)
-    //    - Option B: Show success alert and navigate to login screen
-    // 3. On failure: Error is handled by context (shows in error state)
-
     try {
-      // TODO: Replace with actual implementation
-      // const user = await authApi.register({
-      //   firstName: formData.firstName.trim(),
-      //   lastName: formData.lastName.trim(),
-      //   username: formData.username.trim(),
-      //   password: formData.password,
-      //   email: formData.email.trim(),
-      //   age: formData.age ? parseInt(formData.age) : undefined,
-      //   gender: formData.gender,
-      // });
-      // 
-      // // Auto-login after registration
-      // await login(formData.username.trim(), formData.password);
-      // router.replace('/(app)/(tabs)/home');
-
-      Alert.alert(
-        'TODO: Implement Register',
-        'Complete the register function by:\n1. Calling authApi.register()\n2. Auto-login or redirect to login\n3. Handle errors',
-        [{ text: 'OK' }]
-      );
+      await register({
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
+        username: formData.username.trim(),
+        password: formData.password,
+        email: formData.email.trim(),
+        age: formData.age ? Number(formData.age) : undefined,
+        gender: formData.gender,
+      });
+      router.replace('/(app)/(tabs)/home');
     } catch (err) {
-      // Error handled by context
       console.error('Registration error:', err);
     }
   };
@@ -312,16 +292,7 @@ export default function RegisterScreen() {
           </Card.Content>
         </Card>
 
-        {/* Student Guide */}
-        <View style={styles.guideContainer}>
-          <Text style={styles.guideTitle}>📝 Student Implementation Guide</Text>
-          <Text style={styles.guideText}>
-            Complete the handleRegister function to:\n
-            1. Call authApi.register() with form data\n
-            2. Auto-login or redirect to login\n
-            3. Handle success/error states
-          </Text>
-        </View>
+  
       </ScrollView>
     </KeyboardAvoidingView>
   );

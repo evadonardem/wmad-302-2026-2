@@ -207,7 +207,7 @@ npm run web
 └── .gitignore
 ```
 
-## 🔐 Authentication (Pre-built + TODO)
+## 🔐 Authentication
 
 **Pre-built (Working):**
 - Login with username/password → `POST /auth/login`
@@ -217,29 +217,20 @@ npm run web
 - Hydration on app start
 - Logout
 
-**Student TODOs:**
-1. **Register Screen** (`app/(auth)/register.tsx`)
-   - Complete form validation
-   - Call `authApi.register()` → `POST /auth/register`
-   - Auto-login after registration
+**Implemented in this working copy:**
+- Registration form validation, account creation, and automatic login
+- AsyncStorage-backed token persistence and refresh handling
+- Auth context registration and profile update actions
 
-2. **Auth API** (`services/authApi.ts`)
-   - Implement `register()` method
-   - Add token refresh interceptors
-
-3. **Auth Context** (`context/AuthContext.tsx`)
-   - Wire up `register` function
-   - Enhance token refresh logic
-
-## 🍳 Features to Implement
+## 🍳 Implemented Features
 
 ### Core Features (Required)
-- [ ] **Recipe Discovery** - Browse recipes with pagination
-- [ ] **Recipe Search** - Search by query, filter by category/cuisine/difficulty
-- [ ] **Recipe Details** - Full recipe with ingredients, instructions, nutrition
-- [ ] **Favorites** - Save/remove recipes (AsyncStorage persistence)
-- [ ] **Categories** - Browse by category (Beef, Chicken, Dessert, etc.)
-- [ ] **User Profile** - View/edit profile, stats, settings
+- [x] **Recipe Discovery** - Browse recipes with pull-to-refresh
+- [x] **Recipe Search** - Search by query, category and difficulty filters, sort by rating/time/calories
+- [x] **Recipe Details** - Full recipe with ingredients, instructions, nutrition, tags, and rating
+- [x] **Favorites** - Save/remove recipes with AsyncStorage persistence
+- [x] **Categories** - Browse by category with recipe counts
+- [x] **User Profile** - View profile, edit basic details, settings information, logout
 
 ### Bonus Features
 - [ ] **Meal Planning** - Weekly meal planner
@@ -323,7 +314,7 @@ npm run web:build
 
 ## 📝 Submission Checklist
 
-- [ ] All TODO items completed
+- [x] Core starter TODOs implemented (bonus features remain optional)
 - [ ] App runs on iOS & Android
 - [ ] No TypeScript errors (`npm run typecheck`)
 - [ ] No linting errors (`npm run lint`)
@@ -392,3 +383,14 @@ docker compose logs -f app   # should show the Metro QR banner
 ## 📄 License
 
 Educational use only - WMAD 302 Capstone Project
+## Implementation notes
+
+This working copy adds a recipe detail route at `app/(app)/(tabs)/recipe/[id].tsx`,
+search and client-side filters/sorting, persistent favorites, registration with
+automatic login, AsyncStorage-based auth token storage, and profile editing.
+DummyJSON is a demo API: write operations may be simulated by the service and
+should not be treated as durable production backend updates.
+
+Run `npm install`, then `npm run typecheck`, `npm run lint`, and `npm test`
+in your local environment before submission. Build and device testing are not
+performed by this archive preparation.

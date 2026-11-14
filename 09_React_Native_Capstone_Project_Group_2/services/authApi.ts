@@ -5,6 +5,7 @@
  */
 
 import axios, { AxiosInstance, InternalAxiosRequestConfig } from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LoginCredentials, RegisterData, AuthUser, RefreshTokenResponse } from '@/types/auth';
 
 const API_BASE_URL = 'https://dummyjson.com/auth';
@@ -24,8 +25,8 @@ class AuthApiService {
 
     // Request interceptor to add auth token
     this.client.interceptors.request.use(
-      (config: InternalAxiosRequestConfig) => {
-        const token = this.getAccessToken();
+      async (config: InternalAxiosRequestConfig) => {
+        const token = await this.getAccessToken();
         if (token && config.headers) {
           config.headers.Authorization = `Bearer ${token}`;
         }
@@ -50,8 +51,7 @@ class AuthApiService {
             return this.client(originalRequest);
           } catch (refreshError) {
             // Refresh failed, redirect to login
-            this.clearTokens();
-            // TODO: Student to implement navigation redirect to login
+            await this.clearTokens();
             console.warn('Token refresh failed, user logged out');
             return Promise.reject(refreshError);
           }
@@ -62,38 +62,22 @@ class AuthApiService {
     );
   }
 
-  private getAccessToken(): string | null {
-    try {
-      const userData = localStorage.getItem('auth_user');
-      if (userData) {
-        const user = JSON.parse(userData);
-        return user.token || user.accessToken || null;
-      }
-    } catch {
-      return null;
-    }
-    return null;
+  private async getAccessToken(): Promise<string | null> {
+    const user = await this.getStoredUser();
+    return user?.token || null;
   }
 
-  private getRefreshToken(): string | null {
-    try {
-      const userData = localStorage.getItem('auth_user');
-      if (userData) {
-        const user = JSON.parse(userData);
-        return user.refreshToken || null;
-      }
-    } catch {
-      return null;
-    }
-    return null;
+  private async getRefreshToken(): Promise<string | null> {
+    const user = await this.getStoredUser();
+    return user?.refreshToken || null;
   }
 
-  private setTokens(user: AuthUser): void {
-    localStorage.setItem('auth_user', JSON.stringify(user));
+  async setTokens(user: AuthUser): Promise<void> {
+    await AsyncStorage.setItem('auth_user', JSON.stringify(user));
   }
 
-  private clearTokens(): void {
-    localStorage.removeItem('auth_user');
+  private async clearTokens(): Promise<void> {
+    await AsyncStorage.removeItem('auth_user');
   }
 
   /**
@@ -106,21 +90,26 @@ class AuthApiService {
       password: credentials.password,
       expiresInMins: credentials.expiresInMins || 60,
     });
-    this.setTokens(response.data);
+    await this.setTokens(response.data);
     return response.data;
   }
 
   /**
    * Register new user
    * POST /auth/register
-   * TODO: Students to complete this implementation
    */
   async register(data: RegisterData): Promise<AuthUser> {
-    // TODO: Student implementation
-    // 1. Call POST /auth/register with data
-    // 2. On success, call login() to get tokens
-    // 3. Return user with tokens
-    throw new Error('TODO: Implement register - call /auth/register then login');
+    await this.client.post('/register', data);
+    // DummyJSON registration creates the account but does not issue auth tokens.
+    // Authenticate immediately so the app can enter its protected area.
+    return this.login({ username: data.username, password: data.password });
+  }
+
+
+  /** Update the current user's public profile. DummyJSON simulates this update. */
+  async updateProfile(userId: number, data: Partial<Pick<AuthUser, 'firstName' | 'lastName' | 'email'>>): Promise<AuthUser> {
+    const response = await axios.put<AuthUser>(`https://dummyjson.com/users/${userId}`, data, { headers: { Authorization: `Bearer ${await this.getAccessToken()}` } });
+    return response.data;
   }
 
   /**
@@ -142,7 +131,7 @@ class AuthApiService {
       return this.refreshTokenPromise;
     }
 
-    const refreshToken = this.getRefreshToken();
+    const refreshToken = await this.getRefreshToken();
     if (!refreshToken) {
       throw new Error('No refresh token available');
     }
@@ -152,55 +141,51 @@ class AuthApiService {
         refreshToken,
         expiresInMins: 60,
       })
-      .then((response) => {
+      .then(async (response) => {
         // Update stored tokens with new ones
-        const currentUser = this.getStoredUser();
+        const currentUser = await this.getStoredUser();
         if (currentUser) {
           const updatedUser = {
             ...currentUser,
             token: response.data.accessToken,
             refreshToken: response.data.refreshToken,
           };
-          this.setTokens(updatedUser);
+          await this.setTokens(updatedUser);
         }
         return response.data;
       })
-      .catch((error) => {
-        this.clearTokens();
+      .catch(async (error) => {
+        await this.clearTokens();
         throw error;
       })
       .finally(() => {
         this.refreshTokenPromise = null;
       });
 
-    return this.refreshTokenPromise;
+    return this.refreshTokenPromise!;
   }
 
   /**
    * Get stored user data
    */
-  getStoredUser(): AuthUser | null {
-    try {
-      const userData = localStorage.getItem('auth_user');
-      return userData ? JSON.parse(userData) : null;
-    } catch {
-      return null;
-    }
+  async getStoredUser(): Promise<AuthUser | null> {
+    try { const userData = await AsyncStorage.getItem('auth_user'); return userData ? JSON.parse(userData) as AuthUser : null; }
+    catch { return null; }
   }
 
   /**
    * Logout - clear local tokens
    * Note: DummyJSON doesn't have a logout endpoint, so this is client-side only
    */
-  logout(): void {
-    this.clearTokens();
+  async logout(): Promise<void> {
+    await this.clearTokens();
   }
 
   /**
    * Check if user has valid tokens stored
    */
-  hasValidTokens(): boolean {
-    const user = this.getStoredUser();
+  async hasValidTokens(): Promise<boolean> {
+    const user = await this.getStoredUser();
     return !!(user?.token && user?.refreshToken);
   }
 }

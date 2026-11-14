@@ -1,23 +1,28 @@
 /**
  * Profile Screen - Cookbook
- * TODO: Students implement
  * - Display user info from auth context
  * - Edit profile (PUT /users/{id})
  * - View order history / saved recipes
  * - Settings (notifications, theme, etc.)
  * - Logout
  */
-import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Alert, Image } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, ScrollView, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
-import { Card, Title, Button, List, Avatar, Divider } from 'react-native-paper';
+import { Card, Title, Button, List, Avatar, Divider, Dialog, Portal, TextInput } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { styles } from './profileStyles';
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { user, logout, isAuthenticated } = useAuth();
+  const { user, logout, isAuthenticated, updateProfile } = useAuth();
+  const [editVisible,setEditVisible] = useState(false);
+  const [firstName,setFirstName] = useState(user?.firstName ?? '');
+  const [lastName,setLastName] = useState(user?.lastName ?? '');
+  const [email,setEmail] = useState(user?.email ?? '');
+  const [saving,setSaving] = useState(false);
+  const [settingsVisible,setSettingsVisible] = useState(false);
 
   const handleLogout = () => {
     Alert.alert('Logout', 'Are you sure you want to logout?', [
@@ -27,24 +32,24 @@ export default function ProfileScreen() {
   };
 
   const handleEditProfile = () => {
-    // TODO: Navigate to edit profile screen
-    Alert.alert('TODO', 'Implement edit profile: PUT /users/{id}');
+    setFirstName(user?.firstName ?? ''); setLastName(user?.lastName ?? '');
+    setEmail(user?.email ?? ''); setEditVisible(true);
+  };
+  const saveProfile = async () => {
+    if (!user || !firstName.trim() || !lastName.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      Alert.alert('Check your details','Enter a first name, last name, and valid email.'); return;
+    }
+    setSaving(true);
+    try { await updateProfile({firstName:firstName.trim(),lastName:lastName.trim(),email:email.trim()}); setEditVisible(false); Alert.alert('Profile updated','Your profile changes were saved.'); }
+    catch(e) { Alert.alert('Update failed',e instanceof Error?e.message:'Please try again.'); }
+    finally { setSaving(false); }
   };
 
-  const handleSettings = () => {
-    // TODO: Navigate to settings
-    Alert.alert('TODO', 'Implement settings screen');
-  };
+  const handleSettings = () => setSettingsVisible(true);
 
-  const handleMyRecipes = () => {
-    // TODO: Navigate to user's created recipes
-    Alert.alert('TODO', 'Implement my recipes screen');
-  };
+  const handleMyRecipes = () => router.push('/(app)/(tabs)/search');
 
-  const handleCookbook = () => {
-    // TODO: Navigate to personal cookbook/collections
-    Alert.alert('TODO', 'Implement personal cookbook');
-  };
+  const handleCookbook = () => router.push('/(app)/(tabs)/favorites');
 
   if (!isAuthenticated) {
     return (
@@ -93,8 +98,8 @@ export default function ProfileScreen() {
         <Card style={styles.menuCard} elevation={1}>
           <List.Section>
             <List.Item
-              title="My Recipes"
-              description="Recipes you've created"
+              title="Discover Recipes"
+              description="Explore the recipe collection"
               left={(props) => (
                 <MaterialCommunityIcons name="book-edit" size={24} color="#E85D04" style={props.style} />
               )}
@@ -164,19 +169,24 @@ export default function ProfileScreen() {
         </Button>
       </View>
 
-      {/* Student Guide */}
-      <View style={styles.guideContainer}>
-        <Text style={styles.guideTitle}>📝 Student Implementation Guide</Text>
-        <Text style={styles.guideText}>
-          Complete the profile functionality:\n
-          1. Edit profile: PUT /users/{id}\n
-          2. Fetch user stats (recipes, favorites)\n
-          3. Settings: theme, notifications, privacy\n
-          4. My Recipes: filter by userId\n
-          5. Cookbook: create collections/folders
-        </Text>
-      </View>
 
+
+      <Portal>
+        <Dialog visible={editVisible} onDismiss={()=>setEditVisible(false)}>
+          <Dialog.Title>Edit Profile</Dialog.Title>
+          <Dialog.Content>
+            <TextInput label="First name" value={firstName} onChangeText={setFirstName} mode="outlined" style={{marginBottom:10}} />
+            <TextInput label="Last name" value={lastName} onChangeText={setLastName} mode="outlined" style={{marginBottom:10}} />
+            <TextInput label="Email" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" mode="outlined" />
+          </Dialog.Content>
+          <Dialog.Actions><Button onPress={()=>setEditVisible(false)}>Cancel</Button><Button loading={saving} disabled={saving} onPress={saveProfile}>Save</Button></Dialog.Actions>
+        </Dialog>
+        <Dialog visible={settingsVisible} onDismiss={()=>setSettingsVisible(false)}>
+          <Dialog.Title>Settings</Dialog.Title>
+          <Dialog.Content><Text>Account settings</Text><Text>Theme and notification preferences are not configured in this starter version.</Text></Dialog.Content>
+          <Dialog.Actions><Button onPress={()=>setSettingsVisible(false)}>Close</Button></Dialog.Actions>
+        </Dialog>
+      </Portal>
       <View style={styles.version}>
         <Text style={styles.versionText}>Cookbook v1.0.0</Text>
       </View>

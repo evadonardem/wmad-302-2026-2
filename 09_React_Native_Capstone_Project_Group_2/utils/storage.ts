@@ -112,7 +112,7 @@ export const authStorage = {
 };
 
 export const favoritesStorage = {
-  getIds: () => getStorageItem<number[]>(STORAGE_KEYS.FAVORITES) || Promise.resolve([]),
+  getIds: async () => (await getStorageItem<number[]>(STORAGE_KEYS.FAVORITES)) ?? [],
   setIds: (ids: number[]) => setStorageItem(STORAGE_KEYS.FAVORITES, ids),
   addId: async (id: number) => {
     const ids = await favoritesStorage.getIds();
@@ -137,7 +137,7 @@ export const favoritesStorage = {
 };
 
 export const cartStorage = {
-  getCart: () => getStorageItem<CartItem[]>(STORAGE_KEYS.CART) || Promise.resolve([]),
+  getCart: async () => (await getStorageItem<CartItem[]>(STORAGE_KEYS.CART)) ?? [],
   setCart: (items: CartItem[]) => setStorageItem(STORAGE_KEYS.CART, items),
   addItem: async (item: CartItem) => {
     const items = await cartStorage.getCart();
