@@ -1,17 +1,14 @@
 /**
- * Login Screen - Complete, working implementation
- * Students can use as reference for building register screen
+ * Login Screen - Cookbook
  */
 import React, { useState } from 'react';
 import {
   View,
   Text,
-  TextInput,
   TouchableOpacity,
   ScrollView,
   KeyboardAvoidingView,
   Platform,
-  ActivityIndicator,
   Alert,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -21,7 +18,7 @@ import { styles } from './styles';
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { login, isLoading, error, clearError } = useAuth();
+  const { login, isLoading, error } = useAuth();
   const { redirect } = useLocalSearchParams<{ redirect?: string }>();
 
   const [username, setUsername] = useState('');
@@ -29,17 +26,17 @@ export default function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false);
 
   const handleLogin = async () => {
-    if (!username.trim() || !password.trim()) {
+    if (!username.trim() || !password) {
       Alert.alert('Error', 'Please enter both username and password');
       return;
     }
 
     try {
-      await login(username.trim(), password.trim());
+      await login(username.trim(), password);
       // Redirect to intended page or home
       router.replace(redirect || '/(app)/(tabs)/home');
     } catch {
-      // Error handled in context
+      // Error handled in context and shown inline below
     }
   };
 
@@ -51,23 +48,20 @@ export default function LoginScreen() {
       await login('emilys', 'emilyspass');
       router.replace(redirect || '/(app)/(tabs)/home');
     } catch {
-      // Error handled in context
+      // Error handled in context and shown inline below
     }
   };
-
-  React.useEffect(() => {
-    if (error) {
-      Alert.alert('Login Failed', error, [{ text: 'OK', onPress: clearError }]);
-    }
-  }, [error, clearError]);
 
   return (
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
     >
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
         {/* Logo/Brand */}
         <View style={styles.logoContainer}>
           <Text style={styles.logoText}>🍳</Text>
@@ -89,7 +83,8 @@ export default function LoginScreen() {
               onChangeText={setUsername}
               style={styles.input}
               autoCapitalize="none"
-              autoCompleteType="username"
+              autoCorrect={false}
+              autoComplete="username"
               textContentType="username"
               returnKeyType="next"
               disabled={isLoading}
@@ -103,14 +98,18 @@ export default function LoginScreen() {
               onChangeText={setPassword}
               style={styles.input}
               secureTextEntry={!showPassword}
-              autoCompleteType="password"
+              autoCapitalize="none"
+              autoComplete="password"
               textContentType="password"
               returnKeyType="go"
               onSubmitEditing={handleLogin}
               disabled={isLoading}
-              right={<TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
-                <Text style={styles.eyeText}>{showPassword ? '🙈' : '👁️'}</Text>
-              </TouchableOpacity>}
+              right={
+                <PaperTextInput.Icon
+                  icon={showPassword ? 'eye-off' : 'eye'}
+                  onPress={() => setShowPassword((prev) => !prev)}
+                />
+              }
             />
 
             {/* Error Display */}
@@ -125,22 +124,25 @@ export default function LoginScreen() {
               mode="contained"
               onPress={handleLogin}
               loading={isLoading}
-              style={styles.loginButton}
               disabled={isLoading}
+              style={styles.loginButton}
               contentStyle={styles.buttonContent}
+              labelStyle={styles.buttonText}
             >
-              {isLoading ? (
-                <ActivityIndicator color="white" size="small" />
-              ) : (
-                <Text style={styles.buttonText}>Sign In</Text>
-              )}
+              Sign In
             </Button>
 
             {/* Demo Login */}
             <View style={styles.demoContainer}>
               <Divider style={styles.divider} />
-              <TouchableOpacity onPress={handleDemoLogin} disabled={isLoading} style={styles.demoButton}>
-                <Text style={styles.demoButtonText}>Try Demo Account (emilys / emilyspass)</Text>
+              <TouchableOpacity
+                onPress={handleDemoLogin}
+                disabled={isLoading}
+                style={styles.demoButton}
+              >
+                <Text style={styles.demoButtonText}>
+                  Try Demo Account (emilys / emilyspass)
+                </Text>
               </TouchableOpacity>
             </View>
 
@@ -149,6 +151,7 @@ export default function LoginScreen() {
               <Text style={styles.registerText}>Don't have an account? </Text>
               <TouchableOpacity
                 onPress={() => router.push('/(auth)/register')}
+                disabled={isLoading}
                 style={styles.link}
               >
                 <Text style={styles.linkText}>Sign Up</Text>

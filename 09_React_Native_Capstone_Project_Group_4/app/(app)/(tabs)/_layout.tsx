@@ -4,11 +4,11 @@
  */
 import { Tabs } from 'expo-router';
 import React from 'react';
-import { useAuth } from '@/context/AuthContext';
+import { useFavorites } from '@/context/FavoritesContext';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 export default function TabsLayout() {
-  const { user } = useAuth();
+  const { count: favoritesCount } = useFavorites();
 
   return (
     <Tabs
@@ -37,9 +37,9 @@ export default function TabsLayout() {
         name="home"
         options={{
           title: 'Discover',
-          tabBarIcon: ({ focused, color }) => (
+          tabBarIcon: ({ color }) => (
             <MaterialCommunityIcons
-              name={focused ? 'stove' : 'stove-outline'}
+              name="chef-hat"
               size={24}
               color={color}
             />
@@ -50,9 +50,9 @@ export default function TabsLayout() {
         name="search"
         options={{
           title: 'Search',
-          tabBarIcon: ({ focused, color }) => (
+          tabBarIcon: ({ color }) => (
             <MaterialCommunityIcons
-              name={focused ? 'magnify' : 'magnify-outline'}
+              name="magnify"
               size={24}
               color={color}
             />
@@ -63,6 +63,8 @@ export default function TabsLayout() {
         name="favorites"
         options={{
           title: 'Favorites',
+          tabBarBadge: favoritesCount > 0 ? favoritesCount : undefined,
+          tabBarBadgeStyle: { backgroundColor: '#E85D04', color: '#FFFFFF' },
           tabBarIcon: ({ focused, color }) => (
             <MaterialCommunityIcons
               name={focused ? 'heart' : 'heart-outline'}
@@ -85,6 +87,8 @@ export default function TabsLayout() {
           ),
         }}
       />
+      {/* Reachable from Home ("See All"), but not shown in the tab bar */}
+      <Tabs.Screen name="categories" options={{ href: null }} />
     </Tabs>
   );
 }

@@ -5,6 +5,16 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+/**
+ * Cart item shape. Defined here because '@/types/product' doesn't exist.
+ * If you later create types/product.ts, delete this and import it instead.
+ */
+export interface CartItem {
+  productId: number;
+  quantity: number;
+  [key: string]: unknown;
+}
+
 const STORAGE_KEYS = {
   AUTH_USER: 'auth_user',
   FAVORITES: 'favorite_recipe_ids',
@@ -20,7 +30,7 @@ export type StorageKey = typeof STORAGE_KEYS[keyof typeof STORAGE_KEYS];
 export async function getStorageItem<T>(key: StorageKey): Promise<T | null> {
   try {
     const value = await AsyncStorage.getItem(key);
-    return value ? JSON.parse(value) : null;
+    return value ? (JSON.parse(value) as T) : null;
   } catch (error) {
     console.error(`Failed to get storage item ${key}:`, error);
     return null;
@@ -87,7 +97,11 @@ export async function setMultipleStorageItems(
   items: Array<{ key: StorageKey; value: unknown }>
 ): Promise<void> {
   try {
-    const pairs = items.map(({ key, value }) => [key, JSON.stringify(value)]);
+    // Explicit tuple type: multiSet requires [string, string][], not string[][]
+    const pairs: [string, string][] = items.map(({ key, value }) => [
+      key,
+      JSON.stringify(value),
+    ]);
     await AsyncStorage.multiSet(pairs);
   } catch (error) {
     console.error('Failed to set multiple storage items:', error);
@@ -98,21 +112,25 @@ export async function setMultipleStorageItems(
 // Specific helpers for common use cases
 
 export const authStorage = {
-  getUser: () => getStorageItem<{
-    id: number;
-    username: string;
-    email: string;
-    firstName: string;
-    lastName: string;
-    token: string;
-    refreshToken: string;
-  }>(STORAGE_KEYS.AUTH_USER),
+  getUser: () =>
+    getStorageItem<{
+      id: number;
+      username: string;
+      email: string;
+      firstName: string;
+      lastName: string;
+      token: string;
+      refreshToken: string;
+    }>(STORAGE_KEYS.AUTH_USER),
   setUser: (user: unknown) => setStorageItem(STORAGE_KEYS.AUTH_USER, user),
   clearUser: () => removeStorageItem(STORAGE_KEYS.AUTH_USER),
 };
 
 export const favoritesStorage = {
-  getIds: () => getStorageItem<number[]>(STORAGE_KEYS.FAVORITES) || Promise.resolve([]),
+  // `?? []` after await: the old `|| Promise.resolve([])` never ran, because
+  // a Promise is always truthy, so the result could still be null.
+  getIds: async (): Promise<number[]> =>
+    (await getStorageItem<number[]>(STORAGE_KEYS.FAVORITES)) ?? [],
   setIds: (ids: number[]) => setStorageItem(STORAGE_KEYS.FAVORITES, ids),
   addId: async (id: number) => {
     const ids = await favoritesStorage.getIds();
@@ -137,7 +155,8 @@ export const favoritesStorage = {
 };
 
 export const cartStorage = {
-  getCart: () => getStorageItem<CartItem[]>(STORAGE_KEYS.CART) || Promise.resolve([]),
+  getCart: async (): Promise<CartItem[]> =>
+    (await getStorageItem<CartItem[]>(STORAGE_KEYS.CART)) ?? [],
   setCart: (items: CartItem[]) => setStorageItem(STORAGE_KEYS.CART, items),
   addItem: async (item: CartItem) => {
     const items = await cartStorage.getCart();
@@ -167,6 +186,3 @@ export const cartStorage = {
   },
   clear: () => removeStorageItem(STORAGE_KEYS.CART),
 };
-
-// Import CartItem type for cartStorage
-import type { CartItem } from '@/types/product';

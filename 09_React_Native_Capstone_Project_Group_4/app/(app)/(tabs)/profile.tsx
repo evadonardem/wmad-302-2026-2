@@ -1,49 +1,64 @@
 /**
  * Profile Screen - Cookbook
- * TODO: Students implement
- * - Display user info from auth context
- * - Edit profile (PUT /users/{id})
- * - View order history / saved recipes
- * - Settings (notifications, theme, etc.)
- * - Logout
+ * Still TODO (features, not bugs): edit profile (PUT /users/{id}), real stats,
+ * settings, my recipes, personal cookbook.
  */
 import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Alert, Image } from 'react-native';
+import { View, Text, ScrollView, Alert, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
-import { Card, Title, Button, List, Avatar, Divider } from 'react-native-paper';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Card, Button, List, Avatar, Divider } from 'react-native-paper';
 import { styles } from './profileStyles';
+
+// Alert.alert with buttons does nothing on react-native-web, so use the browser's dialogs there.
+type WebDialogs = { confirm?: (message: string) => boolean; alert?: (message: string) => void };
+const webDialogs = globalThis as unknown as WebDialogs;
+
+function confirmAction(title: string, message: string, confirmLabel: string, onConfirm: () => void) {
+  if (Platform.OS === 'web') {
+    if (webDialogs.confirm?.(`${title}\n\n${message}`)) onConfirm();
+    return;
+  }
+  Alert.alert(title, message, [
+    { text: 'Cancel', style: 'cancel' },
+    { text: confirmLabel, style: 'destructive', onPress: onConfirm },
+  ]);
+}
+
+function notify(title: string, message: string) {
+  if (Platform.OS === 'web') {
+    webDialogs.alert?.(`${title}\n\n${message}`);
+    return;
+  }
+  Alert.alert(title, message);
+}
 
 export default function ProfileScreen() {
   const router = useRouter();
   const { user, logout, isAuthenticated } = useAuth();
 
   const handleLogout = () => {
-    Alert.alert('Logout', 'Are you sure you want to logout?', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Logout', style: 'destructive', onPress: logout },
-    ]);
+    confirmAction('Logout', 'Are you sure you want to logout?', 'Logout', logout);
   };
 
   const handleEditProfile = () => {
     // TODO: Navigate to edit profile screen
-    Alert.alert('TODO', 'Implement edit profile: PUT /users/{id}');
+    notify('TODO', 'Implement edit profile: PUT /users/{id}');
   };
 
   const handleSettings = () => {
     // TODO: Navigate to settings
-    Alert.alert('TODO', 'Implement settings screen');
+    notify('TODO', 'Implement settings screen');
   };
 
   const handleMyRecipes = () => {
     // TODO: Navigate to user's created recipes
-    Alert.alert('TODO', 'Implement my recipes screen');
+    notify('TODO', 'Implement my recipes screen');
   };
 
   const handleCookbook = () => {
     // TODO: Navigate to personal cookbook/collections
-    Alert.alert('TODO', 'Implement personal cookbook');
+    notify('TODO', 'Implement personal cookbook');
   };
 
   if (!isAuthenticated) {
@@ -58,11 +73,11 @@ export default function ProfileScreen() {
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       {/* Profile Header */}
       <View style={styles.header}>
-        <Avatar.Image
-          size={88}
-          source={{ uri: user?.image || 'https://via.placeholder.com/150' }}
-          style={styles.avatar}
-        />
+        {user?.image ? (
+          <Avatar.Image size={88} source={{ uri: user.image }} style={styles.avatar} />
+        ) : (
+          <Avatar.Icon size={88} icon="account" style={styles.avatar} color="#E85D04" />
+        )}
         <View style={styles.nameContainer}>
           <Text style={styles.name}>
             {user?.firstName} {user?.lastName}
@@ -95,30 +110,24 @@ export default function ProfileScreen() {
             <List.Item
               title="My Recipes"
               description="Recipes you've created"
-              left={(props) => (
-                <MaterialCommunityIcons name="book-edit" size={24} color="#E85D04" style={props.style} />
-              )}
-              right={(props) => <MaterialCommunityIcons name="chevron-right" size={24} color="#8D6E63" style={props.style} />}
+              left={(props) => <List.Icon {...props} icon="book-edit" color="#E85D04" />}
+              right={(props) => <List.Icon {...props} icon="chevron-right" color="#8D6E63" />}
               onPress={handleMyRecipes}
             />
             <Divider style={styles.divider} />
             <List.Item
               title="My Cookbook"
               description="Personal collections & meal plans"
-              left={(props) => (
-                <MaterialCommunityIcons name="book-heart" size={24} color="#E85D04" style={props.style} />
-              )}
-              right={(props) => <MaterialCommunityIcons name="chevron-right" size={24} color="#8D6E63" style={props.style} />}
+              left={(props) => <List.Icon {...props} icon="book-open-variant" color="#E85D04" />}
+              right={(props) => <List.Icon {...props} icon="chevron-right" color="#8D6E63" />}
               onPress={handleCookbook}
             />
             <Divider style={styles.divider} />
             <List.Item
               title="Favorites"
               description="Your saved recipes"
-              left={(props) => (
-                <MaterialCommunityIcons name="heart" size={24} color="#E85D04" style={props.style} />
-              )}
-              right={(props) => <MaterialCommunityIcons name="chevron-right" size={24} color="#8D6E63" style={props.style} />}
+              left={(props) => <List.Icon {...props} icon="heart" color="#E85D04" />}
+              right={(props) => <List.Icon {...props} icon="chevron-right" color="#8D6E63" />}
               onPress={() => router.push('/(app)/(tabs)/favorites')}
             />
           </List.Section>
@@ -131,20 +140,16 @@ export default function ProfileScreen() {
             <List.Item
               title="Edit Profile"
               description="Update your information"
-              left={(props) => (
-                <MaterialCommunityIcons name="account-edit" size={24} color="#E85D04" style={props.style} />
-              )}
-              right={(props) => <MaterialCommunityIcons name="chevron-right" size={24} color="#8D6E63" style={props.style} />}
+              left={(props) => <List.Icon {...props} icon="account-edit" color="#E85D04" />}
+              right={(props) => <List.Icon {...props} icon="chevron-right" color="#8D6E63" />}
               onPress={handleEditProfile}
             />
             <Divider style={styles.divider} />
             <List.Item
               title="Settings"
               description="Notifications, theme, privacy"
-              left={(props) => (
-                <MaterialCommunityIcons name="cog" size={24} color="#E85D04" style={props.style} />
-              )}
-              right={(props) => <MaterialCommunityIcons name="chevron-right" size={24} color="#8D6E63" style={props.style} />}
+              left={(props) => <List.Icon {...props} icon="cog" color="#E85D04" />}
+              right={(props) => <List.Icon {...props} icon="chevron-right" color="#8D6E63" />}
               onPress={handleSettings}
             />
           </List.Section>
@@ -162,19 +167,6 @@ export default function ProfileScreen() {
         >
           <Text style={styles.logoutButtonText}>Logout</Text>
         </Button>
-      </View>
-
-      {/* Student Guide */}
-      <View style={styles.guideContainer}>
-        <Text style={styles.guideTitle}>📝 Student Implementation Guide</Text>
-        <Text style={styles.guideText}>
-          Complete the profile functionality:\n
-          1. Edit profile: PUT /users/{id}\n
-          2. Fetch user stats (recipes, favorites)\n
-          3. Settings: theme, notifications, privacy\n
-          4. My Recipes: filter by userId\n
-          5. Cookbook: create collections/folders
-        </Text>
       </View>
 
       <View style={styles.version}>

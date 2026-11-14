@@ -16,7 +16,8 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
-import { Card, Title, Subtitle, Chip, Avatar, Button } from 'react-native-paper';
+import { Card, Title, Chip, Avatar, Button } from 'react-native-paper';
+import { FavoriteButton } from '@/components/FavoriteButton';
 import { styles } from './homeStyles';
 
 // Types for DummyJSON Recipes API
@@ -81,7 +82,7 @@ export default function HomeScreen() {
   const renderRecipe = ({ item }: { item: Recipe }) => (
     <TouchableOpacity
       style={styles.recipeCard}
-      onPress={() => router.push(`/(app)/(tabs)/recipe/${item.id}`)}
+      onPress={() => router.push(`/recipe/${item.id}`)}
       activeOpacity={0.8}
     >
       <Card style={styles.card} elevation={2}>
@@ -103,6 +104,7 @@ export default function HomeScreen() {
               {item.difficulty}
             </Chip>
           </View>
+          <FavoriteButton recipeId={item.id} style={{ position: 'absolute', top: 4, left: 4, zIndex: 1 }} />
         </View>
         <Card.Content style={styles.cardContent}>
           <Title style={styles.recipeTitle} numberOfLines={1}>
@@ -144,7 +146,7 @@ export default function HomeScreen() {
     return (
       <View style={styles.errorContainer}>
         <Text style={styles.errorText}>{error}</Text>
-        <Button mode="contained" onPress={fetchRecipes} style={styles.retryButton}>
+        <Button mode="contained" onPress={() => fetchRecipes()} style={styles.retryButton}>
           Retry
         </Button>
       </View>
@@ -174,6 +176,9 @@ export default function HomeScreen() {
       <View style={styles.sectionContainer}>
         <View style={styles.sectionHeader}>
           <Title style={styles.sectionTitle}>Categories</Title>
+          <TouchableOpacity onPress={() => router.push('/(app)/(tabs)/categories')} style={styles.seeAll}>
+            <Text style={styles.seeAllText}>See All</Text>
+          </TouchableOpacity>
         </View>
         <FlatList
           data={[

@@ -3,9 +3,20 @@
  */
 
 import React from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, ActivityIndicator } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  TouchableOpacity,
+  ActivityIndicator,
+  DimensionValue,
+} from 'react-native';
 import { Card, Title, Chip, Badge, Button } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+
+/** Valid MaterialCommunityIcons icon names */
+export type IconName = React.ComponentProps<typeof MaterialCommunityIcons>['name'];
 
 interface RecipeCardProps {
   recipe: {
@@ -19,6 +30,7 @@ interface RecipeCardProps {
     servings: number;
     rating: number;
     reviewCount: number;
+    caloriesPerServing?: number;
   };
   onPress: () => void;
   style?: any;
@@ -58,7 +70,9 @@ export function RecipeCard({ recipe, onPress, style }: RecipeCardProps) {
               ⏱️ {recipe.prepTimeMinutes + recipe.cookTimeMinutes} min
             </Text>
             <Text style={styles.metaText}>👥 {recipe.servings} servings</Text>
-            <Text style={styles.metaText}>🔥 {recipe.caloriesPerServing} cal</Text>
+            {recipe.caloriesPerServing != null && (
+              <Text style={styles.metaText}>🔥 {recipe.caloriesPerServing} cal</Text>
+            )}
           </View>
           <View style={styles.cuisineRow}>
             <Chip style={styles.cuisineChip}>{recipe.cuisine}</Chip>
@@ -106,8 +120,8 @@ export function ProductCard({ product, onPress, style }: ProductCardProps) {
             resizeMode="contain"
           />
           {product.discountPercentage > 0 && (
-            <Badge style={styles.discountBadge} variant="primary">
-              -{Math.round(product.discountPercentage)}%
+            <Badge style={styles.discountBadge}>
+              {`-${Math.round(product.discountPercentage)}%`}
             </Badge>
           )}
         </View>
@@ -137,7 +151,7 @@ interface CategoryChipProps {
   label: string;
   selected?: boolean;
   onPress: () => void;
-  icon?: string;
+  icon?: IconName;
   style?: any;
 }
 
@@ -186,7 +200,7 @@ export function LoadingOverlay({ visible, message = 'Loading...' }: LoadingOverl
 }
 
 interface EmptyStateProps {
-  icon: string;
+  icon: IconName;
   title: string;
   message: string;
   actionLabel?: string;
@@ -210,7 +224,7 @@ export function EmptyState({ icon, title, message, actionLabel, onAction }: Empt
 
 interface SkeletonProps {
   height?: number;
-  width?: number | string;
+  width?: DimensionValue;
   borderRadius?: number;
 }
 

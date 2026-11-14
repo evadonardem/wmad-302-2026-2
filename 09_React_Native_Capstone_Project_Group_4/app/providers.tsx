@@ -3,13 +3,16 @@
  */
 import { ReactNode } from 'react';
 import { AuthProvider } from '@/context/AuthContext';
+import { FavoritesProvider } from '@/context/FavoritesContext';
 import { PaperProvider } from 'react-native-paper';
 import { theme } from '@/constants/theme';
 
 export function Providers({ children }: { children: ReactNode }) {
   return (
     <PaperProvider theme={theme}>
-      <AuthProvider>{children}</AuthProvider>
+      <AuthProvider>
+        <FavoritesProvider>{children}</FavoritesProvider>
+      </AuthProvider>
     </PaperProvider>
   );
 }
