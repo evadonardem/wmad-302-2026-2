@@ -5,6 +5,7 @@ import { MD3DarkTheme, MD3LightTheme, PaperProvider } from 'react-native-paper';
 import { PhotosProvider } from '@/photos';
 import { SearchHistoryProvider } from '@/searchHistory';
 import { ThemeModeProvider } from '@/themeMode';
+import React from 'react';
 
 export default function RootLayout() {
   const [isDarkMode, setIsDarkMode] = useState(false);
