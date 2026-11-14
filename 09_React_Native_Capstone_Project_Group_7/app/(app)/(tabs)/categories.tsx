@@ -1,6 +1,5 @@
 /**
- * Categories Screen - Cookbook
- * Browse recipes by category
+ * Categories Screen - Botanical Sage & Terracotta Theme
  */
 import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
@@ -8,6 +7,7 @@ import { useRouter } from 'expo-router';
 import { Card, Title } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { recipeApi } from '@/services/recipeApi';
+import { APP_COLORS } from '@/constants/theme';
 import { styles } from './categoriesStyles';
 
 interface Category {
@@ -29,7 +29,6 @@ export default function CategoriesScreen() {
     try {
       setLoading(true);
       const categoryNames = await recipeApi.getCategories();
-      // Get count for each category (optional - could be slow)
       const categoriesWithCounts = await Promise.all(
         categoryNames.slice(0, 12).map(async (name) => {
           try {
@@ -51,21 +50,21 @@ export default function CategoriesScreen() {
   const renderCategory = ({ item }: { item: Category }) => (
     <TouchableOpacity
       style={styles.categoryCard}
-      onPress={() => router.push(`/app/(tabs)/search?category=${encodeURIComponent(item.name)}`)}
-      activeOpacity={0.8}
+      onPress={() => router.push(`/(app)/(tabs)/search?category=${encodeURIComponent(item.name)}` as any)}
+      activeOpacity={0.85}
     >
       <Card style={styles.card} elevation={1}>
         <Card.Content style={styles.cardContent}>
           <View style={styles.iconContainer}>
             <MaterialCommunityIcons
-              name={getCategoryIcon(item.name)}
-              size={32}
-              color="#E85D04"
+              name={getCategoryIcon(item.name) as any}
+              size={30}
+              color={APP_COLORS.primary}
             />
           </View>
           <Title style={styles.categoryName}>{item.name}</Title>
           {item.count !== undefined && (
-            <Text style={styles.categoryCount}>{item.count} recipes</Text>
+            <Text style={styles.categoryCount}>{item.count} dishes</Text>
           )}
         </Card.Content>
       </Card>
@@ -75,8 +74,8 @@ export default function CategoriesScreen() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#E85D04" />
-        <Text style={styles.loadingText}>Loading categories...</Text>
+        <ActivityIndicator size="large" color={APP_COLORS.primary} />
+        <Text style={styles.loadingText}>Loading pantry categories...</Text>
       </View>
     );
   }
@@ -91,8 +90,8 @@ export default function CategoriesScreen() {
 
   return (
     <View style={styles.container}>
-      <Title style={styles.pageTitle}>Categories</Title>
-      <Text style={styles.pageSubtitle}>Browse recipes by category</Text>
+      <Title style={styles.pageTitle}>Culinary Categories</Title>
+      <Text style={styles.pageSubtitle}>Select an ingredient or course style</Text>
 
       <FlatList
         data={categories}
@@ -101,42 +100,30 @@ export default function CategoriesScreen() {
         numColumns={2}
         columnWrapperStyle={styles.gridWrapper}
         contentContainerStyle={styles.gridContent}
+        showsVerticalScrollIndicator={false}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
       />
-
-      {/* Student Guide */}
-      <View style={styles.guideContainer}>
-        <Text style={styles.guideTitle}>📝 Student Implementation Guide</Text>
-        <Text style={styles.guideText}>
-          Enhance the categories screen:\n
-          1. Add category images from assets\n
-          2. Show recipe count per category\n
-          3. Add sub-categories (e.g., Beef → Steaks, Roasts)\n
-          4. Add "Popular" and "Trending" sections\n
-          5. Implement pull-to-refresh
-        </Text>
-      </View>
     </View>
   );
 }
 
 function getCategoryIcon(category: string): string {
   const icons: Record<string, string> = {
-    Beef: 'cow',
-    Chicken: 'chicken',
-    Dessert: 'cake',
-    Lamb: 'sheep',
-    Pasta: 'noodles',
-    Pork: 'pig',
+    Beef: 'food-steak',
+    Chicken: 'food-drumstick',
+    Dessert: 'cupcake',
+    Lamb: 'silverware-fork-knife',
+    Pasta: 'pasta',
+    Pork: 'grill',
     Seafood: 'fish',
     Vegetarian: 'leaf',
-    Breakfast: 'sunrise',
-    Appetizer: 'silverware-fork-knife',
-    'Side Dish': 'bowl',
-    'Main Course': 'plate',
-    Soup: 'bowl-outline',
-    Salad: 'leaf-circle',
-    Drink: 'glass-mug',
+    Breakfast: 'coffee',
+    Appetizer: 'cheese',
+    'Side Dish': 'bowl-mix',
+    'Main Course': 'pot-steam',
+    Soup: 'bowl',
+    Salad: 'sprout',
+    Drink: 'glass-cocktail',
   };
   return icons[category] || 'food';
 }

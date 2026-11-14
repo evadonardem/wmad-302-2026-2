@@ -1,12 +1,10 @@
 /**
- * Login Screen - Complete, working implementation
- * Students can use as reference for building register screen
+ * Login Screen - Botanical Sage & Terracotta Theme
  */
 import React, { useState } from 'react';
 import {
   View,
   Text,
-  TextInput,
   TouchableOpacity,
   ScrollView,
   KeyboardAvoidingView,
@@ -17,6 +15,8 @@ import {
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
 import { Card, Button, TextInput as PaperTextInput, Divider } from 'react-native-paper';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { APP_COLORS } from '@/constants/theme';
 import { styles } from './styles';
 
 export default function LoginScreen() {
@@ -36,22 +36,20 @@ export default function LoginScreen() {
 
     try {
       await login(username.trim(), password.trim());
-      // Redirect to intended page or home
-      router.replace(redirect || '/(app)/(tabs)/home');
+      router.replace((redirect as any) || '/(app)/(tabs)/home');
     } catch {
-      // Error handled in context
+      // Handled in context
     }
   };
 
   const handleDemoLogin = async () => {
-    // DummyJSON test credentials: emilys / emilyspass
     setUsername('emilys');
     setPassword('emilyspass');
     try {
       await login('emilys', 'emilyspass');
-      router.replace(redirect || '/(app)/(tabs)/home');
+      router.replace((redirect as any) || '/(app)/(tabs)/home');
     } catch {
-      // Error handled in context
+      // Handled in context
     }
   };
 
@@ -65,23 +63,21 @@ export default function LoginScreen() {
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
     >
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* Logo/Brand */}
         <View style={styles.logoContainer}>
-          <Text style={styles.logoText}>🍳</Text>
-          <Text style={styles.appName}>Cookbook</Text>
-          <Text style={styles.tagline}>Your Personal Recipe Collection</Text>
+          <View style={styles.logoBadge}>
+            <MaterialCommunityIcons name="silverware-fork-knife" size={34} color="#FAF9F5" />
+          </View>
+          <Text style={styles.appName}>Atelier Cookbook</Text>
+          <Text style={styles.tagline}>Curated Seasonal Recipes & Kitchen Craft</Text>
         </View>
 
-        {/* Login Card */}
-        <Card style={styles.card} elevation={3}>
+        <Card style={styles.card} elevation={1}>
           <Card.Content style={styles.cardContent}>
             <Text style={styles.title}>Welcome Back</Text>
-            <Text style={styles.subtitle}>Sign in to access your recipes</Text>
+            <Text style={styles.subtitle}>Sign in to open your personal recipe book</Text>
 
-            {/* Username Field */}
             <PaperTextInput
               label="Username or Email"
               mode="outlined"
@@ -89,13 +85,11 @@ export default function LoginScreen() {
               onChangeText={setUsername}
               style={styles.input}
               autoCapitalize="none"
-              autoCompleteType="username"
-              textContentType="username"
-              returnKeyType="next"
+              activeOutlineColor={APP_COLORS.primary}
+              outlineColor={APP_COLORS.border}
               disabled={isLoading}
             />
 
-            {/* Password Field */}
             <PaperTextInput
               label="Password"
               mode="outlined"
@@ -103,24 +97,26 @@ export default function LoginScreen() {
               onChangeText={setPassword}
               style={styles.input}
               secureTextEntry={!showPassword}
-              autoCompleteType="password"
-              textContentType="password"
               returnKeyType="go"
               onSubmitEditing={handleLogin}
+              activeOutlineColor={APP_COLORS.primary}
+              outlineColor={APP_COLORS.border}
               disabled={isLoading}
-              right={<TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
-                <Text style={styles.eyeText}>{showPassword ? '🙈' : '👁️'}</Text>
-              </TouchableOpacity>}
+              right={
+                <PaperTextInput.Icon
+                  icon={showPassword ? 'eye-off' : 'eye'}
+                  onPress={() => setShowPassword(!showPassword)}
+                  color={APP_COLORS.primary}
+                />
+              }
             />
 
-            {/* Error Display */}
             {error && (
               <View style={styles.errorContainer}>
                 <Text style={styles.errorText}>{error}</Text>
               </View>
             )}
 
-            {/* Login Button */}
             <Button
               mode="contained"
               onPress={handleLogin}
@@ -136,28 +132,22 @@ export default function LoginScreen() {
               )}
             </Button>
 
-            {/* Demo Login */}
             <View style={styles.demoContainer}>
               <Divider style={styles.divider} />
               <TouchableOpacity onPress={handleDemoLogin} disabled={isLoading} style={styles.demoButton}>
-                <Text style={styles.demoButtonText}>Try Demo Account (emilys / emilyspass)</Text>
+                <Text style={styles.demoButtonText}>Try Demo Kitchen (emilys / emilyspass)</Text>
               </TouchableOpacity>
             </View>
 
-            {/* Register Link */}
             <View style={styles.registerContainer}>
-              <Text style={styles.registerText}>Don't have an account? </Text>
-              <TouchableOpacity
-                onPress={() => router.push('/(auth)/register')}
-                style={styles.link}
-              >
-                <Text style={styles.linkText}>Sign Up</Text>
+              <Text style={styles.registerText}>New to Atelier? </Text>
+              <TouchableOpacity onPress={() => router.push('/(auth)/register')} style={styles.link}>
+                <Text style={styles.linkText}>Create Account</Text>
               </TouchableOpacity>
             </View>
           </Card.Content>
         </Card>
 
-        {/* Footer */}
         <View style={styles.footer}>
           <Text style={styles.footerText}>
             By signing in, you agree to our Terms of Service and Privacy Policy

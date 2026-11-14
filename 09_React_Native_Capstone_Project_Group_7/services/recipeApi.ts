@@ -48,13 +48,36 @@ class RecipeApiService {
   }
 
   /**
-   * Get recipes by category
+   * Get recipes by category (mapped to DummyJSON tags / cuisine / mealType)
    */
   async getRecipesByCategory(category: string, params: RecipeSearchParams = {}): Promise<RecipesResponse> {
-    const response = await this.client.get<RecipesResponse>(`/category/${encodeURIComponent(category)}`, {
-      params,
+    try {
+      const response = await this.client.get<RecipesResponse>(`/tag/${encodeURIComponent(category)}`, {
+        params,
+      });
+      if (response.data && response.data.recipes && response.data.recipes.length > 0) {
+        return response.data;
+      }
+    } catch {
+      // Fallback to fetching all and filtering
+    }
+
+    const response = await this.client.get<RecipesResponse>('/', {
+      params: { limit: 50, ...params },
     });
-    return response.data;
+    const lower = category.toLowerCase();
+    const filtered = (response.data.recipes || []).filter(
+      (r) =>
+        r.cuisine?.toLowerCase() === lower ||
+        r.tags?.some((t) => t.toLowerCase() === lower) ||
+        r.mealType?.some((m) => m.toLowerCase() === lower)
+    );
+    return {
+      recipes: filtered,
+      total: filtered.length,
+      skip: 0,
+      limit: filtered.length,
+    };
   }
 
   /**
@@ -79,8 +102,6 @@ class RecipeApiService {
    * Get all categories
    */
   async getCategories(): Promise<string[]> {
-    // DummyJSON doesn't have a categories endpoint for recipes
-    // Return static list based on known categories
     return [
       'Beef', 'Chicken', 'Dessert', 'Lamb', 'Pasta', 'Pork', 'Seafood', 'Vegetarian',
       'Breakfast', 'Appetizer', 'Side Dish', 'Main Course', 'Soup', 'Salad', 'Drink',

@@ -1,22 +1,24 @@
 /**
- * Favorites Screen Styles - Cookbook
+ * Favorites Screen Styles - Botanical Sage & Terracotta Theme
  */
 import { StyleSheet } from 'react-native';
+import { APP_COLORS } from '@/constants/theme';
 
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFDF8',
+    backgroundColor: APP_COLORS.background,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: APP_COLORS.background,
   },
   loadingText: {
     marginTop: 16,
-    fontSize: 16,
-    color: '#8D6E63',
+    fontSize: 15,
+    color: APP_COLORS.textSecondary,
   },
   emptyState: {
     flex: 1,
@@ -26,27 +28,30 @@ export const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: 22,
-    fontWeight: '700',
-    color: '#3E2723',
-    marginTop: 20,
+    fontWeight: '800',
+    color: APP_COLORS.textPrimary,
+    marginTop: 18,
   },
   emptyText: {
-    fontSize: 16,
-    color: '#8D6E63',
+    fontSize: 15,
+    color: APP_COLORS.textSecondary,
     marginTop: 8,
     textAlign: 'center',
   },
   browseButton: {
     marginTop: 24,
-    borderRadius: 12,
-    height: 52,
+    borderRadius: 14,
+    height: 50,
+    justifyContent: 'center',
+    backgroundColor: APP_COLORS.primary,
   },
   buttonContent: {
-    paddingHorizontal: 32,
+    paddingHorizontal: 28,
   },
   buttonText: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#FAF9F5',
   },
   listContent: {
     paddingHorizontal: 16,
@@ -54,29 +59,32 @@ export const styles = StyleSheet.create({
     paddingBottom: 120,
   },
   header: {
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#3E2723',
-  },
-  favoriteCard: {
+    paddingVertical: 10,
     marginBottom: 8,
   },
+  headerTitle: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: APP_COLORS.textPrimary,
+  },
+  favoriteCard: {
+    marginBottom: 10,
+  },
   card: {
-    borderRadius: 12,
-    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    backgroundColor: APP_COLORS.surface,
+    borderWidth: 1,
+    borderColor: APP_COLORS.border,
   },
   cardContent: {
     flexDirection: 'row',
+    alignItems: 'center',
     padding: 12,
   },
   recipeImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 8,
+    width: 82,
+    height: 82,
+    borderRadius: 12,
     marginRight: 12,
   },
   info: {
@@ -85,45 +93,27 @@ export const styles = StyleSheet.create({
   },
   title: {
     fontSize: 15,
-    fontWeight: '600',
-    color: '#3E2723',
-    marginBottom: 4,
+    fontWeight: '700',
+    color: APP_COLORS.textPrimary,
+    marginBottom: 6,
   },
   meta: {
     flexDirection: 'row',
     gap: 6,
-    marginBottom: 4,
+    marginBottom: 6,
   },
   difficultyChip: {
-    backgroundColor: '#FFF3E0',
+    backgroundColor: APP_COLORS.primaryContainer,
   },
   cuisineChip: {
-    backgroundColor: '#E8F5E9',
+    backgroundColor: APP_COLORS.chipBg,
   },
   details: {
     fontSize: 12,
-    color: '#8D6E63',
+    color: APP_COLORS.textSecondary,
+    fontWeight: '600',
   },
   separator: {
-    height: 8,
-  },
-  guideContainer: {
-    margin: 16,
-    padding: 16,
-    backgroundColor: '#FFF3E0',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#FFCC80',
-  },
-  guideTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#E85D04',
-    marginBottom: 8,
-  },
-  guideText: {
-    fontSize: 13,
-    color: '#5D4037',
-    lineHeight: 20,
+    height: 4,
   },
 });

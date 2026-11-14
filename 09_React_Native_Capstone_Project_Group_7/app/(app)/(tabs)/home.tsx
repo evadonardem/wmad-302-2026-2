@@ -1,7 +1,5 @@
 /**
- * Home Screen - Cookbook Discover Tab
- * Students implement: Recipe grid, categories, featured recipes
- * API: https://dummyjson.com/docs/recipes
+ * Home Screen - Botanical Sage & Terracotta Theme
  */
 import React, { useState, useEffect } from 'react';
 import {
@@ -16,10 +14,10 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
-import { Card, Title, Subtitle, Chip, Avatar, Button } from 'react-native-paper';
+import { Card, Title, Chip, Avatar, Button } from 'react-native-paper';
+import { APP_COLORS } from '@/constants/theme';
 import { styles } from './homeStyles';
 
-// Types for DummyJSON Recipes API
 interface Recipe {
   id: number;
   name: string;
@@ -81,10 +79,10 @@ export default function HomeScreen() {
   const renderRecipe = ({ item }: { item: Recipe }) => (
     <TouchableOpacity
       style={styles.recipeCard}
-      onPress={() => router.push(`/(app)/(tabs)/recipe/${item.id}`)}
-      activeOpacity={0.8}
+      onPress={() => router.push(`/(app)/(tabs)/recipe/${item.id}` as any)}
+      activeOpacity={0.85}
     >
-      <Card style={styles.card} elevation={2}>
+      <Card style={styles.card} elevation={1}>
         <View style={styles.imageContainer}>
           <Image
             source={{ uri: item.image }}
@@ -93,6 +91,16 @@ export default function HomeScreen() {
           />
           <View style={styles.difficultyBadge}>
             <Chip
+              textStyle={{
+                fontSize: 11,
+                fontWeight: '700',
+                color:
+                  item.difficulty === 'Easy'
+                    ? APP_COLORS.easyText
+                    : item.difficulty === 'Medium'
+                    ? APP_COLORS.mediumText
+                    : APP_COLORS.hardText,
+              }}
               style={[
                 styles.difficultyChip,
                 item.difficulty === 'Easy' && styles.easy,
@@ -110,20 +118,24 @@ export default function HomeScreen() {
           </Title>
           <View style={styles.metaRow}>
             <Text style={styles.metaText}>
-              ⏱️ {item.prepTimeMinutes + item.cookTimeMinutes} min
+              ⏱ {item.prepTimeMinutes + item.cookTimeMinutes}m
             </Text>
-            <Text style={styles.metaText}>👥 {item.servings} servings</Text>
-            <Text style={styles.metaText}>🔥 {item.caloriesPerServing} cal</Text>
+            <Text style={styles.metaText}>👥 {item.servings} srv</Text>
+            <Text style={styles.metaText}>🔥 {item.caloriesPerServing} kcal</Text>
           </View>
           <View style={styles.cuisineRow}>
-            <Chip style={styles.cuisineChip}>{item.cuisine}</Chip>
+            <Chip style={styles.cuisineChip} textStyle={{ color: APP_COLORS.primary, fontSize: 11, fontWeight: '700' }}>
+              {item.cuisine}
+            </Chip>
             {item.mealType.slice(0, 2).map((meal) => (
-              <Chip key={meal} style={styles.mealChip}>{meal}</Chip>
+              <Chip key={meal} style={styles.mealChip} textStyle={{ color: APP_COLORS.textSecondary, fontSize: 11, fontWeight: '600' }}>
+                {meal}
+              </Chip>
             ))}
           </View>
           <View style={styles.ratingRow}>
             <Text style={styles.ratingText}>
-              ⭐ {item.rating.toFixed(1)} ({item.reviewCount} reviews)
+              ★ {item.rating.toFixed(1)} ({item.reviewCount} reviews)
             </Text>
           </View>
         </Card.Content>
@@ -134,8 +146,8 @@ export default function HomeScreen() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#E85D04" />
-        <Text style={styles.loadingText}>Loading recipes...</Text>
+        <ActivityIndicator size="large" color={APP_COLORS.primary} />
+        <Text style={styles.loadingText}>Preparing kitchen...</Text>
       </View>
     );
   }
@@ -144,7 +156,7 @@ export default function HomeScreen() {
     return (
       <View style={styles.errorContainer}>
         <Text style={styles.errorText}>{error}</Text>
-        <Button mode="contained" onPress={fetchRecipes} style={styles.retryButton}>
+        <Button mode="contained" onPress={() => fetchRecipes()} style={styles.retryButton}>
           Retry
         </Button>
       </View>
@@ -155,25 +167,24 @@ export default function HomeScreen() {
     <ScrollView
       style={styles.scrollView}
       refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#E85D04']} />
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[APP_COLORS.primary]} />
       }
       contentContainerStyle={styles.scrollContent}
     >
-      {/* Welcome Header */}
       <View style={styles.welcomeContainer}>
         <View style={styles.welcomeTextContainer}>
+          <Text style={styles.welcomeEyebrow}>Seasonal Menu</Text>
           <Text style={styles.welcomeGreeting}>
-            {user ? `Welcome back, ${user.firstName}!` : 'Welcome to Cookbook!'}
+            {user ? `Hello, Chef ${user.firstName}` : 'Welcome to Atelier'}
           </Text>
-          <Text style={styles.welcomeSubtitle}>Discover delicious recipes</Text>
+          <Text style={styles.welcomeSubtitle}>Explore handcrafted dishes for your table</Text>
         </View>
-        <Avatar.Icon size={56} icon="chef-hat" style={styles.welcomeAvatar} />
+        <Avatar.Icon size={54} icon="chef-hat" color="#FAF9F5" style={styles.welcomeAvatar} />
       </View>
 
-      {/* Categories */}
       <View style={styles.sectionContainer}>
         <View style={styles.sectionHeader}>
-          <Title style={styles.sectionTitle}>Categories</Title>
+          <Title style={styles.sectionTitle}>Browse by Pantry</Title>
         </View>
         <FlatList
           data={[
@@ -184,8 +195,8 @@ export default function HomeScreen() {
           contentContainerStyle={styles.categoryList}
           renderItem={({ item }) => (
             <TouchableOpacity
-              style={[styles.categoryChip, { backgroundColor: '#FFF3E0' }]}
-              onPress={() => router.push(`/(app)/(tabs)/search?category=${item}`)}
+              style={styles.categoryChip}
+              onPress={() => router.push(`/(app)/(tabs)/search?category=${item}` as any)}
             >
               <Text style={styles.categoryChipText}>{item}</Text>
             </TouchableOpacity>
@@ -194,18 +205,18 @@ export default function HomeScreen() {
         />
       </View>
 
-      {/* Featured Recipes */}
       <View style={styles.sectionContainer}>
         <View style={styles.sectionHeader}>
-          <Title style={styles.sectionTitle}>Featured Recipes</Title>
-          <TouchableOpacity onPress={() => router.push('/(app)/(tabs)/search')} style={styles.seeAll}>
-            <Text style={styles.seeAllText}>See All</Text>
+          <Title style={styles.sectionTitle}>Chef's Selection</Title>
+          <TouchableOpacity onPress={() => router.push('/(app)/(tabs)/search' as any)} style={styles.seeAll}>
+            <Text style={styles.seeAllText}>Explore All</Text>
           </TouchableOpacity>
         </View>
         <FlatList
           data={recipes.slice(0, 10)}
           renderItem={renderRecipe}
           keyExtractor={(item) => item.id.toString()}
+          scrollEnabled={false}
           ItemSeparatorComponent={() => <View style={styles.cardSeparator} />}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>

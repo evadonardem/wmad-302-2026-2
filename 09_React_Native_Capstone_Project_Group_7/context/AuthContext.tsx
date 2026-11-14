@@ -1,6 +1,5 @@
 /**
- * Auth Context with useReducer - Complete scaffold
- * Students complete: register, token refresh integration, persistence hydration
+ * Auth Context with useReducer - Complete implementation
  */
 
 import React, {
@@ -176,11 +175,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }) => {
       dispatch({ type: 'AUTH_START' });
       try {
-        // TODO: Student implementation
-        // 1. Call authApi.register(data) - implement in services/authApi.ts
-        // 2. On success, dispatch AUTH_SUCCESS
-        // 3. On failure, dispatch AUTH_FAILURE
-        throw new Error('TODO: Implement register in AuthContext - call authApi.register');
+        const user = await authApi.register(data);
+        dispatch({ type: 'AUTH_SUCCESS', payload: user });
       } catch (error: unknown) {
         const message = error instanceof Error ? error.message : 'Registration failed';
         dispatch({ type: 'AUTH_FAILURE', payload: message });

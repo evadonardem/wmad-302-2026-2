@@ -1,68 +1,83 @@
 /**
- * Home Screen Styles - Cookbook
+ * Home Screen Styles - Botanical Sage & Terracotta Theme
  */
 import { StyleSheet } from 'react-native';
+import { APP_COLORS } from '@/constants/theme';
 
 export const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
-    backgroundColor: '#FFFDF8',
+    backgroundColor: APP_COLORS.background,
   },
   scrollContent: {
-    paddingBottom: 100, // Space for tab bar
+    paddingBottom: 100,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: APP_COLORS.background,
     paddingVertical: 60,
   },
   loadingText: {
     marginTop: 16,
-    fontSize: 16,
-    color: '#8D6E63',
+    fontSize: 15,
+    color: APP_COLORS.textSecondary,
+    fontWeight: '500',
   },
   errorContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: APP_COLORS.background,
     paddingHorizontal: 24,
   },
   errorText: {
     fontSize: 16,
-    color: '#C62828',
+    color: APP_COLORS.accent,
     textAlign: 'center',
     marginBottom: 16,
   },
   retryButton: {
     marginTop: 8,
+    backgroundColor: APP_COLORS.primary,
   },
   welcomeContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 20,
-    backgroundColor: '#FFF3E0',
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
-    marginBottom: 16,
+    marginHorizontal: 16,
+    marginTop: 16,
+    paddingHorizontal: 22,
+    paddingVertical: 24,
+    backgroundColor: APP_COLORS.primary,
+    borderRadius: 24,
+    marginBottom: 22,
   },
   welcomeTextContainer: {
     flex: 1,
+    paddingRight: 12,
+  },
+  welcomeEyebrow: {
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 1.5,
+    color: '#95D5B2',
+    textTransform: 'uppercase',
+    marginBottom: 4,
   },
   welcomeGreeting: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#3E2723',
+    fontSize: 22,
+    fontWeight: '800',
+    color: '#FAF9F5',
   },
   welcomeSubtitle: {
-    fontSize: 14,
-    color: '#8D6E63',
+    fontSize: 13,
+    color: '#D8F3DC',
     marginTop: 4,
   },
   welcomeAvatar: {
-    backgroundColor: '#E85D04',
+    backgroundColor: APP_COLORS.accent,
   },
   sectionContainer: {
     paddingHorizontal: 16,
@@ -75,51 +90,54 @@ export const styles = StyleSheet.create({
     marginBottom: 12,
   },
   sectionTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#3E2723',
+    fontSize: 19,
+    fontWeight: '800',
+    color: APP_COLORS.textPrimary,
+    letterSpacing: 0.2,
   },
   seeAll: {
     paddingVertical: 4,
+    paddingHorizontal: 10,
+    backgroundColor: APP_COLORS.primaryContainer,
+    borderRadius: 12,
   },
   seeAllText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#E85D04',
+    fontSize: 12,
+    fontWeight: '700',
+    color: APP_COLORS.primary,
   },
   categoryList: {
-    paddingHorizontal: 4,
+    paddingHorizontal: 2,
     gap: 8,
   },
   categoryChip: {
     paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
+    paddingVertical: 9,
+    borderRadius: 14,
     borderWidth: 1,
-    borderColor: '#FFCC80',
+    borderColor: APP_COLORS.border,
+    backgroundColor: APP_COLORS.surface,
   },
   categoryChipText: {
     fontSize: 13,
-    fontWeight: '500',
-    color: '#E85D04',
+    fontWeight: '700',
+    color: APP_COLORS.primary,
   },
   recipeCard: {
-    marginBottom: 12,
+    marginBottom: 14,
   },
   card: {
-    borderRadius: 16,
+    borderRadius: 20,
     overflow: 'hidden',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: APP_COLORS.surface,
+    borderWidth: 1,
+    borderColor: APP_COLORS.border,
   },
   imageContainer: {
     position: 'relative',
-    height: 180,
+    height: 190,
   },
   recipeImage: {
-    width: '100%',
-    height: '100%',
-  },
-  productImage: {
     width: '100%',
     height: '100%',
   },
@@ -130,60 +148,51 @@ export const styles = StyleSheet.create({
     zIndex: 1,
   },
   difficultyChip: {
-    borderRadius: 12,
+    borderRadius: 10,
   },
   easy: {
-    backgroundColor: '#E8F5E9',
+    backgroundColor: APP_COLORS.easyBg,
   },
   medium: {
-    backgroundColor: '#FFF3E0',
+    backgroundColor: APP_COLORS.mediumBg,
   },
   hard: {
-    backgroundColor: '#FDEDED',
+    backgroundColor: APP_COLORS.hardBg,
   },
   cardContent: {
     padding: 16,
   },
   recipeTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#3E2723',
+    fontSize: 17,
+    fontWeight: '800',
+    color: APP_COLORS.textPrimary,
     marginBottom: 8,
-  },
-  productTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#202124',
-    marginBottom: 8,
-  },
-  productCategory: {
-    fontSize: 12,
-    color: '#1A73E8',
-    fontWeight: '500',
-    marginBottom: 4,
-    textTransform: 'capitalize',
   },
   metaRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    backgroundColor: APP_COLORS.background,
+    borderRadius: 10,
   },
   metaText: {
     fontSize: 12,
-    color: '#8D6E63',
-    fontWeight: '500',
+    color: APP_COLORS.textSecondary,
+    fontWeight: '600',
   },
   cuisineRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 6,
-    marginBottom: 8,
+    marginBottom: 10,
   },
   cuisineChip: {
-    backgroundColor: '#FFF3E0',
+    backgroundColor: APP_COLORS.primaryContainer,
   },
   mealChip: {
-    backgroundColor: '#E8F5E9',
+    backgroundColor: APP_COLORS.chipBg,
   },
   ratingRow: {
     flexDirection: 'row',
@@ -191,33 +200,11 @@ export const styles = StyleSheet.create({
   },
   ratingText: {
     fontSize: 13,
-    color: '#8D6E63',
-    fontWeight: '500',
-  },
-  priceRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 8,
-  },
-  currentPrice: {
-    fontSize: 18,
+    color: APP_COLORS.accent,
     fontWeight: '700',
-    color: '#1A73E8',
-  },
-  originalPrice: {
-    fontSize: 14,
-    color: '#9E9E9E',
-    textDecorationLine: 'line-through',
-  },
-  discountBadge: {
-    position: 'absolute',
-    top: 8,
-    left: 8,
-    zIndex: 1,
   },
   cardSeparator: {
-    height: 8,
+    height: 4,
   },
   emptyContainer: {
     paddingVertical: 40,
@@ -225,6 +212,6 @@ export const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 16,
-    color: '#8D6E63',
+    color: APP_COLORS.textSecondary,
   },
 });
