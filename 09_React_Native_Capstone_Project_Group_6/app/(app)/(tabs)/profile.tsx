@@ -234,6 +234,14 @@ export default function ProfileScreen() {
               />
               <Divider style={styles.divider} />
               <List.Item
+                title="My Cookbook"
+                description="Collections, meal plan, shopping list"
+                left={menuIcon('book-open-page-variant')}
+                right={chevron}
+                onPress={() => router.push('/(app)/cookbook')}
+              />
+              <Divider style={styles.divider} />
+              <List.Item
                 title="Edit Profile"
                 description="Update your name and email"
                 left={menuIcon('account-edit')}

@@ -3,6 +3,9 @@
  */
 import type { PlannedMeal, ShoppingItem } from '@/types/cookbook';
 
+export const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
 /** Local date as "YYYY-MM-DD" (toISOString would shift the day by timezone). */
 export function toDateKey(date: Date): string {
   const y = date.getFullYear();
@@ -89,4 +92,32 @@ export function mergeIngredients(
     }
   }
   return items;
+}
+
+/** The next `count` days starting at `from` (used by the "plan meal" picker). */
+export function getUpcomingDays(from: Date, count = 14): Date[] {
+  return Array.from({ length: count }, (_, i) => {
+    const day = new Date(from.getFullYear(), from.getMonth(), from.getDate());
+    day.setDate(day.getDate() + i);
+    return day;
+  });
+}
+
+/** "Mon 9" - short label for a day chip. */
+export function formatDayShort(date: Date): string {
+  return `${DAY_NAMES[date.getDay()].slice(0, 3)} ${date.getDate()}`;
+}
+
+/** "Nov 9 - Nov 15" for a list of days (first to last). */
+export function formatWeekRange(days: Date[]): string {
+  if (days.length === 0) return '';
+  const label = (d: Date) => `${MONTH_NAMES[d.getMonth()]} ${d.getDate()}`;
+  return `${label(days[0])} - ${label(days[days.length - 1])}`;
+}
+
+/** Plain-text shopping list for the phone's share sheet. */
+export function buildShoppingMessage(items: ShoppingItem[]): string {
+  if (items.length === 0) return 'My shopping list is empty.';
+  const lines = items.map((item) => `${item.checked ? '[x]' : '[ ]'} ${item.name}`);
+  return `Shopping list\n\n${lines.join('\n')}`;
 }

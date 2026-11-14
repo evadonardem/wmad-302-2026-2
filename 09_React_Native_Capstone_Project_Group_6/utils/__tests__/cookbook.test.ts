@@ -1,6 +1,10 @@
 /* eslint-env jest */
 import {
   addWeeks,
+  buildShoppingMessage,
+  formatDayShort,
+  formatWeekRange,
+  getUpcomingDays,
   getWeekDays,
   mergeIngredients,
   normalizeIngredient,
@@ -102,5 +106,33 @@ describe('mergeIngredients', () => {
 
   it('skips blank ingredients', () => {
     expect(mergeIngredients([], [{ id: 1, ingredients: ['  ', ''] }])).toEqual([]);
+  });
+});
+
+describe('display helpers', () => {
+  it('formatDayShort shows weekday and day number', () => {
+    expect(formatDayShort(new Date(2026, 10, 9))).toBe('Mon 9');
+  });
+
+  it('formatWeekRange shows first and last day', () => {
+    expect(formatWeekRange(getWeekDays(new Date(2026, 10, 11)))).toBe('Nov 9 - Nov 15');
+    expect(formatWeekRange([])).toBe('');
+  });
+
+  it('getUpcomingDays starts today and gives the requested count', () => {
+    const days = getUpcomingDays(new Date(2026, 10, 30, 15, 0), 3).map(toDateKey);
+    expect(days).toEqual(['2026-11-30', '2026-12-01', '2026-12-02']);
+  });
+
+  it('buildShoppingMessage marks checked items', () => {
+    const msg = buildShoppingMessage([
+      { id: 'a', name: 'Flour', checked: false, recipeIds: [] },
+      { id: 'b', name: 'Eggs', checked: true, recipeIds: [] },
+    ]);
+    expect(msg).toBe('Shopping list\n\n[ ] Flour\n[x] Eggs');
+  });
+
+  it('buildShoppingMessage handles an empty list', () => {
+    expect(buildShoppingMessage([])).toBe('My shopping list is empty.');
   });
 });

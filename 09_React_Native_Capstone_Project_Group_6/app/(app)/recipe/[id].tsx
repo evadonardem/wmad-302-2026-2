@@ -3,7 +3,8 @@
  * Shows the full recipe: image, quick facts, rating, nutrition, ingredients
  * (tick them off as you cook), step-by-step instructions (with optional
  * cooking timers) and tags. The share button sends the recipe as text through
- * the phone's share sheet.
+ * the phone's share sheet. Buttons under the quick facts save the recipe to a
+ * collection, the meal plan or the shopping list.
  */
 import React, { useCallback, useEffect, useState } from 'react';
 import { View, ScrollView, Image, Share, StyleSheet } from 'react-native';
@@ -26,6 +27,8 @@ import { useFavorites } from '@/context/FavoritesContext';
 import { Recipe } from '@/types/recipe';
 import { StepTimer } from '@/components/StepTimer';
 import { buildShareMessage } from '@/utils/shareRecipe';
+import { RecipeActions } from '@/components/RecipeActions';
+import { OfflineBanner } from '@/components/OfflineBanner';
 
 /** Five stars, filled according to the rating (supports half stars). */
 function Stars({ rating }: { rating: number }) {
@@ -178,6 +181,9 @@ export default function RecipeDetailScreen() {
         <Image source={{ uri: recipe.image }} style={styles.heroImage} resizeMode="cover" />
 
         <View style={styles.body}>
+          {/* Shown only when the recipe came from the offline copy */}
+          <OfflineBanner />
+
           {/* Title + cuisine / difficulty */}
           <Text variant="headlineSmall" style={{ color: theme.colors.onSurface }}>
             {recipe.name}
@@ -221,6 +227,9 @@ export default function RecipeDetailScreen() {
             />
             <Fact icon="account-group-outline" label={`${recipe.servings} servings`} />
           </View>
+
+          {/* Collection / meal plan / shopping list buttons */}
+          <RecipeActions recipe={recipe} onMessage={setMessage} />
 
           {/* Nutrition */}
           <Text variant="titleLarge" style={styles.sectionTitle}>
