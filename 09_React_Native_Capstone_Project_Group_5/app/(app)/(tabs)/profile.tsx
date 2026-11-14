@@ -305,7 +305,7 @@ export default function ProfileScreen() {
         <Dialog.Content>
           <List.Item
             title="Show recipe ratings"
-            description="Display ratings on Discover cards"
+            description="Display ratings on recipe cards"
             right={() => (
               <Switch
                 value={preferences.showRecipeRatings}

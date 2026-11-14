@@ -166,6 +166,8 @@ export const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     marginBottom: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   errorText: {
     color: '#C62828',

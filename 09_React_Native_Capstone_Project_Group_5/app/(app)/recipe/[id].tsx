@@ -104,7 +104,6 @@ export default function RecipeDetailsScreen() {
 
         <View style={styles.stats}>
           <Text style={styles.stat}>⏱ {recipe.prepTimeMinutes + recipe.cookTimeMinutes} min</Text>
-          <Text style={styles.stat}>Serves {recipe.servings}</Text>
           <Text style={styles.stat}>{recipe.caloriesPerServing} cal</Text>
         </View>
 

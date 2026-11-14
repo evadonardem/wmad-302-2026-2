@@ -52,7 +52,7 @@ export default function CategoriesScreen() {
         <Card.Content style={styles.cardContent}>
           <View style={styles.iconContainer}>
             <MaterialCommunityIcons
-              name={getCategoryIcon(item.name) as any}
+              name={getCategoryIcon(item.name)}
               size={32}
               color="#E85D04"
             />
@@ -101,20 +101,20 @@ export default function CategoriesScreen() {
   );
 }
 
-function getCategoryIcon(category: string): string {
-  const icons: Record<string, string> = {
+function getCategoryIcon(category: string): React.ComponentProps<typeof MaterialCommunityIcons>['name'] {
+  const icons: Record<string, React.ComponentProps<typeof MaterialCommunityIcons>['name']> = {
     Beef: 'cow',
-    Chicken: 'chicken',
+    Chicken: 'food-drumstick',
     Dessert: 'cake',
     Lamb: 'sheep',
     Pasta: 'noodles',
     Pork: 'pig',
     Seafood: 'fish',
     Vegetarian: 'leaf',
-    Breakfast: 'sunrise',
+    Breakfast: 'egg-fried',
     Appetizer: 'silverware-fork-knife',
     'Side Dish': 'bowl',
-    'Main Course': 'plate',
+    'Main Course': 'food',
     Soup: 'bowl-outline',
     Salad: 'leaf-circle',
     Drink: 'glass-mug',

@@ -21,6 +21,7 @@ import {
   RECIPE_CATEGORIES,
 } from '@/utils/recipeCategories';
 import { recipeMatchesSearch } from '@/utils/recipeSearch';
+import { getStorageItem } from '@/utils/storage';
 import { styles } from './searchStyles';
 
 const PAGE_SIZE = 10;
@@ -58,6 +59,7 @@ export default function SearchScreen() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loadMoreError, setLoadMoreError] = useState<string | null>(null);
+  const [showRecipeRatings, setShowRecipeRatings] = useState<boolean | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedDifficulty, setSelectedDifficulty] = useState<Recipe['difficulty'] | null>(null);
   const [selectedCuisine, setSelectedCuisine] = useState<string | null>(null);
@@ -204,6 +206,8 @@ export default function SearchScreen() {
   }, []);
 
   useFocusEffect(useCallback(() => {
+    let active = true;
+    setShowRecipeRatings(null);
     const currentSearch = searchStateRef.current;
     void fetchPage(
       'initial',
@@ -212,6 +216,18 @@ export default function SearchScreen() {
       currentSearch.selectedDifficulty,
       currentSearch.selectedCuisine
     );
+
+    void getStorageItem<{ showRecipeRatings?: boolean }>('user_settings')
+      .then((preferences) => {
+        if (active) setShowRecipeRatings(preferences?.showRecipeRatings ?? true);
+      })
+      .catch(() => {
+        if (active) setShowRecipeRatings(true);
+      });
+
+    return () => {
+      active = false;
+    };
   }, [fetchPage]));
 
   const filterEffectInitializedRef = useRef(false);
@@ -277,7 +293,8 @@ export default function SearchScreen() {
               <Chip style={styles.cuisineChip}>{item.cuisine}</Chip>
             </View>
             <Text style={styles.resultDetails} numberOfLines={2}>
-              ⏱️ {item.prepTimeMinutes + item.cookTimeMinutes}min · 👥 {item.servings} · ⭐ {item.rating}
+              ⏱️ {item.prepTimeMinutes + item.cookTimeMinutes}min · 👥 {item.servings}
+              {showRecipeRatings ? ` · ⭐ ${item.rating}` : ''}
             </Text>
           </View>
         </View>

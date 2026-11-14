@@ -79,4 +79,18 @@ describe('local account registration', () => {
       service.login({ username: registration.username, password: 'WrongPassword123!' })
     ).rejects.toThrow('Incorrect username or password.');
   });
+
+  it('suggests signing up when remote login credentials are rejected', async () => {
+    const service = new AuthApiService();
+    service.client.post = jest.fn().mockRejectedValue({
+      isAxiosError: true,
+      response: { status: 400 },
+    });
+
+    await expect(
+      service.login({ username: 'newcook', password: 'Kitchen123!' })
+    ).rejects.toThrow(
+      "We couldn't sign you in. If you haven't created an account yet, please sign up first. Otherwise, check your username and password."
+    );
+  });
 });

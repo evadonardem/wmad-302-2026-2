@@ -170,11 +170,21 @@ class AuthApiService {
       return user;
     }
 
-    const response = await this.client.post<AuthUser>('/login', {
-      username: credentials.username,
-      password: credentials.password,
-      expiresInMins: credentials.expiresInMins || 60,
-    });
+    let response;
+    try {
+      response = await this.client.post<AuthUser>('/login', {
+        username: credentials.username,
+        password: credentials.password,
+        expiresInMins: credentials.expiresInMins || 60,
+      });
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error) && error.response?.status === 400) {
+        throw new Error(
+          "We couldn't sign you in. If you haven't created an account yet, please sign up first. Otherwise, check your username and password."
+        );
+      }
+      throw error;
+    }
 
     await this.setTokens(response.data);
     await this.saveLastLoginUsername(response.data.username);
