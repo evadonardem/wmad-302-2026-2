@@ -1,0 +1,197 @@
+/**
+ * Auth API Service - DummyJSON Authentication
+ * Docs: https://dummyjson.com/docs/auth
+ * Base URL: https://dummyjson.com/auth
+ */
+
+import axios, { AxiosInstance, InternalAxiosRequestConfig } from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { LoginCredentials, RegisterData, AuthUser, RefreshTokenResponse } from '@/types/auth';
+
+const API_BASE_URL = 'https://dummyjson.com/auth';
+
+class AuthApiService {
+  private client: AxiosInstance;
+  private refreshTokenPromise: Promise<RefreshTokenResponse> | null = null;
+
+  constructor() {
+    this.client = axios.create({
+      baseURL: API_BASE_URL,
+      timeout: 10000,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    // Request interceptor to add auth token
+    this.client.interceptors.request.use(
+      async (config: InternalAxiosRequestConfig) => {
+        const token = await this.getAccessToken();
+        if (token && config.headers) {
+          config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
+      },
+      (error) => Promise.reject(error)
+    );
+
+    // Response interceptor for token refresh
+    this.client.interceptors.response.use(
+      (response) => response,
+      async (error) => {
+        const originalRequest = error.config;
+
+        // If error is 401 and we haven't retried yet
+        if (error.response?.status === 401 && !originalRequest._retry) {
+          originalRequest._retry = true;
+
+          try {
+            const tokens = await this.refreshAccessToken();
+            originalRequest.headers.Authorization = `Bearer ${tokens.accessToken}`;
+            return this.client(originalRequest);
+          } catch (refreshError) {
+            // Refresh failed, redirect to login
+            await this.clearTokens();
+            console.warn('Token refresh failed, user logged out');
+            return Promise.reject(refreshError);
+          }
+        }
+
+        return Promise.reject(error);
+      }
+    );
+  }
+
+  private async getAccessToken(): Promise<string | null> {
+    const user = await this.getStoredUser();
+    return user?.token || null;
+  }
+
+  private async getRefreshToken(): Promise<string | null> {
+    const user = await this.getStoredUser();
+    return user?.refreshToken || null;
+  }
+
+  async setTokens(user: AuthUser): Promise<void> {
+    await AsyncStorage.setItem('auth_user', JSON.stringify(user));
+  }
+
+  private async clearTokens(): Promise<void> {
+    await AsyncStorage.removeItem('auth_user');
+  }
+
+  /**
+   * Login user with username/email and password
+   * POST /auth/login
+   */
+  async login(credentials: LoginCredentials): Promise<AuthUser> {
+    const response = await this.client.post<AuthUser>('/login', {
+      username: credentials.username,
+      password: credentials.password,
+      expiresInMins: credentials.expiresInMins || 60,
+    });
+    await this.setTokens(response.data);
+    return response.data;
+  }
+
+  /**
+   * Register new user
+   * POST /auth/register
+   */
+  async register(data: RegisterData): Promise<AuthUser> {
+    await this.client.post('/register', data);
+    // DummyJSON registration creates the account but does not issue auth tokens.
+    // Authenticate immediately so the app can enter its protected area.
+    return this.login({ username: data.username, password: data.password });
+  }
+
+
+  /** Update the current user's public profile. DummyJSON simulates this update. */
+  async updateProfile(userId: number, data: Partial<Pick<AuthUser, 'firstName' | 'lastName' | 'email'>>): Promise<AuthUser> {
+    const response = await axios.put<AuthUser>(`https://dummyjson.com/users/${userId}`, data, { headers: { Authorization: `Bearer ${await this.getAccessToken()}` } });
+    return response.data;
+  }
+
+  /**
+   * Get current user profile (requires valid token)
+   * GET /auth/me
+   */
+  async getMe(): Promise<AuthUser> {
+    const response = await this.client.get<AuthUser>('/me');
+    return response.data;
+  }
+
+  /**
+   * Refresh access token using refresh token
+   * POST /auth/refresh
+   */
+  async refreshAccessToken(): Promise<RefreshTokenResponse> {
+    // Prevent multiple simultaneous refresh calls
+    if (this.refreshTokenPromise) {
+      return this.refreshTokenPromise;
+    }
+
+    const refreshToken = await this.getRefreshToken();
+    if (!refreshToken) {
+      throw new Error('No refresh token available');
+    }
+
+    this.refreshTokenPromise = this.client
+      .post<RefreshTokenResponse>('/refresh', {
+        refreshToken,
+        expiresInMins: 60,
+      })
+      .then(async (response) => {
+        // Update stored tokens with new ones
+        const currentUser = await this.getStoredUser();
+        if (currentUser) {
+          const updatedUser = {
+            ...currentUser,
+            token: response.data.accessToken,
+            refreshToken: response.data.refreshToken,
+          };
+          await this.setTokens(updatedUser);
+        }
+        return response.data;
+      })
+      .catch(async (error) => {
+        await this.clearTokens();
+        throw error;
+      })
+      .finally(() => {
+        this.refreshTokenPromise = null;
+      });
+
+    return this.refreshTokenPromise!;
+  }
+
+  /**
+   * Get stored user data
+   */
+  async getStoredUser(): Promise<AuthUser | null> {
+    try { const userData = await AsyncStorage.getItem('auth_user'); return userData ? JSON.parse(userData) as AuthUser : null; }
+    catch { return null; }
+  }
+
+  /**
+   * Logout - clear local tokens
+   * Note: DummyJSON doesn't have a logout endpoint, so this is client-side only
+   */
+  async logout(): Promise<void> {
+    await this.clearTokens();
+  }
+
+  /**
+   * Check if user has valid tokens stored
+   */
+  async hasValidTokens(): Promise<boolean> {
+    const user = await this.getStoredUser();
+    return !!(user?.token && user?.refreshToken);
+  }
+}
+
+// Export singleton instance
+export const authApi = new AuthApiService();
+
+// Export class for testing
+export { AuthApiService };
