@@ -1,10 +1,15 @@
 /* eslint-env jest */
 import React from 'react';
-import { fireEvent, render } from '@testing-library/react-native';
+import { act, fireEvent, render } from '@testing-library/react-native';
 import { PaperProvider } from 'react-native-paper';
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import { CookingMode } from '@/components/CookingMode';
 import { makeRecipe } from '../../test-utils/fixtures';
+
+jest.mock('react-native-paper', () => ({
+  ...jest.requireActual('react-native-paper'),
+  ProgressBar: () => null,
+}));
 
 jest.mock('expo-keep-awake', () => ({
   activateKeepAwakeAsync: jest.fn(() => Promise.resolve()),
@@ -66,9 +71,12 @@ describe('CookingMode', () => {
     expect(onExit).toHaveBeenCalledTimes(1);
   });
 
-  it('opens the ingredient list', () => {
+  it('opens the ingredient list', async () => {
     const { getByLabelText, getByText } = renderMode();
-    fireEvent.press(getByLabelText('Show ingredients'));
+    await act(async () => {
+      fireEvent.press(getByLabelText('Show ingredients'));
+      await new Promise((resolve) => setTimeout(resolve, 300));
+    });
     expect(getByText('• Tomato')).toBeTruthy();
   });
 

@@ -1,13 +1,14 @@
 /**
  * Profile Screen - Cookbook
- * - Shows the logged-in user and real stats taken from their favorites
+ * - Shows the logged-in user (tap the picture to change the photo) and real
+ *   stats taken from their favorites
  * - Dark mode switch right on the screen
  * - Edit profile (PUT /users/{id}; saved on the device too, see authApi)
  * - Settings (clear favorites, about) and logout
  * Dialogs are used instead of Alert.alert because Alert does nothing on web.
  */
 import React, { useMemo, useState } from 'react';
-import { View, Text, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
 import { useFavorites } from '@/context/FavoritesContext';
@@ -29,9 +30,10 @@ import {
   useTheme,
 } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { deleteLocalPhoto, pickProfilePhoto } from '@/utils/profilePhoto';
 import { styles as rawStyles } from './profileStyles';
 
-type DialogName = 'logout' | 'edit' | 'settings' | 'clearFavorites' | null;
+type DialogName = 'logout' | 'edit' | 'settings' | 'clearFavorites' | 'photo' | null;
 type IconName = React.ComponentProps<typeof MaterialCommunityIcons>['name'];
 
 interface EditForm {
@@ -53,6 +55,20 @@ const local = StyleSheet.create({
   logoutButton: { borderRadius: 999 },
   logoutContent: { height: 52 },
   logoutLabel: { fontSize: 15, fontWeight: '700' },
+  // Camera badge on the corner of the profile picture
+  avatarWrap: { position: 'relative' },
+  cameraBadge: {
+    position: 'absolute',
+    right: 0,
+    bottom: 0,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+  },
+  photoButton: { marginBottom: 8 },
 });
 
 export default function ProfileScreen() {
@@ -162,6 +178,36 @@ export default function ProfileScreen() {
     setSaveError(null);
   };
 
+  // ---- profile photo (picked from the gallery, kept on this device) ----
+  const savePhoto = async (image: string) => {
+    const previous = user?.image;
+    await updateProfile({ image });
+    // Old photo files are only deleted after the new one is saved
+    if (previous && previous !== image) await deleteLocalPhoto(previous);
+  };
+
+  const changePhoto = async () => {
+    setDialog(null);
+    try {
+      const uri = await pickProfilePhoto();
+      if (!uri) return; // cancelled
+      await savePhoto(uri);
+      setMessage('Profile photo updated');
+    } catch {
+      setMessage('Could not change the photo');
+    }
+  };
+
+  const removePhoto = async () => {
+    setDialog(null);
+    try {
+      await savePhoto('');
+      setMessage('Profile photo removed');
+    } catch {
+      setMessage('Could not remove the photo');
+    }
+  };
+
   const confirmLogout = async () => {
     setDialog(null);
     await logout();
@@ -191,11 +237,28 @@ export default function ProfileScreen() {
       <ScrollView style={styles.container} contentContainerStyle={styles.content}>
         {/* Profile Header */}
         <View style={styles.header}>
-          {user?.image ? (
-            <Avatar.Image size={88} source={{ uri: user.image }} style={styles.avatar} />
-          ) : (
-            <Avatar.Text size={88} label={initials} style={styles.avatar} />
-          )}
+          {/* Tap the picture to change it */}
+          <TouchableOpacity
+            style={local.avatarWrap}
+            onPress={() => setDialog('photo')}
+            activeOpacity={0.8}
+            accessibilityRole="button"
+            accessibilityLabel="Change profile photo"
+          >
+            {user?.image ? (
+              <Avatar.Image size={88} source={{ uri: user.image }} style={styles.avatar} />
+            ) : (
+              <Avatar.Text size={88} label={initials} style={styles.avatar} />
+            )}
+            <View
+              style={[
+                local.cameraBadge,
+                { backgroundColor: colors.primary, borderColor: colors.background },
+              ]}
+            >
+              <MaterialCommunityIcons name="camera" size={16} color={colors.onPrimary} />
+            </View>
+          </TouchableOpacity>
           <View style={styles.nameContainer}>
             <Text style={styles.name}>
               {user?.firstName} {user?.lastName}
@@ -303,6 +366,36 @@ export default function ProfileScreen() {
           <Dialog.Actions>
             <Button onPress={() => setDialog(null)}>Cancel</Button>
             <Button onPress={confirmLogout}>Logout</Button>
+          </Dialog.Actions>
+        </Dialog>
+
+        {/* Profile photo */}
+        <Dialog
+          visible={dialog === 'photo'}
+          onDismiss={() => setDialog(null)}
+          style={local.dialog}
+        >
+          <Dialog.Title>Profile photo</Dialog.Title>
+          <Dialog.Content>
+            <Button
+              mode="contained-tonal"
+              icon="image-outline"
+              onPress={changePhoto}
+              style={local.photoButton}
+            >
+              Choose from gallery
+            </Button>
+            <Button
+              mode="outlined"
+              icon="account-remove-outline"
+              onPress={removePhoto}
+              disabled={!user?.image}
+            >
+              Remove photo
+            </Button>
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={() => setDialog(null)}>Cancel</Button>
           </Dialog.Actions>
         </Dialog>
 

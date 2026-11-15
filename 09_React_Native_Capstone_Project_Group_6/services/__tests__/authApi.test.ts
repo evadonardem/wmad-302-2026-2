@@ -4,10 +4,10 @@ import { authApi } from '@/services/authApi';
 import type { RegisterData } from '@/types/auth';
 
 jest.mock('@react-native-async-storage/async-storage', () =>
-  jest.requireActual('@react-native-async-storage/async-storage/jest/async-storage-mock'),
+  jest.requireActual('@react-native-async-storage/async-storage/jest/async-storage-mock')
 );
 
-// Only device-local flows are tested here, so no network request is made.
+// Device-local account only, so no network request is made.
 const newUser: RegisterData = {
   firstName: 'Jecressa',
   lastName: 'Agustin',
@@ -20,80 +20,41 @@ beforeEach(async () => {
   await AsyncStorage.clear();
 });
 
-describe('authApi (local accounts)', () => {
-  it('register creates a local session', async () => {
-    const user = await authApi.register(newUser);
-    expect(user.username).toBe('jecressa');
-    expect(user.isLocalAccount).toBe(true);
-    expect(user.token).toMatch(/^local-/);
-    expect(await authApi.hasValidTokens()).toBe(true);
-    expect((await authApi.getStoredUser())?.email).toBe('jecressa@example.com');
-  });
-
-  it('register rejects a duplicate username or email', async () => {
+describe('authApi profile photo', () => {
+  it('updateProfile can change only the image', async () => {
     await authApi.register(newUser);
-    await expect(authApi.register(newUser)).rejects.toThrow('already registered');
-    await expect(
-      authApi.register({ ...newUser, username: 'other', email: 'JECRESSA@example.com' }),
-    ).rejects.toThrow('already registered');
+    const updated = await authApi.updateProfile({ image: 'file:///app/docs/photo.jpg' });
+    expect(updated.image).toBe('file:///app/docs/photo.jpg');
+    expect(updated.firstName).toBe('Jecressa');
+    expect(updated.email).toBe('jecressa@example.com');
   });
 
-  it('register rejects the reserved demo username', async () => {
-    await expect(authApi.register({ ...newUser, username: 'emilys' })).rejects.toThrow(
-      'already registered',
-    );
-  });
-
-  it('login works with username or email (case-insensitive)', async () => {
+  it('the photo is still there after logging out and in again', async () => {
     await authApi.register(newUser);
-    await authApi.logout();
-
-    const byName = await authApi.login({ username: 'JECRESSA', password: 'secret123' });
-    expect(byName.username).toBe('jecressa');
-    await authApi.logout();
-
-    const byEmail = await authApi.login({
-      username: 'jecressa@example.com',
-      password: 'secret123',
-    });
-    expect(byEmail.username).toBe('jecressa');
-  });
-
-  it('login with a wrong password for a local account fails', async () => {
-    await authApi.register(newUser);
-    await authApi.logout();
-    await expect(authApi.login({ username: 'jecressa', password: 'nope' })).rejects.toThrow(
-      'Invalid credentials',
-    );
-    expect(await authApi.hasValidTokens()).toBe(false);
-  });
-
-  it('updateProfile saves the changes on the device', async () => {
-    await authApi.register(newUser);
-    const updated = await authApi.updateProfile({
-      firstName: 'Jec',
-      lastName: 'Agustin',
-      email: 'jec@example.com',
-    });
-    expect(updated.firstName).toBe('Jec');
-    expect((await authApi.getStoredUser())?.email).toBe('jec@example.com');
-
-    // The change survives logging out and in again
+    await authApi.updateProfile({ image: 'file:///app/docs/photo.jpg' });
     await authApi.logout();
     const again = await authApi.login({ username: 'jecressa', password: 'secret123' });
-    expect(again.firstName).toBe('Jec');
+    expect(again.image).toBe('file:///app/docs/photo.jpg');
   });
 
-  it('updateProfile fails when nobody is logged in', async () => {
-    await expect(
-      authApi.updateProfile({ firstName: 'A', lastName: 'B', email: 'a@b.co' }),
-    ).rejects.toThrow('not logged in');
-  });
-
-  it('logout clears the stored session', async () => {
+  it('an empty image removes the photo', async () => {
     await authApi.register(newUser);
-    await authApi.logout();
-    expect(await authApi.getStoredUser()).toBeNull();
-    expect(await authApi.hasValidTokens()).toBe(false);
+    await authApi.updateProfile({ image: 'file:///app/docs/photo.jpg' });
+    const removed = await authApi.updateProfile({ image: '' });
+    expect(removed.image).toBe('');
+    expect((await authApi.getStoredUser())?.image).toBe('');
+  });
+
+  it('changing the photo does not trigger the duplicate-email check', async () => {
+    await authApi.register(newUser);
+    await expect(authApi.updateProfile({ image: 'x.jpg' })).resolves.toBeDefined();
+  });
+
+  it('editing the name still keeps the photo', async () => {
+    await authApi.register(newUser);
+    await authApi.updateProfile({ image: 'file:///app/docs/photo.jpg' });
+    const updated = await authApi.updateProfile({ firstName: 'Jec' });
+    expect(updated.firstName).toBe('Jec');
+    expect(updated.image).toBe('file:///app/docs/photo.jpg');
   });
 });

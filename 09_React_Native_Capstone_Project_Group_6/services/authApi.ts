@@ -17,8 +17,11 @@ const API_BASE_URL = 'https://dummyjson.com/auth';
 const USERS_URL = 'https://dummyjson.com/users';
 const RESERVED_USERNAMES = ['emilys'];
 
-/** The profile fields a user can edit. */
-export type ProfileUpdate = Pick<AuthUser, 'firstName' | 'lastName' | 'email'>;
+/**
+ * The profile fields a user can edit. Send only what changed: Edit Profile sends
+ * the name and email, the photo picker sends only the image.
+ */
+export type ProfileUpdate = Partial<Pick<AuthUser, 'firstName' | 'lastName' | 'email' | 'image'>>;
 
 // Axios config + a flag so a request is only retried once after a refresh.
 type RetriableRequest = InternalAxiosRequestConfig & { _retry?: boolean };
@@ -191,7 +194,8 @@ class AuthApiService {
   /**
    * Edit the logged-in user's profile.
    * - Real DummyJSON users: PUT /users/{id}. DummyJSON only simulates the
-   *   update, so we also save the new values on this device.
+   *   update, so we also save the new values on this device. (A new profile
+   *   photo is saved on this device only.)
    * - Local (registered) accounts: saved on this device only.
    */
   async updateProfile(changes: ProfileUpdate): Promise<AuthUser> {
@@ -201,19 +205,26 @@ class AuthApiService {
     }
 
     if (stored.isLocalAccount) {
-      const other = await this.findLocalAccount(changes.email);
-      if (other && other.user.id !== stored.id) {
-        throw new Error('That email is already registered');
+      if (changes.email) {
+        const other = await this.findLocalAccount(changes.email);
+        if (other && other.user.id !== stored.id) {
+          throw new Error('That email is already registered');
+        }
       }
       await accountsStorage.update(stored.id, changes);
     } else {
-      try {
-        await axios.put(`${USERS_URL}/${stored.id}`, changes, {
-          timeout: 10000,
-          headers: { 'Content-Type': 'application/json' },
-        });
-      } catch (error) {
-        throw new Error(getApiErrorMessage(error, 'Could not update profile'));
+      // The photo is a file on this phone, so it is never sent to the server
+      const serverChanges = { ...changes };
+      delete serverChanges.image;
+      if (Object.keys(serverChanges).length > 0) {
+        try {
+          await axios.put(`${USERS_URL}/${stored.id}`, serverChanges, {
+            timeout: 10000,
+            headers: { 'Content-Type': 'application/json' },
+          });
+        } catch (error) {
+          throw new Error(getApiErrorMessage(error, 'Could not update profile'));
+        }
       }
     }
 
