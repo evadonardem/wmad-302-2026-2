@@ -41,6 +41,21 @@ export default function QuoteOfTheDay() {
         Quote of the Day
       </Text>
 
+      {quote.isOffline && (
+        <Text
+          accessibilityRole="alert"
+          style={[
+            styles.offlineNotice,
+            {
+              backgroundColor: theme.mode === 'dark' ? '#3b3020' : '#fff3cd',
+              color: theme.mode === 'dark' ? '#ffda8a' : '#664d03',
+            },
+          ]}
+        >
+          Hey! The quote API is offline, so we&apos;re using the offline generator for now.
+        </Text>
+      )}
+
       <View style={styles.tagRow}>
         {quote.tags.map((tag) => {
           const isActive = selectedTag === tag;
@@ -194,6 +209,14 @@ const styles = StyleSheet.create({
     letterSpacing: 2,
     textTransform: 'uppercase',
     textAlign: 'center',
+    marginBottom: 16,
+  },
+  offlineNotice: {
+    fontSize: 13,
+    lineHeight: 18,
+    textAlign: 'center',
+    padding: 10,
+    borderRadius: 8,
     marginBottom: 16,
   },
   tagRow: {

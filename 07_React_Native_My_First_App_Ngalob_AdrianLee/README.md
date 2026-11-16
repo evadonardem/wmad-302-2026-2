@@ -31,6 +31,12 @@ To achieve full credit, your application must successfully execute the following
 
 ---
 
+## Offline support
+
+If the quote API is unavailable, the app generates quotes from a built-in offline collection and displays a notice on the Home screen. If the tag API is unavailable, the filter chips use categories from that same collection.
+
+---
+
 ## Getting Started
 
 1. Install dependencies
