@@ -1,0 +1,147 @@
+import React, { useCallback, useState } from 'react';
+import { Alert, ScrollView, Text, View } from 'react-native';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { Avatar, Badge, Button, Card, Divider, List } from 'react-native-paper';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useAuth } from '@/context/AuthContext';
+import { useFavorites } from '@/context/FavoritesContext';
+import { MarketplaceOrder, ordersStorage } from '@/utils/marketplaceStorage';
+import { styles } from './profileStyles';
+
+export default function ProfileScreen() {
+  const router = useRouter();
+  const { user, logout, isAuthenticated } = useAuth();
+  const { favoriteIds } = useFavorites();
+  const [orders, setOrders] = useState<MarketplaceOrder[]>([]);
+
+  useFocusEffect(useCallback(() => {
+    let active = true;
+    ordersStorage.getAll()
+      .then((savedOrders) => {
+        if (active) setOrders(savedOrders);
+      })
+      .catch((error: unknown) => {
+        Alert.alert('Could not load order summary', error instanceof Error ? error.message : 'Please try again.');
+      });
+    return () => { active = false; };
+  }, []));
+
+  const handleLogout = () => {
+    Alert.alert('Logout', 'Are you sure you want to logout?', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Logout', style: 'destructive', onPress: logout },
+    ]);
+  };
+
+  if (!isAuthenticated) {
+    return (
+      <View style={styles.centerContainer}>
+        <Text style={styles.notLoggedIn}>Please log in to view your account.</Text>
+      </View>
+    );
+  }
+
+  const totalSpent = orders.reduce((sum, order) => sum + order.total, 0);
+
+  return (
+    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <View style={styles.header}>
+        <Avatar.Image
+          size={82}
+          source={{ uri: user?.image || 'https://dummyjson.com/icon/emilys/128' }}
+          style={styles.avatar}
+        />
+        <View style={styles.nameContainer}>
+          <Text style={styles.name}>{user?.firstName} {user?.lastName}</Text>
+          <Text style={styles.username}>@{user?.username}</Text>
+          <Text style={styles.email}>{user?.email}</Text>
+        </View>
+        <Button compact textColor="#EE4D2D" onPress={() => router.push('/(app)/edit-profile')}>
+          Edit
+        </Button>
+      </View>
+
+      <View style={styles.statsContainer}>
+        <View style={styles.statItem}>
+          <Text style={styles.statValue}>{orders.length}</Text>
+          <Text style={styles.statLabel}>Orders</Text>
+        </View>
+        <View style={styles.statItem}>
+          <Text style={styles.statValue}>${totalSpent.toFixed(0)}</Text>
+          <Text style={styles.statLabel}>Demo spend</Text>
+        </View>
+        <View style={styles.statItem}>
+          <Text style={styles.statValue}>{favoriteIds.length}</Text>
+          <Text style={styles.statLabel}>Wishlist</Text>
+        </View>
+      </View>
+
+      <View style={styles.section}>
+        <Card style={styles.menuCard} elevation={1}>
+          <List.Section>
+            <List.Item
+              title="My Orders"
+              description="View order status and details"
+              left={(props) => (
+                <View style={props.style}>
+                  <MaterialCommunityIcons name="package-variant" size={24} color="#EE4D2D" />
+                  {orders.length > 0 && (
+                    <Badge size={16} style={{ position: 'absolute', right: -4, top: -4 }}>
+                      {orders.length}
+                    </Badge>
+                  )}
+                </View>
+              )}
+              right={(props) => <MaterialCommunityIcons name="chevron-right" size={24} color="#777" style={props.style} />}
+              onPress={() => router.push('/(app)/orders')}
+            />
+            <Divider style={styles.divider} />
+            <List.Item
+              title="Wishlist"
+              description="Products saved for later"
+              left={(props) => <MaterialCommunityIcons name="heart" size={24} color="#EE4D2D" style={props.style} />}
+              right={(props) => <MaterialCommunityIcons name="chevron-right" size={24} color="#777" style={props.style} />}
+              onPress={() => router.push('/(app)/wishlist')}
+            />
+            <Divider style={styles.divider} />
+            <List.Item
+              title="Delivery addresses"
+              description="Manage saved shipping addresses"
+              left={(props) => <MaterialCommunityIcons name="map-marker" size={24} color="#EE4D2D" style={props.style} />}
+              right={(props) => <MaterialCommunityIcons name="chevron-right" size={24} color="#777" style={props.style} />}
+              onPress={() => router.push('/(app)/addresses')}
+            />
+          </List.Section>
+        </Card>
+      </View>
+
+      <View style={styles.section}>
+        <Card style={styles.menuCard} elevation={1}>
+          <List.Section>
+            <List.Item
+              title="Settings & payments"
+              description="Notifications and demo payment info"
+              left={(props) => <MaterialCommunityIcons name="cog" size={24} color="#EE4D2D" style={props.style} />}
+              right={(props) => <MaterialCommunityIcons name="chevron-right" size={24} color="#777" style={props.style} />}
+              onPress={() => router.push('/(app)/settings')}
+            />
+          </List.Section>
+        </Card>
+      </View>
+
+      <View style={styles.logoutContainer}>
+        <Button
+          mode="outlined"
+          onPress={handleLogout}
+          style={styles.logoutButton}
+          contentStyle={styles.logoutButtonContent}
+          textColor="#C9361B"
+          icon="logout"
+        >
+          Logout
+        </Button>
+      </View>
+      <Text style={styles.versionText}>Marketplace demo · v1.0.0</Text>
+    </ScrollView>
+  );
+}
