@@ -175,7 +175,7 @@ export default function SearchScreen() {
   const renderResult = ({ item }: { item: Product }) => (
     <TouchableOpacity
       style={styles.resultCard}
-      onPress={() => router.push(`/(app)/(tabs)/product/${item.id}`)}
+      onPress={() => router.push(`/(app)/product/${item.id}`)}
       activeOpacity={0.8}
     >
       <Card style={styles.card} elevation={1}>
