@@ -74,7 +74,10 @@ export default function HomeScreen() {
       if (!productsRes.ok || !categoriesRes.ok) throw new Error('Failed to fetch data');
 
       const productsData: ProductsResponse = await productsRes.json();
-      const categoriesData: string[] = await categoriesRes.json();
+      // DummyJSON now returns category objects ({ slug, name, url }), older versions
+      // returned plain strings. Accept both and keep only the slug string.
+      const rawCategories: (string | { slug: string })[] = await categoriesRes.json();
+      const categoriesData = rawCategories.map((c) => (typeof c === 'string' ? c : c.slug));
 
       setProducts(productsData.products);
       setCategories(categoriesData);
@@ -110,7 +113,7 @@ export default function HomeScreen() {
             />
             {item.discountPercentage > 0 && (
               <Badge style={styles.discountBadge}>
-                -{Math.round(item.discountPercentage)}%
+                {`-${Math.round(item.discountPercentage)}%`}
               </Badge>
             )}
           </View>

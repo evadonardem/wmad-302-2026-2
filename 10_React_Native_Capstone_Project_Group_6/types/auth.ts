@@ -13,6 +13,8 @@ export interface AuthUser {
   image: string;
   token: string;
   refreshToken: string;
+  /** true for accounts made via register(): DummyJSON doesn't really store new users */
+  isSimulated?: boolean;
 }
 
 export interface LoginCredentials {

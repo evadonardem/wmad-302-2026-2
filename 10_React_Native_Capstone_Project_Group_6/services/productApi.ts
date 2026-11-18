@@ -63,8 +63,10 @@ class ProductApiService {
    * Get all categories
    */
   async getCategories(): Promise<string[]> {
-    const response = await this.client.get<string[]>('/products/categories');
-    return response.data;
+    // DummyJSON now returns category objects ({ slug, name, url }), older versions
+    // returned plain strings. Accept both and return the slugs.
+    const response = await this.client.get<(string | { slug: string })[]>('/products/categories');
+    return response.data.map((c) => (typeof c === 'string' ? c : c.slug));
   }
 
   /**
