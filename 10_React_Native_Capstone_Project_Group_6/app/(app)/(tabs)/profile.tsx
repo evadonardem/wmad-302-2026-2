@@ -8,15 +8,13 @@
  * - Logout
  */
 import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Alert, Image } from 'react-native';
-import { useRouter } from 'expo-router';
+import { View, Text, ScrollView, Alert } from 'react-native';
 import { useAuth } from '@/context/AuthContext';
-import { Card, Title, Button, List, Avatar, Divider, Badge } from 'react-native-paper';
+import { Card, Button, List, Avatar, Divider, Badge } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { styles } from './profileStyles';
 
 export default function ProfileScreen() {
-  const router = useRouter();
   const { user, logout, isAuthenticated } = useAuth();
 
   const handleLogout = () => {

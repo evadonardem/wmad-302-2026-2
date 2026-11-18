@@ -4,6 +4,7 @@
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import type { CartItem } from '@/types/product';
 
 const STORAGE_KEYS = {
   AUTH_USER: 'auth_user',
@@ -84,7 +85,7 @@ export async function getMultipleStorageItems<T extends Record<string, unknown>>
  * Set multiple items at once
  */
 export async function setMultipleStorageItems(
-  items: Array<{ key: StorageKey; value: unknown }>
+  items: { key: StorageKey; value: unknown }[]
 ): Promise<void> {
   try {
     const pairs = items.map(({ key, value }): [string, string] => [key, JSON.stringify(value)]);
@@ -169,6 +170,3 @@ export const cartStorage = {
   },
   clear: () => removeStorageItem(STORAGE_KEYS.CART),
 };
-
-// Import CartItem type for cartStorage
-import type { CartItem } from '@/types/product';

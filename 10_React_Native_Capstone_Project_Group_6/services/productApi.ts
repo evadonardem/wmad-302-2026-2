@@ -4,7 +4,7 @@
  */
 
 import axios, { AxiosInstance } from 'axios';
-import { Product, ProductsResponse, ProductSearchParams, Cart, CartAddRequest, CartItem } from '@/types/product';
+import { Product, ProductsResponse, ProductSearchParams, Cart, CartAddRequest } from '@/types/product';
 
 const API_BASE_URL = 'https://dummyjson.com';
 

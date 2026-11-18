@@ -9,9 +9,9 @@
  * - DummyJSON Carts API: https://dummyjson.com/docs/carts
  */
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, FlatList, ActivityIndicator, Alert, Image } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Card, Title, Button, IconButton, TextInput } from 'react-native-paper';
+import { Title, Button, IconButton } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { styles } from './cartStyles';
 
@@ -266,5 +266,3 @@ export default function CartScreen() {
     </View>
   );
 }
-
-import { Image } from 'react-native';

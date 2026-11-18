@@ -16,7 +16,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
-import { Card, Title, Chip, Avatar, Button, Badge } from 'react-native-paper';
+import { Card, Title, Avatar, Button, Badge } from 'react-native-paper';
 import { styles } from './homeStyles';
 
 // Types for DummyJSON Products API
@@ -37,7 +37,7 @@ interface Product {
   warrantyInformation: string;
   shippingInformation: string;
   availabilityStatus: string;
-  reviews: Array<{ rating: number; comment: string; date: string; reviewerName: string }>;
+  reviews: { rating: number; comment: string; date: string; reviewerName: string }[];
   returnPolicy: string;
   minimumOrderQuantity: number;
   meta: { createdAt: string; updatedAt: string; barcode: string; qrCode: string };

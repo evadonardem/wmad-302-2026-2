@@ -6,10 +6,10 @@
  * - Sort by price, rating, discount, newest
  * - Infinite scroll pagination
  */
-import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, ScrollView, FlatList, TouchableOpacity, ActivityIndicator, Alert, Image } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Card, Title, Chip, Button, TextInput as PaperTextInput } from 'react-native-paper';
+import { Card, Title, TextInput as PaperTextInput } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { styles } from './searchStyles';
 
@@ -27,7 +27,7 @@ interface Product {
 export default function SearchScreen() {
   const router = useRouter();
   const [query, setQuery] = useState('');
-  const [results, setResults] = useState<Product[]>([]);
+  const results: Product[] = [];
   const [loading, setLoading] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<'price' | 'rating' | 'discount' | 'newest'>('rating');
@@ -80,8 +80,6 @@ export default function SearchScreen() {
       </TouchableOpacity>
     );
   };
-
-  const { Alert } = require('react-native');
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -205,5 +203,3 @@ export default function SearchScreen() {
     </ScrollView>
   );
 }
-
-import { Image } from 'react-native';
