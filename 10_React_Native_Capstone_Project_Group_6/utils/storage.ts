@@ -9,7 +9,7 @@ import type { CartItem } from '@/types/product';
 const STORAGE_KEYS = {
   AUTH_USER: 'auth_user',
   FAVORITES: 'favorite_recipe_ids',
-  CART: 'cart_items',
+  CART: 'cart', // README says the cart lives under the key "cart"
   SETTINGS: 'user_settings',
 } as const;
 

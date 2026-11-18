@@ -5,8 +5,11 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useCart } from '@/context/CartContext';
 
 export default function TabsLayout() {
+  const { totalQuantity } = useCart();
+
   return (
     <Tabs
       screenOptions={{
@@ -60,6 +63,8 @@ export default function TabsLayout() {
         name="cart"
         options={{
           title: 'Cart',
+          // Red badge with the number of items; hidden when the cart is empty
+          tabBarBadge: totalQuantity > 0 ? totalQuantity : undefined,
           tabBarIcon: ({ focused, color }) => (
             <MaterialCommunityIcons
               name={focused ? 'cart' : 'cart-outline'}

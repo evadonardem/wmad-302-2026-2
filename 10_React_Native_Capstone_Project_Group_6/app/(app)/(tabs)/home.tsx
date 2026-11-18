@@ -16,7 +16,8 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
-import { Card, Title, Avatar, Button, Badge } from 'react-native-paper';
+import { useCart } from '@/context/CartContext';
+import { Card, Title, Avatar, Button, Badge, Snackbar } from 'react-native-paper';
 import { styles } from './homeStyles';
 
 // Types for DummyJSON Products API
@@ -55,6 +56,8 @@ interface ProductsResponse {
 export default function HomeScreen() {
   const router = useRouter();
   const { user } = useAuth();
+  const { addToCart } = useCart();
+  const [toast, setToast] = useState<string | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
@@ -95,6 +98,13 @@ export default function HomeScreen() {
 
   const onRefresh = () => fetchData(true);
 
+  const handleAddToCart = (product: Product) => {
+    const result = addToCart(product);
+    if (result === 'added') setToast(`Added "${product.title}" to cart`);
+    else if (result === 'max_reached') setToast(`Only ${product.stock} in stock - already in your cart`);
+    else setToast('Sorry, this item is out of stock');
+  };
+
   const renderProduct = ({ item }: { item: Product }) => {
     const discountedPrice = item.price * (1 - item.discountPercentage / 100);
 
@@ -133,6 +143,16 @@ export default function HomeScreen() {
                 ⭐ {item.rating.toFixed(1)} · {item.stock > 0 ? 'In Stock' : 'Out of Stock'}
               </Text>
             </View>
+            <Button
+              mode="contained-tonal"
+              icon="cart-plus"
+              compact
+              disabled={item.stock <= 0}
+              onPress={() => handleAddToCart(item)}
+              style={{ marginTop: 8 }}
+            >
+              Add to cart
+            </Button>
           </Card.Content>
         </Card>
       </TouchableOpacity>
@@ -160,84 +180,95 @@ export default function HomeScreen() {
   }
 
   return (
-    <ScrollView
-      style={styles.scrollView}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#1A73E8']} />
-      }
-      contentContainerStyle={styles.scrollContent}
-    >
-      {/* Welcome Header */}
-      <View style={styles.welcomeContainer}>
-        <View style={styles.welcomeTextContainer}>
-          <Text style={styles.welcomeGreeting}>
-            {user ? `Welcome, ${user.firstName}!` : 'Welcome to Marketplace!'}
-          </Text>
-          <Text style={styles.welcomeSubtitle}>Discover amazing deals</Text>
+    <View style={{ flex: 1 }}>
+      <ScrollView
+        style={styles.scrollView}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#1A73E8']} />
+        }
+        contentContainerStyle={styles.scrollContent}
+      >
+        {/* Welcome Header */}
+        <View style={styles.welcomeContainer}>
+          <View style={styles.welcomeTextContainer}>
+            <Text style={styles.welcomeGreeting}>
+              {user ? `Welcome, ${user.firstName}!` : 'Welcome to Marketplace!'}
+            </Text>
+            <Text style={styles.welcomeSubtitle}>Discover amazing deals</Text>
+          </View>
+          <Avatar.Icon size={56} icon="storefront" style={styles.welcomeAvatar} />
         </View>
-        <Avatar.Icon size={56} icon="storefront" style={styles.welcomeAvatar} />
-      </View>
 
-      {/* Categories */}
-      <View style={styles.sectionContainer}>
-        <View style={styles.sectionHeader}>
-          <Title style={styles.sectionTitle}>Categories</Title>
+        {/* Categories */}
+        <View style={styles.sectionContainer}>
+          <View style={styles.sectionHeader}>
+            <Title style={styles.sectionTitle}>Categories</Title>
+          </View>
+          <FlatList
+            data={categories.slice(0, 10)}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.categoryList}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                style={styles.categoryChip}
+                onPress={() => router.push(`/(app)/(tabs)/categories?category=${item}`)}
+              >
+                <Text style={styles.categoryChipText}>
+                  {item.charAt(0).toUpperCase() + item.slice(1).replace('-', ' ')}
+                </Text>
+              </TouchableOpacity>
+            )}
+            keyExtractor={(item) => item}
+          />
         </View>
-        <FlatList
-          data={categories.slice(0, 10)}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.categoryList}
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              style={styles.categoryChip}
-              onPress={() => router.push(`/(app)/(tabs)/categories?category=${item}`)}
-            >
-              <Text style={styles.categoryChipText}>
-                {item.charAt(0).toUpperCase() + item.slice(1).replace('-', ' ')}
-              </Text>
+
+        {/* Flash Deals */}
+        <View style={styles.sectionContainer}>
+          <View style={styles.sectionHeader}>
+            <Title style={styles.sectionTitle}>⚡ Flash Deals</Title>
+            <TouchableOpacity style={styles.seeAll}>
+              <Text style={styles.seeAllText}>See All</Text>
             </TouchableOpacity>
-          )}
-          keyExtractor={(item) => item}
-        />
-      </View>
-
-      {/* Flash Deals */}
-      <View style={styles.sectionContainer}>
-        <View style={styles.sectionHeader}>
-          <Title style={styles.sectionTitle}>⚡ Flash Deals</Title>
-          <TouchableOpacity style={styles.seeAll}>
-            <Text style={styles.seeAllText}>See All</Text>
-          </TouchableOpacity>
+          </View>
+          <FlatList
+            data={products.filter((p) => p.discountPercentage > 20).slice(0, 5)}
+            renderItem={renderProduct}
+            keyExtractor={(item) => item.id.toString()}
+            ItemSeparatorComponent={() => <View style={styles.cardSeparator} />}
+          />
         </View>
-        <FlatList
-          data={products.filter((p) => p.discountPercentage > 20).slice(0, 5)}
-          renderItem={renderProduct}
-          keyExtractor={(item) => item.id.toString()}
-          ItemSeparatorComponent={() => <View style={styles.cardSeparator} />}
-        />
-      </View>
 
-      {/* Recommended Products */}
-      <View style={styles.sectionContainer}>
-        <View style={styles.sectionHeader}>
-          <Title style={styles.sectionTitle}>Recommended for You</Title>
-          <TouchableOpacity onPress={() => router.push('/(app)/(tabs)/search')} style={styles.seeAll}>
-            <Text style={styles.seeAllText}>See All</Text>
-          </TouchableOpacity>
+        {/* Recommended Products */}
+        <View style={styles.sectionContainer}>
+          <View style={styles.sectionHeader}>
+            <Title style={styles.sectionTitle}>Recommended for You</Title>
+            <TouchableOpacity onPress={() => router.push('/(app)/(tabs)/search')} style={styles.seeAll}>
+              <Text style={styles.seeAllText}>See All</Text>
+            </TouchableOpacity>
+          </View>
+          <FlatList
+            data={products.slice(0, 10)}
+            renderItem={renderProduct}
+            keyExtractor={(item) => item.id.toString()}
+            ItemSeparatorComponent={() => <View style={styles.cardSeparator} />}
+            ListEmptyComponent={
+              <View style={styles.emptyContainer}>
+                <Text style={styles.emptyText}>No products found</Text>
+              </View>
+            }
+          />
         </View>
-        <FlatList
-          data={products.slice(0, 10)}
-          renderItem={renderProduct}
-          keyExtractor={(item) => item.id.toString()}
-          ItemSeparatorComponent={() => <View style={styles.cardSeparator} />}
-          ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>No products found</Text>
-            </View>
-          }
-        />
-      </View>
-    </ScrollView>
+      </ScrollView>
+
+      <Snackbar
+        visible={toast !== null}
+        onDismiss={() => setToast(null)}
+        duration={2500}
+        action={{ label: 'View cart', onPress: () => router.push('/(app)/(tabs)/cart') }}
+      >
+        {toast ?? ''}
+      </Snackbar>
+    </View>
   );
 }

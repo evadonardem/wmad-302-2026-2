@@ -3,8 +3,9 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
+import { Platform } from 'react-native';
 import { useAuth } from '@/context/AuthContext';
-import { authStorage } from '@/utils/storage';
+import { authStorage, getStorageItem, setStorageItem, StorageKey } from '@/utils/storage';
 
 /**
  * Hook for managing authentication state with persistence
@@ -37,14 +38,14 @@ export function useAuthPersistence() {
 /**
  * Hook for async storage with state
  */
-export function useAsyncStorage<T>(key: string, initialValue: T) {
+export function useAsyncStorage<T>(key: StorageKey, initialValue: T) {
   const [value, setValue] = useState<T>(initialValue);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const load = async () => {
       try {
-        const stored = await import('@/utils/storage').then((m) => m.getStorageItem<T>(key as any));
+        const stored = await getStorageItem<T>(key);
         if (stored !== null) setValue(stored);
       } catch (error) {
         console.error(`Failed to load ${key}:`, error);
@@ -60,7 +61,7 @@ export function useAsyncStorage<T>(key: string, initialValue: T) {
       const resolvedValue = newValue instanceof Function ? newValue(value) : newValue;
       setValue(resolvedValue);
       try {
-        await import('@/utils/storage').then((m) => m.setStorageItem(key as any, resolvedValue));
+        await setStorageItem(key, resolvedValue);
       } catch (error) {
         console.error(`Failed to save ${key}:`, error);
       }
@@ -136,19 +137,40 @@ export function useInfiniteScroll<T>(
 /**
  * Hook for network status
  */
+
+// The browser's `window` has these two methods. We describe only what we use, so
+// this compiles without the DOM type definitions (they aren't in a React Native tsconfig).
+interface BrowserEvents {
+  addEventListener: (type: string, listener: () => void) => void;
+  removeEventListener: (type: string, listener: () => void) => void;
+}
+
 export function useNetworkStatus() {
   const [isOnline, setIsOnline] = useState(true);
 
   useEffect(() => {
+    // online/offline events only exist in the browser. On a phone they don't, so we
+    // skip them (isOnline stays true). For real offline detection on devices, use
+    // @react-native-community/netinfo (bonus: offline mode).
+    const browser = globalThis as unknown as Partial<BrowserEvents>;
+    if (
+      Platform.OS !== 'web' ||
+      typeof browser.addEventListener !== 'function' ||
+      typeof browser.removeEventListener !== 'function'
+    ) {
+      return;
+    }
+    const { addEventListener, removeEventListener } = browser as BrowserEvents;
+
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
 
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
+    addEventListener.call(globalThis, 'online', handleOnline);
+    addEventListener.call(globalThis, 'offline', handleOffline);
 
     return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
+      removeEventListener.call(globalThis, 'online', handleOnline);
+      removeEventListener.call(globalThis, 'offline', handleOffline);
     };
   }, []);
 
