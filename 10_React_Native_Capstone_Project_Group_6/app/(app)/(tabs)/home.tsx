@@ -212,7 +212,7 @@ export default function HomeScreen() {
             renderItem={({ item }) => (
               <TouchableOpacity
                 style={styles.categoryChip}
-                onPress={() => router.push(`/(app)/(tabs)/categories?category=${item}`)}
+                onPress={() => router.push(`/(app)/(tabs)/search?category=${encodeURIComponent(item)}`)}
               >
                 <Text style={styles.categoryChipText}>
                   {item.charAt(0).toUpperCase() + item.slice(1).replace('-', ' ')}

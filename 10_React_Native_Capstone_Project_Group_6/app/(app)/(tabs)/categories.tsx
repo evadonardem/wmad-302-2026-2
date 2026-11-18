@@ -51,7 +51,7 @@ export default function CategoriesScreen() {
   const renderCategory = ({ item }: { item: Category }) => (
     <TouchableOpacity
       style={styles.categoryCard}
-      onPress={() => router.push(`/app/(tabs)/search?category=${encodeURIComponent(item.name)}`)}
+      onPress={() => router.push(`/(app)/(tabs)/search?category=${encodeURIComponent(item.name)}`)}
       activeOpacity={0.8}
     >
       <Card style={styles.card} elevation={1}>

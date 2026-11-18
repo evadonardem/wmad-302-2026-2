@@ -1,5 +1,5 @@
 /**
- * Search Screen Styles - Shared base
+ * Search Screen Styles - Marketplace
  */
 import { StyleSheet } from 'react-native';
 
@@ -8,146 +8,117 @@ export const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F8F9FA',
   },
-  content: {
+  listContent: {
     paddingHorizontal: 16,
     paddingBottom: 100,
   },
   searchBarContainer: {
-    marginBottom: 16,
-  },
-  searchInput: {
-    height: 52,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-    paddingHorizontal: 16,
-    fontSize: 16,
-    color: '#202124',
-  },
-  clearButton: {
-    padding: 8,
-  },
-  searchButton: {
-    backgroundColor: '#1A73E8',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 4,
-  },
-  filterSection: {
-    marginBottom: 20,
-  },
-  sortSection: {
-    marginBottom: 20,
-  },
-  filterTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#202124',
     marginBottom: 12,
   },
-  filterList: {
-    paddingHorizontal: 4,
-    gap: 8,
-  },
-  filterChip: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
+  searchInput: {
     backgroundColor: '#FFFFFF',
+    fontSize: 16,
   },
-  filterChipSelected: {
-    backgroundColor: '#1A73E8',
-    borderColor: '#1A73E8',
-  },
-  filterChipText: {
-    fontSize: 13,
-    fontWeight: '500',
-    color: '#1A73E8',
-  },
-  filterChipTextSelected: {
-    color: '#FFFFFF',
-  },
-  sortOptions: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  sortChip: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1,
+  searchOutline: {
+    borderRadius: 12,
     borderColor: '#E0E0E0',
-    backgroundColor: '#FFFFFF',
   },
-  sortChipSelected: {
-    backgroundColor: '#1A73E8',
-    borderColor: '#1A73E8',
+  filterSection: {
+    marginBottom: 14,
   },
-  sortChipText: {
-    fontSize: 13,
-    fontWeight: '500',
-    color: '#1A73E8',
-  },
-  sortChipTextSelected: {
-    color: '#FFFFFF',
-  },
-  resultsSection: {
-    marginTop: 8,
-  },
-  resultsTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#202124',
-    marginBottom: 16,
-  },
-  resultsList: {
-    paddingBottom: 20,
-  },
-  resultCard: {
+  filterTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#5F6368',
     marginBottom: 8,
   },
-  card: {
-    borderRadius: 12,
+  chipRow: {
+    gap: 8,
+    paddingRight: 8,
+  },
+  chip: {
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
     backgroundColor: '#FFFFFF',
+  },
+  chipSelected: {
+    backgroundColor: '#1A73E8',
+    borderColor: '#1A73E8',
+  },
+  chipText: {
+    fontSize: 13,
+    color: '#5F6368',
+  },
+  chipTextSelected: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+  },
+  priceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  priceInput: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+  },
+  priceDash: {
+    color: '#5F6368',
+    fontSize: 16,
+  },
+  resultsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 4,
+    marginBottom: 8,
+  },
+  resultsTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#202124',
+    flexShrink: 1,
+  },
+  resultCard: {
+    marginBottom: 0,
+  },
+  card: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
   },
   resultContent: {
     flexDirection: 'row',
     padding: 12,
+    alignItems: 'center',
   },
   resultImage: {
-    width: 80,
-    height: 80,
+    width: 88,
+    height: 88,
     borderRadius: 8,
-    marginRight: 12,
+    backgroundColor: '#F1F3F4',
   },
   resultInfo: {
     flex: 1,
-    justifyContent: 'center',
+    marginLeft: 12,
   },
   resultCategory: {
-    fontSize: 11,
-    color: '#1A73E8',
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    marginBottom: 4,
+    fontSize: 12,
+    color: '#5F6368',
+    textTransform: 'capitalize',
   },
   resultTitle: {
     fontSize: 15,
+    lineHeight: 20,
     fontWeight: '600',
     color: '#202124',
-    marginBottom: 4,
   },
   resultPrice: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    marginBottom: 4,
   },
   currentPrice: {
     fontSize: 16,
@@ -156,63 +127,53 @@ export const styles = StyleSheet.create({
   },
   originalPrice: {
     fontSize: 13,
-    color: '#9E9E9E',
+    color: '#9AA0A6',
     textDecorationLine: 'line-through',
-  },
-  resultMeta: {
-    flexDirection: 'row',
-    gap: 6,
-    marginBottom: 4,
-  },
-  difficultyChip: {
-    backgroundColor: '#FFF3E0',
-  },
-  cuisineChip: {
-    backgroundColor: '#E8F5E9',
   },
   resultDetails: {
     fontSize: 12,
     color: '#5F6368',
+    marginTop: 2,
+  },
+  addButton: {
+    marginTop: 6,
+    alignSelf: 'flex-start',
   },
   loadingCenter: {
-    paddingVertical: 40,
+    paddingVertical: 48,
     alignItems: 'center',
   },
+  loadingText: {
+    marginTop: 12,
+    color: '#5F6368',
+  },
+  errorText: {
+    color: '#EA4335',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
   emptyState: {
-    paddingVertical: 60,
     alignItems: 'center',
+    paddingVertical: 48,
+    paddingHorizontal: 24,
   },
   emptyText: {
     fontSize: 18,
     fontWeight: '600',
     color: '#202124',
-    marginTop: 16,
+    marginTop: 12,
   },
   emptySubtext: {
     fontSize: 14,
     color: '#5F6368',
     marginTop: 4,
+    marginBottom: 16,
+    textAlign: 'center',
   },
   separator: {
-    height: 8,
+    height: 10,
   },
-  guideContainer: {
-    marginTop: 24,
-    padding: 16,
-    backgroundColor: '#E8F0FE',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#D0E1F9',
-  },
-  guideTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#1A73E8',
-    marginBottom: 8,
-  },
-  guideText: {
-    fontSize: 13,
-    color: '#3C4043',
-    lineHeight: 20,
+  footerSpace: {
+    height: 24,
   },
 });
