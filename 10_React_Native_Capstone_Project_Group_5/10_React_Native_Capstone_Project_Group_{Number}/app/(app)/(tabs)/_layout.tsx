@@ -6,6 +6,7 @@ import { Tabs } from 'expo-router';
 import React from 'react';
 import { useCart } from '@/context/CartContext';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { marketplaceColors } from '@/constants/theme';
 
 export default function TabsLayout() {
   const { totalQuantity } = useCart();
@@ -14,22 +15,23 @@ export default function TabsLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#1A73E8',
-        tabBarInactiveTintColor: '#5F6368',
+        tabBarActiveTintColor: marketplaceColors.primary,
+        tabBarInactiveTintColor: '#81788A',
         tabBarStyle: {
           backgroundColor: '#FFFFFF',
-          borderTopWidth: 0,
-          elevation: 8,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: -2 },
-          shadowOpacity: 0.1,
-          shadowRadius: 8,
-          paddingTop: 8,
-          paddingBottom: 8,
+          borderTopWidth: 1,
+          borderTopColor: marketplaceColors.border,
+          elevation: 6,
+          shadowColor: '#30283A',
+          shadowOffset: { width: 0, height: -3 },
+          shadowOpacity: 0.06,
+          shadowRadius: 10,
+          paddingTop: 6,
+          paddingBottom: 6,
         },
         tabBarLabelStyle: {
-          fontSize: 12,
-          fontWeight: '500',
+          fontSize: 11,
+          fontWeight: '600',
         },
       }}
     >

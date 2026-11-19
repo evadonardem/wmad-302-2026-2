@@ -6,7 +6,7 @@ import { StyleSheet } from 'react-native';
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: '#FBFAFC',
   },
   scrollContent: {
     flexGrow: 1,
@@ -18,15 +18,18 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 40,
   },
-  logoText: {
-    fontSize: 64,
+  logoImage: {
+    width: 128,
+    height: 128,
     marginBottom: 8,
   },
   appName: {
+    fontFamily: 'monospace',
     fontSize: 32,
     fontWeight: '700',
-    color: '#1A73E8',
-    letterSpacing: -0.5,
+    color: '#59486F',
+    letterSpacing: 2,
+    textTransform: 'uppercase',
   },
   tagline: {
     fontSize: 16,
@@ -99,7 +102,7 @@ export const styles = StyleSheet.create({
   },
   demoButtonText: {
     fontSize: 14,
-    color: '#1A73E8',
+    color: '#75648A',
     fontWeight: '500',
   },
   registerContainer: {
@@ -116,7 +119,7 @@ export const styles = StyleSheet.create({
   },
   linkText: {
     fontSize: 14,
-    color: '#1A73E8',
+    color: '#75648A',
     fontWeight: '600',
   },
   footer: {
@@ -164,8 +167,8 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
   },
   genderOptionSelected: {
-    borderColor: '#1A73E8',
-    backgroundColor: '#E8F0FE',
+    borderColor: '#75648A',
+    backgroundColor: '#F2EEF5',
   },
   genderOptionText: {
     fontSize: 14,
@@ -173,7 +176,7 @@ export const styles = StyleSheet.create({
     color: '#5F6368',
   },
   genderOptionTextSelected: {
-    color: '#1A73E8',
+    color: '#75648A',
     fontWeight: '600',
   },
   termsContainer: {
@@ -208,15 +211,15 @@ export const styles = StyleSheet.create({
   guideContainer: {
     marginTop: 24,
     padding: 16,
-    backgroundColor: '#E8F0FE',
+    backgroundColor: '#F2EEF5',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#D0E1F9',
+    borderColor: '#DCD4E5',
   },
   guideTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#1A73E8',
+    color: '#75648A',
     marginBottom: 8,
   },
   guideText: {

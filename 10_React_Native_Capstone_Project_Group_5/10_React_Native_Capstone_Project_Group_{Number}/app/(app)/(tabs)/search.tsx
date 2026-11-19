@@ -2,25 +2,15 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { View, Text, ScrollView, FlatList, TouchableOpacity, ActivityIndicator, Alert, Image } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Card, Title, TextInput as PaperTextInput } from 'react-native-paper';
+import { Title, TextInput as PaperTextInput } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { productApi } from '@/services/productApi';
 import { useCart } from '@/context/CartContext';
 import { useFavorites } from '@/context/FavoritesContext';
+import { Product } from '@/types/product';
+import { recordSearch } from '@/utils/searchHistory';
+import ProductTile from '@/components/ProductTile';
 import { styles } from './searchStyles';
-
-interface Product {
-  id: number;
-  title: string;
-  description: string;
-  brand?: string;
-  thumbnail: string;
-  category: string;
-  price: number;
-  discountPercentage: number;
-  rating: number;
-  stock: number;
-}
 
 type SortOption = 'price' | 'rating' | 'discount' | 'newest';
 
@@ -43,7 +33,7 @@ function sortProducts(products: Product[], sortBy: SortOption): Product[] {
 export default function SearchScreen() {
   const router = useRouter();
   const { totalQuantity } = useCart();
-  const { favoriteIds } = useFavorites();
+  const { favoriteIds, isFavorite, toggleFavorite } = useFavorites();
   const { category: categoryParam } = useLocalSearchParams<{ category?: string }>();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<Product[]>([]);
@@ -114,7 +104,26 @@ export default function SearchScreen() {
     }
   }, [sortBy]);
 
-  const handleSearch = () => searchProducts(query, selectedCategory);
+  const trackSearch = (term: string) => {
+    void recordSearch(term).catch((error: unknown) => {
+      Alert.alert(
+        'Could not save search',
+        error instanceof Error ? error.message : 'Please try again.'
+      );
+    });
+  };
+
+  const handleSearch = () => {
+    if (!query.trim() && !selectedCategory) return;
+    trackSearch(query.trim() || selectedCategory || '');
+    router.push({
+      pathname: '/(app)/search-results',
+      params: {
+        ...(query.trim() ? { q: query.trim() } : {}),
+        ...(selectedCategory ? { category: selectedCategory } : {}),
+      },
+    });
+  };
 
   useEffect(() => {
     if (categoryParam) {
@@ -123,34 +132,26 @@ export default function SearchScreen() {
     }
   }, [categoryParam, searchProducts]);
 
-  const renderResult = ({ item }: { item: Product }) => {
-    const discountedPrice = item.price * (1 - item.discountPercentage / 100);
-    return (
-      <TouchableOpacity
-        style={styles.resultCard}
-        onPress={() => router.push(`/(app)/product/${item.id}`)}
-      >
-        <Card style={styles.card} elevation={1}>
-          <View style={styles.resultContent}>
-            <Image source={{ uri: item.thumbnail }} style={styles.resultImage} resizeMode="contain" />
-            <View style={styles.resultInfo}>
-              <Text style={styles.resultCategory}>{item.category}</Text>
-              <Title style={styles.resultTitle} numberOfLines={2}>{item.title}</Title>
-              <View style={styles.resultPrice}>
-                <Text style={styles.currentPrice}>${discountedPrice.toFixed(2)}</Text>
-                {item.discountPercentage > 0 && (
-                  <Text style={styles.originalPrice}>${item.price.toFixed(2)}</Text>
-                )}
-              </View>
-              <Text style={styles.resultDetails}>
-                ⭐ {item.rating} · {item.stock > 0 ? 'In Stock' : 'Out of Stock'}
-              </Text>
-            </View>
-          </View>
-        </Card>
-      </TouchableOpacity>
-    );
+  const handleFavorite = async (product: Product) => {
+    try {
+      const added = await toggleFavorite(product.id);
+      Alert.alert(added ? 'Saved to wishlist' : 'Removed from wishlist', product.title);
+    } catch (favoriteError) {
+      Alert.alert(
+        'Wishlist unavailable',
+        favoriteError instanceof Error ? favoriteError.message : 'Please try again.'
+      );
+    }
   };
+
+  const renderResult = ({ item }: { item: Product }) => (
+    <ProductTile
+      product={item}
+      isFavorite={isFavorite(item.id)}
+      onPress={() => router.push(`/(app)/product/${item.id}`)}
+      onToggleFavorite={() => void handleFavorite(item)}
+    />
+  );
 
   return (
     <View style={styles.container}>
@@ -162,7 +163,7 @@ export default function SearchScreen() {
           accessibilityRole="button"
           accessibilityLabel="Go to home"
         >
-          <MaterialCommunityIcons name="home-outline" size={23} color="#EE4D2D" />
+          <MaterialCommunityIcons name="home-outline" size={23} color="#75648A" />
         </TouchableOpacity>
         <PaperTextInput
           style={styles.searchInput}
@@ -196,7 +197,7 @@ export default function SearchScreen() {
               accessibilityRole="button"
               accessibilityLabel="Open wishlist"
             >
-              <MaterialCommunityIcons name="heart-outline" size={23} color="#EE4D2D" />
+              <MaterialCommunityIcons name="heart-outline" size={23} color="#75648A" />
               {favoriteIds.length > 0 && (
                 <View style={styles.headerActionBadge}>
                   <Text style={styles.headerActionBadgeText}>{favoriteIds.length}</Text>
@@ -209,7 +210,7 @@ export default function SearchScreen() {
               accessibilityRole="button"
               accessibilityLabel="Open cart"
             >
-              <MaterialCommunityIcons name="cart-outline" size={23} color="#EE4D2D" />
+              <MaterialCommunityIcons name="cart-outline" size={23} color="#75648A" />
               {totalQuantity > 0 && (
                 <View style={styles.headerActionBadge}>
                   <Text style={styles.headerActionBadgeText}>{totalQuantity}</Text>
@@ -222,7 +223,7 @@ export default function SearchScreen() {
               accessibilityRole="button"
               accessibilityLabel="Open profile"
             >
-              <MaterialCommunityIcons name="account-outline" size={23} color="#EE4D2D" />
+              <MaterialCommunityIcons name="account-outline" size={23} color="#75648A" />
             </TouchableOpacity>
           </>
         )}
@@ -236,7 +237,7 @@ export default function SearchScreen() {
           <MaterialCommunityIcons
             name={actionsExpanded ? 'chevron-up' : 'dots-horizontal'}
             size={23}
-            color="#EE4D2D"
+            color="#75648A"
           />
         </TouchableOpacity>
       </View>
@@ -263,7 +264,12 @@ export default function SearchScreen() {
               onPress={() => {
                 const nextCategory = selectedCategory === item ? null : item;
                 setSelectedCategory(nextCategory);
-                void searchProducts(query, nextCategory);
+                if (nextCategory) {
+                  router.push({
+                    pathname: '/(app)/search-results',
+                    params: { category: nextCategory },
+                  });
+                }
               }}
             >
               <Text style={[
@@ -312,7 +318,7 @@ export default function SearchScreen() {
         </Title>
         {loading ? (
           <View style={styles.loadingCenter}>
-            <ActivityIndicator size="large" color="#1A73E8" />
+            <ActivityIndicator size="large" color="#75648A" />
           </View>
         ) : results.length === 0 && query ? (
           <View style={styles.emptyState}>
@@ -325,8 +331,9 @@ export default function SearchScreen() {
             data={results}
             renderItem={renderResult}
             keyExtractor={(item) => item.id.toString()}
+            numColumns={2}
+            columnWrapperStyle={styles.productRow}
             contentContainerStyle={styles.resultsList}
-            ItemSeparatorComponent={() => <View style={styles.separator} />}
           />
         )}
       </View>
@@ -341,10 +348,14 @@ export default function SearchScreen() {
                 style={styles.suggestionChip}
                 onPress={() => {
                   setQuery(suggestion);
-                  void searchProducts(suggestion, null);
+                  trackSearch(suggestion);
+                  router.push({
+                    pathname: '/(app)/search-results',
+                    params: { q: suggestion },
+                  });
                 }}
               >
-                <MaterialCommunityIcons name="magnify" size={16} color="#1A73E8" />
+                <MaterialCommunityIcons name="magnify" size={16} color="#75648A" />
                 <Text style={styles.suggestionText}>
                   {suggestion.charAt(0).toUpperCase() + suggestion.slice(1)}
                 </Text>
@@ -358,7 +369,7 @@ export default function SearchScreen() {
         <View style={styles.featuredSection}>
           <Text style={styles.featuredTitle}>Featured products</Text>
           {featuredLoading ? (
-            <ActivityIndicator color="#1A73E8" style={styles.featuredLoading} />
+            <ActivityIndicator color="#75648A" style={styles.featuredLoading} />
           ) : (
             <FlatList
               data={featuredProducts}

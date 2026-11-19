@@ -2,11 +2,12 @@
  * Search Screen Styles - Shared base
  */
 import { StyleSheet } from 'react-native';
+import { marketplaceCardShadow, marketplaceColors } from '@/constants/theme';
 
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: marketplaceColors.background,
   },
   content: {
     paddingHorizontal: 16,
@@ -26,7 +27,7 @@ export const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: marketplaceColors.border,
   },
   searchHeader: {
     marginHorizontal: 16,
@@ -56,7 +57,7 @@ export const styles = StyleSheet.create({
     height: 16,
     paddingHorizontal: 3,
     borderRadius: 8,
-    backgroundColor: '#EE4D2D',
+    backgroundColor: '#75648A',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -72,13 +73,13 @@ export const styles = StyleSheet.create({
     backgroundColor: 'transparent',
     paddingHorizontal: 0,
     fontSize: 16,
-    color: '#202124',
+    color: marketplaceColors.text,
   },
   clearButton: {
     padding: 8,
   },
   searchButton: {
-    backgroundColor: '#1A73E8',
+    backgroundColor: '#75648A',
     borderRadius: 12,
     paddingHorizontal: 16,
     justifyContent: 'center',
@@ -94,7 +95,7 @@ export const styles = StyleSheet.create({
   filterTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#202124',
+    color: marketplaceColors.text,
     marginBottom: 12,
   },
   filterList: {
@@ -106,17 +107,17 @@ export const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: marketplaceColors.border,
     backgroundColor: '#FFFFFF',
   },
   filterChipSelected: {
-    backgroundColor: '#1A73E8',
-    borderColor: '#1A73E8',
+    backgroundColor: '#75648A',
+    borderColor: '#75648A',
   },
   filterChipText: {
     fontSize: 13,
     fontWeight: '500',
-    color: '#1A73E8',
+    color: '#75648A',
   },
   filterChipTextSelected: {
     color: '#FFFFFF',
@@ -131,17 +132,17 @@ export const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: marketplaceColors.border,
     backgroundColor: '#FFFFFF',
   },
   sortChipSelected: {
-    backgroundColor: '#1A73E8',
-    borderColor: '#1A73E8',
+    backgroundColor: '#75648A',
+    borderColor: '#75648A',
   },
   sortChipText: {
     fontSize: 13,
     fontWeight: '500',
-    color: '#1A73E8',
+    color: '#75648A',
   },
   sortChipTextSelected: {
     color: '#FFFFFF',
@@ -158,55 +159,8 @@ export const styles = StyleSheet.create({
   resultsList: {
     paddingBottom: 20,
   },
-  resultCard: {
-    marginBottom: 8,
-  },
-  card: {
-    borderRadius: 12,
-    backgroundColor: '#FFFFFF',
-  },
-  resultContent: {
-    flexDirection: 'row',
-    padding: 12,
-  },
-  resultImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 8,
-    marginRight: 12,
-  },
-  resultInfo: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-  resultCategory: {
-    fontSize: 11,
-    color: '#1A73E8',
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    marginBottom: 4,
-  },
-  resultTitle: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#202124',
-    marginBottom: 4,
-  },
-  resultPrice: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 4,
-  },
-  currentPrice: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#1A73E8',
-  },
-  originalPrice: {
-    fontSize: 13,
-    color: '#9E9E9E',
-    textDecorationLine: 'line-through',
+  productRow: {
+    justifyContent: 'space-between',
   },
   resultMeta: {
     flexDirection: 'row',
@@ -221,7 +175,7 @@ export const styles = StyleSheet.create({
   },
   resultDetails: {
     fontSize: 12,
-    color: '#5F6368',
+    color: marketplaceColors.muted,
   },
   loadingCenter: {
     paddingVertical: 40,
@@ -234,16 +188,13 @@ export const styles = StyleSheet.create({
   emptyText: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#202124',
+    color: marketplaceColors.text,
     marginTop: 16,
   },
   emptySubtext: {
     fontSize: 14,
-    color: '#5F6368',
+    color: marketplaceColors.muted,
     marginTop: 4,
-  },
-  separator: {
-    height: 8,
   },
   suggestionsContainer: {
     marginTop: 16,
@@ -271,10 +222,10 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: '#F1F6FE',
+    backgroundColor: '#F2EEF5',
   },
   suggestionText: {
-    color: '#1A73E8',
+    color: '#75648A',
     fontSize: 13,
     fontWeight: '500',
   },
@@ -300,13 +251,14 @@ export const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: marketplaceColors.border,
+    ...marketplaceCardShadow,
   },
   featuredImageContainer: {
     height: 100,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#F8F9FA',
+    backgroundColor: marketplaceColors.background,
     borderRadius: 8,
     marginBottom: 8,
   },
@@ -323,7 +275,7 @@ export const styles = StyleSheet.create({
     borderRadius: 8,
     overflow: 'hidden',
     color: '#FFFFFF',
-    backgroundColor: '#EE4D2D',
+    backgroundColor: '#75648A',
     fontSize: 9,
     fontWeight: '700',
   },
@@ -331,10 +283,10 @@ export const styles = StyleSheet.create({
     minHeight: 36,
     fontSize: 13,
     fontWeight: '600',
-    color: '#202124',
+    color: marketplaceColors.text,
   },
   featuredPrice: {
-    color: '#EE4D2D',
+    color: '#75648A',
     fontSize: 14,
     fontWeight: '700',
     marginTop: 6,
@@ -342,20 +294,20 @@ export const styles = StyleSheet.create({
   guideContainer: {
     marginTop: 24,
     padding: 16,
-    backgroundColor: '#E8F0FE',
-    borderRadius: 12,
+    backgroundColor: marketplaceColors.primarySoft,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#D0E1F9',
+    borderColor: marketplaceColors.border,
   },
   guideTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#1A73E8',
+    color: '#75648A',
     marginBottom: 8,
   },
   guideText: {
     fontSize: 13,
-    color: '#3C4043',
+    color: marketplaceColors.text,
     lineHeight: 20,
   },
 });

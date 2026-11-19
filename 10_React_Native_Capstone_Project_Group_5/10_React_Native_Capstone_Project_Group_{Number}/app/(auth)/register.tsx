@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
+  Image,
   ScrollView,
   KeyboardAvoidingView,
   Platform,
@@ -101,9 +102,14 @@ export default function RegisterScreen() {
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Logo/Brand */}
         <View style={styles.logoContainer}>
-          <Text style={styles.logoText}>🛒</Text>
-          <Text style={styles.appName}>Marketplace</Text>
-          <Text style={styles.tagline}>Create Your Account</Text>
+          <Image
+            source={require('../../assets/kartora-logo.png')}
+            style={styles.logoImage}
+            resizeMode="contain"
+            accessibilityLabel="Kartora logo"
+          />
+          <Text style={styles.appName}>Kartora</Text>
+          <Text style={styles.tagline}>You Shop. We Deliver.</Text>
         </View>
 
         {/* Register Card */}

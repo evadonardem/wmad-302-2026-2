@@ -6,7 +6,7 @@ import { StyleSheet } from 'react-native';
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: '#FBFAFC',
   },
   loadingContainer: {
     flex: 1,
@@ -79,7 +79,7 @@ export const styles = StyleSheet.create({
     height: 80,
     borderRadius: 8,
     marginRight: 12,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: '#FAF9FC',
   },
   itemInfo: {
     flex: 1,
@@ -99,7 +99,7 @@ export const styles = StyleSheet.create({
   itemCurrentPrice: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#1A73E8',
+    color: '#75648A',
   },
   itemOriginalPrice: {
     fontSize: 13,
@@ -174,7 +174,7 @@ export const styles = StyleSheet.create({
   summaryValueTotal: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#1A73E8',
+    color: '#75648A',
   },
   checkoutButton: {
     borderRadius: 8,
@@ -183,15 +183,15 @@ export const styles = StyleSheet.create({
   guideContainer: {
     margin: 16,
     padding: 16,
-    backgroundColor: '#E8F0FE',
+    backgroundColor: '#F2EEF5',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#D0E1F9',
+    borderColor: '#DCD4E5',
   },
   guideTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#1A73E8',
+    color: '#75648A',
     marginBottom: 8,
   },
   guideText: {

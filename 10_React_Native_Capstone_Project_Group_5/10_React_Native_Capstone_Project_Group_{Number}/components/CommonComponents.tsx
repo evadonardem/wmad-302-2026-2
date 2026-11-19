@@ -6,6 +6,7 @@ import React from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, ActivityIndicator, DimensionValue } from 'react-native';
 import { Card, Title, Chip, Badge, Button } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { marketplaceCardShadow } from '@/constants/theme';
 
 interface RecipeCardProps {
   recipe: {
@@ -95,11 +96,11 @@ export function ProductCard({ product, onPress, style }: ProductCardProps) {
 
   return (
     <TouchableOpacity
-      style={[styles.cardWrapper, style]}
+      style={[styles.cardWrapper, styles.productCardWrapper, style]}
       onPress={onPress}
       activeOpacity={0.8}
     >
-      <Card style={styles.card} elevation={2}>
+      <Card style={styles.card} elevation={0}>
         <View style={styles.imageContainer}>
           <Image
             source={{ uri: product.thumbnail }}
@@ -154,7 +155,7 @@ export function CategoryChip({ label, selected, onPress, icon, style }: Category
         <MaterialCommunityIcons
           name={icon}
           size={16}
-          color={selected ? '#FFFFFF' : '#1A73E8'}
+          color={selected ? '#FFFFFF' : '#75648A'}
           style={{ marginRight: 4 }}
         />
       )}
@@ -178,7 +179,7 @@ export function LoadingOverlay({ visible, message = 'Loading...' }: LoadingOverl
 
   return (
     <View style={styles.loadingOverlay}>
-      <ActivityIndicator size="large" color="#1A73E8" />
+      <ActivityIndicator size="large" color="#75648A" />
       <Text style={styles.loadingText}>{message}</Text>
     </View>
   );
@@ -228,6 +229,10 @@ const styles = StyleSheet.create({
   cardWrapper: {
     marginBottom: 12,
   },
+  productCardWrapper: {
+    borderRadius: 12,
+    ...marketplaceCardShadow,
+  },
   card: {
     borderRadius: 12,
     overflow: 'hidden',
@@ -236,7 +241,7 @@ const styles = StyleSheet.create({
   imageContainer: {
     position: 'relative',
     height: 160,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: '#FAF9FC',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -273,7 +278,7 @@ const styles = StyleSheet.create({
     top: 8,
     left: 8,
     zIndex: 1,
-    backgroundColor: '#1A73E8',
+    backgroundColor: '#75648A',
   },
   cardContent: {
     padding: 12,
@@ -281,7 +286,7 @@ const styles = StyleSheet.create({
   recipeTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#3E2723',
+    color: '#202124',
     marginBottom: 8,
   },
   productTitle: {
@@ -292,7 +297,7 @@ const styles = StyleSheet.create({
   },
   productCategory: {
     fontSize: 12,
-    color: '#1A73E8',
+    color: '#75648A',
     fontWeight: '500',
     marginBottom: 4,
     textTransform: 'capitalize',
@@ -304,7 +309,7 @@ const styles = StyleSheet.create({
   },
   metaText: {
     fontSize: 12,
-    color: '#8D6E63',
+    color: '#5F6368',
     fontWeight: '500',
   },
   cuisineRow: {
@@ -334,7 +339,7 @@ const styles = StyleSheet.create({
   currentPrice: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#1A73E8',
+    color: '#75648A',
   },
   originalPrice: {
     fontSize: 13,
@@ -352,13 +357,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   categoryChipSelected: {
-    backgroundColor: '#1A73E8',
-    borderColor: '#1A73E8',
+    backgroundColor: '#75648A',
+    borderColor: '#75648A',
   },
   categoryChipText: {
     fontSize: 13,
     fontWeight: '500',
-    color: '#1A73E8',
+    color: '#75648A',
   },
   categoryChipTextSelected: {
     color: '#FFFFFF',

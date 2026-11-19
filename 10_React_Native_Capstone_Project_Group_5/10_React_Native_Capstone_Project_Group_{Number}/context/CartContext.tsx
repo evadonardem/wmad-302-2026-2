@@ -9,6 +9,11 @@ import React, {
 } from 'react';
 import { CartItem, Product } from '@/types/product';
 import { cartStorage } from '@/utils/storage';
+import {
+  calculateCouponDiscount,
+  CouponDefinition,
+  getCouponByCode,
+} from '@/utils/coupons';
 
 interface CartContextValue {
   items: CartItem[];
@@ -16,9 +21,15 @@ interface CartContextValue {
   totalQuantity: number;
   subtotal: number;
   discountedTotal: number;
+  appliedCoupon: CouponDefinition | null;
+  couponDiscount: number;
+  totalAfterCoupon: number;
   addItem: (product: Product, quantity?: number) => Promise<void>;
+  applyCoupon: (code: string) => Promise<void>;
+  removeCoupon: () => void;
   updateQuantity: (productId: number, quantity: number) => Promise<void>;
   removeItem: (productId: number) => Promise<void>;
+  removeItems: (productIds: number[]) => Promise<void>;
   clearCart: () => Promise<void>;
 }
 
@@ -27,6 +38,7 @@ const CartContext = createContext<CartContextValue | undefined>(undefined);
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [appliedCoupon, setAppliedCoupon] = useState<CouponDefinition | null>(null);
   const itemsRef = useRef<CartItem[]>([]);
 
   useEffect(() => {
@@ -112,15 +124,44 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const removeItem = useCallback(
     async (productId: number) => {
-      await saveItems(itemsRef.current.filter((item) => item.productId !== productId));
+      const nextItems = itemsRef.current.filter((item) => item.productId !== productId);
+      await saveItems(nextItems);
+      if (nextItems.length === 0) setAppliedCoupon(null);
     },
     [saveItems]
   );
+
+  const removeItems = useCallback(
+    async (productIds: number[]) => {
+      const removedIds = new Set(productIds);
+      if (removedIds.size === 0) return;
+      const nextItems = itemsRef.current.filter((item) => !removedIds.has(item.productId));
+      await saveItems(nextItems);
+      if (nextItems.length === 0) setAppliedCoupon(null);
+    },
+    [saveItems]
+  );
+
+  const applyCoupon = useCallback(async (code: string) => {
+    if (itemsRef.current.length === 0) {
+      throw new Error('Add an item to your cart before applying a coupon.');
+    }
+    const coupon = getCouponByCode(code);
+    if (!coupon) {
+      throw new Error('That coupon code is not valid. Try KARTORA10 or WELCOME5.');
+    }
+    setAppliedCoupon(coupon);
+  }, []);
+
+  const removeCoupon = useCallback(() => {
+    setAppliedCoupon(null);
+  }, []);
 
   const clearCart = useCallback(async () => {
     await cartStorage.clear();
     itemsRef.current = [];
     setItems([]);
+    setAppliedCoupon(null);
   }, []);
 
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
@@ -129,6 +170,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
       sum + item.price * (1 - item.discountPercentage / 100) * item.quantity,
     0
   );
+  const couponDiscount = calculateCouponDiscount(appliedCoupon, discountedTotal);
+  const totalAfterCoupon = Number((discountedTotal - couponDiscount).toFixed(2));
   const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
@@ -139,9 +182,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
         totalQuantity,
         subtotal,
         discountedTotal,
+        appliedCoupon,
+        couponDiscount,
+        totalAfterCoupon,
         addItem,
+        applyCoupon,
+        removeCoupon,
         updateQuantity,
         removeItem,
+        removeItems,
         clearCart,
       }}
     >

@@ -20,7 +20,7 @@ import { productApi } from '@/services/productApi';
 import { Product } from '@/types/product';
 import { styles } from './homeStyles';
 
-const orange = '#EE4D2D';
+const brandPurple = '#75648A';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -113,7 +113,7 @@ export default function HomeScreen() {
           <MaterialCommunityIcons
             name={isFavorite(product.id) ? 'heart' : 'heart-outline'}
             size={20}
-            color={isFavorite(product.id) ? orange : '#555'}
+            color={isFavorite(product.id) ? brandPurple : '#555'}
           />
         </TouchableOpacity>
       </View>
@@ -134,7 +134,7 @@ export default function HomeScreen() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={orange} />
+        <ActivityIndicator size="large" color={brandPurple} />
         <Text style={styles.loadingText}>Finding today&apos;s deals...</Text>
       </View>
     );
@@ -144,7 +144,7 @@ export default function HomeScreen() {
     return (
       <View style={styles.errorContainer}>
         <Text style={styles.errorText}>{error}</Text>
-        <Button mode="contained" buttonColor={orange} onPress={() => void fetchData()}>Try again</Button>
+        <Button mode="contained" buttonColor={brandPurple} onPress={() => void fetchData()}>Try again</Button>
       </View>
     );
   }
@@ -163,20 +163,31 @@ export default function HomeScreen() {
             setRefreshing(true);
             void fetchData(true);
           }}
-          colors={[orange]}
+          colors={[brandPurple]}
         />
       }
       contentContainerStyle={styles.scrollContent}
     >
       <View style={styles.topBar}>
-        <View>
-          <Text style={styles.brand}>marketplace</Text>
+        <View style={styles.brandBlock}>
+          <View style={styles.brandRow}>
+            <Image
+              source={require('../../../assets/kartora-logo.png')}
+              style={styles.brandLogo}
+              resizeMode="contain"
+              accessibilityLabel="Kartora logo"
+            />
+            <View>
+              <Text style={styles.brand}>Kartora</Text>
+              <Text style={styles.brandTagline}>You Shop. We Deliver.</Text>
+            </View>
+          </View>
           <Text style={styles.greeting}>Hi{user?.firstName ? `, ${user.firstName}` : ''}! What are you shopping for?</Text>
         </View>
         <View style={styles.topActions}>
-          <IconButton icon="heart-outline" iconColor={orange} onPress={() => router.push('/(app)/wishlist')} accessibilityLabel="Open wishlist" />
+          <IconButton icon="heart-outline" iconColor={brandPurple} onPress={() => router.push('/(app)/wishlist')} accessibilityLabel="Open wishlist" />
           <View>
-            <IconButton icon="cart-outline" iconColor={orange} onPress={() => router.push('/(app)/(tabs)/cart')} accessibilityLabel="Open cart" />
+            <IconButton icon="cart-outline" iconColor={brandPurple} onPress={() => router.push('/(app)/(tabs)/cart')} accessibilityLabel="Open cart" />
             {totalQuantity > 0 && (
               <View style={styles.cartBadge}><Text style={styles.cartBadgeText}>{totalQuantity}</Text></View>
             )}
@@ -195,9 +206,9 @@ export default function HomeScreen() {
         accessibilityRole="button"
         accessibilityLabel="Search products, brands, and more"
       >
-        <MaterialCommunityIcons name="magnify" size={23} color={orange} />
+        <MaterialCommunityIcons name="magnify" size={23} color={brandPurple} />
         <Text style={styles.searchPlaceholder}>Search products, brands, and more</Text>
-        <MaterialCommunityIcons name="camera-outline" size={21} color={orange} />
+        <MaterialCommunityIcons name="camera-outline" size={21} color={brandPurple} />
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.promoBanner} onPress={() => router.push('/(app)/(tabs)/search')}>
@@ -217,7 +228,7 @@ export default function HomeScreen() {
           { icon: 'shield-check-outline' as const, label: 'Shop with trust' },
         ].map((item) => (
           <View key={item.label} style={styles.quickLink}>
-            <MaterialCommunityIcons name={item.icon} size={22} color={orange} />
+            <MaterialCommunityIcons name={item.icon} size={22} color={brandPurple} />
             <Text style={styles.quickLinkText}>{item.label}</Text>
           </View>
         ))}
@@ -237,7 +248,7 @@ export default function HomeScreen() {
               onPress={() => router.push(`/(app)/(tabs)/search?category=${encodeURIComponent(item)}`)}
             >
               <View style={[styles.categoryIcon, { backgroundColor: categoryColors[index % categoryColors.length] }]}>
-                <MaterialCommunityIcons name={categoryIcons[index % categoryIcons.length]} size={24} color={orange} />
+                <MaterialCommunityIcons name={categoryIcons[index % categoryIcons.length]} size={24} color={brandPurple} />
               </View>
               <Text style={styles.categoryLabel} numberOfLines={2}>{item.replace(/-/g, ' ')}</Text>
             </TouchableOpacity>
@@ -282,4 +293,4 @@ const categoryIcons = [
   'cellphone', 'laptop', 'face-woman', 'spray', 'cart', 'home-outline',
   'sofa-outline', 'silverware-fork-knife', 'car', 'headphones', 'watch', 'diamond-stone',
 ] as const;
-const categoryColors = ['#FFF0E8', '#FFF7E0', '#FDEAF0', '#EAF6FF', '#EAF8F0', '#F3ECFF'];
+const categoryColors = ['#F2EEF5', '#EBE7EF', '#F7F4F8', '#E6DEED', '#F3F0F6', '#DCD4E5'];

@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Animated,
   Image,
   ScrollView,
   StyleSheet,
@@ -16,8 +17,10 @@ import { productApi } from '@/services/productApi';
 import { Product } from '@/types/product';
 import { useCart } from '@/context/CartContext';
 import { useFavorites } from '@/context/FavoritesContext';
+import { availableCoupons } from '@/utils/coupons';
+import { marketplaceColors } from '@/constants/theme';
 
-const orange = '#EE4D2D';
+const brandPurple = '#75648A';
 
 export default function ProductDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -30,6 +33,10 @@ export default function ProductDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [addedToast, setAddedToast] = useState<string | null>(null);
+  const toastOpacity = useRef(new Animated.Value(0)).current;
+  const toastTranslateY = useRef(new Animated.Value(14)).current;
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -61,15 +68,43 @@ export default function ProductDetailScreen() {
     };
   }, [id]);
 
+  useEffect(() => () => {
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    toastOpacity.stopAnimation();
+    toastTranslateY.stopAnimation();
+  }, [toastOpacity, toastTranslateY]);
+
+  const showCartConfirmation = (productTitle: string) => {
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    toastOpacity.stopAnimation();
+    toastTranslateY.stopAnimation();
+    setAddedToast(productTitle);
+    toastOpacity.setValue(0);
+    toastTranslateY.setValue(14);
+    Animated.parallel([
+      Animated.timing(toastOpacity, { toValue: 1, duration: 180, useNativeDriver: false }),
+      Animated.spring(toastTranslateY, { toValue: 0, speed: 20, bounciness: 5, useNativeDriver: false }),
+    ]).start();
+
+    toastTimer.current = setTimeout(() => {
+      Animated.parallel([
+        Animated.timing(toastOpacity, { toValue: 0, duration: 180, useNativeDriver: false }),
+        Animated.timing(toastTranslateY, { toValue: 10, duration: 180, useNativeDriver: false }),
+      ]).start(({ finished }) => {
+        if (finished) setAddedToast(null);
+      });
+    }, 2200);
+  };
+
   const addToCart = async (goToCart: boolean) => {
     if (!product) return;
     setAdding(true);
     try {
       await addItem(product, quantity);
       if (goToCart) {
-        router.push('/(app)/(tabs)/cart');
+        openCart(product.id);
       } else {
-        Alert.alert('Added to cart', `${product.title} was added to your cart.`);
+        showCartConfirmation(product.title);
       }
     } catch (addError) {
       Alert.alert(
@@ -79,6 +114,13 @@ export default function ProductDetailScreen() {
     } finally {
       setAdding(false);
     }
+  };
+
+  const openCart = (productId: number) => {
+    router.push({
+      pathname: '/(app)/(tabs)/cart',
+      params: { sourceProductId: String(productId) },
+    });
   };
 
   const toggleProductFavorite = async () => {
@@ -99,13 +141,13 @@ export default function ProductDetailScreen() {
       <View style={styles.center}>
         {loading ? (
           <>
-            <ActivityIndicator size="large" color={orange} />
+            <ActivityIndicator size="large" color={brandPurple} />
             <Text style={styles.muted}>Loading product...</Text>
           </>
         ) : (
           <>
             <Text style={styles.error}>{error ?? 'Product not found.'}</Text>
-            <Button mode="contained" onPress={() => router.back()} buttonColor={orange}>
+            <Button mode="contained" onPress={() => router.back()} buttonColor={brandPurple}>
               Go back
             </Button>
           </>
@@ -122,18 +164,20 @@ export default function ProductDetailScreen() {
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.topBar}>
           <IconButton icon="arrow-left" onPress={() => router.back()} accessibilityLabel="Go back" />
-          <Text style={styles.topTitle}>Product details</Text>
-          <IconButton
-            icon="cart-outline"
-            onPress={() => router.push('/(app)/(tabs)/cart')}
-            accessibilityLabel="Open cart"
-          />
-          <IconButton
-            icon={isFavorite(product.id) ? 'heart' : 'heart-outline'}
-            iconColor={orange}
-            onPress={() => void toggleProductFavorite()}
-            accessibilityLabel={isFavorite(product.id) ? 'Remove from wishlist' : 'Add to wishlist'}
-          />
+          <Text style={styles.topTitle} numberOfLines={1}>Product details</Text>
+          <View style={styles.topActions}>
+            <IconButton
+              icon="cart-outline"
+              onPress={() => openCart(product.id)}
+              accessibilityLabel="Open cart"
+            />
+            <IconButton
+              icon={isFavorite(product.id) ? 'heart' : 'heart-outline'}
+              iconColor={brandPurple}
+              onPress={() => void toggleProductFavorite()}
+              accessibilityLabel={isFavorite(product.id) ? 'Remove from wishlist' : 'Add to wishlist'}
+            />
+          </View>
         </View>
 
         <View style={styles.gallery}>
@@ -174,13 +218,55 @@ export default function ProductDetailScreen() {
             </View>
             <Text style={styles.description}>{product.description}</Text>
             <View style={styles.infoRow}>
-              <MaterialCommunityIcons name="truck-fast-outline" size={20} color={orange} />
-              <Text style={styles.infoText}>{product.shippingInformation}</Text>
+              <MaterialCommunityIcons name="storefront-outline" size={20} color={brandPurple} />
+              <Text style={styles.infoText}>Sold by Kartora Marketplace seller · Demo</Text>
             </View>
             <View style={styles.infoRow}>
-              <MaterialCommunityIcons name="shield-check-outline" size={20} color={orange} />
+              <MaterialCommunityIcons name="tag-outline" size={20} color={brandPurple} />
+              <Text style={styles.infoText}>Brand: {product.brand || 'Unbranded'}</Text>
+            </View>
+            <View style={styles.infoRow}>
+              <MaterialCommunityIcons name="truck-fast-outline" size={20} color={brandPurple} />
+              <View style={styles.infoDetails}>
+                <Text style={styles.infoText}>Kartora Standard Delivery · Demo</Text>
+                <Text style={styles.infoSubtext}>{product.shippingInformation}</Text>
+              </View>
+            </View>
+            <View style={styles.infoRow}>
+              <MaterialCommunityIcons name="truck-delivery-outline" size={20} color={brandPurple} />
+              <View style={styles.infoDetails}>
+                <Text style={styles.infoText}>Express delivery · Demo</Text>
+                <Text style={styles.infoSubtext}>Courier service is not connected.</Text>
+              </View>
+            </View>
+            <View style={styles.infoRow}>
+              <MaterialCommunityIcons name="shield-check-outline" size={20} color={brandPurple} />
               <Text style={styles.infoText}>{product.warrantyInformation}</Text>
             </View>
+          </Card.Content>
+        </Card>
+
+        <Card style={styles.productCard} mode="contained">
+          <Card.Content>
+            <View style={styles.couponHeading}>
+              <MaterialCommunityIcons name="ticket-percent-outline" size={22} color={brandPurple} />
+              <Text style={styles.sectionTitle}>Available vouchers</Text>
+            </View>
+            {availableCoupons.map((coupon) => (
+              <View key={coupon.code} style={styles.couponRow}>
+                <View style={styles.couponCodeBox}>
+                  <Text style={styles.couponCode}>{coupon.code}</Text>
+                </View>
+                <Text style={styles.couponOffer}>
+                  {coupon.type === 'percent'
+                    ? `${coupon.value}% off cart total`
+                    : `$${coupon.value.toFixed(2)} off cart total`}
+                </Text>
+              </View>
+            ))}
+            <Text style={styles.infoSubtext}>
+              Apply one code in your cart or at checkout. Coupons cannot be combined. Demo offers only.
+            </Text>
           </Card.Content>
         </Card>
 
@@ -206,84 +292,129 @@ export default function ProductDetailScreen() {
       </ScrollView>
 
       <View style={styles.buyBar}>
-        <View>
-          <Text style={styles.muted}>Total</Text>
-          <Text style={styles.barPrice}>${(salePrice * quantity).toFixed(2)}</Text>
+        <View style={styles.buySummaryRow}>
+          <View>
+            <Text style={styles.muted}>Your total</Text>
+            <Text style={styles.barPrice}>${(salePrice * quantity).toFixed(2)}</Text>
+          </View>
+          <View style={styles.quantity}>
+            <IconButton
+              icon="minus"
+              size={18}
+              onPress={() => setQuantity((current) => Math.max(1, current - 1))}
+              disabled={quantity <= 1}
+              accessibilityLabel="Decrease quantity"
+            />
+            <Text style={styles.quantityText}>{quantity}</Text>
+            <IconButton
+              icon="plus"
+              size={18}
+              onPress={() => setQuantity((current) => Math.min(product.stock, current + 1))}
+              disabled={quantity >= product.stock}
+              accessibilityLabel="Increase quantity"
+            />
+          </View>
         </View>
-        <View style={styles.quantity}>
-          <IconButton
-            icon="minus"
-            size={18}
-            onPress={() => setQuantity((current) => Math.max(1, current - 1))}
-            disabled={quantity <= 1}
-            accessibilityLabel="Decrease quantity"
-          />
-          <Text style={styles.quantityText}>{quantity}</Text>
-          <IconButton
-            icon="plus"
-            size={18}
-            onPress={() => setQuantity((current) => Math.min(product.stock, current + 1))}
-            disabled={quantity >= product.stock}
-            accessibilityLabel="Increase quantity"
-          />
+        <View style={styles.buyActions}>
+          <Button
+            mode="outlined"
+            textColor={brandPurple}
+            style={styles.buyActionButton}
+            contentStyle={styles.buyActionContent}
+            onPress={() => void addToCart(false)}
+            loading={adding}
+            disabled={adding || product.stock < 1}
+          >
+            Add to cart
+          </Button>
+          <Button
+            mode="contained"
+            buttonColor={brandPurple}
+            style={styles.buyActionButton}
+            contentStyle={styles.buyActionContent}
+            onPress={() => void addToCart(true)}
+            loading={adding}
+            disabled={adding || product.stock < 1}
+          >
+            Buy now
+          </Button>
         </View>
-        <Button
-          mode="contained"
-          buttonColor={orange}
-          onPress={() => void addToCart(false)}
-          loading={adding}
-          disabled={adding || product.stock < 1}
-          compact
-        >
-          Add to cart
-        </Button>
-        <Button
-          mode="contained"
-          buttonColor="#C9361B"
-          onPress={() => void addToCart(true)}
-          loading={adding}
-          disabled={adding || product.stock < 1}
-          compact
-        >
-          Buy now
-        </Button>
       </View>
+      {addedToast && (
+        <Animated.View
+          pointerEvents="none"
+          accessibilityLiveRegion="polite"
+          style={[
+            styles.cartToast,
+            {
+              opacity: toastOpacity,
+              transform: [{ translateY: toastTranslateY }],
+            },
+          ]}
+        >
+          <View style={styles.toastCheck}>
+            <MaterialCommunityIcons name="check-bold" size={16} color="#FFF" />
+          </View>
+          <View style={styles.toastCopy}>
+            <Text style={styles.toastTitle}>Added to your cart</Text>
+            <Text style={styles.toastProduct} numberOfLines={1}>{addedToast}</Text>
+          </View>
+          <MaterialCommunityIcons name="cart-check" size={23} color="#25845A" />
+        </Animated.View>
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: '#F5F5F5' },
-  content: { paddingBottom: 110 },
+  screen: { flex: 1, backgroundColor: marketplaceColors.background },
+  content: { paddingBottom: 160 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24, gap: 16 },
-  topBar: { height: 52, flexDirection: 'row' as const, alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#FFF' },
-  topTitle: { fontSize: 17, fontWeight: '700' as const, color: '#222' },
-  gallery: { height: 300, backgroundColor: '#FFF', alignItems: 'center', justifyContent: 'center' },
+  topBar: { height: 56, flexDirection: 'row' as const, alignItems: 'center', backgroundColor: '#FFF', borderBottomWidth: 1, borderBottomColor: marketplaceColors.border },
+  topActions: { flexDirection: 'row' as const, alignItems: 'center' },
+  topTitle: { flex: 1, textAlign: 'center' as const, fontSize: 17, fontWeight: '700' as const, color: '#222' },
+  gallery: { height: 300, margin: 12, marginBottom: 0, backgroundColor: '#FFF', borderRadius: 18, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   heroImage: { width: '100%' as const, height: '100%' as const },
-  discount: { position: 'absolute' as const, top: 16, left: 16, backgroundColor: orange, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 4 },
+  discount: { position: 'absolute' as const, top: 16, left: 16, backgroundColor: brandPurple, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 4 },
   discountText: { color: '#FFF', fontWeight: '700' as const },
-  thumbnails: { padding: 12, gap: 10, backgroundColor: '#FFF' },
-  thumbnailFrame: { width: 58, height: 58, borderWidth: 1, borderColor: '#DDD', borderRadius: 6, padding: 3 },
-  thumbnailSelected: { borderColor: orange, borderWidth: 2 },
+  thumbnails: { padding: 12, gap: 10, marginHorizontal: 12, backgroundColor: '#FFF', borderBottomLeftRadius: 18, borderBottomRightRadius: 18 },
+  thumbnailFrame: { width: 58, height: 58, borderWidth: 1, borderColor: marketplaceColors.border, borderRadius: 10, padding: 3 },
+  thumbnailSelected: { borderColor: brandPurple, borderWidth: 2 },
   thumbnail: { width: '100%' as const, height: '100%' as const },
-  productCard: { margin: 10, backgroundColor: '#FFF' },
+  productCard: { margin: 12, backgroundColor: '#FFF', borderRadius: 16, borderWidth: 1, borderColor: marketplaceColors.border },
   category: { color: '#888', fontSize: 13, textTransform: 'capitalize' as const },
   title: { color: '#222', fontSize: 20, fontWeight: '700' as const, marginTop: 6 },
   ratingRow: { flexDirection: 'row' as const, alignItems: 'center', marginTop: 8 },
   rating: { color: '#333', fontWeight: '600' as const, marginLeft: 3 },
   muted: { color: '#777', fontSize: 13 },
   priceRow: { flexDirection: 'row' as const, alignItems: 'center', gap: 10, marginTop: 14 },
-  salePrice: { color: orange, fontWeight: '800' as const, fontSize: 25 },
+  salePrice: { color: brandPurple, fontWeight: '800' as const, fontSize: 25 },
   oldPrice: { color: '#999', fontSize: 15, textDecorationLine: 'line-through' as const },
   description: { color: '#444', fontSize: 14, lineHeight: 21, marginTop: 12 },
   infoRow: { flexDirection: 'row' as const, alignItems: 'center', gap: 10, marginTop: 12 },
   infoText: { color: '#444', flex: 1, fontSize: 13 },
+  infoDetails: { flex: 1 },
+  infoSubtext: { color: '#777', flex: 1, fontSize: 12, lineHeight: 17, marginTop: 3 },
   sectionTitle: { color: '#222', fontSize: 17, fontWeight: '700' as const },
+  couponHeading: { flexDirection: 'row' as const, alignItems: 'center', gap: 8, marginBottom: 8 },
+  couponRow: { flexDirection: 'row' as const, alignItems: 'center', gap: 10, marginVertical: 6 },
+  couponCodeBox: { borderWidth: 1, borderColor: '#DCD4E5', borderStyle: 'dashed' as const, borderRadius: 6, paddingHorizontal: 10, paddingVertical: 6, backgroundColor: '#F2EEF5' },
+  couponCode: { color: '#59486F', fontSize: 12, fontWeight: '800' as const, letterSpacing: 0.5 },
+  couponOffer: { color: '#444', fontSize: 13, fontWeight: '600' as const },
   review: { paddingTop: 12, marginTop: 10, borderTopWidth: 1, borderTopColor: '#EEE' },
   reviewName: { color: '#777', fontSize: 13 },
-  buyBar: { position: 'absolute' as const, bottom: 0, left: 0, right: 0, backgroundColor: '#FFF', borderTopWidth: 1, borderTopColor: '#EEE', padding: 8, flexDirection: 'row' as const, alignItems: 'center', justifyContent: 'space-between', gap: 4 },
-  barPrice: { color: orange, fontWeight: '800' as const, fontSize: 17 },
-  quantity: { flexDirection: 'row' as const, alignItems: 'center', borderWidth: 1, borderColor: '#EEE', borderRadius: 6 },
+  buyBar: { position: 'absolute' as const, bottom: 0, left: 0, right: 0, backgroundColor: '#FFF', borderTopWidth: 1, borderTopColor: marketplaceColors.border, paddingHorizontal: 14, paddingTop: 10, paddingBottom: 14, gap: 8, shadowColor: '#30283A', shadowOffset: { width: 0, height: -3 }, shadowOpacity: 0.08, shadowRadius: 8, elevation: 10 },
+  buySummaryRow: { flexDirection: 'row' as const, alignItems: 'center', justifyContent: 'space-between' },
+  barPrice: { color: brandPurple, fontWeight: '800' as const, fontSize: 19, marginTop: 1 },
+  quantity: { flexDirection: 'row' as const, alignItems: 'center', borderWidth: 1, borderColor: marketplaceColors.border, borderRadius: 10 },
   quantityText: { minWidth: 20, textAlign: 'center' as const, fontWeight: '700' as const },
+  buyActions: { flexDirection: 'row' as const, gap: 10 },
+  buyActionButton: { flex: 1, borderRadius: 12 },
+  buyActionContent: { minHeight: 44 },
+  cartToast: { position: 'absolute' as const, left: 14, right: 14, bottom: 136, flexDirection: 'row' as const, alignItems: 'center', gap: 11, padding: 13, backgroundColor: '#FFF', borderRadius: 15, borderWidth: 1, borderColor: '#DCEDE3', shadowColor: '#30283A', shadowOffset: { width: 0, height: 5 }, shadowOpacity: 0.12, shadowRadius: 12, elevation: 8 },
+  toastCheck: { width: 30, height: 30, borderRadius: 10, alignItems: 'center' as const, justifyContent: 'center' as const, backgroundColor: '#25845A' },
+  toastCopy: { flex: 1 },
+  toastTitle: { color: '#30283A', fontSize: 13, fontWeight: '800' as const },
+  toastProduct: { color: '#746C7A', fontSize: 12, marginTop: 2 },
   error: { color: '#B00020', textAlign: 'center' as const },
 });

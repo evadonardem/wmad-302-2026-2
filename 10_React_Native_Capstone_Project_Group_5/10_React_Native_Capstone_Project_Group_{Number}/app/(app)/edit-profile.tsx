@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text } from 'react-native';
+import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Button, IconButton, TextInput } from 'react-native-paper';
+import { Button, Card, IconButton, TextInput } from 'react-native-paper';
 import { useAuth } from '@/context/AuthContext';
+import { marketplaceColors } from '@/constants/theme';
 
-const orange = '#EE4D2D';
+const brandPurple = '#75648A';
 
 export default function EditProfileScreen() {
   const router = useRouter();
@@ -48,26 +49,48 @@ export default function EditProfileScreen() {
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-      <IconButton icon="arrow-left" onPress={() => router.back()} accessibilityLabel="Go back" />
-      <Text style={styles.heading}>Edit profile</Text>
-      <TextInput label="First name" mode="outlined" value={firstName} onChangeText={setFirstName} style={styles.input} />
-      <TextInput label="Last name" mode="outlined" value={lastName} onChangeText={setLastName} style={styles.input} />
-      <TextInput label="Email" mode="outlined" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" style={styles.input} />
-      <TextInput label="Username" mode="outlined" value={user?.username ?? ''} editable={false} style={styles.input} />
-      <Text style={styles.note}>
-        DummyJSON simulates profile updates. Your changes are retained locally and may not persist on the API.
-      </Text>
-      <Button mode="contained" buttonColor={orange} onPress={() => void save()} loading={saving} disabled={saving}>
-        Save changes
-      </Button>
+      <View style={styles.header}>
+        <IconButton icon="arrow-left" onPress={() => router.back()} accessibilityLabel="Go back" />
+        <View>
+          <Text style={styles.heading}>Edit profile</Text>
+          <Text style={styles.subtitle}>Keep your account details up to date</Text>
+        </View>
+      </View>
+      <Card style={styles.formCard} mode="contained">
+        <Card.Content>
+          <TextInput label="First name" mode="outlined" value={firstName} onChangeText={setFirstName} style={styles.input} />
+          <TextInput label="Last name" mode="outlined" value={lastName} onChangeText={setLastName} style={styles.input} />
+          <TextInput label="Email" mode="outlined" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" style={styles.input} />
+          <TextInput label="Username" mode="outlined" value={user?.username ?? ''} editable={false} style={styles.input} />
+          <Text style={styles.note}>
+            Profile updates are saved on this device for the demo.
+          </Text>
+          <Button
+            mode="contained"
+            buttonColor={brandPurple}
+            onPress={() => void save()}
+            loading={saving}
+            disabled={saving}
+            style={styles.saveButton}
+            contentStyle={styles.saveButtonContent}
+          >
+            Save changes
+          </Button>
+        </Card.Content>
+      </Card>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: '#FFF' },
-  content: { padding: 18, paddingBottom: 32 },
-  heading: { color: '#222', fontSize: 23, fontWeight: '800', marginBottom: 16 },
+  screen: { flex: 1, backgroundColor: marketplaceColors.background },
+  content: { padding: 16, paddingBottom: 36 },
+  header: { flexDirection: 'row', alignItems: 'center', marginBottom: 14 },
+  heading: { color: '#30283A', fontSize: 21, fontWeight: '800' },
+  subtitle: { color: '#746C7A', fontSize: 12, marginTop: 2 },
+  formCard: { backgroundColor: '#FFF', borderRadius: 16, borderWidth: 1, borderColor: marketplaceColors.border },
   input: { marginBottom: 12, backgroundColor: '#FFF' },
-  note: { color: '#777', fontSize: 12, lineHeight: 18, marginBottom: 18 },
+  note: { color: '#746C7A', fontSize: 12, lineHeight: 18, marginBottom: 16 },
+  saveButton: { borderRadius: 12 },
+  saveButtonContent: { minHeight: 46 },
 });

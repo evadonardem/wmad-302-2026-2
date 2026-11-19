@@ -20,10 +20,12 @@ export interface DeliveryAddress {
 export interface MarketplaceOrder {
   id: string;
   createdAt: string;
-  status: 'Processing';
+  status: 'Processing' | 'Completed' | 'Cancelled';
   items: CartItem[];
   subtotal: number;
   total: number;
+  couponCode?: string;
+  couponDiscount?: number;
   shippingAddress: DeliveryAddress;
   paymentMethod: 'cash' | 'demo-card';
 }
@@ -48,12 +50,28 @@ async function write<T>(key: string, value: T): Promise<void> {
   await AsyncStorage.setItem(key, JSON.stringify(value));
 }
 
+async function updateOrderStatus(
+  id: string,
+  status: Exclude<MarketplaceOrder['status'], 'Processing'>
+): Promise<MarketplaceOrder> {
+  const orders = await read<MarketplaceOrder[]>(KEYS.orders, []);
+  const order = orders.find((entry) => entry.id === id);
+  if (!order) throw new Error('Order not found.');
+  if (order.status !== 'Processing') throw new Error('Only in-progress orders can change status.');
+
+  const updatedOrder: MarketplaceOrder = { ...order, status };
+  await write(KEYS.orders, orders.map((entry) => entry.id === id ? updatedOrder : entry));
+  return updatedOrder;
+}
+
 export const ordersStorage = {
   getAll: () => read<MarketplaceOrder[]>(KEYS.orders, []),
   add: async (order: MarketplaceOrder) => {
     const orders = await ordersStorage.getAll();
     await write(KEYS.orders, [order, ...orders]);
   },
+  cancel: (id: string) => updateOrderStatus(id, 'Cancelled'),
+  complete: (id: string) => updateOrderStatus(id, 'Completed'),
 };
 
 export const addressesStorage = {

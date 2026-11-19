@@ -2,11 +2,12 @@
  * Profile Screen Styles - Shared
  */
 import { StyleSheet } from 'react-native';
+import { marketplaceColors } from '@/constants/theme';
 
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: marketplaceColors.background,
   },
   content: {
     paddingHorizontal: 16,
@@ -30,7 +31,7 @@ export const styles = StyleSheet.create({
   },
   avatar: {
     marginRight: 16,
-    backgroundColor: '#E8F0FE',
+    backgroundColor: '#F2EEF5',
   },
   nameContainer: {
     flex: 1,
@@ -38,24 +39,26 @@ export const styles = StyleSheet.create({
   name: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#202124',
+    color: marketplaceColors.text,
   },
   username: {
     fontSize: 14,
-    color: '#1A73E8',
+    color: '#75648A',
     fontWeight: '500',
     marginTop: 2,
   },
   email: {
     fontSize: 13,
-    color: '#5F6368',
+    color: marketplaceColors.muted,
     marginTop: 2,
   },
   statsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    backgroundColor: '#E8F0FE',
-    borderRadius: 12,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: marketplaceColors.border,
     paddingVertical: 20,
     marginBottom: 24,
   },
@@ -65,19 +68,21 @@ export const styles = StyleSheet.create({
   statValue: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#1A73E8',
+    color: marketplaceColors.primary,
   },
   statLabel: {
     fontSize: 12,
-    color: '#5F6368',
+    color: marketplaceColors.muted,
     marginTop: 4,
   },
   section: {
     marginBottom: 16,
   },
   menuCard: {
-    borderRadius: 12,
+    borderRadius: 16,
     overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: marketplaceColors.border,
   },
   divider: {
     marginLeft: 56,
@@ -89,7 +94,7 @@ export const styles = StyleSheet.create({
   logoutButton: {
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#EA4335',
+    borderColor: marketplaceColors.primary,
     height: 52,
   },
   logoutButtonContent: {
@@ -98,20 +103,20 @@ export const styles = StyleSheet.create({
   logoutButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#EA4335',
+    color: '#75648A',
   },
   guideContainer: {
     marginTop: 16,
     padding: 16,
-    backgroundColor: '#E8F0FE',
+    backgroundColor: '#F2EEF5',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#D0E1F9',
+    borderColor: '#DCD4E5',
   },
   guideTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#1A73E8',
+    color: '#75648A',
     marginBottom: 8,
   },
   guideText: {

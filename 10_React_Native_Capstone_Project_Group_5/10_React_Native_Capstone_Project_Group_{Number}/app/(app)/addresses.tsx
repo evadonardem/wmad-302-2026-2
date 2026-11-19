@@ -3,8 +3,9 @@ import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { Button, Card, IconButton, Switch, TextInput } from 'react-native-paper';
 import { addressesStorage, DeliveryAddress } from '@/utils/marketplaceStorage';
+import { marketplaceColors } from '@/constants/theme';
 
-const orange = '#EE4D2D';
+const brandPurple = '#75648A';
 const emptyAddress = { recipient: '', phone: '', street: '', city: '', postalCode: '' };
 
 export default function AddressesScreen() {
@@ -115,11 +116,11 @@ export default function AddressesScreen() {
             </Text>
             <View style={styles.actions}>
               {!address.isDefault && (
-                <Button compact textColor={orange} onPress={() => void setDefault(address.id)}>
+                <Button compact textColor={brandPurple} onPress={() => void setDefault(address.id)}>
                   Set default
                 </Button>
               )}
-              <Button compact textColor={orange} onPress={() => editAddress(address)}>Edit</Button>
+              <Button compact textColor={brandPurple} onPress={() => editAddress(address)}>Edit</Button>
               <Button compact textColor="#B00020" onPress={() => removeAddress(address)}>Delete</Button>
             </View>
           </Card.Content>
@@ -135,9 +136,9 @@ export default function AddressesScreen() {
           <TextInput label="Postal code" mode="outlined" value={form.postalCode} onChangeText={(postalCode) => setForm({ ...form, postalCode })} keyboardType="number-pad" style={styles.input} />
           <View style={styles.defaultRow}>
             <Text style={styles.body}>Make this my default address</Text>
-            <Switch value={isDefault} onValueChange={setIsDefault} color={orange} />
+            <Switch value={isDefault} onValueChange={setIsDefault} color={brandPurple} />
           </View>
-          <Button mode="contained" buttonColor={orange} onPress={() => void saveAddress()} loading={saving} disabled={saving}>
+          <Button mode="contained" buttonColor={brandPurple} onPress={() => void saveAddress()} loading={saving} disabled={saving}>
             {editingId ? 'Save changes' : 'Add address'}
           </Button>
           {editingId && <Button onPress={resetForm}>Cancel editing</Button>}
@@ -148,18 +149,18 @@ export default function AddressesScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: '#F5F5F5' },
-  content: { padding: 14, paddingBottom: 32 },
+  screen: { flex: 1, backgroundColor: marketplaceColors.background },
+  content: { padding: 16, paddingBottom: 36 },
   header: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
-  heading: { color: '#222', fontSize: 21, fontWeight: '800' },
-  card: { backgroundColor: '#FFF', marginBottom: 12 },
+  heading: { color: '#30283A', fontSize: 22, fontWeight: '800' },
+  card: { backgroundColor: '#FFF', marginBottom: 14, borderRadius: 16, borderWidth: 1, borderColor: marketplaceColors.border },
   addressHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  name: { color: '#222', fontWeight: '700', fontSize: 16 },
-  defaultTag: { color: orange, fontWeight: '800', fontSize: 11 },
-  muted: { color: '#777', fontSize: 13, marginTop: 6 },
-  body: { color: '#444', marginTop: 8 },
+  name: { color: '#30283A', fontWeight: '700', fontSize: 16 },
+  defaultTag: { color: brandPurple, fontWeight: '800', fontSize: 11 },
+  muted: { color: '#746C7A', fontSize: 13, marginTop: 6 },
+  body: { color: '#504858', marginTop: 8, lineHeight: 20 },
   actions: { flexDirection: 'row', justifyContent: 'flex-end', marginTop: 8 },
-  formTitle: { fontSize: 17, fontWeight: '700', color: '#222', marginBottom: 12 },
+  formTitle: { fontSize: 18, fontWeight: '800', color: '#30283A', marginBottom: 14 },
   input: { marginBottom: 10, backgroundColor: '#FFF' },
   defaultRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
 });

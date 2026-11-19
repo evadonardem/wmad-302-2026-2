@@ -2,11 +2,12 @@
  * Categories Screen Styles
  */
 import { StyleSheet } from 'react-native';
+import { marketplaceCardShadow, marketplaceColors } from '@/constants/theme';
 
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: marketplaceColors.background,
     paddingHorizontal: 16,
     paddingTop: 20,
     paddingBottom: 100,
@@ -14,55 +15,65 @@ export const styles = StyleSheet.create({
   pageTitle: {
     fontSize: 28,
     fontWeight: '700',
-    color: '#202124',
+    color: marketplaceColors.text,
     marginBottom: 4,
   },
   pageSubtitle: {
     fontSize: 16,
-    color: '#5F6368',
+    color: marketplaceColors.muted,
     marginBottom: 20,
   },
   gridWrapper: {
     justifyContent: 'space-between',
   },
   gridContent: {
-    paddingBottom: 20,
+    paddingBottom: 28,
   },
   categoryCard: {
     width: '48%',
-    marginBottom: 16,
+    marginBottom: 12,
+    borderRadius: 15,
+    ...marketplaceCardShadow,
   },
   card: {
-    borderRadius: 12,
+    minHeight: 164,
+    borderRadius: 15,
     backgroundColor: '#FFFFFF',
-    height: '100%',
+    borderWidth: 1,
+    borderColor: marketplaceColors.border,
+    overflow: 'hidden',
   },
   cardContent: {
-    padding: 20,
+    minHeight: 162,
+    paddingHorizontal: 12,
+    paddingVertical: 14,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   iconContainer: {
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: '#E8F0FE',
+    backgroundColor: marketplaceColors.primarySoft,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 10,
   },
   categoryName: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#202124',
+    color: marketplaceColors.text,
     textAlign: 'center',
-    marginBottom: 4,
+    lineHeight: 22,
+    minHeight: 22,
   },
   categoryCount: {
     fontSize: 12,
-    color: '#5F6368',
+    color: marketplaceColors.muted,
+    marginTop: 4,
   },
   separator: {
-    height: 8,
+    height: 4,
     width: '100%',
   },
   loadingContainer: {
@@ -73,7 +84,7 @@ export const styles = StyleSheet.create({
   loadingText: {
     marginTop: 16,
     fontSize: 16,
-    color: '#5F6368',
+    color: marketplaceColors.muted,
   },
   errorContainer: {
     flex: 1,
@@ -89,20 +100,20 @@ export const styles = StyleSheet.create({
   guideContainer: {
     marginTop: 24,
     padding: 16,
-    backgroundColor: '#E8F0FE',
-    borderRadius: 12,
+    backgroundColor: marketplaceColors.primarySoft,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#D0E1F9',
+    borderColor: marketplaceColors.border,
   },
   guideTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#1A73E8',
+    color: '#75648A',
     marginBottom: 8,
   },
   guideText: {
     fontSize: 13,
-    color: '#3C4043',
+    color: marketplaceColors.text,
     lineHeight: 20,
   },
 });

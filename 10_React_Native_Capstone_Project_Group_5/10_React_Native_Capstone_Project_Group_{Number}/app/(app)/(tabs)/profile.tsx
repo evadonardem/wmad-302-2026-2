@@ -5,6 +5,7 @@ import { Avatar, Badge, Button, Card, Divider, List } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '@/context/AuthContext';
 import { useFavorites } from '@/context/FavoritesContext';
+import ProductRecommendations from '@/components/ProductRecommendations';
 import { MarketplaceOrder, ordersStorage } from '@/utils/marketplaceStorage';
 import { styles } from './profileStyles';
 
@@ -56,7 +57,7 @@ export default function ProfileScreen() {
           <Text style={styles.username}>@{user?.username}</Text>
           <Text style={styles.email}>{user?.email}</Text>
         </View>
-        <Button compact textColor="#EE4D2D" onPress={() => router.push('/(app)/edit-profile')}>
+        <Button compact textColor="#75648A" onPress={() => router.push('/(app)/edit-profile')}>
           Edit
         </Button>
       </View>
@@ -84,7 +85,7 @@ export default function ProfileScreen() {
               description="View order status and details"
               left={(props) => (
                 <View style={props.style}>
-                  <MaterialCommunityIcons name="package-variant" size={24} color="#EE4D2D" />
+                  <MaterialCommunityIcons name="package-variant" size={24} color="#75648A" />
                   {orders.length > 0 && (
                     <Badge size={16} style={{ position: 'absolute', right: -4, top: -4 }}>
                       {orders.length}
@@ -99,7 +100,7 @@ export default function ProfileScreen() {
             <List.Item
               title="Wishlist"
               description="Products saved for later"
-              left={(props) => <MaterialCommunityIcons name="heart" size={24} color="#EE4D2D" style={props.style} />}
+              left={(props) => <MaterialCommunityIcons name="heart" size={24} color="#75648A" style={props.style} />}
               right={(props) => <MaterialCommunityIcons name="chevron-right" size={24} color="#777" style={props.style} />}
               onPress={() => router.push('/(app)/wishlist')}
             />
@@ -107,7 +108,7 @@ export default function ProfileScreen() {
             <List.Item
               title="Delivery addresses"
               description="Manage saved shipping addresses"
-              left={(props) => <MaterialCommunityIcons name="map-marker" size={24} color="#EE4D2D" style={props.style} />}
+              left={(props) => <MaterialCommunityIcons name="map-marker" size={24} color="#75648A" style={props.style} />}
               right={(props) => <MaterialCommunityIcons name="chevron-right" size={24} color="#777" style={props.style} />}
               onPress={() => router.push('/(app)/addresses')}
             />
@@ -121,7 +122,7 @@ export default function ProfileScreen() {
             <List.Item
               title="Settings & payments"
               description="Notifications and demo payment info"
-              left={(props) => <MaterialCommunityIcons name="cog" size={24} color="#EE4D2D" style={props.style} />}
+              left={(props) => <MaterialCommunityIcons name="cog" size={24} color="#75648A" style={props.style} />}
               right={(props) => <MaterialCommunityIcons name="chevron-right" size={24} color="#777" style={props.style} />}
               onPress={() => router.push('/(app)/settings')}
             />
@@ -135,13 +136,16 @@ export default function ProfileScreen() {
           onPress={handleLogout}
           style={styles.logoutButton}
           contentStyle={styles.logoutButtonContent}
-          textColor="#C9361B"
+          textColor="#59486F"
           icon="logout"
         >
           Logout
         </Button>
       </View>
-      <Text style={styles.versionText}>Marketplace demo · v1.0.0</Text>
+
+      <ProductRecommendations />
+
+      <Text style={styles.versionText}>Kartora · You Shop. We Deliver.</Text>
     </ScrollView>
   );
 }

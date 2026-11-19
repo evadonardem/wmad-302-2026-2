@@ -1,34 +1,58 @@
 /**
- * React Native Paper Theme - Marketplace App
- * Clean, commerce-friendly color palette
+ * React Native Paper Theme - Kartora
+ * Violet palette inspired by the Kartora logo.
  */
 import { MD3LightTheme } from 'react-native-paper';
+
+export const marketplaceColors = {
+  primary: '#75648A',
+  primaryDark: '#59486F',
+  primarySoft: '#F2EEF5',
+  background: '#F8F6FA',
+  surface: '#FFFFFF',
+  text: '#2D2633',
+  muted: '#746C7A',
+  border: '#E8E2EC',
+  success: '#25845A',
+  successSoft: '#E8F5EE',
+  danger: '#B4233C',
+  dangerSoft: '#FCECEF',
+  accent: '#D99517',
+} as const;
+
+export const marketplaceCardShadow = {
+  elevation: 2,
+  shadowColor: '#30283A',
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.12,
+  shadowRadius: 6,
+};
 
 export const theme = {
   ...MD3LightTheme,
   colors: {
     ...MD3LightTheme.colors,
-    primary: '#1A73E8',      // Google/Trust blue
-    primaryContainer: '#E8F0FE',
-    secondary: '#5C6BC0',    // Indigo
-    secondaryContainer: '#E8EAF6',
-    tertiary: '#34A853',     // Success green
-    tertiaryContainer: '#E6F4EA',
-    surface: '#FFFFFF',
-    surfaceVariant: '#F8F9FA',
-    background: '#F8F9FA',
-    error: '#EA4335',
-    errorContainer: '#FCE8E6',
+    primary: marketplaceColors.primary,
+    primaryContainer: marketplaceColors.primarySoft,
+    secondary: '#806C91',
+    secondaryContainer: '#F2EEF5',
+    tertiary: marketplaceColors.success,
+    tertiaryContainer: marketplaceColors.successSoft,
+    surface: marketplaceColors.surface,
+    surfaceVariant: marketplaceColors.background,
+    background: marketplaceColors.background,
+    error: marketplaceColors.danger,
+    errorContainer: marketplaceColors.dangerSoft,
     onPrimary: '#FFFFFF',
     onSecondary: '#FFFFFF',
     onTertiary: '#FFFFFF',
-    onSurface: '#202124',
-    onSurfaceVariant: '#5F6368',
-    onBackground: '#202124',
-    outline: '#DADCE0',
-    outlineVariant: '#E8EAED',
+    onSurface: marketplaceColors.text,
+    onSurfaceVariant: marketplaceColors.muted,
+    onBackground: marketplaceColors.text,
+    outline: marketplaceColors.border,
+    outlineVariant: '#F0ECF2',
   },
-  roundness: 8,
+  roundness: 12,
   fonts: {
     ...MD3LightTheme.fonts,
     displayLarge: { fontFamily: 'System', fontWeight: '700' as const, fontSize: 57, lineHeight: 64, letterSpacing: -0.25 },

@@ -1,4 +1,6 @@
-# 10 React Native Capstone Project - Marketplace App
+# Kartora - Marketplace App
+
+**You Shop. We Deliver.**
 
 A React Native + Expo + React Native Paper e-commerce application (Lazada/Shopee clone) using the [DummyJSON Products API](https://dummyjson.com/docs/products) and [Carts API](https://dummyjson.com/docs/carts).
 

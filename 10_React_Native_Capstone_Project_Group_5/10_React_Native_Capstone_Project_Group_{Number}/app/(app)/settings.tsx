@@ -3,6 +3,7 @@ import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { IconButton, Switch } from 'react-native-paper';
 import { MarketplacePreferences, preferencesStorage } from '@/utils/marketplaceStorage';
+import { marketplaceColors } from '@/constants/theme';
 
 const initialPreferences: MarketplacePreferences = {
   notificationsEnabled: true,
@@ -50,7 +51,7 @@ export default function SettingsScreen() {
         <Switch
           value={preferences.notificationsEnabled}
           onValueChange={(value) => void updatePreference('notificationsEnabled', value)}
-          color="#EE4D2D"
+          color="#75648A"
         />
       </View>
       <View style={styles.row}>
@@ -61,7 +62,7 @@ export default function SettingsScreen() {
         <Switch
           value={preferences.promotionalEmailsEnabled}
           onValueChange={(value) => void updatePreference('promotionalEmailsEnabled', value)}
-          color="#EE4D2D"
+          color="#75648A"
         />
       </View>
       <Text style={styles.note}>These preferences are saved on this device. No notifications or emails are sent by the demo.</Text>
@@ -72,14 +73,14 @@ export default function SettingsScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: '#FFF' },
-  content: { padding: 16 },
+  screen: { flex: 1, backgroundColor: marketplaceColors.background },
+  content: { padding: 16, paddingBottom: 32 },
   header: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
-  heading: { color: '#222', fontSize: 22, fontWeight: '800' },
-  row: { flexDirection: 'row', alignItems: 'center', borderBottomWidth: 1, borderBottomColor: '#EEE', paddingVertical: 14 },
+  heading: { color: '#30283A', fontSize: 22, fontWeight: '800' },
+  row: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFF', borderWidth: 1, borderColor: marketplaceColors.border, borderRadius: 16, padding: 16, marginBottom: 12 },
   description: { flex: 1, paddingRight: 10 },
-  title: { color: '#222', fontWeight: '700' },
-  subtitle: { color: '#777', fontSize: 12, marginTop: 4 },
-  section: { color: '#222', fontSize: 17, fontWeight: '700', marginTop: 24 },
-  note: { color: '#777', fontSize: 12, lineHeight: 18, marginTop: 10 },
+  title: { color: '#30283A', fontWeight: '700', fontSize: 15 },
+  subtitle: { color: '#746C7A', fontSize: 12, marginTop: 5, lineHeight: 17 },
+  section: { color: '#30283A', fontSize: 18, fontWeight: '800', marginTop: 18 },
+  note: { color: '#746C7A', fontSize: 12, lineHeight: 18, marginTop: 10, paddingHorizontal: 2 },
 });

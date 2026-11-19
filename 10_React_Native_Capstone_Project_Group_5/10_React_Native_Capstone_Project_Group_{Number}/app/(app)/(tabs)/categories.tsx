@@ -7,6 +7,7 @@ import { View, Text, FlatList, TouchableOpacity, ActivityIndicator } from 'react
 import { useRouter } from 'expo-router';
 import { Card, Title } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import ProductRecommendations from '@/components/ProductRecommendations';
 import { productApi } from '@/services/productApi';
 import { styles } from './categoriesStyles';
 
@@ -52,22 +53,27 @@ export default function CategoriesScreen() {
     <TouchableOpacity
       style={styles.categoryCard}
       onPress={() =>
-        router.push(`/(app)/(tabs)/search?category=${encodeURIComponent(item.name)}`)
+        router.push({
+          pathname: '/(app)/search-results',
+          params: { category: item.name },
+        })
       }
       activeOpacity={0.8}
+      accessibilityRole="button"
+      accessibilityLabel={`Browse ${item.name.replace(/-/g, ' ')}`}
     >
-      <Card style={styles.card} elevation={1}>
+      <Card style={styles.card} mode="contained">
         <Card.Content style={styles.cardContent}>
           <View style={styles.iconContainer}>
             <MaterialCommunityIcons
               name={getCategoryIcon(item.name)}
-              size={32}
-              color="#1A73E8"
+              size={28}
+              color="#75648A"
             />
           </View>
-          <Title style={styles.categoryName}>
-            {item.name.charAt(0).toUpperCase() + item.name.slice(1).replace('-', ' ')}
-          </Title>
+          <Text style={styles.categoryName}>
+            {item.name.charAt(0).toUpperCase() + item.name.slice(1).replace(/-/g, ' ')}
+          </Text>
           {item.count !== undefined && (
             <Text style={styles.categoryCount}>{item.count} products</Text>
           )}
@@ -79,7 +85,7 @@ export default function CategoriesScreen() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#1A73E8" />
+        <ActivityIndicator size="large" color="#75648A" />
         <Text style={styles.loadingText}>Loading categories...</Text>
       </View>
     );
@@ -94,27 +100,37 @@ export default function CategoriesScreen() {
   }
 
   return (
-    <View style={styles.container}>
-      <Title style={styles.pageTitle}>Categories</Title>
-      <Text style={styles.pageSubtitle}>Browse products by category</Text>
-
-      <FlatList
-        data={categories}
-        renderItem={renderCategory}
-        keyExtractor={(item) => item.name}
-        numColumns={2}
-        columnWrapperStyle={styles.gridWrapper}
-        contentContainerStyle={styles.gridContent}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
-      />
-
-      <View style={styles.guideContainer}>
-        <Text style={styles.guideTitle}>Find your next favorite</Text>
-        <Text style={styles.guideText}>
-          Choose a category to browse products, compare prices, and check customer ratings.
-        </Text>
-      </View>
-    </View>
+    <FlatList
+      style={styles.container}
+      data={categories}
+      renderItem={renderCategory}
+      keyExtractor={(item) => item.name}
+      numColumns={2}
+      columnWrapperStyle={styles.gridWrapper}
+      contentContainerStyle={styles.gridContent}
+      ItemSeparatorComponent={() => <View style={styles.separator} />}
+      ListHeaderComponent={
+        <View>
+          <Title style={styles.pageTitle}>Categories</Title>
+          <Text style={styles.pageSubtitle}>Browse products by category</Text>
+        </View>
+      }
+      ListFooterComponent={
+        <View>
+          <ProductRecommendations
+            title="Popular search picks"
+            subtitle="Products matched to your most frequent searches"
+            searchBased
+          />
+          <View style={styles.guideContainer}>
+            <Text style={styles.guideTitle}>Find your next favorite</Text>
+            <Text style={styles.guideText}>
+              Choose a category to browse products, compare prices, and check customer ratings.
+            </Text>
+          </View>
+        </View>
+      }
+    />
   );
 }
 

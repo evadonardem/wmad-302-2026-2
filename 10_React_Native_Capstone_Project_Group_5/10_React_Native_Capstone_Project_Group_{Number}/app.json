@@ -1,11 +1,14 @@
 {
   "expo": {
-    "name": "Marketplace Capstone",
+    "name": "Kartora",
     "slug": "10-marketplace-capstone",
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "splash": {
+      "image": "./assets/kartora-logo.png",
+      "imageWidth": 200,
+      "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
     "assetBundlePatterns": ["**/*"],
