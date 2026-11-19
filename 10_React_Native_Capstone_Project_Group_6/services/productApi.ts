@@ -82,10 +82,10 @@ class ProductApiService {
   // ============ Carts ============
 
   /**
-   * Get user's cart
+   * Get a user's carts (DummyJSON returns a list: { carts: [...], total, skip, limit })
    */
-  async getUserCart(userId: number): Promise<Cart> {
-    const response = await this.client.get<Cart>(`/carts/user/${userId}`);
+  async getUserCarts(userId: number): Promise<{ carts: Cart[]; total: number }> {
+    const response = await this.client.get<{ carts: Cart[]; total: number }>(`/carts/user/${userId}`);
     return response.data;
   }
 

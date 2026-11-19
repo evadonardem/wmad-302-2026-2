@@ -4,13 +4,14 @@
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import type { CartItem } from '@/types/product';
+import type { CartItem, Order } from '@/types/product';
 
 const STORAGE_KEYS = {
   AUTH_USER: 'auth_user',
   FAVORITES: 'favorite_recipe_ids',
   CART: 'cart', // README says the cart lives under the key "cart"
   SETTINGS: 'user_settings',
+  ORDERS: 'orders',
 } as const;
 
 export type StorageKey = typeof STORAGE_KEYS[keyof typeof STORAGE_KEYS];
@@ -169,4 +170,17 @@ export const cartStorage = {
     await cartStorage.setCart(items.filter((i) => i.productId !== productId));
   },
   clear: () => removeStorageItem(STORAGE_KEYS.CART),
+};
+
+/**
+ * Orders placed inside this app. DummyJSON only pretends to save new orders
+ * (POST /carts/add), so we keep them on the device to show them in Order History.
+ */
+export const orderStorage = {
+  getOrders: async (): Promise<Order[]> => (await getStorageItem<Order[]>(STORAGE_KEYS.ORDERS)) ?? [],
+  addOrder: async (order: Order) => {
+    const orders = await orderStorage.getOrders();
+    await setStorageItem(STORAGE_KEYS.ORDERS, [order, ...orders]); // newest first
+  },
+  clear: () => removeStorageItem(STORAGE_KEYS.ORDERS),
 };

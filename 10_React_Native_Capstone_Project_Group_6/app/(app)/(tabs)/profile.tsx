@@ -7,21 +7,27 @@
  * - Settings (notifications, theme, addresses, payment)
  * - Logout
  */
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, ScrollView, Alert } from 'react-native';
+import { useRouter } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
-import { Card, Button, List, Avatar, Divider, Badge } from 'react-native-paper';
+import { Card, Button, List, Avatar, Divider, Badge, Dialog, Portal } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { styles } from './profileStyles';
 
 export default function ProfileScreen() {
+  const router = useRouter();
   const { user, logout, isAuthenticated } = useAuth();
 
-  const handleLogout = () => {
-    Alert.alert('Logout', 'Are you sure you want to logout?', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Logout', style: 'destructive', onPress: logout },
-    ]);
+  // Alert.alert does nothing in the browser, so the confirmation is a Paper Dialog
+  // (works on web and phone)
+  const [showLogoutDialog, setShowLogoutDialog] = useState(false);
+
+  const handleLogout = () => setShowLogoutDialog(true);
+
+  const confirmLogout = () => {
+    setShowLogoutDialog(false);
+    logout(); // clears the saved session; the route guard then sends you to Login
   };
 
   const handleEditProfile = () => {
@@ -29,7 +35,7 @@ export default function ProfileScreen() {
   };
 
   const handleOrders = () => {
-    Alert.alert('TODO', 'Implement order history: GET /carts/user/{id}');
+    router.push('/(app)/orders');
   };
 
   const handleAddresses = () => {
@@ -193,6 +199,21 @@ export default function ProfileScreen() {
       <View style={styles.version}>
         <Text style={styles.versionText}>Marketplace v1.0.0</Text>
       </View>
+
+      <Portal>
+        <Dialog visible={showLogoutDialog} onDismiss={() => setShowLogoutDialog(false)}>
+          <Dialog.Title>Logout</Dialog.Title>
+          <Dialog.Content>
+            <Text>Are you sure you want to logout?</Text>
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={() => setShowLogoutDialog(false)}>Cancel</Button>
+            <Button onPress={confirmLogout} textColor="#EA4335">
+              Logout
+            </Button>
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
     </ScrollView>
   );
 }

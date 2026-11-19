@@ -97,3 +97,38 @@ export interface CartItem {
   quantity: number;
   stock: number;
 }
+
+// ============ Orders ============
+
+export type PaymentMethod = 'cod' | 'card' | 'gcash';
+
+export interface ShippingInfo {
+  fullName: string;
+  phone: string;
+  address: string;
+  city: string;
+  postalCode: string;
+}
+
+export interface OrderItem {
+  productId: number;
+  title: string;
+  thumbnail: string;
+  price: number;
+  discountPercentage: number;
+  quantity: number;
+}
+
+export interface Order {
+  /** "ORD-<time>" for orders placed in the app, "CART-<id>" for DummyJSON past orders */
+  id: string;
+  userId: number;
+  placedAt: string | null; // ISO date; DummyJSON past orders have no date
+  status: 'Processing' | 'Shipped' | 'Delivered';
+  items: OrderItem[];
+  total: number; // before discounts
+  discountedTotal: number; // what was paid
+  totalQuantity: number;
+  shipping?: ShippingInfo;
+  paymentMethod?: PaymentMethod;
+}

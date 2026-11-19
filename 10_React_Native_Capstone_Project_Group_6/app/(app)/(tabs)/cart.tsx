@@ -2,7 +2,7 @@
  * Cart Screen - Marketplace
  * Reads the cart from CartContext (useReducer + AsyncStorage persistence).
  * Quantity buttons, remove with "Undo", order summary.
- * TODO (Phase 5): checkout via POST /carts/add
+ * The Checkout button opens the checkout screen (app/(app)/checkout.tsx).
  */
 import React, { useState } from 'react';
 import { View, Text, FlatList, ActivityIndicator, Image } from 'react-native';
@@ -36,8 +36,7 @@ export default function CartScreen() {
 
   const handleCheckout = () => {
     if (items.length === 0) return;
-    // Phase 5 will call POST /carts/add here and show the order confirmation
-    setSnack({ message: 'Checkout is coming in the next phase' });
+    router.push('/(app)/checkout'); // shipping form -> POST /carts/add -> confirmation
   };
 
   const renderItem = ({ item }: { item: CartItem }) => {
