@@ -73,6 +73,7 @@ export default function TabsLayout() {
           ),
         }}
       />
+      <Tabs.Screen name="search" options={{ href: null, tabBarStyle: { display: 'none' } }} />
       <Tabs.Screen
         name="profile"
         options={{

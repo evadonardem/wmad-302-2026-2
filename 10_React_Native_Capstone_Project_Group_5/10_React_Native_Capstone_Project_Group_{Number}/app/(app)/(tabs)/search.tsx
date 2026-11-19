@@ -5,6 +5,8 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Card, Title, TextInput as PaperTextInput } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { productApi } from '@/services/productApi';
+import { useCart } from '@/context/CartContext';
+import { useFavorites } from '@/context/FavoritesContext';
 import { styles } from './searchStyles';
 
 interface Product {
@@ -40,16 +42,49 @@ function sortProducts(products: Product[], sortBy: SortOption): Product[] {
 
 export default function SearchScreen() {
   const router = useRouter();
+  const { totalQuantity } = useCart();
+  const { favoriteIds } = useFavorites();
   const { category: categoryParam } = useLocalSearchParams<{ category?: string }>();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<Product[]>([]);
+  const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
+  const [featuredLoading, setFeaturedLoading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(categoryParam ?? null);
   const [sortBy, setSortBy] = useState<SortOption>('rating');
+  const [actionsExpanded, setActionsExpanded] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
 
   const categories = [
     'smartphones', 'laptops', 'fragrances', 'skincare', 'groceries', 'home-decoration',
   ];
+  const searchSuggestions = ['phone', 'laptop', 'perfume', 'skincare'];
+
+  useEffect(() => {
+    if (categoryParam) return;
+
+    let active = true;
+    setFeaturedLoading(true);
+    productApi.getProducts({ limit: 6 })
+      .then((response) => {
+        if (active) setFeaturedProducts(response.products);
+      })
+      .catch((error: unknown) => {
+        if (active) {
+          Alert.alert(
+            'Could not load featured products',
+            error instanceof Error ? error.message : 'Please try again.'
+          );
+        }
+      })
+      .finally(() => {
+        if (active) setFeaturedLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [categoryParam]);
 
   const searchProducts = useCallback(async (searchQuery: string, category: string | null) => {
     if (!searchQuery.trim() && !category) {
@@ -57,6 +92,7 @@ export default function SearchScreen() {
       return;
     }
 
+    setHasSearched(true);
     setLoading(true);
     try {
       const response = category
@@ -117,16 +153,25 @@ export default function SearchScreen() {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <View style={styles.container}>
       {/* Search Bar */}
-      <View style={styles.searchBarContainer}>
+      <View style={[styles.searchField, styles.searchHeader]}>
+        <TouchableOpacity
+          style={styles.homeButton}
+          onPress={() => router.replace('/(app)/(tabs)/home')}
+          accessibilityRole="button"
+          accessibilityLabel="Go to home"
+        >
+          <MaterialCommunityIcons name="home-outline" size={23} color="#EE4D2D" />
+        </TouchableOpacity>
         <PaperTextInput
           style={styles.searchInput}
           placeholder="Search products..."
           value={query}
           onChangeText={setQuery}
           onSubmitEditing={handleSearch}
-          left={<MaterialCommunityIcons name="magnify" size={24} color="#5F6368" style={{ marginLeft: 12 }} />}
+          underlineColor="transparent"
+          activeUnderlineColor="transparent"
           right={
             query ? (
               <TouchableOpacity onPress={() => setQuery('')} style={styles.clearButton}>
@@ -143,8 +188,64 @@ export default function SearchScreen() {
             )
           }
         />
+        {actionsExpanded && (
+          <>
+            <TouchableOpacity
+              style={styles.headerAction}
+              onPress={() => router.push('/(app)/wishlist')}
+              accessibilityRole="button"
+              accessibilityLabel="Open wishlist"
+            >
+              <MaterialCommunityIcons name="heart-outline" size={23} color="#EE4D2D" />
+              {favoriteIds.length > 0 && (
+                <View style={styles.headerActionBadge}>
+                  <Text style={styles.headerActionBadgeText}>{favoriteIds.length}</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.headerAction}
+              onPress={() => router.push('/(app)/(tabs)/cart')}
+              accessibilityRole="button"
+              accessibilityLabel="Open cart"
+            >
+              <MaterialCommunityIcons name="cart-outline" size={23} color="#EE4D2D" />
+              {totalQuantity > 0 && (
+                <View style={styles.headerActionBadge}>
+                  <Text style={styles.headerActionBadgeText}>{totalQuantity}</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.headerAction}
+              onPress={() => router.push('/(app)/(tabs)/profile')}
+              accessibilityRole="button"
+              accessibilityLabel="Open profile"
+            >
+              <MaterialCommunityIcons name="account-outline" size={23} color="#EE4D2D" />
+            </TouchableOpacity>
+          </>
+        )}
+        <TouchableOpacity
+          style={styles.drawerToggle}
+          onPress={() => setActionsExpanded((expanded) => !expanded)}
+          accessibilityRole="button"
+          accessibilityLabel={actionsExpanded ? 'Hide shortcuts' : 'Show shortcuts'}
+          accessibilityState={{ expanded: actionsExpanded }}
+        >
+          <MaterialCommunityIcons
+            name={actionsExpanded ? 'chevron-up' : 'dots-horizontal'}
+            size={23}
+            color="#EE4D2D"
+          />
+        </TouchableOpacity>
       </View>
 
+      <ScrollView
+        style={styles.searchContent}
+        contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled"
+      >
       {/* Category Filters */}
       <View style={styles.filterSection}>
         <Title style={styles.filterTitle}>Categories</Title>
@@ -230,12 +331,77 @@ export default function SearchScreen() {
         )}
       </View>
 
+      {!hasSearched && (
+        <View style={styles.suggestionsContainer}>
+          <Text style={styles.suggestionsTitle}>Popular searches</Text>
+          <View style={styles.suggestionsList}>
+            {searchSuggestions.map((suggestion) => (
+              <TouchableOpacity
+                key={suggestion}
+                style={styles.suggestionChip}
+                onPress={() => {
+                  setQuery(suggestion);
+                  void searchProducts(suggestion, null);
+                }}
+              >
+                <MaterialCommunityIcons name="magnify" size={16} color="#1A73E8" />
+                <Text style={styles.suggestionText}>
+                  {suggestion.charAt(0).toUpperCase() + suggestion.slice(1)}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+      )}
+
+      {!hasSearched && (
+        <View style={styles.featuredSection}>
+          <Text style={styles.featuredTitle}>Featured products</Text>
+          {featuredLoading ? (
+            <ActivityIndicator color="#1A73E8" style={styles.featuredLoading} />
+          ) : (
+            <FlatList
+              data={featuredProducts}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              keyExtractor={(item) => String(item.id)}
+              contentContainerStyle={styles.featuredList}
+              renderItem={({ item }) => {
+                const salePrice = item.price * (1 - item.discountPercentage / 100);
+                return (
+                  <TouchableOpacity
+                    style={styles.featuredCard}
+                    onPress={() => router.push(`/(app)/product/${item.id}`)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`View ${item.title}`}
+                  >
+                    <View style={styles.featuredImageContainer}>
+                      <Image
+                        source={{ uri: item.thumbnail }}
+                        style={styles.featuredImage}
+                        resizeMode="contain"
+                      />
+                      <Text style={styles.featuredBadge}>Featured</Text>
+                    </View>
+                    <Text style={styles.featuredProductTitle} numberOfLines={2}>
+                      {item.title}
+                    </Text>
+                    <Text style={styles.featuredPrice}>${salePrice.toFixed(2)}</Text>
+                  </TouchableOpacity>
+                );
+              }}
+            />
+          )}
+        </View>
+      )}
+
       <View style={styles.guideContainer}>
         <Text style={styles.guideTitle}>Browse products</Text>
         <Text style={styles.guideText}>
           Search by name or brand, choose a category, and sort products by price, rating, or discount.
         </Text>
       </View>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 }

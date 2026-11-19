@@ -189,8 +189,13 @@ export default function HomeScreen() {
         </View>
       </View>
 
-      <TouchableOpacity style={styles.searchBar} onPress={() => router.push('/(app)/(tabs)/search')}>
-        <MaterialCommunityIcons name="magnify" size={22} color="#777" />
+      <TouchableOpacity
+        style={styles.searchBar}
+        onPress={() => router.push('/(app)/(tabs)/search')}
+        accessibilityRole="button"
+        accessibilityLabel="Search products, brands, and more"
+      >
+        <MaterialCommunityIcons name="magnify" size={23} color={orange} />
         <Text style={styles.searchPlaceholder}>Search products, brands, and more</Text>
         <MaterialCommunityIcons name="camera-outline" size={21} color={orange} />
       </TouchableOpacity>
