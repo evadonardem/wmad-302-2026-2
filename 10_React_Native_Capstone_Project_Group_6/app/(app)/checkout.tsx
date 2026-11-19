@@ -79,7 +79,7 @@ export default function CheckoutScreen() {
       });
 
       // 2. Save it on the device so it appears in Order History
-      const order = buildOrder({ userId: user.id, items, shipping: form, paymentMethod });
+      const order = buildOrder({ userId: user.id, owner: user.username, items, shipping: form, paymentMethod });
       try {
         await orderStorage.addOrder(order);
       } catch (storageError) {
@@ -258,30 +258,151 @@ export default function CheckoutScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: '#F8F9FA' },
-  scrollContent: { paddingBottom: 32 },
-  content: { width: '100%', maxWidth: 720, alignSelf: 'center' },
-  section: { backgroundColor: '#FFFFFF', marginTop: 10, padding: 16 },
-  sectionTitle: { fontSize: 16, fontWeight: '700', color: '#202124', marginBottom: 8 },
-  field: { marginBottom: 0 },
-  input: { backgroundColor: '#FFFFFF' },
-  radioLabel: { fontSize: 14 },
-  summaryItem: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 8 },
-  summaryImage: { width: 48, height: 48, borderRadius: 6, backgroundColor: '#F1F3F4' },
-  summaryInfo: { flex: 1 },
-  summaryTitle: { fontSize: 14, fontWeight: '600', color: '#202124' },
-  summaryLine: { fontSize: 14, fontWeight: '600', color: '#202124' },
-  muted: { fontSize: 13, color: '#5F6368' },
-  discount: { fontSize: 13, color: '#188038' },
-  totalRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 4 },
-  grandTotalRow: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: '#E0E0E0', marginTop: 8, paddingTop: 10 },
-  grandTotal: { fontSize: 18, fontWeight: '700', color: '#1A73E8' },
-  submitError: { color: '#EA4335', textAlign: 'center', marginTop: 12, paddingHorizontal: 16 },
-  placeButton: { margin: 16, borderRadius: 8 },
-  placeButtonContent: { paddingVertical: 6 },
-  confirmation: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24, gap: 10 },
-  confirmTitle: { fontSize: 26, fontWeight: '700', color: '#202124', marginTop: 8 },
-  confirmText: { fontSize: 15, color: '#5F6368', textAlign: 'center' },
-  confirmTotal: { fontSize: 20, fontWeight: '700', color: '#1A73E8' },
-  confirmButton: { alignSelf: 'stretch', maxWidth: 360, width: '100%', marginTop: 6 },
+  screen: { 
+    flex: 1, 
+    backgroundColor: '#F8F9FA' 
+  },
+  
+  scrollContent: { 
+    paddingBottom: 32 
+  },
+  
+  content: { 
+    width: '100%', 
+    maxWidth: 720, 
+    alignSelf: 'center' 
+  },
+  
+  section: { 
+    backgroundColor: '#FFFFFF', 
+    marginTop: 10, 
+    padding: 16 
+  },
+
+  sectionTitle: { 
+    fontSize: 16, 
+    fontWeight: '700', 
+    color: '#202124', 
+    marginBottom: 8 
+  },
+  
+  field: { 
+    marginBottom: 0 
+  },
+
+  input: { 
+    backgroundColor: '#FFFFFF' 
+  },
+  
+  radioLabel: { 
+    fontSize: 14 
+  },
+  
+  summaryItem: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    gap: 12, 
+    paddingVertical: 8 
+  },
+
+  summaryImage: { 
+    width: 48, 
+    height: 48, 
+    borderRadius: 6, 
+    backgroundColor: '#F1F3F4' 
+  },
+
+  summaryInfo: { 
+    flex: 1 
+  },
+
+  summaryTitle: { 
+    fontSize: 14, 
+    fontWeight: '600', 
+    color: '#202124' 
+  },
+
+  summaryLine: { 
+    fontSize: 14, 
+    fontWeight: '600', 
+    color: '#202124' 
+  },
+
+  muted: { 
+    fontSize: 13, 
+    color: '#5F6368' 
+  },
+
+  discount: { 
+    fontSize: 13, 
+    color: '#188038' 
+  },
+
+  totalRow: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    paddingVertical: 4 
+  },
+
+  grandTotalRow: { 
+    borderTopWidth: StyleSheet.hairlineWidth, 
+    borderTopColor: '#E0E0E0', 
+    marginTop: 8, 
+    paddingTop: 10 
+  },
+
+  grandTotal: { 
+    fontSize: 18, 
+    fontWeight: '700', 
+    color: '#1A73E8' 
+  },
+
+  submitError: { 
+    color: '#EA4335', 
+    textAlign: 'center', 
+    marginTop: 12, 
+    paddingHorizontal: 16 
+  },
+
+  placeButton: { 
+    margin: 16, 
+    borderRadius: 8 
+  },
+
+  placeButtonContent: { 
+    paddingVertical: 6 
+  },
+
+  confirmation: { 
+    flex: 1, 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    padding: 24, gap: 10 
+  },
+
+  confirmTitle: { 
+    fontSize: 26, 
+    fontWeight: '700', 
+    color: '#202124', 
+    marginTop: 8 
+  },
+
+  confirmText: { 
+    fontSize: 15, 
+    color: '#5F6368', 
+    textAlign: 'center' 
+  },
+
+  confirmTotal: { 
+    fontSize: 20, 
+    fontWeight: '700', 
+    color: '#1A73E8' 
+  },
+
+  confirmButton: { 
+    alignSelf: 'stretch', 
+    maxWidth: 360, 
+    width: '100%', 
+    marginTop: 6 
+  },
 });

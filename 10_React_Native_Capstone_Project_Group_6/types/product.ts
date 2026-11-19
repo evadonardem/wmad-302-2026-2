@@ -123,6 +123,8 @@ export interface Order {
   /** "ORD-<time>" for orders placed in the app, "CART-<id>" for DummyJSON past orders */
   id: string;
   userId: number;
+  /** username of the account that placed it (accounts made via Register share a user id) */
+  owner?: string;
   placedAt: string | null; // ISO date; DummyJSON past orders have no date
   status: 'Processing' | 'Shipped' | 'Delivered';
   items: OrderItem[];

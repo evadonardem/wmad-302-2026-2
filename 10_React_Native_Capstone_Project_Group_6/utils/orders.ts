@@ -35,16 +35,18 @@ export function validateShipping(form: ShippingInfo): ShippingErrors {
 
 export function buildOrder(params: {
   userId: number;
+  owner: string; // username of the account placing the order
   items: CartItem[];
   shipping: ShippingInfo;
   paymentMethod: PaymentMethod;
   now?: Date;
 }): Order {
-  const { userId, items, shipping, paymentMethod, now = new Date() } = params;
+  const { userId, owner, items, shipping, paymentMethod, now = new Date() } = params;
   const totals = calculateTotals(items);
   return {
     id: `ORD-${now.getTime()}`,
     userId,
+    owner,
     placedAt: now.toISOString(),
     status: 'Processing',
     items: items.map((i) => ({
@@ -96,4 +98,18 @@ export function formatOrderDate(iso: string | null): string {
   return Number.isNaN(date.getTime())
     ? 'Past order'
     : date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+}
+
+/**
+ * Does this saved order belong to the logged-in person?
+ * Accounts made with Register all share the test account's user id (DummyJSON
+ * doesn't really create users), so we match on username instead. Orders saved
+ * before this rule have no owner: only real (non-registered) accounts see those.
+ */
+export function belongsToUser(
+  order: Pick<Order, 'owner' | 'userId'>,
+  user: { id: number; username: string; isSimulated?: boolean }
+): boolean {
+  if (order.owner) return order.owner === user.username;
+  return !user.isSimulated && order.userId === user.id;
 }
