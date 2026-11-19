@@ -10,8 +10,15 @@
  */
 
 import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from 'axios';
-import { LoginCredentials, RegisterData, AuthUser, RefreshTokenResponse } from '@/types/auth';
-import { getStorageItem, setStorageItem, removeStorageItem } from '@/utils/storage';
+import {
+  LoginCredentials,
+  RegisterData,
+  AuthUser,
+  RefreshTokenResponse,
+  LocalAccount,
+} from '@/types/auth';
+import { accountStorage, getStorageItem, setStorageItem, removeStorageItem } from '@/utils/storage';
+import { hashPassword } from '@/utils/hash';
 
 const API_BASE_URL = 'https://dummyjson.com/auth';
 // DummyJSON has no /auth/register. New users are created with POST /users/add.
@@ -122,11 +129,8 @@ class AuthApiService {
     return this.currentUser;
   }
 
-  /**
-   * Login user with username/email and password
-   * POST /auth/login
-   */
-  async login(credentials: LoginCredentials): Promise<AuthUser> {
+  /** The plain DummyJSON login (POST /auth/login). Saves the session on success. */
+  private async requestLogin(credentials: LoginCredentials): Promise<AuthUser> {
     const response = await this.client.post<AuthUser>('/login', {
       username: credentials.username,
       password: credentials.password,
@@ -137,36 +141,75 @@ class AuthApiService {
   }
 
   /**
-   * Register new user, then sign them in.
+   * Login with username + password.
+   * 1. Real DummyJSON accounts (like emilys) log in through the API.
+   * 2. Accounts made with Register only exist on this device (DummyJSON doesn't
+   *    really store new users). If the API rejects the login, we check those.
+   * Network/server errors are NOT treated as "wrong password": they are re-thrown.
+   */
+  async login(credentials: LoginCredentials): Promise<AuthUser> {
+    try {
+      return await this.requestLogin(credentials);
+    } catch (error) {
+      const rejected = axios.isAxiosError(error) && !!error.response && error.response.status < 500;
+      if (rejected) {
+        const account = await accountStorage.find(credentials.username);
+        if (account && account.passwordHash === hashPassword(credentials.password, account.username)) {
+          return this.startLocalSession(account);
+        }
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Sign in a device-only account. DummyJSON gives tokens only to its own users, so we
+   * borrow the test account's tokens (needed for carts etc.) and show this account's
+   * profile. `isSimulated` marks the session so the profile is kept after refreshes.
+   */
+  private async startLocalSession(account: LocalAccount): Promise<AuthUser> {
+    const demo = await this.requestLogin(DEMO_CREDENTIALS);
+    const user: AuthUser = {
+      ...demo,
+      firstName: account.firstName,
+      lastName: account.lastName,
+      username: account.username,
+      email: account.email,
+      gender: account.gender ?? demo.gender,
+      isSimulated: true,
+    };
+    await this.setTokens(user);
+    return user;
+  }
+
+  /**
+   * Register a new user, then sign them in.
    *
-   * DummyJSON only SIMULATES creating users (POST /users/add returns the new user
-   * but never saves it), so logging in with the new account fails with
-   * "Invalid credentials". To still give a working session (tokens for carts etc.)
-   * we fall back to the DummyJSON test account's tokens and overlay the profile the
-   * person just typed in. `isSimulated` marks this so we keep their profile later.
+   * DummyJSON only SIMULATES creating users (POST /users/add returns the new user but
+   * never saves it). So we also save the account on this device (password hashed), which
+   * lets the person log in later with the username and password they chose.
    */
   async register(data: RegisterData): Promise<AuthUser> {
-    // 1. Create the user (throws on network/server errors)
+    if (await accountStorage.find(data.username)) {
+      throw new Error('That username is already taken');
+    }
+
+    // 1. "Create" the user on DummyJSON (throws on network/server errors)
     await this.client.post(USERS_ADD_URL, data);
 
-    // 2. Try a real login first (works if the backend ever really stores users)
-    try {
-      return await this.login({ username: data.username, password: data.password });
-    } catch {
-      // 3. Simulated-API fallback
-      const demo = await this.login(DEMO_CREDENTIALS);
-      const user: AuthUser = {
-        ...demo,
-        firstName: data.firstName,
-        lastName: data.lastName,
-        username: data.username,
-        email: data.email,
-        gender: data.gender ?? demo.gender,
-        isSimulated: true,
-      };
-      await this.setTokens(user);
-      return user;
-    }
+    // 2. Save the account on this device
+    const account: LocalAccount = {
+      username: data.username,
+      passwordHash: hashPassword(data.password, data.username),
+      firstName: data.firstName,
+      lastName: data.lastName,
+      email: data.email,
+      gender: data.gender,
+    };
+    await accountStorage.add(account);
+
+    // 3. Sign in
+    return this.startLocalSession(account);
   }
 
   /**
@@ -186,14 +229,14 @@ class AuthApiService {
     if (!stored) return fresh;
     const base: AuthUser = stored.isSimulated
       ? {
-        ...fresh,
-        firstName: stored.firstName,
-        lastName: stored.lastName,
-        username: stored.username,
-        email: stored.email,
-        gender: stored.gender,
-        isSimulated: true,
-      }
+          ...fresh,
+          firstName: stored.firstName,
+          lastName: stored.lastName,
+          username: stored.username,
+          email: stored.email,
+          gender: stored.gender,
+          isSimulated: true,
+        }
       : fresh;
     return { ...base, token: stored.token, refreshToken: stored.refreshToken };
   }

@@ -65,3 +65,13 @@ export type AuthAction =
   | { type: 'AUTH_HYDRATE'; payload: AuthUser | null }
   | { type: 'AUTH_UPDATE_USER'; payload: Partial<AuthUser> }
   | { type: 'AUTH_CLEAR_ERROR' };
+
+/** An account made with Register. Saved on this device only (DummyJSON doesn't store new users). */
+export interface LocalAccount {
+  username: string;
+  passwordHash: string; // SHA-256, never the plain password
+  firstName: string;
+  lastName: string;
+  email: string;
+  gender?: 'male' | 'female';
+}

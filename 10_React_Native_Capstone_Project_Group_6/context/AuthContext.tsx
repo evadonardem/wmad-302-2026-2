@@ -147,6 +147,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const user = await authApi.login({ username, password });
       dispatch({ type: 'AUTH_SUCCESS', payload: user });
     } catch (error: unknown) {
+      console.error('Login failed:', error); // full error + stack for debugging
       const message = extractErrorMessage(error, 'Login failed');
       dispatch({ type: 'AUTH_FAILURE', payload: message });
       throw error;
@@ -169,6 +170,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const user = await authApi.register(data);
         dispatch({ type: 'AUTH_SUCCESS', payload: user });
       } catch (error: unknown) {
+        console.error('Registration failed:', error); // full error + stack for debugging
         const message = extractErrorMessage(error, 'Registration failed');
         dispatch({ type: 'AUTH_FAILURE', payload: message });
         throw error;

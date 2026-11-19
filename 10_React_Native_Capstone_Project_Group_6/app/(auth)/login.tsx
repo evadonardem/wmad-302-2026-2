@@ -26,15 +26,18 @@ export default function LoginScreen() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null); // empty-field message
 
   const handleLogin = async () => {
-    if (!username.trim() || !password.trim()) {
-      Alert.alert('Error', 'Please enter both username and password');
+    if (!username.trim() || !password) {
+      // Alert.alert does nothing in the browser, so the message is shown on the page
+      setFormError('Please enter both username and password');
       return;
     }
+    setFormError(null);
 
     try {
-      await login(username.trim(), password.trim());
+      await login(username.trim(), password);
       router.replace(redirect || '/(app)/(tabs)/home');
     } catch {
       // Error handled in context
@@ -84,7 +87,10 @@ export default function LoginScreen() {
               label="Username or Email"
               mode="outlined"
               value={username}
-              onChangeText={setUsername}
+              onChangeText={(value) => {
+                setUsername(value);
+                setFormError(null);
+              }}
               style={styles.input}
               autoCapitalize="none"
               autoComplete="username"
@@ -98,7 +104,10 @@ export default function LoginScreen() {
               label="Password"
               mode="outlined"
               value={password}
-              onChangeText={setPassword}
+              onChangeText={(value) => {
+                setPassword(value);
+                setFormError(null);
+              }}
               style={styles.input}
               secureTextEntry={!showPassword}
               autoComplete="password"
@@ -112,9 +121,9 @@ export default function LoginScreen() {
             />
 
             {/* Error Display */}
-            {error && (
+            {(formError ?? error) && (
               <View style={styles.errorContainer}>
-                <Text style={styles.errorText}>{error}</Text>
+                <Text style={styles.errorText}>{formError ?? error}</Text>
               </View>
             )}
 

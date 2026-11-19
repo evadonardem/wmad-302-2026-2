@@ -1,7 +1,8 @@
 /**
  * Register Screen
  * Validates the form, calls register() from AuthContext (creates the account and
- * signs the user in), then goes to the home tab. Errors show in an Alert.
+ * signs the user in), then goes to the home tab. Errors are shown on the page
+ * (Alert.alert does nothing in the browser).
  */
 import React, { useState } from 'react';
 import {
@@ -10,7 +11,6 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
-  Alert,
   ActivityIndicator,
   TouchableOpacity,
 } from 'react-native';
@@ -38,6 +38,7 @@ export default function RegisterScreen() {
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null); // validation message
 
   // Validation helpers
   const validateForm = (): string | null => {
@@ -59,10 +60,8 @@ export default function RegisterScreen() {
 
   const handleRegister = async () => {
     const validationError = validateForm();
-    if (validationError) {
-      Alert.alert('Validation Error', validationError);
-      return;
-    }
+    setFormError(validationError);
+    if (validationError) return;
 
     try {
       // The context creates the account AND signs the user in (auto-login).
@@ -77,20 +76,18 @@ export default function RegisterScreen() {
       });
       router.replace('/(app)/(tabs)/home');
     } catch {
-      // Error message is stored in the context and shown by the Alert effect below
+      // Error message is stored in the context and shown above the Register button
     }
   };
 
   const handleFieldChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+    if (formError) setFormError(null);
     if (error) clearError();
   };
 
-  React.useEffect(() => {
-    if (error) {
-      Alert.alert('Registration Failed', error, [{ text: 'OK', onPress: clearError }]);
-    }
-  }, [error, clearError]);
+  // Show the validation message, or the error from the server/storage
+  const shownError = formError ?? error;
 
   return (
     <KeyboardAvoidingView
@@ -252,7 +249,10 @@ export default function RegisterScreen() {
               <View style={styles.checkbox}>
                 <Checkbox
                   status={agreedToTerms ? 'checked' : 'unchecked'}
-                  onPress={() => setAgreedToTerms(!agreedToTerms)}
+                  onPress={() => {
+                    setAgreedToTerms(!agreedToTerms);
+                    setFormError(null);
+                  }}
                 />
               </View>
               <Text style={styles.termsText}>
@@ -262,6 +262,13 @@ export default function RegisterScreen() {
                 <Text style={styles.linkText}>Privacy Policy</Text>
               </Text>
             </View>
+
+            {/* Error Display */}
+            {shownError && (
+              <View style={styles.errorContainer}>
+                <Text style={styles.errorText}>{shownError}</Text>
+              </View>
+            )}
 
             {/* Register Button */}
             <Button

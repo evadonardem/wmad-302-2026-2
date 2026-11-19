@@ -5,6 +5,7 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { CartItem, Order } from '@/types/product';
+import type { LocalAccount } from '@/types/auth';
 
 const STORAGE_KEYS = {
   AUTH_USER: 'auth_user',
@@ -12,6 +13,7 @@ const STORAGE_KEYS = {
   CART: 'cart', // README says the cart lives under the key "cart"
   SETTINGS: 'user_settings',
   ORDERS: 'orders',
+  LOCAL_ACCOUNTS: 'local_accounts',
 } as const;
 
 export type StorageKey = typeof STORAGE_KEYS[keyof typeof STORAGE_KEYS];
@@ -183,4 +185,28 @@ export const orderStorage = {
     await setStorageItem(STORAGE_KEYS.ORDERS, [order, ...orders]); // newest first
   },
   clear: () => removeStorageItem(STORAGE_KEYS.ORDERS),
+};
+
+/**
+ * Accounts created with Register. DummyJSON only pretends to create users, so we keep
+ * them here to let people log in with the username and password they registered.
+ */
+export const accountStorage = {
+  getAll: async (): Promise<LocalAccount[]> => {
+    const saved = await getStorageItem<LocalAccount[]>(STORAGE_KEYS.LOCAL_ACCOUNTS);
+    // Ignore anything that isn't a proper account (e.g. old or damaged data)
+    return Array.isArray(saved)
+      ? saved.filter((a) => !!a && typeof a.username === 'string' && typeof a.passwordHash === 'string')
+      : [];
+  },
+  find: async (username: string | undefined): Promise<LocalAccount | null> => {
+    const key = (username ?? '').trim().toLowerCase();
+    if (!key) return null;
+    const accounts = await accountStorage.getAll();
+    return accounts.find((a) => a.username.toLowerCase() === key) ?? null;
+  },
+  add: async (account: LocalAccount) => {
+    const accounts = await accountStorage.getAll();
+    await setStorageItem(STORAGE_KEYS.LOCAL_ACCOUNTS, [...accounts, account]);
+  },
 };
