@@ -16,10 +16,12 @@ import React, {
   useEffect,
   useMemo,
   useReducer,
+  useRef,
   ReactNode,
 } from 'react';
 import { CartItem, Product } from '@/types/product';
 import { cartStorage } from '@/utils/storage';
+import { useAuth } from '@/context/AuthContext';
 
 /** Only the product fields the cart needs (so any screen's Product type works). */
 export type CartProduct = Pick<
@@ -129,29 +131,44 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 export function CartProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(cartReducer, initialCartState);
 
-  // 1. Load the saved cart once on start
+  // Whose cart is this? (null = nobody logged in)
+  const { user } = useAuth();
+  const owner = user?.username ?? null;
+  // Which account's cart is currently loaded into `state`. Stops us from saving one
+  // account's items under another account's name while switching.
+  const loadedOwner = useRef<string | null>(null);
+
+  // 1. Load the cart of whoever is logged in (again every time the account changes)
   useEffect(() => {
     let cancelled = false;
+    loadedOwner.current = null;
+    dispatch({ type: 'CART_HYDRATE', payload: [] }); // never show the previous account's items
+    if (!owner) return;
+
     cartStorage
-      .getCart()
+      .getCart(owner)
       .then((saved) => {
-        if (!cancelled) dispatch({ type: 'CART_HYDRATE', payload: saved });
+        if (cancelled) return;
+        loadedOwner.current = owner;
+        dispatch({ type: 'CART_HYDRATE', payload: saved });
       })
       .catch(() => {
-        if (!cancelled) dispatch({ type: 'CART_HYDRATE', payload: [] });
+        if (cancelled) return;
+        loadedOwner.current = owner;
+        dispatch({ type: 'CART_HYDRATE', payload: [] });
       });
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [owner]);
 
-  // 2. Save whenever the items change (skipped until the saved cart was loaded)
+  // 2. Save whenever the items change (only once THIS account's cart has been loaded)
   useEffect(() => {
-    if (!state.isHydrated) return;
-    cartStorage.setCart(state.items).catch((error: unknown) => {
+    if (!owner || loadedOwner.current !== owner) return;
+    cartStorage.setCart(owner, state.items).catch((error: unknown) => {
       console.error('Failed to save cart:', error);
     });
-  }, [state.items, state.isHydrated]);
+  }, [state.items, owner]);
 
   const addToCart = useCallback(
     (product: CartProduct, quantity = 1): AddToCartResult => {

@@ -141,35 +141,25 @@ export const favoritesStorage = {
   },
 };
 
+/**
+ * Carts are saved per account: { "emilys": [items], "jlaw": [items] }.
+ * That way two people using the same device never see each other's cart.
+ */
+type CartMap = Record<string, CartItem[]>;
+const cartKey = (owner: string) => owner.trim().toLowerCase();
+
 export const cartStorage = {
-  getCart: async (): Promise<CartItem[]> =>
-    (await getStorageItem<CartItem[]>(STORAGE_KEYS.CART)) ?? [],
-  setCart: (items: CartItem[]) => setStorageItem(STORAGE_KEYS.CART, items),
-  addItem: async (item: CartItem) => {
-    const items = await cartStorage.getCart();
-    const existingIndex = items.findIndex((i) => i.productId === item.productId);
-    if (existingIndex >= 0) {
-      items[existingIndex].quantity += item.quantity;
-    } else {
-      items.push(item);
-    }
-    await cartStorage.setCart(items);
+  getCart: async (owner: string): Promise<CartItem[]> => {
+    const saved = await getStorageItem<CartMap | CartItem[]>(STORAGE_KEYS.CART);
+    // An old (pre-per-account) cart was a plain array: ignore it
+    if (!saved || Array.isArray(saved)) return [];
+    const items = saved[cartKey(owner)];
+    return Array.isArray(items) ? items : [];
   },
-  updateQuantity: async (productId: number, quantity: number) => {
-    const items = await cartStorage.getCart();
-    const index = items.findIndex((i) => i.productId === productId);
-    if (index >= 0) {
-      if (quantity <= 0) {
-        items.splice(index, 1);
-      } else {
-        items[index].quantity = quantity;
-      }
-      await cartStorage.setCart(items);
-    }
-  },
-  removeItem: async (productId: number) => {
-    const items = await cartStorage.getCart();
-    await cartStorage.setCart(items.filter((i) => i.productId !== productId));
+  setCart: async (owner: string, items: CartItem[]): Promise<void> => {
+    const saved = await getStorageItem<CartMap | CartItem[]>(STORAGE_KEYS.CART);
+    const map: CartMap = saved && !Array.isArray(saved) ? saved : {};
+    await setStorageItem(STORAGE_KEYS.CART, { ...map, [cartKey(owner)]: items });
   },
   clear: () => removeStorageItem(STORAGE_KEYS.CART),
 };
