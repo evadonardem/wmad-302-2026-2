@@ -125,7 +125,7 @@ export default function ProductRecommendations({
                     <View style={styles.imageContainer}>
                       <Image
                         source={{ uri: product.thumbnail }}
-                        style={styles.image}
+                        style={{ width: '90%', height: '90%' }}
                         resizeMode="contain"
                       />
                       {product.discountPercentage > 0 && (
@@ -215,12 +215,16 @@ const styles = StyleSheet.create({
   list: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-start',
     paddingHorizontal: 10,
-    gap: 10,
+    columnGap: 10,
   },
   productCard: {
-    width: '48.5%',
+    width: '48%',
+    flexBasis: '48%',
+    flexGrow: 0,
+    flexShrink: 0,
+    marginBottom: 10,
     borderRadius: 14,
     ...marketplaceCardShadow,
   },
@@ -238,10 +242,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#FFFFFF',
-  },
-  image: {
-    width: '90%',
-    height: '90%',
   },
   discount: {
     position: 'absolute',

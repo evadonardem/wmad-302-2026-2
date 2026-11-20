@@ -174,19 +174,31 @@ export default function SearchScreen() {
           underlineColor="transparent"
           activeUnderlineColor="transparent"
           right={
-            query ? (
-              <TouchableOpacity onPress={() => setQuery('')} style={styles.clearButton}>
-                <MaterialCommunityIcons name="close" size={24} color="#5F6368" style={{ marginRight: 12 }} />
-              </TouchableOpacity>
-            ) : (
-              <TouchableOpacity onPress={handleSearch} disabled={loading} style={styles.searchButton}>
+            <View style={styles.searchActions}>
+              {query ? (
+                <TouchableOpacity
+                  onPress={() => setQuery('')}
+                  style={styles.clearButton}
+                  accessibilityRole="button"
+                  accessibilityLabel="Clear search"
+                >
+                  <MaterialCommunityIcons name="close" size={24} color="#5F6368" />
+                </TouchableOpacity>
+              ) : null}
+              <TouchableOpacity
+                onPress={handleSearch}
+                disabled={loading}
+                style={styles.searchButton}
+                accessibilityRole="button"
+                accessibilityLabel="Search"
+              >
                 {loading ? (
                   <ActivityIndicator size="small" color="white" />
                 ) : (
                   <MaterialCommunityIcons name="magnify" size={24} color="white" />
                 )}
               </TouchableOpacity>
-            )
+            </View>
           }
         />
         {actionsExpanded && (

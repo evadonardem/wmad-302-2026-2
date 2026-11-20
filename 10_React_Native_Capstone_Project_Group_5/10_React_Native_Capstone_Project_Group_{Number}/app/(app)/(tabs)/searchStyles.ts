@@ -78,6 +78,10 @@ export const styles = StyleSheet.create({
   clearButton: {
     padding: 8,
   },
+  searchActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   searchButton: {
     backgroundColor: '#75648A',
     borderRadius: 12,

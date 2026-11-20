@@ -86,7 +86,13 @@ export default function SearchResultsScreen() {
           ? await productApi.getProductsByCategory(category, { limit: 100 })
           : await productApi.searchProducts(query, { limit: 100 });
 
-        if (active) setProducts(response.products);
+        const searchTerm = query.toLowerCase();
+        const matchingProducts = response.products.filter((product) =>
+          !searchTerm ||
+          [product.title, product.description, product.brand ?? '']
+            .some((value) => value.toLowerCase().includes(searchTerm))
+        );
+        if (active) setProducts(matchingProducts);
       } catch (loadError) {
         if (active) {
           setError(loadError instanceof Error ? loadError.message : 'Unable to load results');
@@ -137,8 +143,11 @@ export default function SearchResultsScreen() {
     />
   );
 
-  const heading = category
+  const categoryLabel = category
     ? category.charAt(0).toUpperCase() + category.slice(1).replace('-', ' ')
+    : '';
+  const heading = category
+    ? `${categoryLabel}${query ? ` · "${query}"` : ''}`
     : `Results for "${query}"`;
   const submitSearch = () => {
     if (!searchText.trim()) return;
@@ -148,7 +157,7 @@ export default function SearchResultsScreen() {
         error instanceof Error ? error.message : 'Please try again.'
       );
     });
-    router.setParams({ q: searchText.trim(), category: undefined });
+    router.setParams({ q: searchText.trim(), category: category || undefined });
   };
 
   return (
@@ -171,16 +180,17 @@ export default function SearchResultsScreen() {
           underlineColor="transparent"
           activeUnderlineColor="transparent"
           right={
-            searchText ? (
-              <TouchableOpacity
-                onPress={() => setSearchText('')}
-                style={styles.clearButton}
-                accessibilityRole="button"
-                accessibilityLabel="Clear search"
-              >
-                <MaterialCommunityIcons name="close" size={24} color="#5F6368" />
-              </TouchableOpacity>
-            ) : (
+            <View style={styles.searchActions}>
+              {searchText ? (
+                <TouchableOpacity
+                  onPress={() => setSearchText('')}
+                  style={styles.clearButton}
+                  accessibilityRole="button"
+                  accessibilityLabel="Clear search"
+                >
+                  <MaterialCommunityIcons name="close" size={24} color="#5F6368" />
+                </TouchableOpacity>
+              ) : null}
               <TouchableOpacity
                 onPress={submitSearch}
                 disabled={loading}
@@ -194,7 +204,7 @@ export default function SearchResultsScreen() {
                   <MaterialCommunityIcons name="magnify" size={24} color="white" />
                 )}
               </TouchableOpacity>
-            )
+            </View>
           }
         />
         {actionsExpanded && (

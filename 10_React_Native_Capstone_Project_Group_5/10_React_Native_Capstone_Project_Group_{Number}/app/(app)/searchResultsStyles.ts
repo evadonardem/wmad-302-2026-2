@@ -37,6 +37,10 @@ export const styles = StyleSheet.create({
   clearButton: {
     padding: 8,
   },
+  searchActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   searchButton: {
     width: 44,
     height: 44,

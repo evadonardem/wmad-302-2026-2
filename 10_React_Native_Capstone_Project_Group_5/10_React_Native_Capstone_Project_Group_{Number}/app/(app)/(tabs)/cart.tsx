@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Alert, Image, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Animated, Image, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Button, Card, IconButton } from 'react-native-paper';
+import { Button, Card, IconButton, Snackbar } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useCart } from '@/context/CartContext';
 import ProductRecommendations from '@/components/ProductRecommendations';
@@ -24,6 +24,11 @@ export default function CartScreen() {
   } = useCart();
   const [selectedProductIds, setSelectedProductIds] = useState<number[] | null>(null);
   const previousProductIds = useRef<number[]>([]);
+  const removalInProgress = useRef<number | null>(null);
+  const [removingProductId, setRemovingProductId] = useState<number | null>(null);
+  const [removedProductTitle, setRemovedProductTitle] = useState<string | null>(null);
+  const removalOpacity = useRef(new Animated.Value(1)).current;
+  const removalTranslateX = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     if (isLoading) return;
@@ -71,20 +76,84 @@ export default function CartScreen() {
     }
   };
 
-  const confirmRemove = (productId: number) => {
+  const animateRemove = (productId: number, title: string) => {
+    if (removalInProgress.current !== null) return;
+
+    removalInProgress.current = productId;
+    setRemovingProductId(productId);
+    setRemovedProductTitle(null);
+    Animated.parallel([
+      Animated.timing(removalOpacity, {
+        toValue: 0,
+        duration: 220,
+        useNativeDriver: false,
+      }),
+      Animated.timing(removalTranslateX, {
+        toValue: 28,
+        duration: 220,
+        useNativeDriver: false,
+      }),
+    ]).start(({ finished }) => {
+      if (!finished) {
+        removalInProgress.current = null;
+        setRemovingProductId(null);
+        removalOpacity.setValue(1);
+        removalTranslateX.setValue(0);
+        return;
+      }
+
+      void removeItem(productId)
+        .then(() => setRemovedProductTitle(title))
+        .catch((error: unknown) => {
+          Alert.alert('Could not remove item', error instanceof Error ? error.message : 'Try again.');
+        })
+        .finally(() => {
+          removalInProgress.current = null;
+          setRemovingProductId(null);
+          removalOpacity.setValue(1);
+          removalTranslateX.setValue(0);
+        });
+    });
+  };
+
+  const decrease = async (productId: number, title: string, quantity: number) => {
+    if (quantity > 1) {
+      await update(productId, quantity - 1);
+      return;
+    }
+
+    animateRemove(productId, title);
+  };
+
+  const confirmRemove = (productId: number, title: string) => {
+    if (Platform.OS === 'web') {
+      if (window.confirm('Remove this item from your cart?')) {
+        animateRemove(productId, title);
+      }
+      return;
+    }
+
     Alert.alert('Remove item', 'Remove this item from your cart?', [
       { text: 'Keep item', style: 'cancel' },
       {
         text: 'Remove',
         style: 'destructive',
-        onPress: () => {
-          removeItem(productId).catch((error: unknown) => {
-            Alert.alert('Could not remove item', error instanceof Error ? error.message : 'Try again.');
-          });
-        },
+        onPress: () => animateRemove(productId, title),
       },
     ]);
   };
+
+  const removalFeedback = (
+    <Snackbar
+      visible={removedProductTitle !== null}
+      onDismiss={() => setRemovedProductTitle(null)}
+      duration={2600}
+      style={styles.removalSnackbar}
+      action={{ label: 'OK', onPress: () => setRemovedProductTitle(null) }}
+    >
+      {`${removedProductTitle ?? ''} removed from your cart`}
+    </Snackbar>
+  );
 
   const goBack = () => {
     const productId = Number(sourceProductId);
@@ -132,6 +201,7 @@ export default function CartScreen() {
             subtitle="Discover products to add to your cart"
           />
         </ScrollView>
+        {removalFeedback}
       </View>
     );
   }
@@ -159,53 +229,70 @@ export default function CartScreen() {
           const unitPrice = item.price * (1 - item.discountPercentage / 100);
           const isSelected = selectedIdSet.has(item.productId);
           return (
-            <Card
+            <Animated.View
               key={item.productId}
-              style={[styles.card, isSelected && styles.selectedCard]}
-              mode="contained"
+              style={removingProductId === item.productId ? {
+                opacity: removalOpacity,
+                transform: [
+                  { translateX: removalTranslateX },
+                  {
+                    scale: removalOpacity.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0.96, 1],
+                    }),
+                  },
+                ],
+              } : undefined}
             >
-              <View style={styles.itemRow}>
-                <IconButton
-                  icon={isSelected ? 'checkbox-marked' : 'checkbox-blank-outline'}
-                  iconColor={isSelected ? brandPurple : '#A79EAE'}
-                  size={22}
-                  style={styles.itemCheckbox}
-                  onPress={() => toggleProductSelection(item.productId)}
-                  accessibilityLabel={`${isSelected ? 'Deselect' : 'Select'} ${item.title}`}
-                />
-                <Image source={{ uri: item.thumbnail }} style={styles.image} resizeMode="contain" />
-                <View style={styles.itemInfo}>
-                  <Text style={styles.itemTitle} numberOfLines={2}>{item.title}</Text>
-                  <Text style={styles.itemPrice}>${unitPrice.toFixed(2)}</Text>
-                  {item.discountPercentage > 0 && (
-                    <Text style={styles.oldPrice}>${item.price.toFixed(2)}</Text>
-                  )}
-                  <View style={styles.controls}>
-                    <IconButton
-                      icon="minus"
-                      size={18}
-                      onPress={() => void update(item.productId, item.quantity - 1)}
-                      disabled={item.quantity <= 1}
-                      accessibilityLabel="Decrease quantity"
-                    />
-                    <Text style={styles.quantity}>{item.quantity}</Text>
-                    <IconButton
-                      icon="plus"
-                      size={18}
-                      onPress={() => void update(item.productId, item.quantity + 1)}
-                      disabled={item.quantity >= item.stock}
-                      accessibilityLabel="Increase quantity"
-                    />
+              <Card
+                style={[styles.card, isSelected && styles.selectedCard]}
+                mode="contained"
+              >
+                <View style={styles.itemRow}>
+                  <IconButton
+                    icon={isSelected ? 'checkbox-marked' : 'checkbox-blank-outline'}
+                    iconColor={isSelected ? brandPurple : '#A79EAE'}
+                    size={22}
+                    style={styles.itemCheckbox}
+                    onPress={() => toggleProductSelection(item.productId)}
+                    disabled={removingProductId !== null}
+                    accessibilityLabel={`${isSelected ? 'Deselect' : 'Select'} ${item.title}`}
+                  />
+                  <Image source={{ uri: item.thumbnail }} style={styles.image} resizeMode="contain" />
+                  <View style={styles.itemInfo}>
+                    <Text style={styles.itemTitle} numberOfLines={2}>{item.title}</Text>
+                    <Text style={styles.itemPrice}>${unitPrice.toFixed(2)}</Text>
+                    {item.discountPercentage > 0 && (
+                      <Text style={styles.oldPrice}>${item.price.toFixed(2)}</Text>
+                    )}
+                    <View style={styles.controls}>
+                      <IconButton
+                        icon="minus"
+                        size={18}
+                        onPress={() => void decrease(item.productId, item.title, item.quantity)}
+                        disabled={removingProductId !== null}
+                        accessibilityLabel={item.quantity === 1 ? 'Remove item' : 'Decrease quantity'}
+                      />
+                      <Text style={styles.quantity}>{item.quantity}</Text>
+                      <IconButton
+                        icon="plus"
+                        size={18}
+                        onPress={() => void update(item.productId, item.quantity + 1)}
+                        disabled={removingProductId !== null || item.quantity >= item.stock}
+                        accessibilityLabel="Increase quantity"
+                      />
+                    </View>
                   </View>
+                  <IconButton
+                    icon="delete-outline"
+                    iconColor={brandPurple}
+                    onPress={() => confirmRemove(item.productId, item.title)}
+                    disabled={removingProductId !== null}
+                    accessibilityLabel={`Remove ${item.title}`}
+                  />
                 </View>
-                <IconButton
-                  icon="delete-outline"
-                  iconColor={brandPurple}
-                  onPress={() => confirmRemove(item.productId)}
-                  accessibilityLabel={`Remove ${item.title}`}
-                />
-              </View>
-            </Card>
+              </Card>
+            </Animated.View>
           );
         })}
 
@@ -258,6 +345,7 @@ export default function CartScreen() {
           subtitle="Discover products to add to your cart"
         />
       </ScrollView>
+      {removalFeedback}
     </View>
   );
 }
@@ -293,6 +381,7 @@ const styles = StyleSheet.create({
   total: { color: brandPurple, fontSize: 20, fontWeight: '800' as const },
   selectionPrompt: { color: '#9B5B27', fontSize: 13, marginTop: 4 },
   checkoutButton: { marginTop: 14, borderRadius: 12, paddingVertical: 3 },
+  removalSnackbar: { backgroundColor: brandPurple },
   empty: { minHeight: 420, backgroundColor: '#FFF', alignItems: 'center', justifyContent: 'center', padding: 24, gap: 14 },
   emptyTitle: { color: '#222', fontSize: 20, fontWeight: '700' as const },
   muted: { color: '#777', fontSize: 14 },
