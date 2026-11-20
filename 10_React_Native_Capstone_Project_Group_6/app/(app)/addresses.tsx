@@ -146,7 +146,7 @@ export default function AddressesScreen() {
           <Button mode="contained" onPress={handleSave} style={styles.button}>
             Save address
           </Button>
-          <Button mode="text" onPress={() => setEditing(null)}>
+          <Button textColor={colors.primaryText} mode="text" onPress={() => setEditing(null)}>
             Cancel
           </Button>
         </ScrollView>
@@ -185,11 +185,11 @@ export default function AddressesScreen() {
               </Text>
               <View style={styles.cardActions}>
                 {!address.isDefault ? (
-                  <Button compact onPress={() => persist(setDefaultAddress(addresses, address.id), 'Default address changed')}>
+                  <Button textColor={colors.primaryText} compact onPress={() => persist(setDefaultAddress(addresses, address.id), 'Default address changed')}>
                     Set default
                   </Button>
                 ) : null}
-                <Button compact onPress={() => startEdit(address)}>
+                <Button textColor={colors.primaryText} compact onPress={() => startEdit(address)}>
                   Edit
                 </Button>
                 <Button compact textColor={colors.errorText} onPress={() => setToDelete(address)}>
@@ -206,13 +206,13 @@ export default function AddressesScreen() {
       </ScrollView>
 
       <Portal>
-        <Dialog visible={!!toDelete} onDismiss={() => setToDelete(null)}>
+        <Dialog visible={!!toDelete} onDismiss={() => setToDelete(null)} style={{ borderRadius: 24, backgroundColor: colors.surface }}>
           <Dialog.Title>Delete address</Dialog.Title>
           <Dialog.Content>
             <Text>Delete your “{toDelete?.label}” address?</Text>
           </Dialog.Content>
           <Dialog.Actions>
-            <Button onPress={() => setToDelete(null)}>Cancel</Button>
+            <Button textColor={colors.primaryText} onPress={() => setToDelete(null)}>Cancel</Button>
             <Button onPress={confirmDelete} textColor={colors.errorText}>
               Delete
             </Button>

@@ -211,7 +211,7 @@ export default function ProfileScreen() {
 
       {/* Logout Button */}
       <View style={styles.logoutContainer}>
-        <Button
+        <Button textColor={colors.error}
           mode="outlined"
           onPress={handleLogout}
           style={styles.logoutButton}
@@ -227,13 +227,13 @@ export default function ProfileScreen() {
       </View>
 
       <Portal>
-        <Dialog visible={showLogoutDialog} onDismiss={() => setShowLogoutDialog(false)}>
+        <Dialog visible={showLogoutDialog} onDismiss={() => setShowLogoutDialog(false)} style={{ borderRadius: 24, backgroundColor: colors.surface }}>
           <Dialog.Title>Logout</Dialog.Title>
           <Dialog.Content>
             <Text>Are you sure you want to logout?</Text>
           </Dialog.Content>
           <Dialog.Actions>
-            <Button onPress={() => setShowLogoutDialog(false)}>Cancel</Button>
+            <Button textColor={colors.primaryText} onPress={() => setShowLogoutDialog(false)}>Cancel</Button>
             <Button onPress={confirmLogout} textColor={colors.error}>
               Logout
             </Button>

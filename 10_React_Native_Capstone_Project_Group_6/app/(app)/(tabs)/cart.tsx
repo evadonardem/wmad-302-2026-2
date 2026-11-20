@@ -185,7 +185,7 @@ export default function CartScreen() {
                     onSubmitEditing={handleApplyCoupon}
                     style={styles.couponInput}
                   />
-                  <Button mode="outlined" onPress={handleApplyCoupon} style={styles.couponButton}>
+                  <Button textColor={colors.primaryText} mode="outlined" onPress={handleApplyCoupon} style={styles.couponButton}>
                     Apply
                   </Button>
                 </View>

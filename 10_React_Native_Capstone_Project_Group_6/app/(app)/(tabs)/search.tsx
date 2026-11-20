@@ -181,32 +181,31 @@ export default function SearchScreen() {
       onPress={() => router.push(`/(app)/product/${item.id}`)}
       activeOpacity={0.8}
     >
-      <Card style={styles.card} elevation={1}>
+      <Card style={styles.card} elevation={0}>
         <View style={styles.resultContent}>
           <Image source={{ uri: item.thumbnail }} style={styles.resultImage} resizeMode="contain" />
           <View style={styles.resultInfo}>
-            <Text style={styles.resultCategory}>{formatCategory(item.category)}</Text>
             <Title style={styles.resultTitle} numberOfLines={2}>
               {item.title}
             </Title>
             <View style={styles.resultPrice}>
-              <Text style={styles.currentPrice}>${getFinalPrice(item).toFixed(2)}</Text>
+              <Text style={styles.currentPrice} numberOfLines={1}>${getFinalPrice(item).toFixed(2)}</Text>
               {item.discountPercentage > 0 && (
-                <Text style={styles.originalPrice}>${item.price.toFixed(2)}</Text>
+                <Text style={styles.originalPrice} numberOfLines={1}>${item.price.toFixed(2)}</Text>
               )}
             </View>
             <Text style={styles.resultDetails}>
-              ⭐ {item.rating.toFixed(1)} · {item.stock > 0 ? 'In Stock' : 'Out of Stock'}
+              ⭐ {item.rating.toFixed(1)}{item.stock > 0 ? '' : ' · Out of stock'}
             </Text>
             <Button
-              mode="contained-tonal"
+              mode="contained"
               icon="cart-plus"
               compact
               disabled={item.stock <= 0}
               onPress={() => handleAddToCart(item)}
               style={styles.addButton}
             >
-              Add to cart
+              Add
             </Button>
           </View>
         </View>
@@ -295,7 +294,7 @@ export default function SearchScreen() {
           {debouncedQuery.trim() ? ` for "${debouncedQuery.trim()}"` : ''}
         </Text>
         {hasFilters && (
-          <Button compact onPress={clearAll}>
+          <Button textColor={colors.primaryText} compact onPress={clearAll}>
             Clear all
           </Button>
         )}
@@ -329,7 +328,7 @@ export default function SearchScreen() {
         <Text style={styles.emptyText}>No products found</Text>
         <Text style={styles.emptySubtext}>Try a different search or remove some filters</Text>
         {hasFilters && (
-          <Button mode="outlined" onPress={clearAll}>
+          <Button textColor={colors.primaryText} mode="outlined" onPress={clearAll}>
             Clear filters
           </Button>
         )}
@@ -343,6 +342,8 @@ export default function SearchScreen() {
         data={loading || error ? [] : visibleResults}
         renderItem={renderResult}
         keyExtractor={(item) => item.id.toString()}
+        numColumns={2}
+        columnWrapperStyle={styles.gridRow}
         contentContainerStyle={styles.listContent}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         ListHeaderComponent={header}

@@ -42,42 +42,47 @@ export default function WishlistScreen() {
     const finalPrice = getFinalPrice(item);
     const outOfStock = item.stock <= 0;
     return (
-      <Card style={styles.card} elevation={1}>
+      <Card style={styles.card} elevation={0}>
         <TouchableOpacity
-          style={styles.row}
+          style={styles.tile}
           onPress={() => router.push(`/(app)/product/${item.id}`)}
           activeOpacity={0.8}
           accessibilityRole="button"
           accessibilityLabel={`Open ${item.title}`}
         >
-          <Image source={{ uri: item.thumbnail }} style={styles.image} resizeMode="contain" />
+          <View style={styles.imageWrap}>
+            <Image source={{ uri: item.thumbnail }} style={styles.image} resizeMode="contain" />
+            <IconButton
+              icon="heart"
+              size={20}
+              iconColor={colors.error}
+              onPress={() => handleRemove(item)}
+              accessibilityLabel="Remove from wishlist"
+              style={styles.heart}
+            />
+          </View>
           <View style={styles.info}>
             <Text style={styles.title} numberOfLines={2}>
               {item.title}
             </Text>
             <View style={styles.priceRow}>
-              <Text style={styles.price}>${finalPrice.toFixed(2)}</Text>
-              {item.discountPercentage > 0 && <Text style={styles.oldPrice}>${item.price.toFixed(2)}</Text>}
+              <Text style={styles.price} numberOfLines={1}>${finalPrice.toFixed(2)}</Text>
+              {item.discountPercentage > 0 && <Text style={styles.oldPrice} numberOfLines={1}>${item.price.toFixed(2)}</Text>}
             </View>
             <Text style={outOfStock ? styles.outOfStock : styles.muted}>
               {outOfStock ? 'Out of stock' : `${item.stock} in stock`}
             </Text>
           </View>
-          <IconButton
-            icon="heart"
-            iconColor={colors.error}
-            onPress={() => handleRemove(item)}
-            accessibilityLabel="Remove from wishlist"
-          />
         </TouchableOpacity>
         <Button
-          mode="contained-tonal"
+          mode="contained"
           icon="cart-plus"
+          compact
           disabled={outOfStock}
           onPress={() => handleAddToCart(item)}
           style={styles.cartButton}
         >
-          Add to cart
+          Add
         </Button>
       </Card>
     );
@@ -105,6 +110,8 @@ export default function WishlistScreen() {
           data={items}
           renderItem={renderItem}
           keyExtractor={(item) => item.id.toString()}
+          numColumns={2}
+          columnWrapperStyle={styles.gridRow}
           contentContainerStyle={styles.list}
         />
       )}
@@ -134,17 +141,20 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24, gap: 8 },
   list: { padding: 16, paddingBottom: 48, width: '100%', maxWidth: 720, alignSelf: 'center' },
-  card: { marginBottom: 12, borderRadius: 12, backgroundColor: colors.surface },
-  row: { flexDirection: 'row', alignItems: 'center', padding: 12 },
-  image: { width: 72, height: 72, borderRadius: 8, backgroundColor: colors.surfaceMuted },
-  info: { flex: 1, marginLeft: 12 },
-  title: { fontSize: 14, fontWeight: '600', color: colors.text },
-  priceRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4 },
+  gridRow: { justifyContent: 'space-between' },
+  card: { width: '48.5%', marginBottom: 12, borderRadius: 18, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
+  tile: { flex: 1, padding: 8 },
+  imageWrap: { position: 'relative' },
+  image: { width: '100%', height: 130, borderRadius: 14, backgroundColor: colors.surfaceMuted },
+  heart: { position: 'absolute', top: 0, right: 0, margin: 2, backgroundColor: colors.surface },
+  info: { flex: 1, marginTop: 8, paddingHorizontal: 2 },
+  title: { fontSize: 14, lineHeight: 18, minHeight: 36, fontWeight: '600', color: colors.text },
+  priceRow: { flexDirection: 'row', alignItems: 'center', columnGap: 6, marginTop: 4 },
   price: { fontSize: 16, fontWeight: '700', color: colors.primaryText },
-  oldPrice: { fontSize: 12, color: colors.textMuted, textDecorationLine: 'line-through' },
+  oldPrice: { flexShrink: 1, fontSize: 12, color: colors.textMuted, textDecorationLine: 'line-through' },
   muted: { fontSize: 13, color: colors.textMuted },
   outOfStock: { fontSize: 13, color: colors.errorText },
-  cartButton: { marginHorizontal: 12, marginBottom: 12, borderRadius: 8 },
+  cartButton: { marginHorizontal: 8, marginBottom: 8, borderRadius: 12 },
   emptyTitle: { fontSize: 20, fontWeight: '700', color: colors.text, marginTop: 12 },
   browseButton: { marginTop: 16, borderRadius: 8 },
 });

@@ -94,18 +94,18 @@ export function AvatarPicker({ size = 88, style }: Props) {
       </TouchableOpacity>
 
       <Portal>
-        <Dialog visible={menuOpen} onDismiss={() => setMenuOpen(false)}>
+        <Dialog visible={menuOpen} onDismiss={() => setMenuOpen(false)} style={{ borderRadius: 24, backgroundColor: colors.surface }}>
           <Dialog.Title>Profile photo</Dialog.Title>
           <Dialog.Content style={styles.options}>
             <Button mode="contained" icon="image" onPress={choosePhoto}>
               Choose from gallery
             </Button>
             {user?.imageEdited && (
-              <Button mode="outlined" icon="delete-outline" onPress={removePhoto}>
+              <Button textColor={colors.primaryText} mode="outlined" icon="delete-outline" onPress={removePhoto}>
                 Remove photo
               </Button>
             )}
-            <Button mode="text" onPress={() => setMenuOpen(false)}>
+            <Button textColor={colors.primaryText} mode="text" onPress={() => setMenuOpen(false)}>
               Cancel
             </Button>
           </Dialog.Content>

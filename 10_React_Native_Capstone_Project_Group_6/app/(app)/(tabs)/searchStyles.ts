@@ -83,27 +83,34 @@ export const createStyles = (colors: ThemeColors) => StyleSheet.create({
     color: colors.text,
     flexShrink: 1,
   },
+  // Two results per row
+  gridRow: {
+    justifyContent: 'space-between',
+  },
   resultCard: {
-    marginBottom: 0,
+    width: '48.5%',
   },
   card: {
+    flex: 1,
     backgroundColor: colors.surface,
-    borderRadius: 12,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   resultContent: {
-    flexDirection: 'row',
-    padding: 12,
-    alignItems: 'center',
+    flex: 1,
+    padding: 8,
   },
   resultImage: {
-    width: 88,
-    height: 88,
-    borderRadius: 8,
+    width: '100%',
+    height: 130,
+    borderRadius: 14,
     backgroundColor: colors.surfaceMuted,
   },
   resultInfo: {
     flex: 1,
-    marginLeft: 12,
+    marginTop: 8,
+    paddingHorizontal: 2,
   },
   resultCategory: {
     fontSize: 12,
@@ -111,8 +118,9 @@ export const createStyles = (colors: ThemeColors) => StyleSheet.create({
     textTransform: 'capitalize',
   },
   resultTitle: {
-    fontSize: 15,
-    lineHeight: 20,
+    fontSize: 14,
+    lineHeight: 18,
+    minHeight: 36,
     fontWeight: '600',
     color: colors.text,
   },
@@ -127,7 +135,8 @@ export const createStyles = (colors: ThemeColors) => StyleSheet.create({
     color: colors.primaryText,
   },
   originalPrice: {
-    fontSize: 13,
+    flexShrink: 1,
+    fontSize: 12,
     color: colors.textFaint,
     textDecorationLine: 'line-through',
   },
@@ -135,10 +144,11 @@ export const createStyles = (colors: ThemeColors) => StyleSheet.create({
     fontSize: 12,
     color: colors.textMuted,
     marginTop: 2,
+    marginBottom: 8,
   },
   addButton: {
-    marginTop: 6,
-    alignSelf: 'flex-start',
+    marginTop: 'auto',
+    alignSelf: 'stretch',
   },
   loadingCenter: {
     paddingVertical: 48,
@@ -172,7 +182,7 @@ export const createStyles = (colors: ThemeColors) => StyleSheet.create({
     textAlign: 'center',
   },
   separator: {
-    height: 10,
+    height: 12,
   },
   footerSpace: {
     height: 24,

@@ -171,7 +171,7 @@ export default function OrderDetailScreen() {
             </View>
           )}
 
-          <Button mode="outlined" style={styles.backButton} onPress={() => router.replace('/(app)/orders')}>
+          <Button textColor={colors.primaryText} mode="outlined" style={styles.backButton} onPress={() => router.replace('/(app)/orders')}>
             All orders
           </Button>
         </View>

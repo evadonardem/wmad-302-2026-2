@@ -230,7 +230,7 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
   total: { 
     fontSize: 16, 
     fontWeight: '700', 
-    color: colors.primaryText
+    color: colors.primaryText 
   },
 
   warning: { 

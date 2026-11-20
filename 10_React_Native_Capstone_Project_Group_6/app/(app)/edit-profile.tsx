@@ -12,11 +12,12 @@ import { useAuth } from '@/context/AuthContext';
 import { extractErrorMessage } from '@/services/authApi';
 import { ProfileUpdate } from '@/types/auth';
 import { ProfileErrors, validateProfile } from '@/utils/profile';
-import { useThemedStyles } from '@/context/ThemeContext';
+import { useAppTheme, useThemedStyles } from '@/context/ThemeContext';
 import type { ThemeColors } from '@/constants/colors';
 
 export default function EditProfileScreen() {
   const styles = useThemedStyles(createStyles);
+  const { colors } = useAppTheme();
   const router = useRouter();
   const { user, updateProfile } = useAuth();
 
@@ -108,7 +109,7 @@ export default function EditProfileScreen() {
         <Button mode="contained" onPress={handleSave} loading={saving} disabled={saving} style={styles.button}>
           Save changes
         </Button>
-        <Button mode="text" onPress={goBack} disabled={saving}>
+        <Button textColor={colors.primaryText} mode="text" onPress={goBack} disabled={saving}>
           Cancel
         </Button>
       </ScrollView>

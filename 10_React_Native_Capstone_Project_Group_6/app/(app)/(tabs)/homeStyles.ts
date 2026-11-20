@@ -141,10 +141,18 @@ export const createStyles = (colors: ThemeColors) => StyleSheet.create({
     fontWeight: '500',
     color: colors.primaryText,
   },
+  // Two products per row
+  productGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    rowGap: 12,
+  },
   productCard: {
-    marginBottom: 12,
+    width: '48.5%',
   },
   card: {
+    flex: 1,
     borderRadius: 18,
     overflow: 'hidden',
     backgroundColor: colors.surface,
@@ -153,7 +161,7 @@ export const createStyles = (colors: ThemeColors) => StyleSheet.create({
   },
   imageContainer: {
     position: 'relative',
-    height: 160,
+    height: 130,
     margin: 8,
     borderRadius: 14,
     backgroundColor: colors.surfaceMuted,
@@ -189,7 +197,10 @@ export const createStyles = (colors: ThemeColors) => StyleSheet.create({
     backgroundColor: colors.errorContainer,
   },
   cardContent: {
-    padding: 12,
+    flex: 1,
+    paddingHorizontal: 10,
+    paddingTop: 0,
+    paddingBottom: 10,
   },
   recipeTitle: {
     fontSize: 16,
@@ -198,10 +209,12 @@ export const createStyles = (colors: ThemeColors) => StyleSheet.create({
     marginBottom: 8,
   },
   productTitle: {
-    fontSize: 16,
-    fontWeight: '700',
+    fontSize: 14,
+    lineHeight: 18,
+    minHeight: 36,
+    fontWeight: '600',
     color: colors.text,
-    marginBottom: 8,
+    marginBottom: 4,
   },
   productCategory: {
     fontSize: 12,
@@ -235,6 +248,7 @@ export const createStyles = (colors: ThemeColors) => StyleSheet.create({
   ratingRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginBottom: 8,
   },
   ratingText: {
     fontSize: 13,
@@ -244,16 +258,21 @@ export const createStyles = (colors: ThemeColors) => StyleSheet.create({
   priceRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    marginBottom: 8,
+    columnGap: 6,
+    marginBottom: 2,
+  },
+  // Pushed to the bottom so the buttons line up across a row
+  addButton: {
+    marginTop: 'auto',
   },
   currentPrice: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '700',
     color: colors.primaryText,
   },
   originalPrice: {
-    fontSize: 14,
+    flexShrink: 1,
+    fontSize: 12,
     color: colors.textFaint,
     textDecorationLine: 'line-through',
   },

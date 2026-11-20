@@ -168,7 +168,7 @@ export default function CheckoutScreen() {
           >
             View order
           </Button>
-          <Button mode="outlined" style={styles.confirmButton} onPress={() => router.replace('/(app)/(tabs)/home')}>
+          <Button textColor={colors.primaryText} mode="outlined" style={styles.confirmButton} onPress={() => router.replace('/(app)/(tabs)/home')}>
             Continue shopping
           </Button>
         </View>

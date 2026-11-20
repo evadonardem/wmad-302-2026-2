@@ -241,13 +241,13 @@ export function ProductReviews({ apiReviews, myReview, loadingMine = false, onSa
             <Button mode="contained" onPress={handleSubmit} loading={saving} disabled={saving}>
               {myReview ? 'Save changes' : 'Submit review'}
             </Button>
-            <Button mode="text" onPress={() => setFormOpen(false)} disabled={saving}>
+            <Button textColor={colors.primaryText} mode="text" onPress={() => setFormOpen(false)} disabled={saving}>
               Cancel
             </Button>
           </View>
         </View>
       ) : !myReview ? (
-        <Button
+        <Button textColor={colors.primaryText}
           mode="outlined"
           icon="pencil-outline"
           onPress={openForm}
@@ -282,16 +282,16 @@ export function ProductReviews({ apiReviews, myReview, loadingMine = false, onSa
                     <Button compact mode="text" textColor={colors.error} onPress={handleDelete} disabled={saving}>
                       Delete
                     </Button>
-                    <Button compact mode="text" onPress={() => setConfirmDelete(false)} disabled={saving}>
+                    <Button textColor={colors.primaryText} compact mode="text" onPress={() => setConfirmDelete(false)} disabled={saving}>
                       Keep
                     </Button>
                   </>
                 ) : (
                   <>
-                    <Button compact mode="text" icon="pencil-outline" onPress={openForm}>
+                    <Button textColor={colors.primaryText} compact mode="text" icon="pencil-outline" onPress={openForm}>
                       Edit
                     </Button>
-                    <Button compact mode="text" icon="delete-outline" onPress={() => setConfirmDelete(true)}>
+                    <Button textColor={colors.primaryText} compact mode="text" icon="delete-outline" onPress={() => setConfirmDelete(true)}>
                       Delete
                     </Button>
                   </>

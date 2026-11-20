@@ -165,30 +165,29 @@ export default function HomeScreen() {
             )}
           </View>
           <Card.Content style={styles.cardContent}>
-            <Text style={styles.productCategory}>{item.category}</Text>
             <Title style={styles.productTitle} numberOfLines={2}>
               {item.title}
             </Title>
             <View style={styles.priceRow}>
-              <Text style={styles.currentPrice}>${discountedPrice.toFixed(2)}</Text>
+              <Text style={styles.currentPrice} numberOfLines={1}>${discountedPrice.toFixed(2)}</Text>
               {item.discountPercentage > 0 && (
-                <Text style={styles.originalPrice}>${item.price.toFixed(2)}</Text>
+                <Text style={styles.originalPrice} numberOfLines={1}>${item.price.toFixed(2)}</Text>
               )}
             </View>
             <View style={styles.ratingRow}>
               <Text style={styles.ratingText}>
-                ⭐ {item.rating.toFixed(1)} · {item.stock > 0 ? 'In Stock' : 'Out of Stock'}
+                ⭐ {item.rating.toFixed(1)}{item.stock > 0 ? '' : ' · Out of stock'}
               </Text>
             </View>
             <Button
-              mode="contained-tonal"
+              mode="contained"
               icon="cart-plus"
               compact
               disabled={item.stock <= 0}
               onPress={() => handleAddToCart(item)}
-              style={{ marginTop: 8 }}
+              style={styles.addButton}
             >
-              Add to cart
+              Add
             </Button>
           </Card.Content>
         </Card>
@@ -318,15 +317,14 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </View>
           {/* Plain .map() (not a FlatList): this page already scrolls, and the list is only 5 items */}
-          {products
-            .filter((p) => p.discountPercentage > 20)
-            .slice(0, 5)
-            .map((item, index) => (
-              <React.Fragment key={item.id}>
-                {index > 0 && <View style={styles.cardSeparator} />}
-                {renderProduct({ item })}
-              </React.Fragment>
-            ))}
+          <View style={styles.productGrid}>
+            {products
+              .filter((p) => p.discountPercentage > 20)
+              .slice(0, 6)
+              .map((item) => (
+                <React.Fragment key={item.id}>{renderProduct({ item })}</React.Fragment>
+              ))}
+          </View>
         </View>
 
         {/* Recommended Products */}
@@ -342,12 +340,11 @@ export default function HomeScreen() {
               <Text style={styles.emptyText}>No products found</Text>
             </View>
           ) : (
-            products.map((item, index) => (
-              <React.Fragment key={item.id}>
-                {index > 0 && <View style={styles.cardSeparator} />}
-                {renderProduct({ item })}
-              </React.Fragment>
-            ))
+            <View style={styles.productGrid}>
+              {products.map((item) => (
+                <React.Fragment key={item.id}>{renderProduct({ item })}</React.Fragment>
+              ))}
+            </View>
           )}
 
           {/* Scroll on demand: what is shown under the last product */}
@@ -357,13 +354,13 @@ export default function HomeScreen() {
                 <ActivityIndicator size="small" color={colors.primary} />
               ) : loadMoreFailed ? (
                 <>
-                  <Text style={styles.emptyText}>Couldn't load more products</Text>
-                  <Button mode="outlined" compact onPress={loadMore} style={styles.retryButton}>
+                  <Text style={styles.emptyText}>Couldn&apos;t load more products</Text>
+                  <Button textColor={colors.primaryText} mode="outlined" compact onPress={loadMore} style={styles.retryButton}>
                     Try again
                   </Button>
                 </>
               ) : !hasMore(products.length, total) ? (
-                <Text style={styles.emptyText}>You've seen all {total} products</Text>
+                <Text style={styles.emptyText}>You&apos;ve seen all {total} products</Text>
               ) : null}
             </View>
           )}
