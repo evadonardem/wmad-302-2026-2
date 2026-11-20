@@ -11,7 +11,7 @@ import React, {
   useCallback,
   ReactNode,
 } from 'react';
-import { AuthState, AuthAction } from '@/types/auth';
+import { AuthState, AuthAction, ProfileUpdate } from '@/types/auth';
 import { authApi, extractErrorMessage } from '@/services/authApi';
 
 // Initial state
@@ -97,6 +97,8 @@ interface AuthContextType extends AuthState {
     gender?: 'male' | 'female';
   }) => Promise<void>;
   logout: () => void;
+  /** Edit Profile: PUT /users/{id}. Throws if it fails (the screen shows the message). */
+  updateProfile: (update: ProfileUpdate) => Promise<void>;
   clearError: () => void;
   refreshUser: () => Promise<void>;
 }
@@ -184,6 +186,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'AUTH_LOGOUT' });
   }, []);
 
+  const updateProfile = useCallback(async (update: ProfileUpdate) => {
+    // No AUTH_START here: it sets isLoading, which would blank the whole app for a moment
+    const user = await authApi.updateProfile(update);
+    dispatch({ type: 'AUTH_UPDATE_USER', payload: user });
+  }, []);
+
   const clearError = useCallback(() => {
     dispatch({ type: 'AUTH_CLEAR_ERROR' });
   }, []);
@@ -210,6 +218,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         login,
         register,
         logout,
+        updateProfile,
         clearError,
         refreshUser,
       }}

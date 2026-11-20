@@ -5,7 +5,7 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { CartItem, Order } from '@/types/product';
-import type { LocalAccount } from '@/types/auth';
+import type { Address, LocalAccount, ProfileUpdate, UserSettings } from '@/types/auth';
 
 const STORAGE_KEYS = {
   AUTH_USER: 'auth_user',
@@ -14,6 +14,8 @@ const STORAGE_KEYS = {
   SETTINGS: 'user_settings',
   ORDERS: 'orders',
   LOCAL_ACCOUNTS: 'local_accounts',
+  ADDRESSES: 'addresses',
+  PROFILE_EDITS: 'profile_edits',
 } as const;
 
 export type StorageKey = typeof STORAGE_KEYS[keyof typeof STORAGE_KEYS];
@@ -199,4 +201,53 @@ export const accountStorage = {
     const accounts = await accountStorage.getAll();
     await setStorageItem(STORAGE_KEYS.LOCAL_ACCOUNTS, [...accounts, account]);
   },
+  /** Change the saved details of one account (used by Edit Profile) */
+  update: async (username: string, changes: Partial<LocalAccount>) => {
+    const key = username.trim().toLowerCase();
+    const accounts = await accountStorage.getAll();
+    await setStorageItem(
+      STORAGE_KEYS.LOCAL_ACCOUNTS,
+      accounts.map((a) => (a.username.toLowerCase() === key ? { ...a, ...changes } : a))
+    );
+  },
+};
+
+/**
+ * Things saved per account, as one object: { "emilys": value, "jlaw": value }.
+ * Two people on the same device never see each other's addresses or settings.
+ */
+async function getForOwner<T>(key: StorageKey, owner: string): Promise<T | null> {
+  const saved = await getStorageItem<Record<string, T>>(key);
+  if (!saved || typeof saved !== 'object' || Array.isArray(saved)) return null;
+  return saved[owner.trim().toLowerCase()] ?? null;
+}
+
+async function setForOwner<T>(key: StorageKey, owner: string, value: T): Promise<void> {
+  const saved = await getStorageItem<Record<string, T>>(key);
+  const map = saved && typeof saved === 'object' && !Array.isArray(saved) ? saved : {};
+  await setStorageItem(key, { ...map, [owner.trim().toLowerCase()]: value });
+}
+
+/** Saved delivery addresses (Profile > Addresses, prefilled at Checkout) */
+export const addressStorage = {
+  get: async (owner: string): Promise<Address[]> => {
+    const list = await getForOwner<Address[]>(STORAGE_KEYS.ADDRESSES, owner);
+    return Array.isArray(list) ? list : [];
+  },
+  set: (owner: string, addresses: Address[]) => setForOwner(STORAGE_KEYS.ADDRESSES, owner, addresses),
+};
+
+/** Notification + payment preferences (Profile > Settings) */
+export const settingsStorage = {
+  get: (owner: string) => getForOwner<UserSettings>(STORAGE_KEYS.SETTINGS, owner),
+  set: (owner: string, settings: UserSettings) => setForOwner(STORAGE_KEYS.SETTINGS, owner, settings),
+};
+
+/**
+ * Profile edits of real DummyJSON accounts (like emilys). The API only pretends to save
+ * a PUT /users/{id}, so we keep the edits here and re-apply them at the next login.
+ */
+export const profileEditStorage = {
+  get: (owner: string) => getForOwner<ProfileUpdate>(STORAGE_KEYS.PROFILE_EDITS, owner),
+  set: (owner: string, edits: ProfileUpdate) => setForOwner(STORAGE_KEYS.PROFILE_EDITS, owner, edits),
 };

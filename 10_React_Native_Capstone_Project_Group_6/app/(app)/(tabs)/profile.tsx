@@ -1,18 +1,21 @@
 /**
  * Profile Screen - Marketplace
- * TODO: Students implement
- * - Display user info from auth context
- * - Edit profile (PUT /users/{id})
- * - View order history (GET /carts/user/{id})
- * - Settings (notifications, theme, addresses, payment)
- * - Logout
+ * - User info from the auth context
+ * - Real Orders / Spent numbers (same sources as Order History)
+ * - Menu: My Orders, Addresses, Payment (default, in Settings), Edit Profile, Settings
+ * - Logout (confirmation dialog)
  */
-import React, { useState } from 'react';
-import { View, Text, ScrollView, Alert } from 'react-native';
-import { useRouter } from 'expo-router';
+import React, { useCallback, useState } from 'react';
+import { View, Text, ScrollView } from 'react-native';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
-import { Card, Button, List, Avatar, Divider, Badge, Dialog, Portal } from 'react-native-paper';
+import { Card, Button, List, Avatar, Divider, Badge, Dialog, Portal, Snackbar } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { productApi } from '@/services/productApi';
+import { Order } from '@/types/product';
+import { apiCartToOrder, belongsToUser } from '@/utils/orders';
+import { computeOrderStats } from '@/utils/profile';
+import { orderStorage } from '@/utils/storage';
 import { styles } from './profileStyles';
 
 export default function ProfileScreen() {
@@ -22,6 +25,38 @@ export default function ProfileScreen() {
   // Alert.alert does nothing in the browser, so the confirmation is a Paper Dialog
   // (works on web and phone)
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+  const [stats, setStats] = useState({ count: 0, spent: 0 });
+
+  // Count the orders again every time this tab comes into view (e.g. after checkout).
+  // Same sources as Order History: orders saved in the app + DummyJSON past orders.
+  useFocusEffect(
+    useCallback(() => {
+      if (!user) return;
+      let cancelled = false;
+
+      const loadStats = async () => {
+        const saved = (await orderStorage.getOrders().catch(() => [] as Order[])).filter((o) =>
+          belongsToUser(o, user)
+        );
+        let past: Order[] = [];
+        if (!user.isSimulated) {
+          try {
+            const response = await productApi.getUserCarts(user.id);
+            past = response.carts.map(apiCartToOrder);
+          } catch {
+            // Offline: just count the saved orders
+          }
+        }
+        if (!cancelled) setStats(computeOrderStats([...saved, ...past]));
+      };
+
+      void loadStats();
+      return () => {
+        cancelled = true;
+      };
+    }, [user])
+  );
 
   const handleLogout = () => setShowLogoutDialog(true);
 
@@ -31,7 +66,7 @@ export default function ProfileScreen() {
   };
 
   const handleEditProfile = () => {
-    Alert.alert('TODO', 'Implement edit profile: PUT /users/{id}');
+    router.push('/(app)/edit-profile');
   };
 
   const handleOrders = () => {
@@ -39,15 +74,16 @@ export default function ProfileScreen() {
   };
 
   const handleAddresses = () => {
-    Alert.alert('TODO', 'Implement address management');
+    router.push('/(app)/addresses');
   };
 
+  // The default payment method is chosen in Settings
   const handlePayment = () => {
-    Alert.alert('TODO', 'Implement payment methods');
+    router.push('/(app)/settings');
   };
 
   const handleSettings = () => {
-    Alert.alert('TODO', 'Implement settings screen');
+    router.push('/(app)/settings');
   };
 
   if (!isAuthenticated) {
@@ -79,11 +115,11 @@ export default function ProfileScreen() {
       {/* Stats */}
       <View style={styles.statsContainer}>
         <View style={styles.statItem}>
-          <Text style={styles.statValue}>0</Text>
+          <Text style={styles.statValue}>{stats.count}</Text>
           <Text style={styles.statLabel}>Orders</Text>
         </View>
         <View style={styles.statItem}>
-          <Text style={styles.statValue}>$0.00</Text>
+          <Text style={styles.statValue}>${stats.spent.toFixed(2)}</Text>
           <Text style={styles.statLabel}>Spent</Text>
         </View>
         <View style={styles.statItem}>
@@ -102,9 +138,11 @@ export default function ProfileScreen() {
               left={(props) => (
                 <View style={props.style}>
                   <MaterialCommunityIcons name="package-variant" size={24} color="#1A73E8" />
-                  <Badge size={16} style={{ position: 'absolute', right: -4, top: -4 }}>
-                    0
-                  </Badge>
+                  {stats.count > 0 ? (
+                    <Badge size={16} style={{ position: 'absolute', right: -4, top: -4 }}>
+                      {stats.count}
+                    </Badge>
+                  ) : null}
                 </View>
               )}
               right={(props) => <MaterialCommunityIcons name="chevron-right" size={24} color="#5F6368" style={props.style} />}
@@ -118,7 +156,7 @@ export default function ProfileScreen() {
                 <MaterialCommunityIcons name="heart" size={24} color="#1A73E8" style={props.style} />
               )}
               right={(props) => <MaterialCommunityIcons name="chevron-right" size={24} color="#5F6368" style={props.style} />}
-              onPress={() => Alert.alert('TODO', 'Implement wishlist')}
+              onPress={() => setMessage('Wishlist is coming soon')}
             />
             <Divider style={styles.divider} />
             <List.Item
@@ -133,7 +171,7 @@ export default function ProfileScreen() {
             <Divider style={styles.divider} />
             <List.Item
               title="Payment Methods"
-              description="Manage cards & wallets"
+              description="Choose your default payment"
               left={(props) => (
                 <MaterialCommunityIcons name="credit-card" size={24} color="#1A73E8" style={props.style} />
               )}
@@ -183,19 +221,6 @@ export default function ProfileScreen() {
         </Button>
       </View>
 
-      {/* Student Guide */}
-      <View style={styles.guideContainer}>
-        <Text style={styles.guideTitle}>📝 Student Implementation Guide</Text>
-        <Text style={styles.guideText}>
-          Complete the profile functionality:\n
-          1. Edit profile: PUT /users/{'{id}'}\n
-          2. Order history: GET /carts/user/{'{id}'}\n
-          3. Address management (CRUD)\n
-          4. Payment methods integration\n
-          5. Settings: theme, notifications, privacy
-        </Text>
-      </View>
-
       <View style={styles.version}>
         <Text style={styles.versionText}>Marketplace v1.0.0</Text>
       </View>
@@ -213,6 +238,11 @@ export default function ProfileScreen() {
             </Button>
           </Dialog.Actions>
         </Dialog>
+
+        {/* Inside Portal so it floats over the screen instead of sitting at the bottom of the scroll */}
+        <Snackbar visible={!!message} onDismiss={() => setMessage(null)} duration={2500}>
+          {message ?? ''}
+        </Snackbar>
       </Portal>
     </ScrollView>
   );

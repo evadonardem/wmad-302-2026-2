@@ -16,13 +16,21 @@ import {
   AuthUser,
   RefreshTokenResponse,
   LocalAccount,
+  ProfileUpdate,
 } from '@/types/auth';
-import { accountStorage, getStorageItem, setStorageItem, removeStorageItem } from '@/utils/storage';
+import {
+  accountStorage,
+  profileEditStorage,
+  getStorageItem,
+  setStorageItem,
+  removeStorageItem,
+} from '@/utils/storage';
 import { hashPassword } from '@/utils/hash';
 
 const API_BASE_URL = 'https://dummyjson.com/auth';
 // DummyJSON has no /auth/register. New users are created with POST /users/add.
 const USERS_ADD_URL = 'https://dummyjson.com/users/add';
+const USERS_URL = 'https://dummyjson.com/users';
 // Real DummyJSON test account, used only as a fallback after register (see register()).
 const DEMO_CREDENTIALS: LoginCredentials = { username: 'emilys', password: 'emilyspass' };
 // Auth endpoints must never trigger the "refresh on 401" logic (it would loop).
@@ -148,8 +156,9 @@ class AuthApiService {
    * Network/server errors are NOT treated as "wrong password": they are re-thrown.
    */
   async login(credentials: LoginCredentials): Promise<AuthUser> {
+    let user: AuthUser;
     try {
-      return await this.requestLogin(credentials);
+      user = await this.requestLogin(credentials);
     } catch (error) {
       const rejected = axios.isAxiosError(error) && !!error.response && error.response.status < 500;
       if (rejected) {
@@ -160,6 +169,47 @@ class AuthApiService {
       }
       throw error;
     }
+    return this.applyProfileEdits(user);
+  }
+
+  /** Real accounts: put back any edits made in Edit Profile (the API doesn't keep them). */
+  private async applyProfileEdits(user: AuthUser): Promise<AuthUser> {
+    const edits = await profileEditStorage.get(user.username).catch(() => null);
+    if (!edits) return user;
+    const edited: AuthUser = { ...user, ...edits, profileEdited: true };
+    await this.setTokens(edited);
+    return edited;
+  }
+
+  /**
+   * Edit Profile: PUT /users/{id}.
+   * DummyJSON only pretends to save, so the change is also kept on this device:
+   * - accounts made with Register: inside their saved account
+   * - real accounts (emilys...): in profileEditStorage, re-applied at login
+   * Accounts made with Register share the test account's id, so we don't send their
+   * edits to the API (it would "edit" the wrong user).
+   */
+  async updateProfile(update: ProfileUpdate): Promise<AuthUser> {
+    const current = this.currentUser;
+    if (!current) throw new Error('Your session expired. Please log in again.');
+
+    const clean: ProfileUpdate = {
+      firstName: update.firstName.trim(),
+      lastName: update.lastName.trim(),
+      email: update.email.trim(),
+      phone: update.phone.trim(),
+    };
+
+    if (current.isSimulated) {
+      await accountStorage.update(current.username, clean);
+    } else {
+      await this.client.put(`${USERS_URL}/${current.id}`, clean); // throws on network errors
+      await profileEditStorage.set(current.username, clean);
+    }
+
+    const user: AuthUser = { ...current, ...clean, profileEdited: true };
+    await this.setTokens(user);
+    return user;
   }
 
   /**
@@ -175,6 +225,7 @@ class AuthApiService {
       lastName: account.lastName,
       username: account.username,
       email: account.email,
+      phone: account.phone,
       gender: account.gender ?? demo.gender,
       isSimulated: true,
     };
@@ -227,7 +278,8 @@ class AuthApiService {
    */
   mergeWithStored(fresh: AuthUser, stored: AuthUser | null): AuthUser {
     if (!stored) return fresh;
-    const base: AuthUser = stored.isSimulated
+    const keepStoredProfile = stored.isSimulated || stored.profileEdited;
+    const base: AuthUser = keepStoredProfile
       ? {
           ...fresh,
           firstName: stored.firstName,
@@ -235,7 +287,9 @@ class AuthApiService {
           username: stored.username,
           email: stored.email,
           gender: stored.gender,
-          isSimulated: true,
+          phone: stored.phone,
+          isSimulated: stored.isSimulated,
+          profileEdited: stored.profileEdited,
         }
       : fresh;
     return { ...base, token: stored.token, refreshToken: stored.refreshToken };
