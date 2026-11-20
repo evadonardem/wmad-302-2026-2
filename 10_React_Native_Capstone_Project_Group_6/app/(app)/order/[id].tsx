@@ -14,8 +14,12 @@ import { productApi } from '@/services/productApi';
 import { Order } from '@/types/product';
 import { orderStorage } from '@/utils/storage';
 import { PAYMENT_METHODS, apiCartToOrder, formatOrderDate, getOrderNumber } from '@/utils/orders';
+import { useAppTheme, useThemedStyles } from '@/context/ThemeContext';
+import type { ThemeColors } from '@/constants/colors';
 
 export default function OrderDetailScreen() {
+  const { colors } = useAppTheme();
+  const styles = useThemedStyles(createStyles);
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const [order, setOrder] = useState<Order | null>(null);
@@ -50,7 +54,7 @@ export default function OrderDetailScreen() {
       <View style={styles.screen}>
         <ScreenHeader title="Order details" />
         <View style={styles.center}>
-          <ActivityIndicator size="large" color="#1A73E8" />
+          <ActivityIndicator size="large" color={colors.primary} />
         </View>
       </View>
     );
@@ -61,7 +65,7 @@ export default function OrderDetailScreen() {
       <View style={styles.screen}>
         <ScreenHeader title="Order details" />
         <View style={styles.center}>
-          <MaterialCommunityIcons name="alert-circle-outline" size={64} color="#DADCE0" />
+          <MaterialCommunityIcons name="alert-circle-outline" size={64} color={colors.iconMuted} />
           <Text style={styles.error}>{error ?? 'Order not found'}</Text>
           <Button mode="contained" onPress={loadOrder}>
             Retry
@@ -161,29 +165,29 @@ export default function OrderDetailScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: '#F8F9FA' },
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
+  screen: { flex: 1, backgroundColor: colors.background },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24, gap: 12 },
-  error: { fontSize: 16, color: '#EA4335', textAlign: 'center' },
+  error: { fontSize: 16, color: colors.error, textAlign: 'center' },
   scrollContent: { paddingBottom: 32 },
   content: { width: '100%', maxWidth: 720, alignSelf: 'center' },
-  section: { backgroundColor: '#FFFFFF', marginTop: 10, padding: 16 },
-  sectionTitle: { fontSize: 16, fontWeight: '700', color: '#202124', marginBottom: 6 },
+  section: { backgroundColor: colors.surface, marginTop: 10, padding: 16 },
+  sectionTitle: { fontSize: 16, fontWeight: '700', color: colors.text, marginBottom: 6 },
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 3 },
-  muted: { fontSize: 13, color: '#5F6368' },
-  bodyText: { fontSize: 14, color: '#202124', lineHeight: 20 },
+  muted: { fontSize: 13, color: colors.textMuted },
+  bodyText: { fontSize: 14, color: colors.text, lineHeight: 20 },
   paymentLine: { marginTop: 6 },
   status: { borderRadius: 12, paddingHorizontal: 10, paddingVertical: 3 },
-  statusActive: { backgroundColor: '#FEF7E0' },
-  statusDone: { backgroundColor: '#E6F4EA' },
-  statusText: { fontSize: 12, fontWeight: '600', color: '#3C4043' },
+  statusActive: { backgroundColor: colors.warningContainer },
+  statusDone: { backgroundColor: colors.successContainer },
+  statusText: { fontSize: 12, fontWeight: '600', color: colors.textBody },
   item: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 8 },
-  itemImage: { width: 56, height: 56, borderRadius: 8, backgroundColor: '#F1F3F4' },
+  itemImage: { width: 56, height: 56, borderRadius: 8, backgroundColor: colors.surfaceMuted },
   itemInfo: { flex: 1 },
-  itemTitle: { fontSize: 14, fontWeight: '600', color: '#202124' },
-  itemTotal: { fontSize: 14, fontWeight: '600', color: '#202124' },
-  discount: { fontSize: 13, color: '#188038' },
-  totalRow: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: '#E0E0E0', marginTop: 8, paddingTop: 10 },
-  grandTotal: { fontSize: 18, fontWeight: '700', color: '#1A73E8' },
+  itemTitle: { fontSize: 14, fontWeight: '600', color: colors.text },
+  itemTotal: { fontSize: 14, fontWeight: '600', color: colors.text },
+  discount: { fontSize: 13, color: colors.success },
+  totalRow: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border, marginTop: 8, paddingTop: 10 },
+  grandTotal: { fontSize: 18, fontWeight: '700', color: colors.primary },
   backButton: { margin: 16 },
 });

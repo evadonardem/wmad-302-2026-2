@@ -13,8 +13,12 @@ import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
 import { WishlistItem } from '@/types/product';
 import { getFinalPrice } from '@/utils/productFilters';
+import { useAppTheme, useThemedStyles } from '@/context/ThemeContext';
+import type { ThemeColors } from '@/constants/colors';
 
 export default function WishlistScreen() {
+  const { colors } = useAppTheme();
+  const styles = useThemedStyles(createStyles);
   const router = useRouter();
   const { items, isHydrated, removeFromWishlist, toggleWishlist } = useWishlist();
   const { addToCart } = useCart();
@@ -61,7 +65,7 @@ export default function WishlistScreen() {
           </View>
           <IconButton
             icon="heart"
-            iconColor="#EA4335"
+            iconColor={colors.error}
             onPress={() => handleRemove(item)}
             accessibilityLabel="Remove from wishlist"
           />
@@ -85,11 +89,11 @@ export default function WishlistScreen() {
 
       {!isHydrated ? (
         <View style={styles.center}>
-          <ActivityIndicator size="large" color="#1A73E8" />
+          <ActivityIndicator size="large" color={colors.primary} />
         </View>
       ) : items.length === 0 ? (
         <View style={styles.center}>
-          <MaterialCommunityIcons name="heart-outline" size={80} color="#DADCE0" />
+          <MaterialCommunityIcons name="heart-outline" size={80} color={colors.iconMuted} />
           <Text style={styles.emptyTitle}>Your wishlist is empty</Text>
           <Text style={styles.muted}>Tap the heart on a product to save it here.</Text>
           <Button mode="contained" style={styles.browseButton} onPress={() => router.replace('/(app)/(tabs)/home')}>
@@ -126,21 +130,21 @@ export default function WishlistScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: '#F8F9FA' },
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
+  screen: { flex: 1, backgroundColor: colors.background },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24, gap: 8 },
   list: { padding: 16, paddingBottom: 48, width: '100%', maxWidth: 720, alignSelf: 'center' },
-  card: { marginBottom: 12, borderRadius: 12, backgroundColor: '#FFFFFF' },
+  card: { marginBottom: 12, borderRadius: 12, backgroundColor: colors.surface },
   row: { flexDirection: 'row', alignItems: 'center', padding: 12 },
-  image: { width: 72, height: 72, borderRadius: 8, backgroundColor: '#F1F3F4' },
+  image: { width: 72, height: 72, borderRadius: 8, backgroundColor: colors.surfaceMuted },
   info: { flex: 1, marginLeft: 12 },
-  title: { fontSize: 14, fontWeight: '600', color: '#202124' },
+  title: { fontSize: 14, fontWeight: '600', color: colors.text },
   priceRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4 },
-  price: { fontSize: 16, fontWeight: '700', color: '#1A73E8' },
-  oldPrice: { fontSize: 12, color: '#5F6368', textDecorationLine: 'line-through' },
-  muted: { fontSize: 13, color: '#5F6368' },
-  outOfStock: { fontSize: 13, color: '#D93025' },
+  price: { fontSize: 16, fontWeight: '700', color: colors.primary },
+  oldPrice: { fontSize: 12, color: colors.textMuted, textDecorationLine: 'line-through' },
+  muted: { fontSize: 13, color: colors.textMuted },
+  outOfStock: { fontSize: 13, color: colors.errorText },
   cartButton: { marginHorizontal: 12, marginBottom: 12, borderRadius: 8 },
-  emptyTitle: { fontSize: 20, fontWeight: '700', color: '#202124', marginTop: 12 },
+  emptyTitle: { fontSize: 20, fontWeight: '700', color: colors.text, marginTop: 12 },
   browseButton: { marginTop: 16, borderRadius: 8 },
 });

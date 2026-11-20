@@ -2,11 +2,12 @@
  * Profile Screen Styles - Shared
  */
 import { StyleSheet } from 'react-native';
+import type { ThemeColors } from '@/constants/colors';
 
-export const styles = StyleSheet.create({
+export const createStyles = (colors: ThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: colors.background,
   },
   content: {
     paddingHorizontal: 16,
@@ -20,7 +21,7 @@ export const styles = StyleSheet.create({
   },
   notLoggedIn: {
     fontSize: 16,
-    color: '#5F6368',
+    color: colors.textMuted,
   },
   header: {
     flexDirection: 'row',
@@ -30,7 +31,7 @@ export const styles = StyleSheet.create({
   },
   avatar: {
     marginRight: 16,
-    backgroundColor: '#E8F0FE',
+    backgroundColor: colors.primaryContainer,
   },
   nameContainer: {
     flex: 1,
@@ -38,23 +39,23 @@ export const styles = StyleSheet.create({
   name: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#202124',
+    color: colors.text,
   },
   username: {
     fontSize: 14,
-    color: '#1A73E8',
+    color: colors.primary,
     fontWeight: '500',
     marginTop: 2,
   },
   email: {
     fontSize: 13,
-    color: '#5F6368',
+    color: colors.textMuted,
     marginTop: 2,
   },
   statsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    backgroundColor: '#E8F0FE',
+    backgroundColor: colors.primaryContainer,
     borderRadius: 12,
     paddingVertical: 20,
     marginBottom: 24,
@@ -65,11 +66,11 @@ export const styles = StyleSheet.create({
   statValue: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#1A73E8',
+    color: colors.primary,
   },
   statLabel: {
     fontSize: 12,
-    color: '#5F6368',
+    color: colors.textMuted,
     marginTop: 4,
   },
   section: {
@@ -89,7 +90,7 @@ export const styles = StyleSheet.create({
   logoutButton: {
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#EA4335',
+    borderColor: colors.error,
     height: 52,
   },
   logoutButtonContent: {
@@ -98,25 +99,25 @@ export const styles = StyleSheet.create({
   logoutButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#EA4335',
+    color: colors.error,
   },
   guideContainer: {
     marginTop: 16,
     padding: 16,
-    backgroundColor: '#E8F0FE',
+    backgroundColor: colors.primaryContainer,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#D0E1F9',
+    borderColor: colors.primaryBorder,
   },
   guideTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#1A73E8',
+    color: colors.primary,
     marginBottom: 8,
   },
   guideText: {
     fontSize: 13,
-    color: '#3C4043',
+    color: colors.textBody,
     lineHeight: 20,
   },
   version: {
@@ -125,6 +126,6 @@ export const styles = StyleSheet.create({
   },
   versionText: {
     fontSize: 12,
-    color: '#DADCE0',
+    color: colors.iconMuted,
   },
 });

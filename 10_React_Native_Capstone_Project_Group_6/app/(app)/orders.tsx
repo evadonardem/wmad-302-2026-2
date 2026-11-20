@@ -15,8 +15,12 @@ import { productApi } from '@/services/productApi';
 import { Order } from '@/types/product';
 import { orderStorage } from '@/utils/storage';
 import { apiCartToOrder, belongsToUser, formatOrderDate, getOrderNumber } from '@/utils/orders';
+import { useAppTheme, useThemedStyles } from '@/context/ThemeContext';
+import type { ThemeColors } from '@/constants/colors';
 
 export default function OrdersScreen() {
+  const { colors } = useAppTheme();
+  const styles = useThemedStyles(createStyles);
   const router = useRouter();
   const { user } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
@@ -101,7 +105,7 @@ export default function OrdersScreen() {
 
       {loading ? (
         <View style={styles.center}>
-          <ActivityIndicator size="large" color="#1A73E8" />
+          <ActivityIndicator size="large" color={colors.primary} />
           <Text style={styles.muted}>Loading orders...</Text>
         </View>
       ) : (
@@ -116,7 +120,7 @@ export default function OrdersScreen() {
           ListHeaderComponent={warning ? <Text style={styles.warning}>{warning}</Text> : null}
           ListEmptyComponent={
             <View style={styles.center}>
-              <MaterialCommunityIcons name="package-variant" size={80} color="#DADCE0" />
+              <MaterialCommunityIcons name="package-variant" size={80} color={colors.iconMuted} />
               <Text style={styles.emptyTitle}>No orders yet</Text>
               <Text style={styles.muted}>When you place an order, it will show up here.</Text>
               <Button mode="contained" style={styles.shopButton} onPress={() => router.replace('/(app)/(tabs)/home')}>
@@ -130,10 +134,10 @@ export default function OrdersScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   screen: { 
     flex: 1, 
-    backgroundColor: '#F8F9FA' 
+    backgroundColor: colors.background 
   },
   
   list: { 
@@ -155,7 +159,7 @@ const styles = StyleSheet.create({
   },
   
   card: { 
-    backgroundColor: '#FFFFFF', 
+    backgroundColor: colors.surface, 
     borderRadius: 12 
   },
   
@@ -172,7 +176,7 @@ const styles = StyleSheet.create({
   orderNumber: { 
     fontSize: 16, 
     fontWeight: '700', 
-    color: '#202124' 
+    color: colors.text 
   },
 
   status: { 
@@ -182,22 +186,22 @@ const styles = StyleSheet.create({
   },
 
   statusActive: { 
-    backgroundColor: '#FEF7E0' 
+    backgroundColor: colors.warningContainer 
   },
 
   statusDone: { 
-    backgroundColor: '#E6F4EA' 
+    backgroundColor: colors.successContainer 
   },
 
   statusText: { 
     fontSize: 12, 
     fontWeight: '600', 
-    color: '#3C4043' 
+    color: colors.textBody 
   },
 
   muted: { 
     fontSize: 13, 
-    color: '#5F6368' 
+    color: colors.textMuted 
   },
   
   thumbs: { 
@@ -211,7 +215,7 @@ const styles = StyleSheet.create({
     width: 48, 
     height: 48, 
     borderRadius: 6, 
-    backgroundColor: '#F1F3F4' 
+    backgroundColor: colors.surfaceMuted 
   },
 
   cardFooter: { 
@@ -223,12 +227,12 @@ const styles = StyleSheet.create({
   total: { 
     fontSize: 16, 
     fontWeight: '700', 
-    color: '#1A73E8' 
+    color: colors.primary 
   },
 
   warning: { 
-    color: '#B06000', 
-    backgroundColor: '#FEF7E0', 
+    color: colors.warning, 
+    backgroundColor: colors.warningContainer, 
     padding: 10, 
     borderRadius: 8, 
     marginBottom: 10 
@@ -237,7 +241,7 @@ const styles = StyleSheet.create({
   emptyTitle: { 
     fontSize: 20, 
     fontWeight: '700', 
-    color: '#202124', 
+    color: colors.text, 
     marginTop: 8 
   },
 

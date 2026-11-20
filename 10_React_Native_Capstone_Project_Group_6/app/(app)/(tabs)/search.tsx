@@ -36,11 +36,14 @@ import {
   getFinalPrice,
   parsePrice,
 } from '@/utils/productFilters';
-import { styles } from './searchStyles';
+import { createStyles } from './searchStyles';
+import { useAppTheme, useThemedStyles } from '@/context/ThemeContext';
 
 const PAGE_SIZE = 20;
 
 export default function SearchScreen() {
+  const { colors } = useAppTheme();
+  const styles = useThemedStyles(createStyles);
   const router = useRouter();
   const { addToCart } = useCart();
   const params = useLocalSearchParams<{ category?: string }>();
@@ -305,14 +308,14 @@ export default function SearchScreen() {
   if (loading) {
     emptyContent = (
       <View style={styles.loadingCenter}>
-        <ActivityIndicator size="large" color="#1A73E8" />
+        <ActivityIndicator size="large" color={colors.primary} />
         <Text style={styles.loadingText}>Loading products...</Text>
       </View>
     );
   } else if (error) {
     emptyContent = (
       <View style={styles.emptyState}>
-        <MaterialCommunityIcons name="wifi-off" size={64} color="#DADCE0" />
+        <MaterialCommunityIcons name="wifi-off" size={64} color={colors.iconMuted} />
         <Text style={styles.errorText}>{error}</Text>
         <Button mode="contained" onPress={loadProducts}>
           Retry
@@ -322,7 +325,7 @@ export default function SearchScreen() {
   } else if (results.length === 0) {
     emptyContent = (
       <View style={styles.emptyState}>
-        <MaterialCommunityIcons name="magnify" size={64} color="#DADCE0" />
+        <MaterialCommunityIcons name="magnify" size={64} color={colors.iconMuted} />
         <Text style={styles.emptyText}>No products found</Text>
         <Text style={styles.emptySubtext}>Try a different search or remove some filters</Text>
         {hasFilters && (

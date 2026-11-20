@@ -2,11 +2,12 @@
  * Categories Screen Styles
  */
 import { StyleSheet } from 'react-native';
+import type { ThemeColors } from '@/constants/colors';
 
-export const styles = StyleSheet.create({
+export const createStyles = (colors: ThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: colors.background,
     paddingHorizontal: 16,
     paddingTop: 20,
     paddingBottom: 100,
@@ -14,12 +15,12 @@ export const styles = StyleSheet.create({
   pageTitle: {
     fontSize: 28,
     fontWeight: '700',
-    color: '#202124',
+    color: colors.text,
     marginBottom: 4,
   },
   pageSubtitle: {
     fontSize: 16,
-    color: '#5F6368',
+    color: colors.textMuted,
     marginBottom: 20,
   },
   gridWrapper: {
@@ -34,7 +35,7 @@ export const styles = StyleSheet.create({
   },
   card: {
     borderRadius: 12,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
     height: '100%',
   },
   cardContent: {
@@ -45,7 +46,7 @@ export const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: '#E8F0FE',
+    backgroundColor: colors.primaryContainer,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 12,
@@ -53,13 +54,13 @@ export const styles = StyleSheet.create({
   categoryName: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#202124',
+    color: colors.text,
     textAlign: 'center',
     marginBottom: 4,
   },
   categoryCount: {
     fontSize: 12,
-    color: '#5F6368',
+    color: colors.textMuted,
   },
   separator: {
     height: 8,
@@ -73,7 +74,7 @@ export const styles = StyleSheet.create({
   loadingText: {
     marginTop: 16,
     fontSize: 16,
-    color: '#5F6368',
+    color: colors.textMuted,
   },
   errorContainer: {
     flex: 1,
@@ -83,26 +84,26 @@ export const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 16,
-    color: '#EA4335',
+    color: colors.error,
     textAlign: 'center',
   },
   guideContainer: {
     marginTop: 24,
     padding: 16,
-    backgroundColor: '#E8F0FE',
+    backgroundColor: colors.primaryContainer,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#D0E1F9',
+    borderColor: colors.primaryBorder,
   },
   guideTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#1A73E8',
+    color: colors.primary,
     marginBottom: 8,
   },
   guideText: {
     fontSize: 13,
-    color: '#3C4043',
+    color: colors.textBody,
     lineHeight: 20,
   },
 });

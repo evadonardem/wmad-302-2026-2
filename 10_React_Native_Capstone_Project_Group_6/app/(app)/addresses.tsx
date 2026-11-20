@@ -21,8 +21,12 @@ import {
   validateAddress,
 } from '@/utils/profile';
 import { addressStorage } from '@/utils/storage';
+import { useAppTheme, useThemedStyles } from '@/context/ThemeContext';
+import type { ThemeColors } from '@/constants/colors';
 
 export default function AddressesScreen() {
+  const { colors } = useAppTheme();
+  const styles = useThemedStyles(createStyles);
   const { user } = useAuth();
   const username = user?.username;
 
@@ -157,7 +161,7 @@ export default function AddressesScreen() {
       <ScrollView contentContainerStyle={styles.content}>
         {!loading && addresses.length === 0 ? (
           <View style={styles.empty}>
-            <MaterialCommunityIcons name="map-marker-off-outline" size={72} color="#DADCE0" />
+            <MaterialCommunityIcons name="map-marker-off-outline" size={72} color={colors.iconMuted} />
             <Text style={styles.emptyTitle}>No saved addresses</Text>
             <Text style={styles.muted}>Add one to fill in Checkout faster.</Text>
           </View>
@@ -188,7 +192,7 @@ export default function AddressesScreen() {
                 <Button compact onPress={() => startEdit(address)}>
                   Edit
                 </Button>
-                <Button compact textColor="#D93025" onPress={() => setToDelete(address)}>
+                <Button compact textColor={colors.errorText} onPress={() => setToDelete(address)}>
                   Delete
                 </Button>
               </View>
@@ -209,7 +213,7 @@ export default function AddressesScreen() {
           </Dialog.Content>
           <Dialog.Actions>
             <Button onPress={() => setToDelete(null)}>Cancel</Button>
-            <Button onPress={confirmDelete} textColor="#D93025">
+            <Button onPress={confirmDelete} textColor={colors.errorText}>
               Delete
             </Button>
           </Dialog.Actions>
@@ -223,21 +227,21 @@ export default function AddressesScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: '#F8F9FA' },
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
+  screen: { flex: 1, backgroundColor: colors.background },
   content: { padding: 16, paddingBottom: 48 },
   empty: { alignItems: 'center', paddingVertical: 48 },
-  emptyTitle: { fontSize: 18, fontWeight: '700', color: '#202124', marginTop: 12 },
-  muted: { fontSize: 13, color: '#5F6368', marginTop: 4 },
+  emptyTitle: { fontSize: 18, fontWeight: '700', color: colors.text, marginTop: 12 },
+  muted: { fontSize: 13, color: colors.textMuted, marginTop: 4 },
   card: { borderRadius: 12, marginBottom: 12 },
   cardBody: { padding: 16 },
   cardHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 6 },
-  cardLabel: { fontSize: 16, fontWeight: '700', color: '#202124', marginRight: 8 },
-  cardText: { fontSize: 14, color: '#3C4043', marginTop: 2 },
-  defaultBadge: { backgroundColor: '#E8F0FE', borderRadius: 4, paddingHorizontal: 8, paddingVertical: 2 },
-  defaultBadgeText: { fontSize: 11, fontWeight: '700', color: '#1A73E8' },
+  cardLabel: { fontSize: 16, fontWeight: '700', color: colors.text, marginRight: 8 },
+  cardText: { fontSize: 14, color: colors.textBody, marginTop: 2 },
+  defaultBadge: { backgroundColor: colors.primaryContainer, borderRadius: 4, paddingHorizontal: 8, paddingVertical: 2 },
+  defaultBadgeText: { fontSize: 11, fontWeight: '700', color: colors.primary },
   cardActions: { flexDirection: 'row', justifyContent: 'flex-end', marginTop: 8, flexWrap: 'wrap' },
   defaultRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginVertical: 8 },
-  defaultLabel: { flex: 1, fontSize: 14, color: '#3C4043', marginRight: 12 },
+  defaultLabel: { flex: 1, fontSize: 14, color: colors.textBody, marginRight: 12 },
   button: { marginTop: 8, borderRadius: 8 },
 });

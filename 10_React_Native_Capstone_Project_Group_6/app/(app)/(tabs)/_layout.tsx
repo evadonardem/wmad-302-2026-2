@@ -4,23 +4,28 @@
  */
 import { Tabs } from 'expo-router';
 import React from 'react';
+import { StyleSheet } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useCart } from '@/context/CartContext';
+import { useAppTheme } from '@/context/ThemeContext';
 
 export default function TabsLayout() {
+  const { colors, isDark } = useAppTheme();
   const { totalQuantity } = useCart();
 
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#1A73E8',
-        tabBarInactiveTintColor: '#5F6368',
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.textMuted,
         tabBarStyle: {
-          backgroundColor: '#FFFFFF',
-          borderTopWidth: 0,
+          backgroundColor: colors.surface,
+          // A shadow can't be seen on a dark background, so dark mode gets a thin line instead
+          borderTopWidth: isDark ? StyleSheet.hairlineWidth : 0,
+          borderTopColor: colors.border,
           elevation: 8,
-          shadowColor: '#000',
+          shadowColor: colors.shadow,
           shadowOffset: { width: 0, height: -2 },
           shadowOpacity: 0.1,
           shadowRadius: 8,

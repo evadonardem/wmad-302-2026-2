@@ -2,11 +2,12 @@
  * Home Screen Styles - Marketplace
  */
 import { StyleSheet } from 'react-native';
+import type { ThemeColors } from '@/constants/colors';
 
-export const styles = StyleSheet.create({
+export const createStyles = (colors: ThemeColors) => StyleSheet.create({
   scrollView: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: colors.background,
   },
   scrollContent: {
     paddingBottom: 100, // Space for tab bar
@@ -20,7 +21,7 @@ export const styles = StyleSheet.create({
   loadingText: {
     marginTop: 16,
     fontSize: 16,
-    color: '#5F6368',
+    color: colors.textMuted,
   },
   errorContainer: {
     flex: 1,
@@ -30,7 +31,7 @@ export const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 16,
-    color: '#EA4335',
+    color: colors.error,
     textAlign: 'center',
     marginBottom: 16,
   },
@@ -43,7 +44,7 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 20,
-    backgroundColor: '#E8F0FE',
+    backgroundColor: colors.primaryContainer,
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
     marginBottom: 16,
@@ -54,15 +55,15 @@ export const styles = StyleSheet.create({
   welcomeGreeting: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#202124',
+    color: colors.text,
   },
   welcomeSubtitle: {
     fontSize: 14,
-    color: '#5F6368',
+    color: colors.textMuted,
     marginTop: 4,
   },
   welcomeAvatar: {
-    backgroundColor: '#1A73E8',
+    backgroundColor: colors.primary,
   },
   sectionContainer: {
     paddingHorizontal: 16,
@@ -77,7 +78,7 @@ export const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#202124',
+    color: colors.text,
   },
   seeAll: {
     paddingVertical: 4,
@@ -85,7 +86,7 @@ export const styles = StyleSheet.create({
   seeAllText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#1A73E8',
+    color: colors.primary,
   },
   categoryList: {
     paddingHorizontal: 4,
@@ -95,11 +96,11 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: colors.border,
     elevation: 1,
-    shadowColor: '#000',
+    shadowColor: colors.shadow,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 2,
@@ -107,7 +108,7 @@ export const styles = StyleSheet.create({
   categoryChipText: {
     fontSize: 13,
     fontWeight: '500',
-    color: '#1A73E8',
+    color: colors.primary,
   },
   productCard: {
     marginBottom: 12,
@@ -115,12 +116,12 @@ export const styles = StyleSheet.create({
   card: {
     borderRadius: 12,
     overflow: 'hidden',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
   },
   imageContainer: {
     position: 'relative',
     height: 160,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: colors.surfaceMuted,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -144,13 +145,13 @@ export const styles = StyleSheet.create({
     borderRadius: 12,
   },
   easy: {
-    backgroundColor: '#E8F5E9',
+    backgroundColor: colors.successContainer,
   },
   medium: {
-    backgroundColor: '#FFF3E0',
+    backgroundColor: colors.warningContainer,
   },
   hard: {
-    backgroundColor: '#FDEDED',
+    backgroundColor: colors.errorContainer,
   },
   cardContent: {
     padding: 12,
@@ -158,18 +159,18 @@ export const styles = StyleSheet.create({
   recipeTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#3E2723',
+    color: colors.onWarningContainer,
     marginBottom: 8,
   },
   productTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#202124',
+    color: colors.text,
     marginBottom: 8,
   },
   productCategory: {
     fontSize: 12,
-    color: '#1A73E8',
+    color: colors.primary,
     fontWeight: '500',
     marginBottom: 4,
     textTransform: 'capitalize',
@@ -181,7 +182,7 @@ export const styles = StyleSheet.create({
   },
   metaText: {
     fontSize: 12,
-    color: '#8D6E63',
+    color: colors.warningMuted,
     fontWeight: '500',
   },
   cuisineRow: {
@@ -191,10 +192,10 @@ export const styles = StyleSheet.create({
     marginBottom: 8,
   },
   cuisineChip: {
-    backgroundColor: '#FFF3E0',
+    backgroundColor: colors.warningContainer,
   },
   mealChip: {
-    backgroundColor: '#E8F5E9',
+    backgroundColor: colors.successContainer,
   },
   ratingRow: {
     flexDirection: 'row',
@@ -202,7 +203,7 @@ export const styles = StyleSheet.create({
   },
   ratingText: {
     fontSize: 13,
-    color: '#5F6368',
+    color: colors.textMuted,
     fontWeight: '500',
   },
   priceRow: {
@@ -214,11 +215,11 @@ export const styles = StyleSheet.create({
   currentPrice: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#1A73E8',
+    color: colors.primary,
   },
   originalPrice: {
     fontSize: 14,
-    color: '#9E9E9E',
+    color: colors.textFaint,
     textDecorationLine: 'line-through',
   },
   discountBadge: {
@@ -226,7 +227,7 @@ export const styles = StyleSheet.create({
     top: 8,
     left: 8,
     zIndex: 1,
-    backgroundColor: '#1A73E8',
+    backgroundColor: colors.primary,
   },
   cardSeparator: {
     height: 8,
@@ -237,6 +238,6 @@ export const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 16,
-    color: '#5F6368',
+    color: colors.textMuted,
   },
 });

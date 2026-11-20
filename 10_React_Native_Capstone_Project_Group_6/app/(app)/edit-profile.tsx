@@ -12,8 +12,11 @@ import { useAuth } from '@/context/AuthContext';
 import { extractErrorMessage } from '@/services/authApi';
 import { ProfileUpdate } from '@/types/auth';
 import { ProfileErrors, validateProfile } from '@/utils/profile';
+import { useThemedStyles } from '@/context/ThemeContext';
+import type { ThemeColors } from '@/constants/colors';
 
 export default function EditProfileScreen() {
+  const styles = useThemedStyles(createStyles);
   const router = useRouter();
   const { user, updateProfile } = useAuth();
 
@@ -117,11 +120,11 @@ export default function EditProfileScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: '#FFFFFF' },
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
+  screen: { flex: 1, backgroundColor: colors.surface },
   content: { padding: 16, paddingBottom: 48 },
-  username: { fontSize: 14, color: '#1A73E8', fontWeight: '500', marginBottom: 12 },
+  username: { fontSize: 14, color: colors.primary, fontWeight: '500', marginBottom: 12 },
   field: { marginBottom: 4 },
-  submitError: { color: '#D93025', marginBottom: 12 },
+  submitError: { color: colors.errorText, marginBottom: 12 },
   button: { marginTop: 8, borderRadius: 8 },
 });

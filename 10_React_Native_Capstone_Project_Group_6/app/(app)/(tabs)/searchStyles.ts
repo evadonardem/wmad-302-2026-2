@@ -2,11 +2,12 @@
  * Search Screen Styles - Marketplace
  */
 import { StyleSheet } from 'react-native';
+import type { ThemeColors } from '@/constants/colors';
 
-export const styles = StyleSheet.create({
+export const createStyles = (colors: ThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: colors.background,
   },
   listContent: {
     paddingHorizontal: 16,
@@ -16,12 +17,12 @@ export const styles = StyleSheet.create({
     marginBottom: 12,
   },
   searchInput: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
     fontSize: 16,
   },
   searchOutline: {
     borderRadius: 12,
-    borderColor: '#E0E0E0',
+    borderColor: colors.border,
   },
   filterSection: {
     marginBottom: 14,
@@ -29,7 +30,7 @@ export const styles = StyleSheet.create({
   filterTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#5F6368',
+    color: colors.textMuted,
     marginBottom: 8,
   },
   chipRow: {
@@ -41,19 +42,19 @@ export const styles = StyleSheet.create({
     paddingVertical: 7,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
-    backgroundColor: '#FFFFFF',
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
   },
   chipSelected: {
-    backgroundColor: '#1A73E8',
-    borderColor: '#1A73E8',
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   chipText: {
     fontSize: 13,
-    color: '#5F6368',
+    color: colors.textMuted,
   },
   chipTextSelected: {
-    color: '#FFFFFF',
+    color: colors.onPrimary,
     fontWeight: '600',
   },
   priceRow: {
@@ -63,10 +64,10 @@ export const styles = StyleSheet.create({
   },
   priceInput: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
   },
   priceDash: {
-    color: '#5F6368',
+    color: colors.textMuted,
     fontSize: 16,
   },
   resultsHeader: {
@@ -79,14 +80,14 @@ export const styles = StyleSheet.create({
   resultsTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#202124',
+    color: colors.text,
     flexShrink: 1,
   },
   resultCard: {
     marginBottom: 0,
   },
   card: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
     borderRadius: 12,
   },
   resultContent: {
@@ -98,7 +99,7 @@ export const styles = StyleSheet.create({
     width: 88,
     height: 88,
     borderRadius: 8,
-    backgroundColor: '#F1F3F4',
+    backgroundColor: colors.surfaceMuted,
   },
   resultInfo: {
     flex: 1,
@@ -106,14 +107,14 @@ export const styles = StyleSheet.create({
   },
   resultCategory: {
     fontSize: 12,
-    color: '#5F6368',
+    color: colors.textMuted,
     textTransform: 'capitalize',
   },
   resultTitle: {
     fontSize: 15,
     lineHeight: 20,
     fontWeight: '600',
-    color: '#202124',
+    color: colors.text,
   },
   resultPrice: {
     flexDirection: 'row',
@@ -123,16 +124,16 @@ export const styles = StyleSheet.create({
   currentPrice: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#1A73E8',
+    color: colors.primary,
   },
   originalPrice: {
     fontSize: 13,
-    color: '#9AA0A6',
+    color: colors.textFaint,
     textDecorationLine: 'line-through',
   },
   resultDetails: {
     fontSize: 12,
-    color: '#5F6368',
+    color: colors.textMuted,
     marginTop: 2,
   },
   addButton: {
@@ -145,10 +146,10 @@ export const styles = StyleSheet.create({
   },
   loadingText: {
     marginTop: 12,
-    color: '#5F6368',
+    color: colors.textMuted,
   },
   errorText: {
-    color: '#EA4335',
+    color: colors.error,
     marginBottom: 12,
     textAlign: 'center',
   },
@@ -160,12 +161,12 @@ export const styles = StyleSheet.create({
   emptyText: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#202124',
+    color: colors.text,
     marginTop: 12,
   },
   emptySubtext: {
     fontSize: 14,
-    color: '#5F6368',
+    color: colors.textMuted,
     marginTop: 4,
     marginBottom: 16,
     textAlign: 'center',

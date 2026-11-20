@@ -10,7 +10,8 @@ import { Button, Card, Title } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { productApi } from '@/services/productApi';
 import { formatCategory } from '@/utils/productFilters';
-import { styles } from './categoriesStyles';
+import { createStyles } from './categoriesStyles';
+import { useAppTheme, useThemedStyles } from '@/context/ThemeContext';
 
 interface Category {
   name: string; // the slug, e.g. "home-decoration"
@@ -18,6 +19,8 @@ interface Category {
 }
 
 export default function CategoriesScreen() {
+  const { colors } = useAppTheme();
+  const styles = useThemedStyles(createStyles);
   const router = useRouter();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -66,7 +69,7 @@ export default function CategoriesScreen() {
       <Card style={styles.card} elevation={1}>
         <Card.Content style={styles.cardContent}>
           <View style={styles.iconContainer}>
-            <MaterialCommunityIcons name={getCategoryIcon(item.name)} size={32} color="#1A73E8" />
+            <MaterialCommunityIcons name={getCategoryIcon(item.name)} size={32} color={colors.primary} />
           </View>
           <Title style={styles.categoryName}>{formatCategory(item.name)}</Title>
           <Text style={styles.categoryCount}>
@@ -80,7 +83,7 @@ export default function CategoriesScreen() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#1A73E8" />
+        <ActivityIndicator size="large" color={colors.primary} />
         <Text style={styles.loadingText}>Loading categories...</Text>
       </View>
     );

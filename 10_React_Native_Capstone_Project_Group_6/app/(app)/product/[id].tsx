@@ -31,22 +31,27 @@ import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
 import { Product } from '@/types/product';
 import { formatCategory, getFinalPrice } from '@/utils/productFilters';
+import { useAppTheme, useThemedStyles } from '@/context/ThemeContext';
+import type { ThemeColors } from '@/constants/colors';
 
 const MAX_CONTENT_WIDTH = 720; // keeps the page readable on a wide browser window
 
 /** Five stars filled according to a rating like 4.3 */
 function Stars({ rating, size = 18 }: { rating: number; size?: number }) {
+  const { colors } = useAppTheme();
   return (
     <View style={{ flexDirection: 'row' }}>
       {[1, 2, 3, 4, 5].map((n) => {
         const name = rating >= n ? 'star' : rating >= n - 0.5 ? 'star-half-full' : 'star-outline';
-        return <MaterialCommunityIcons key={n} name={name} size={size} color="#F9AB00" />;
+        return <MaterialCommunityIcons key={n} name={name} size={size} color={colors.star} />;
       })}
     </View>
   );
 }
 
 export default function ProductDetailScreen() {
+  const { colors } = useAppTheme();
+  const styles = useThemedStyles(createStyles);
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { items, addToCart } = useCart();
@@ -147,7 +152,7 @@ export default function ProductDetailScreen() {
       </Text>
       <IconButton
         icon={product && isInWishlist(product.id) ? 'heart' : 'heart-outline'}
-        iconColor={product && isInWishlist(product.id) ? '#EA4335' : undefined}
+        iconColor={product && isInWishlist(product.id) ? colors.error : undefined}
         onPress={handleToggleWishlist}
         disabled={!product}
         accessibilityLabel={product && isInWishlist(product.id) ? 'Remove from wishlist' : 'Add to wishlist'}
@@ -166,7 +171,7 @@ export default function ProductDetailScreen() {
       <View style={styles.screen}>
         {topBar}
         <View style={styles.center}>
-          <ActivityIndicator size="large" color="#1A73E8" />
+          <ActivityIndicator size="large" color={colors.primary} />
           <Text style={styles.mutedText}>Loading product...</Text>
         </View>
       </View>
@@ -178,7 +183,7 @@ export default function ProductDetailScreen() {
       <View style={styles.screen}>
         {topBar}
         <View style={styles.center}>
-          <MaterialCommunityIcons name="alert-circle-outline" size={64} color="#DADCE0" />
+          <MaterialCommunityIcons name="alert-circle-outline" size={64} color={colors.iconMuted} />
           <Text style={styles.errorText}>{error ?? 'Product not found'}</Text>
           <Button mode="contained" onPress={loadProduct}>
             Retry
@@ -376,73 +381,73 @@ export default function ProductDetailScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: '#F8F9FA' },
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
+  screen: { flex: 1, backgroundColor: colors.background },
   topBar: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingTop: 16,
     paddingHorizontal: 4,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
   },
-  topBarTitle: { flex: 1, fontSize: 16, fontWeight: '600', color: '#202124' },
+  topBarTitle: { flex: 1, fontSize: 16, fontWeight: '600', color: colors.text },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24, gap: 12 },
-  mutedText: { fontSize: 13, color: '#5F6368' },
-  errorText: { fontSize: 16, color: '#EA4335', textAlign: 'center' },
+  mutedText: { fontSize: 13, color: colors.textMuted },
+  errorText: { fontSize: 16, color: colors.error, textAlign: 'center' },
   scrollContent: { paddingBottom: 24 },
   content: { width: '100%', maxWidth: MAX_CONTENT_WIDTH, alignSelf: 'center' },
-  gallery: { backgroundColor: '#FFFFFF', alignSelf: 'center' },
+  gallery: { backgroundColor: colors.surface, alignSelf: 'center' },
   discountTag: {
     position: 'absolute',
     top: 12,
     left: 12,
-    backgroundColor: '#EA4335',
+    backgroundColor: colors.error,
     borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 4,
   },
-  discountTagText: { color: '#FFFFFF', fontWeight: '700' },
-  dots: { flexDirection: 'row', justifyContent: 'center', gap: 6, paddingVertical: 8, backgroundColor: '#FFFFFF' },
-  dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#DADCE0' },
-  dotActive: { backgroundColor: '#1A73E8' },
-  thumbRow: { paddingHorizontal: 12, paddingBottom: 12, gap: 8, backgroundColor: '#FFFFFF' },
-  thumb: { width: 64, height: 64, borderRadius: 8, borderWidth: 2, borderColor: 'transparent', backgroundColor: '#F1F3F4' },
-  thumbActive: { borderColor: '#1A73E8' },
+  discountTagText: { color: colors.onError, fontWeight: '700' },
+  dots: { flexDirection: 'row', justifyContent: 'center', gap: 6, paddingVertical: 8, backgroundColor: colors.surface },
+  dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.borderStrong },
+  dotActive: { backgroundColor: colors.primary },
+  thumbRow: { paddingHorizontal: 12, paddingBottom: 12, gap: 8, backgroundColor: colors.surface },
+  thumb: { width: 64, height: 64, borderRadius: 8, borderWidth: 2, borderColor: 'transparent', backgroundColor: colors.surfaceMuted },
+  thumbActive: { borderColor: colors.primary },
   thumbImage: { width: '100%', height: '100%' },
-  section: { backgroundColor: '#FFFFFF', marginTop: 10, padding: 16 },
-  category: { fontSize: 12, color: '#1A73E8', fontWeight: '600', textTransform: 'uppercase' },
-  title: { fontSize: 22, fontWeight: '700', color: '#202124', marginTop: 4 },
+  section: { backgroundColor: colors.surface, marginTop: 10, padding: 16 },
+  category: { fontSize: 12, color: colors.primary, fontWeight: '600', textTransform: 'uppercase' },
+  title: { fontSize: 22, fontWeight: '700', color: colors.text, marginTop: 4 },
   ratingRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 8 },
-  ratingText: { fontSize: 13, color: '#5F6368' },
+  ratingText: { fontSize: 13, color: colors.textMuted },
   priceRow: { flexDirection: 'row', alignItems: 'baseline', gap: 10, marginTop: 12 },
-  price: { fontSize: 28, fontWeight: '700', color: '#1A73E8' },
-  originalPrice: { fontSize: 16, color: '#9AA0A6', textDecorationLine: 'line-through' },
+  price: { fontSize: 28, fontWeight: '700', color: colors.primary },
+  originalPrice: { fontSize: 16, color: colors.textFaint, textDecorationLine: 'line-through' },
   stock: { fontSize: 14, fontWeight: '600', marginTop: 4 },
-  stockIn: { color: '#188038' },
-  stockOut: { color: '#EA4335' },
-  sectionTitle: { fontSize: 16, fontWeight: '700', color: '#202124', marginTop: 16, marginBottom: 8 },
-  description: { fontSize: 14, lineHeight: 21, color: '#3C4043' },
+  stockIn: { color: colors.success },
+  stockOut: { color: colors.error },
+  sectionTitle: { fontSize: 16, fontWeight: '700', color: colors.text, marginTop: 16, marginBottom: 8 },
+  description: { fontSize: 14, lineHeight: 21, color: colors.textBody },
   tagRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 12 },
-  tag: { backgroundColor: '#E8F0FE', borderRadius: 14, paddingHorizontal: 10, paddingVertical: 4 },
-  tagText: { fontSize: 12, color: '#1A73E8' },
+  tag: { backgroundColor: colors.primaryContainer, borderRadius: 14, paddingHorizontal: 10, paddingVertical: 4 },
+  tagText: { fontSize: 12, color: colors.primary },
   specRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingVertical: 8,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#E0E0E0',
+    borderBottomColor: colors.border,
     gap: 16,
   },
-  specLabel: { fontSize: 14, color: '#5F6368' },
-  specValue: { fontSize: 14, color: '#202124', fontWeight: '500', flexShrink: 1, textAlign: 'right' },
-  review: { paddingVertical: 10, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#E0E0E0' },
+  specLabel: { fontSize: 14, color: colors.textMuted },
+  specValue: { fontSize: 14, color: colors.text, fontWeight: '500', flexShrink: 1, textAlign: 'right' },
+  review: { paddingVertical: 10, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border },
   reviewHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 },
-  reviewer: { fontSize: 14, fontWeight: '600', color: '#202124' },
-  reviewComment: { fontSize: 14, color: '#3C4043', marginTop: 4 },
+  reviewer: { fontSize: 14, fontWeight: '600', color: colors.text },
+  reviewComment: { fontSize: 14, color: colors.textBody, marginTop: 4 },
   bottomBar: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: '#E0E0E0',
+    borderTopColor: colors.border,
     paddingHorizontal: 12,
     paddingVertical: 8,
   },

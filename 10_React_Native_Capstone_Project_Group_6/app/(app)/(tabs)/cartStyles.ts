@@ -2,11 +2,12 @@
  * Cart Screen Styles - Marketplace
  */
 import { StyleSheet } from 'react-native';
+import type { ThemeColors } from '@/constants/colors';
 
-export const styles = StyleSheet.create({
+export const createStyles = (colors: ThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: colors.background,
   },
   loadingContainer: {
     flex: 1,
@@ -16,7 +17,7 @@ export const styles = StyleSheet.create({
   loadingText: {
     marginTop: 16,
     fontSize: 16,
-    color: '#5F6368',
+    color: colors.textMuted,
   },
   emptyState: {
     flex: 1,
@@ -27,12 +28,12 @@ export const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 22,
     fontWeight: '700',
-    color: '#202124',
+    color: colors.text,
     marginTop: 20,
   },
   emptyText: {
     fontSize: 16,
-    color: '#5F6368',
+    color: colors.textMuted,
     marginTop: 8,
     textAlign: 'center',
   },
@@ -60,16 +61,16 @@ export const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#202124',
+    color: colors.text,
   },
   cartItem: {
     flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
     borderRadius: 12,
     padding: 12,
     alignItems: 'center',
     elevation: 1,
-    shadowColor: '#000',
+    shadowColor: colors.shadow,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 2,
@@ -79,7 +80,7 @@ export const styles = StyleSheet.create({
     height: 80,
     borderRadius: 8,
     marginRight: 12,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: colors.surfaceMuted,
   },
   itemInfo: {
     flex: 1,
@@ -87,7 +88,7 @@ export const styles = StyleSheet.create({
   itemTitle: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#202124',
+    color: colors.text,
     marginBottom: 4,
   },
   itemPriceRow: {
@@ -99,11 +100,11 @@ export const styles = StyleSheet.create({
   itemCurrentPrice: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#1A73E8',
+    color: colors.primary,
   },
   itemOriginalPrice: {
     fontSize: 13,
-    color: '#9E9E9E',
+    color: colors.textFaint,
     textDecorationLine: 'line-through',
   },
   quantityControls: {
@@ -114,7 +115,7 @@ export const styles = StyleSheet.create({
   quantityText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#202124',
+    color: colors.text,
     minWidth: 30,
     textAlign: 'center',
   },
@@ -126,13 +127,13 @@ export const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
     borderTopWidth: 1,
-    borderTopColor: '#E8EAED',
+    borderTopColor: colors.borderSubtle,
     padding: 20,
     paddingBottom: 30,
     elevation: 8,
-    shadowColor: '#000',
+    shadowColor: colors.shadow,
     shadowOffset: { width: 0, height: -2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
@@ -145,7 +146,7 @@ export const styles = StyleSheet.create({
   },
   couponInput: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
   },
   couponButton: {
     borderRadius: 8,
@@ -153,7 +154,7 @@ export const styles = StyleSheet.create({
   couponApplied: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#E6F4EA',
+    backgroundColor: colors.successContainer,
     borderRadius: 8,
     paddingLeft: 10,
     marginBottom: 6,
@@ -162,17 +163,17 @@ export const styles = StyleSheet.create({
     flex: 1,
     fontSize: 13,
     fontWeight: '600',
-    color: '#188038',
+    color: colors.success,
     marginLeft: 6,
   },
   couponError: {
     fontSize: 12,
-    color: '#D93025',
+    color: colors.errorText,
     marginBottom: 6,
   },
   couponHint: {
     fontSize: 11,
-    color: '#5F6368',
+    color: colors.textMuted,
     marginBottom: 10,
   },
   summaryRow: {
@@ -182,21 +183,21 @@ export const styles = StyleSheet.create({
   },
   summaryLabel: {
     fontSize: 14,
-    color: '#5F6368',
+    color: colors.textMuted,
   },
   summaryValue: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#202124',
+    color: colors.text,
   },
   discountValue: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#34A853',
+    color: colors.success,
   },
   summaryRowDivider: {
     height: 1,
-    backgroundColor: '#E8EAED',
+    backgroundColor: colors.borderSubtle,
     marginVertical: 12,
   },
   summaryRowTotal: {
@@ -207,12 +208,12 @@ export const styles = StyleSheet.create({
   summaryLabelTotal: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#202124',
+    color: colors.text,
   },
   summaryValueTotal: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#1A73E8',
+    color: colors.primary,
   },
   checkoutButton: {
     borderRadius: 8,
@@ -221,20 +222,20 @@ export const styles = StyleSheet.create({
   guideContainer: {
     margin: 16,
     padding: 16,
-    backgroundColor: '#E8F0FE',
+    backgroundColor: colors.primaryContainer,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#D0E1F9',
+    borderColor: colors.primaryBorder,
   },
   guideTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#1A73E8',
+    color: colors.primary,
     marginBottom: 8,
   },
   guideText: {
     fontSize: 13,
-    color: '#3C4043',
+    color: colors.textBody,
     lineHeight: 20,
   },
 });

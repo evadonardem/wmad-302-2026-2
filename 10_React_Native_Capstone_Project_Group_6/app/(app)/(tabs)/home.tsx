@@ -18,7 +18,8 @@ import { useRouter } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
 import { useCart } from '@/context/CartContext';
 import { Card, Title, Avatar, Button, Badge, Snackbar } from 'react-native-paper';
-import { styles } from './homeStyles';
+import { createStyles } from './homeStyles';
+import { useAppTheme, useThemedStyles } from '@/context/ThemeContext';
 
 // Types for DummyJSON Products API
 interface Product {
@@ -54,6 +55,8 @@ interface ProductsResponse {
 }
 
 export default function HomeScreen() {
+  const { colors } = useAppTheme();
+  const styles = useThemedStyles(createStyles);
   const router = useRouter();
   const { user } = useAuth();
   const { addToCart } = useCart();
@@ -162,7 +165,7 @@ export default function HomeScreen() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#1A73E8" />
+        <ActivityIndicator size="large" color={colors.primary} />
         <Text style={styles.loadingText}>Loading products...</Text>
       </View>
     );
@@ -184,7 +187,7 @@ export default function HomeScreen() {
       <ScrollView
         style={styles.scrollView}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#1A73E8']} />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.primary]} />
         }
         contentContainerStyle={styles.scrollContent}
       >
@@ -231,12 +234,16 @@ export default function HomeScreen() {
               <Text style={styles.seeAllText}>See All</Text>
             </TouchableOpacity>
           </View>
-          <FlatList
-            data={products.filter((p) => p.discountPercentage > 20).slice(0, 5)}
-            renderItem={renderProduct}
-            keyExtractor={(item) => item.id.toString()}
-            ItemSeparatorComponent={() => <View style={styles.cardSeparator} />}
-          />
+          {/* Plain .map() (not a FlatList): this page already scrolls, and the list is only 5 items */}
+          {products
+            .filter((p) => p.discountPercentage > 20)
+            .slice(0, 5)
+            .map((item, index) => (
+              <React.Fragment key={item.id}>
+                {index > 0 && <View style={styles.cardSeparator} />}
+                {renderProduct({ item })}
+              </React.Fragment>
+            ))}
         </View>
 
         {/* Recommended Products */}
@@ -247,17 +254,18 @@ export default function HomeScreen() {
               <Text style={styles.seeAllText}>See All</Text>
             </TouchableOpacity>
           </View>
-          <FlatList
-            data={products.slice(0, 10)}
-            renderItem={renderProduct}
-            keyExtractor={(item) => item.id.toString()}
-            ItemSeparatorComponent={() => <View style={styles.cardSeparator} />}
-            ListEmptyComponent={
-              <View style={styles.emptyContainer}>
-                <Text style={styles.emptyText}>No products found</Text>
-              </View>
-            }
-          />
+          {products.length === 0 ? (
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>No products found</Text>
+            </View>
+          ) : (
+            products.slice(0, 10).map((item, index) => (
+              <React.Fragment key={item.id}>
+                {index > 0 && <View style={styles.cardSeparator} />}
+                {renderProduct({ item })}
+              </React.Fragment>
+            ))
+          )}
         </View>
       </ScrollView>
 

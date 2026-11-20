@@ -6,6 +6,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { CartItem, Order, WishlistItem } from '@/types/product';
 import type { Address, LocalAccount, ProfileUpdate, UserSettings } from '@/types/auth';
+import { isThemeMode, type ThemeMode } from '@/utils/theme';
 
 const STORAGE_KEYS = {
   AUTH_USER: 'auth_user',
@@ -18,6 +19,7 @@ const STORAGE_KEYS = {
   PROFILE_EDITS: 'profile_edits',
   WISHLIST: 'wishlist',
   COUPON: 'applied_coupon',
+  THEME_MODE: 'theme_mode',
 } as const;
 
 export type StorageKey = typeof STORAGE_KEYS[keyof typeof STORAGE_KEYS];
@@ -270,4 +272,16 @@ export const couponStorage = {
     return typeof code === 'string' && code ? code : null;
   },
   set: (owner: string, code: string | null) => setForOwner<string | null>(STORAGE_KEYS.COUPON, owner, code),
+};
+
+/**
+ * Light / Dark / System choice. Saved for the whole DEVICE (not per account) so the
+ * login screen is already in the right theme before anyone signs in.
+ */
+export const themeStorage = {
+  get: async (): Promise<ThemeMode | null> => {
+    const saved = await getStorageItem<unknown>(STORAGE_KEYS.THEME_MODE);
+    return isThemeMode(saved) ? saved : null; // ignore anything that isn't a valid mode
+  },
+  set: (mode: ThemeMode) => setStorageItem(STORAGE_KEYS.THEME_MODE, mode),
 };

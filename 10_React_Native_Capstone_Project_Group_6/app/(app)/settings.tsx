@@ -13,8 +13,13 @@ import { UserSettings } from '@/types/auth';
 import { PAYMENT_METHODS } from '@/utils/orders';
 import { DEFAULT_SETTINGS } from '@/utils/profile';
 import { settingsStorage } from '@/utils/storage';
+import { THEME_MODE_OPTIONS, ThemeMode } from '@/utils/theme';
+import { useAppTheme, useThemedStyles } from '@/context/ThemeContext';
+import type { ThemeColors } from '@/constants/colors';
 
 export default function SettingsScreen() {
+  const styles = useThemedStyles(createStyles);
+  const { mode, setMode } = useAppTheme();
   const { user } = useAuth();
   const username = user?.username;
   const [settings, setSettings] = useState<UserSettings>(DEFAULT_SETTINGS);
@@ -47,6 +52,20 @@ export default function SettingsScreen() {
     <View style={styles.screen}>
       <ScreenHeader title="Settings" />
       <ScrollView contentContainerStyle={styles.content}>
+        <Text style={styles.sectionTitle}>Appearance</Text>
+        <Card style={styles.card} elevation={1}>
+          <RadioButton.Group value={mode} onValueChange={(value) => setMode(value as ThemeMode)}>
+            {THEME_MODE_OPTIONS.map((option) => (
+              <RadioButton.Item
+                key={option.value}
+                value={option.value}
+                label={`${option.label} - ${option.description}`}
+                labelStyle={styles.radioLabel}
+              />
+            ))}
+          </RadioButton.Group>
+        </Card>
+
         <Text style={styles.sectionTitle}>Notifications</Text>
         <Card style={styles.card} elevation={1}>
           <List.Item
@@ -92,18 +111,18 @@ export default function SettingsScreen() {
         </Card>
 
         {error ? <Text style={styles.error}>{error}</Text> : null}
-        <Text style={styles.note}>Settings are saved on this device for your account.</Text>
+        <Text style={styles.note}>Notification and payment settings are saved for your account. Appearance applies to this whole device.</Text>
       </ScrollView>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: '#F8F9FA' },
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
+  screen: { flex: 1, backgroundColor: colors.background },
   content: { padding: 16, paddingBottom: 48 },
-  sectionTitle: { fontSize: 14, fontWeight: '700', color: '#5F6368', marginTop: 8, marginBottom: 8 },
+  sectionTitle: { fontSize: 14, fontWeight: '700', color: colors.textMuted, marginTop: 8, marginBottom: 8 },
   card: { borderRadius: 12, marginBottom: 16, overflow: 'hidden' },
   radioLabel: { fontSize: 14 },
-  error: { color: '#D93025', marginBottom: 8 },
-  note: { fontSize: 12, color: '#5F6368', textAlign: 'center', marginTop: 8 },
+  error: { color: colors.errorText, marginBottom: 8 },
+  note: { fontSize: 12, color: colors.textMuted, textAlign: 'center', marginTop: 8 },
 });

@@ -17,9 +17,12 @@ import { Order } from '@/types/product';
 import { apiCartToOrder, belongsToUser } from '@/utils/orders';
 import { computeOrderStats } from '@/utils/profile';
 import { orderStorage } from '@/utils/storage';
-import { styles } from './profileStyles';
+import { createStyles } from './profileStyles';
+import { useAppTheme, useThemedStyles } from '@/context/ThemeContext';
 
 export default function ProfileScreen() {
+  const { colors } = useAppTheme();
+  const styles = useThemedStyles(createStyles);
   const router = useRouter();
   const { user, logout, isAuthenticated } = useAuth();
   const { count: wishlistCount } = useWishlist();
@@ -138,7 +141,7 @@ export default function ProfileScreen() {
               description="Track and manage orders"
               left={(props) => (
                 <View style={props.style}>
-                  <MaterialCommunityIcons name="package-variant" size={24} color="#1A73E8" />
+                  <MaterialCommunityIcons name="package-variant" size={24} color={colors.primary} />
                   {stats.count > 0 ? (
                     <Badge size={16} style={{ position: 'absolute', right: -4, top: -4 }}>
                       {stats.count}
@@ -146,7 +149,7 @@ export default function ProfileScreen() {
                   ) : null}
                 </View>
               )}
-              right={(props) => <MaterialCommunityIcons name="chevron-right" size={24} color="#5F6368" style={props.style} />}
+              right={(props) => <MaterialCommunityIcons name="chevron-right" size={24} color={colors.textMuted} style={props.style} />}
               onPress={handleOrders}
             />
             <Divider style={styles.divider} />
@@ -154,9 +157,9 @@ export default function ProfileScreen() {
               title="Wishlist"
               description="Saved items for later"
               left={(props) => (
-                <MaterialCommunityIcons name="heart" size={24} color="#1A73E8" style={props.style} />
+                <MaterialCommunityIcons name="heart" size={24} color={colors.primary} style={props.style} />
               )}
-              right={(props) => <MaterialCommunityIcons name="chevron-right" size={24} color="#5F6368" style={props.style} />}
+              right={(props) => <MaterialCommunityIcons name="chevron-right" size={24} color={colors.textMuted} style={props.style} />}
               onPress={() => router.push('/(app)/wishlist')}
             />
             <Divider style={styles.divider} />
@@ -164,9 +167,9 @@ export default function ProfileScreen() {
               title="Addresses"
               description="Manage delivery addresses"
               left={(props) => (
-                <MaterialCommunityIcons name="map-marker" size={24} color="#1A73E8" style={props.style} />
+                <MaterialCommunityIcons name="map-marker" size={24} color={colors.primary} style={props.style} />
               )}
-              right={(props) => <MaterialCommunityIcons name="chevron-right" size={24} color="#5F6368" style={props.style} />}
+              right={(props) => <MaterialCommunityIcons name="chevron-right" size={24} color={colors.textMuted} style={props.style} />}
               onPress={handleAddresses}
             />
             <Divider style={styles.divider} />
@@ -174,9 +177,9 @@ export default function ProfileScreen() {
               title="Payment Methods"
               description="Choose your default payment"
               left={(props) => (
-                <MaterialCommunityIcons name="credit-card" size={24} color="#1A73E8" style={props.style} />
+                <MaterialCommunityIcons name="credit-card" size={24} color={colors.primary} style={props.style} />
               )}
-              right={(props) => <MaterialCommunityIcons name="chevron-right" size={24} color="#5F6368" style={props.style} />}
+              right={(props) => <MaterialCommunityIcons name="chevron-right" size={24} color={colors.textMuted} style={props.style} />}
               onPress={handlePayment}
             />
           </List.Section>
@@ -190,9 +193,9 @@ export default function ProfileScreen() {
               title="Edit Profile"
               description="Update your information"
               left={(props) => (
-                <MaterialCommunityIcons name="account-edit" size={24} color="#1A73E8" style={props.style} />
+                <MaterialCommunityIcons name="account-edit" size={24} color={colors.primary} style={props.style} />
               )}
-              right={(props) => <MaterialCommunityIcons name="chevron-right" size={24} color="#5F6368" style={props.style} />}
+              right={(props) => <MaterialCommunityIcons name="chevron-right" size={24} color={colors.textMuted} style={props.style} />}
               onPress={handleEditProfile}
             />
             <Divider style={styles.divider} />
@@ -200,9 +203,9 @@ export default function ProfileScreen() {
               title="Settings"
               description="Notifications, theme, privacy"
               left={(props) => (
-                <MaterialCommunityIcons name="cog" size={24} color="#1A73E8" style={props.style} />
+                <MaterialCommunityIcons name="cog" size={24} color={colors.primary} style={props.style} />
               )}
-              right={(props) => <MaterialCommunityIcons name="chevron-right" size={24} color="#5F6368" style={props.style} />}
+              right={(props) => <MaterialCommunityIcons name="chevron-right" size={24} color={colors.textMuted} style={props.style} />}
               onPress={handleSettings}
             />
           </List.Section>
@@ -234,7 +237,7 @@ export default function ProfileScreen() {
           </Dialog.Content>
           <Dialog.Actions>
             <Button onPress={() => setShowLogoutDialog(false)}>Cancel</Button>
-            <Button onPress={confirmLogout} textColor="#EA4335">
+            <Button onPress={confirmLogout} textColor={colors.error}>
               Logout
             </Button>
           </Dialog.Actions>

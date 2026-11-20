@@ -11,9 +11,12 @@ import { Title, Button, IconButton, Snackbar, TextInput } from 'react-native-pap
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useCart, getDiscountedPrice } from '@/context/CartContext';
 import { CartItem } from '@/types/product';
-import { styles } from './cartStyles';
+import { createStyles } from './cartStyles';
+import { useAppTheme, useThemedStyles } from '@/context/ThemeContext';
 
 export default function CartScreen() {
+  const { colors } = useAppTheme();
+  const styles = useThemedStyles(createStyles);
   const router = useRouter();
   const {
     items,
@@ -99,7 +102,7 @@ export default function CartScreen() {
         <IconButton
           icon="delete-outline"
           size={24}
-          iconColor="#EA4335"
+          iconColor={colors.error}
           onPress={() => handleRemove(item)}
           accessibilityLabel="Remove item"
         />
@@ -111,7 +114,7 @@ export default function CartScreen() {
   if (!isHydrated) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#1A73E8" />
+        <ActivityIndicator size="large" color={colors.primary} />
         <Text style={styles.loadingText}>Loading cart...</Text>
       </View>
     );
@@ -123,7 +126,7 @@ export default function CartScreen() {
     <View style={styles.container}>
       {isEmpty ? (
         <View style={styles.emptyState}>
-          <MaterialCommunityIcons name="cart-outline" size={80} color="#DADCE0" />
+          <MaterialCommunityIcons name="cart-outline" size={80} color={colors.iconMuted} />
           <Text style={styles.emptyTitle}>Your Cart is Empty</Text>
           <Text style={styles.emptyText}>Add some products to get started</Text>
           <Button
@@ -156,7 +159,7 @@ export default function CartScreen() {
             {coupon ? (
               <>
                 <View style={styles.couponApplied}>
-                  <MaterialCommunityIcons name="ticket-percent" size={18} color="#188038" />
+                  <MaterialCommunityIcons name="ticket-percent" size={18} color={colors.success} />
                   <Text style={styles.couponAppliedText} numberOfLines={1}>
                     {coupon.code} - {coupon.description}
                   </Text>

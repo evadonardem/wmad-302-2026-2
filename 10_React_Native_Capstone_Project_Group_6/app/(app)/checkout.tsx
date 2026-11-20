@@ -36,8 +36,12 @@ import {
   getOrderNumber,
   validateShipping,
 } from '@/utils/orders';
+import { useAppTheme, useThemedStyles } from '@/context/ThemeContext';
+import type { ThemeColors } from '@/constants/colors';
 
 export default function CheckoutScreen() {
+  const { colors } = useAppTheme();
+  const styles = useThemedStyles(createStyles);
   const router = useRouter();
   const { user } = useAuth();
   const { items, total, discountedTotal, totalQuantity, clearCart, coupon, couponDiscount, payableTotal } = useCart();
@@ -147,7 +151,7 @@ export default function CheckoutScreen() {
     return (
       <View style={styles.screen}>
         <View style={styles.confirmation}>
-          <MaterialCommunityIcons name="check-circle" size={96} color="#188038" />
+          <MaterialCommunityIcons name="check-circle" size={96} color={colors.success} />
           <Text style={styles.confirmTitle}>Order placed!</Text>
           <Text style={styles.confirmText}>
             Thank you, {placedOrder.shipping?.fullName}. Your order {getOrderNumber(placedOrder)} is being
@@ -178,7 +182,7 @@ export default function CheckoutScreen() {
       <View style={styles.screen}>
         <ScreenHeader title="Checkout" />
         <View style={styles.confirmation}>
-          <MaterialCommunityIcons name="cart-outline" size={80} color="#DADCE0" />
+          <MaterialCommunityIcons name="cart-outline" size={80} color={colors.iconMuted} />
           <Text style={styles.confirmTitle}>Your cart is empty</Text>
           <Button mode="contained" style={styles.confirmButton} onPress={() => router.replace('/(app)/(tabs)/home')}>
             Continue shopping
@@ -321,33 +325,33 @@ export default function CheckoutScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: '#F8F9FA' },
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
+  screen: { flex: 1, backgroundColor: colors.background },
   scrollContent: { paddingBottom: 32 },
   content: { width: '100%', maxWidth: 720, alignSelf: 'center' },
-  section: { backgroundColor: '#FFFFFF', marginTop: 10, padding: 16 },
-  sectionTitle: { fontSize: 16, fontWeight: '700', color: '#202124', marginBottom: 8 },
+  section: { backgroundColor: colors.surface, marginTop: 10, padding: 16 },
+  sectionTitle: { fontSize: 16, fontWeight: '700', color: colors.text, marginBottom: 8 },
   field: { marginBottom: 0 },
-  input: { backgroundColor: '#FFFFFF' },
+  input: { backgroundColor: colors.surface },
   radioLabel: { fontSize: 14 },
   chipRow: { marginBottom: 12 },
   chip: { marginRight: 8 },
   summaryItem: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 8 },
-  summaryImage: { width: 48, height: 48, borderRadius: 6, backgroundColor: '#F1F3F4' },
+  summaryImage: { width: 48, height: 48, borderRadius: 6, backgroundColor: colors.surfaceMuted },
   summaryInfo: { flex: 1 },
-  summaryTitle: { fontSize: 14, fontWeight: '600', color: '#202124' },
-  summaryLine: { fontSize: 14, fontWeight: '600', color: '#202124' },
-  muted: { fontSize: 13, color: '#5F6368' },
-  discount: { fontSize: 13, color: '#188038' },
+  summaryTitle: { fontSize: 14, fontWeight: '600', color: colors.text },
+  summaryLine: { fontSize: 14, fontWeight: '600', color: colors.text },
+  muted: { fontSize: 13, color: colors.textMuted },
+  discount: { fontSize: 13, color: colors.success },
   totalRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 4 },
-  grandTotalRow: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: '#E0E0E0', marginTop: 8, paddingTop: 10 },
-  grandTotal: { fontSize: 18, fontWeight: '700', color: '#1A73E8' },
-  submitError: { color: '#EA4335', textAlign: 'center', marginTop: 12, paddingHorizontal: 16 },
+  grandTotalRow: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border, marginTop: 8, paddingTop: 10 },
+  grandTotal: { fontSize: 18, fontWeight: '700', color: colors.primary },
+  submitError: { color: colors.error, textAlign: 'center', marginTop: 12, paddingHorizontal: 16 },
   placeButton: { margin: 16, borderRadius: 8 },
   placeButtonContent: { paddingVertical: 6 },
   confirmation: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24, gap: 10 },
-  confirmTitle: { fontSize: 26, fontWeight: '700', color: '#202124', marginTop: 8 },
-  confirmText: { fontSize: 15, color: '#5F6368', textAlign: 'center' },
-  confirmTotal: { fontSize: 20, fontWeight: '700', color: '#1A73E8' },
+  confirmTitle: { fontSize: 26, fontWeight: '700', color: colors.text, marginTop: 8 },
+  confirmText: { fontSize: 15, color: colors.textMuted, textAlign: 'center' },
+  confirmTotal: { fontSize: 20, fontWeight: '700', color: colors.primary },
   confirmButton: { alignSelf: 'stretch', maxWidth: 360, width: '100%', marginTop: 6 },
 });
