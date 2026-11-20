@@ -88,21 +88,6 @@ export const createStyles = (colors: ThemeColors) => StyleSheet.create({
     fontWeight: '600',
     letterSpacing: 0.5,
   },
-  demoContainer: {
-    marginTop: 8,
-  },
-  divider: {
-    marginVertical: 16,
-  },
-  demoButton: {
-    paddingVertical: 12,
-    alignItems: 'center',
-  },
-  demoButtonText: {
-    fontSize: 14,
-    color: colors.primary,
-    fontWeight: '500',
-  },
   registerContainer: {
     flexDirection: 'row',
     justifyContent: 'center',

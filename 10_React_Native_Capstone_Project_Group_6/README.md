@@ -36,7 +36,6 @@ npm install
 npx expo start          # press "w" for web, or scan the QR code with Expo Go
 ```
 
-Demo account (a real DummyJSON user): `emilys` / `emilyspass`.
 If the web app acts strangely after big changes, restart with `npx expo start -c` (clears the cache).
 
 > Only one capstone (09 or 10) can run at a time because both use port 8081.
@@ -85,7 +84,7 @@ DummyJSON is a fake API: it answers "success" to writes but does not store them.
 | Feature | What DummyJSON does | What this app does |
 |---|---|---|
 | Register | no `/auth/register`; `POST /users/add` only simulates | also saves the account on the device (password stored as a SHA-256 hash) so the person can log in again |
-| Registered account session | new users get no tokens | borrows the demo account's tokens; the profile shown is the registered person's |
+| Registered account session | new users get no tokens | borrows a DummyJSON test user's tokens; the profile shown is the registered person's |
 | Checkout | `POST /carts/add` only simulates | order is also saved on the device so it appears in Order History |
 | Edit profile | `PUT /users/{id}` only simulates | edit is also saved on the device and re-applied at login |
 | Addresses, settings, cart | no endpoints | saved per account in AsyncStorage |

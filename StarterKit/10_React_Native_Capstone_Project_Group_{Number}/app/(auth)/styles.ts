@@ -87,21 +87,6 @@ export const styles = StyleSheet.create({
     fontWeight: '600',
     letterSpacing: 0.5,
   },
-  demoContainer: {
-    marginTop: 8,
-  },
-  divider: {
-    marginVertical: 16,
-  },
-  demoButton: {
-    paddingVertical: 12,
-    alignItems: 'center',
-  },
-  demoButtonText: {
-    fontSize: 14,
-    color: '#1A73E8',
-    fontWeight: '500',
-  },
   registerContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
