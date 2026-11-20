@@ -29,6 +29,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { productApi } from '@/services/productApi';
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
+import { useRecentlyViewed } from '@/context/RecentlyViewedContext';
 import { Product } from '@/types/product';
 import { formatCategory, getFinalPrice } from '@/utils/productFilters';
 import { useAppTheme, useThemedStyles } from '@/context/ThemeContext';
@@ -56,6 +57,7 @@ export default function ProductDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { items, addToCart } = useCart();
   const { isInWishlist, toggleWishlist } = useWishlist();
+  const { trackView, isHydrated: historyReady } = useRecentlyViewed();
   const { width } = useWindowDimensions();
 
   const [product, setProduct] = useState<Product | null>(null);
@@ -89,6 +91,11 @@ export default function ProductDetailScreen() {
   useEffect(() => {
     loadProduct();
   }, [loadProduct]);
+
+  // Remember that this product was opened (shows up in Home > Recently viewed)
+  useEffect(() => {
+    if (product && historyReady) trackView(product);
+  }, [product, historyReady, trackView]);
 
   // How many more of this product can still be added (stock minus what is in the cart)
   const inCart = items.find((i) => i.productId === product?.id)?.quantity ?? 0;

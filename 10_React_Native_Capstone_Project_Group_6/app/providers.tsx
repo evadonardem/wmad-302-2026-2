@@ -7,6 +7,7 @@ import { AuthProvider } from '@/context/AuthContext';
 import { CartProvider } from '@/context/CartContext';
 import { ThemeProvider, useAppTheme } from '@/context/ThemeContext';
 import { WishlistProvider } from '@/context/WishlistContext';
+import { RecentlyViewedProvider } from '@/context/RecentlyViewedContext';
 import { PaperProvider } from 'react-native-paper';
 
 /** Gives Paper the light or dark theme that matches the current scheme. */
@@ -21,7 +22,9 @@ export function Providers({ children }: { children: ReactNode }) {
       <ThemedPaperProvider>
         <AuthProvider>
           <CartProvider>
-            <WishlistProvider>{children}</WishlistProvider>
+            <WishlistProvider>
+              <RecentlyViewedProvider>{children}</RecentlyViewedProvider>
+            </WishlistProvider>
           </CartProvider>
         </AuthProvider>
       </ThemedPaperProvider>

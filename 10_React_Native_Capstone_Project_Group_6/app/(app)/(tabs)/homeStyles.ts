@@ -88,6 +88,37 @@ export const createStyles = (colors: ThemeColors) => StyleSheet.create({
     fontWeight: '600',
     color: colors.primary,
   },
+  recentList: {
+    paddingHorizontal: 4,
+    gap: 10,
+  },
+  recentCard: {
+    width: 128,
+    padding: 8,
+    borderRadius: 12,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  recentImage: {
+    width: '100%',
+    height: 96,
+    borderRadius: 8,
+    backgroundColor: colors.surfaceMuted,
+  },
+  recentTitle: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.text,
+    marginTop: 6,
+    minHeight: 32,
+  },
+  recentPrice: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: colors.primary,
+    marginTop: 2,
+  },
   categoryList: {
     paddingHorizontal: 4,
     gap: 8,

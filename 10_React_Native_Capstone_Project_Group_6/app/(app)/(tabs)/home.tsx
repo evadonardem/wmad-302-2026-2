@@ -17,6 +17,7 @@ import {
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
 import { useCart } from '@/context/CartContext';
+import { useRecentlyViewed } from '@/context/RecentlyViewedContext';
 import { Card, Title, Avatar, Button, Badge, Snackbar } from 'react-native-paper';
 import { createStyles } from './homeStyles';
 import { HOME_PAGE_SIZE, hasMore, isNearBottom, mergeById } from '@/utils/pagination';
@@ -61,6 +62,7 @@ export default function HomeScreen() {
   const router = useRouter();
   const { user } = useAuth();
   const { addToCart } = useCart();
+  const { items: recentItems, clearRecentlyViewed } = useRecentlyViewed();
   const [toast, setToast] = useState<string | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
@@ -272,6 +274,40 @@ export default function HomeScreen() {
             keyExtractor={(item) => item}
           />
         </View>
+
+        {/* Recently viewed: only shown once the person has opened a product */}
+        {recentItems.length > 0 && (
+          <View style={styles.sectionContainer}>
+            <View style={styles.sectionHeader}>
+              <Title style={styles.sectionTitle}>Recently viewed</Title>
+              <TouchableOpacity onPress={clearRecentlyViewed} style={styles.seeAll} accessibilityRole="button">
+                <Text style={styles.seeAllText}>Clear</Text>
+              </TouchableOpacity>
+            </View>
+            <FlatList
+              data={recentItems}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.recentList}
+              keyExtractor={(item) => item.id.toString()}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={styles.recentCard}
+                  onPress={() => router.push(`/(app)/product/${item.id}`)}
+                  activeOpacity={0.8}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${item.title}, $${(item.price * (1 - item.discountPercentage / 100)).toFixed(2)}`}
+                >
+                  <Image source={{ uri: item.thumbnail }} style={styles.recentImage} resizeMode="contain" />
+                  <Text style={styles.recentTitle} numberOfLines={2}>
+                    {item.title}
+                  </Text>
+                  <Text style={styles.recentPrice}>${(item.price * (1 - item.discountPercentage / 100)).toFixed(2)}</Text>
+                </TouchableOpacity>
+              )}
+            />
+          </View>
+        )}
 
         {/* Flash Deals */}
         <View style={styles.sectionContainer}>

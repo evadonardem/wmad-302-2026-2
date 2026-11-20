@@ -7,6 +7,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { CartItem, Order, WishlistItem } from '@/types/product';
 import type { Address, LocalAccount, ProfileUpdate, UserSettings } from '@/types/auth';
 import { isThemeMode, type ThemeMode } from '@/utils/theme';
+import { sanitizeRecentlyViewed, type RecentlyViewedItem } from '@/utils/recentlyViewed';
 
 const STORAGE_KEYS = {
   AUTH_USER: 'auth_user',
@@ -21,6 +22,7 @@ const STORAGE_KEYS = {
   COUPON: 'applied_coupon',
   THEME_MODE: 'theme_mode',
   AVATAR: 'profile_avatar',
+  RECENTLY_VIEWED: 'recently_viewed',
 } as const;
 
 export type StorageKey = typeof STORAGE_KEYS[keyof typeof STORAGE_KEYS];
@@ -274,6 +276,13 @@ export const wishlistStorage = {
     return Array.isArray(list) ? list : [];
   },
   set: (owner: string, items: WishlistItem[]) => setForOwner(STORAGE_KEYS.WISHLIST, owner, items),
+};
+
+/** Products the person opened lately (Home > Recently viewed): one history per account, newest first */
+export const recentlyViewedStorage = {
+  get: async (owner: string): Promise<RecentlyViewedItem[]> =>
+    sanitizeRecentlyViewed(await getForOwner<RecentlyViewedItem[]>(STORAGE_KEYS.RECENTLY_VIEWED, owner)),
+  set: (owner: string, items: RecentlyViewedItem[]) => setForOwner(STORAGE_KEYS.RECENTLY_VIEWED, owner, items),
 };
 
 /** The coupon code currently applied to an account's cart (null = none) */
