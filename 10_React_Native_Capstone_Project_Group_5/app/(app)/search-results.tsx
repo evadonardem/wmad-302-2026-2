@@ -16,7 +16,7 @@ import { useFavorites } from '@/context/FavoritesContext';
 import { Product } from '@/types/product';
 import { recordSearch } from '@/utils/searchHistory';
 import ProductTile from '@/components/ProductTile';
-import { styles } from './searchResultsStyles';
+import { styles } from '@/styles/searchResultsStyles';
 
 type SortOption = 'price' | 'rating' | 'discount' | 'newest' | 'name';
 type SortOrder = 'asc' | 'desc';

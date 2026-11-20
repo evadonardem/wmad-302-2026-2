@@ -321,15 +321,25 @@ npm run lint
 
 ## 📦 Building for Production
 
+Run the following commands from the app directory (`10_React_Native_Capstone_Project_Group_5`). Link the app to an EAS project once before the first build:
+
 ```bash
-# Build for Android
-eas build --platform android
+npx eas-cli@latest login
+npx eas-cli@latest init
+```
 
-# Build for iOS
-eas build --platform ios
+Create an installable Android APK:
 
-# Build for Web
-npm run web:build
+```bash
+npx eas-cli@latest build --platform android --profile preview
+```
+
+The build requires an Expo account. When it finishes, download the APK from the build page or the link printed by EAS.
+
+For store distribution, build the production Android App Bundle or iOS app:
+
+```bash
+npx eas-cli@latest build --platform all --profile production
 ```
 
 ## 👥 Group Workflow

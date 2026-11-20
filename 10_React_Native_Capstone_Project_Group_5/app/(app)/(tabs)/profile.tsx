@@ -7,7 +7,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useFavorites } from '@/context/FavoritesContext';
 import ProductRecommendations from '@/components/ProductRecommendations';
 import { MarketplaceOrder, ordersStorage } from '@/utils/marketplaceStorage';
-import { styles } from './profileStyles';
+import { styles } from '@/styles/profileStyles';
 
 export default function ProfileScreen() {
   const router = useRouter();

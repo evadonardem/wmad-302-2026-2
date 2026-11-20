@@ -2,10 +2,7 @@
  * Root Layout - Entry point with providers
  */
 import { Stack } from 'expo-router';
-import { Providers } from './providers';
-import * as SplashScreen from 'expo-splash-screen';
-
-SplashScreen.preventAutoHideAsync();
+import { Providers } from '../providers';
 
 export default function RootLayout() {
   return (

@@ -14,7 +14,7 @@ import {
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
 import { Card, Button, TextInput as PaperTextInput, Checkbox } from 'react-native-paper';
-import { styles } from './styles';
+import { styles } from '@/styles/authStyles';
 
 export default function RegisterScreen() {
   const router = useRouter();

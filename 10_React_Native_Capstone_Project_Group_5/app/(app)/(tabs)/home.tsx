@@ -1,26 +1,46 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
   FlatList,
-  Image,
   RefreshControl,
-  ScrollView,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Avatar, Button, Card, IconButton } from 'react-native-paper';
+import { Image } from 'expo-image';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '@/context/AuthContext';
 import { useCart } from '@/context/CartContext';
 import { useFavorites } from '@/context/FavoritesContext';
 import { productApi } from '@/services/productApi';
 import { Product } from '@/types/product';
-import { styles } from './homeStyles';
+import { styles } from '@/styles/homeStyles';
 
 const brandPurple = '#75648A';
+
+const DealCountdown = React.memo(function DealCountdown() {
+  const [countdown, setCountdown] = useState(5 * 60);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCountdown((seconds) => (seconds > 0 ? seconds - 1 : 5 * 60));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const minutes = Math.floor(countdown / 60).toString().padStart(2, '0');
+  const seconds = (countdown % 60).toString().padStart(2, '0');
+
+  return (
+    <View style={styles.flashTimer}>
+      <Text style={styles.flashCaption}>Deals end in</Text>
+      <Text style={styles.timerDigits}>{minutes}:{seconds}</Text>
+    </View>
+  );
+});
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -32,7 +52,11 @@ export default function HomeScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [countdown, setCountdown] = useState(5 * 60);
+  const categoryItems = useMemo(() => categories.slice(0, 12), [categories]);
+  const flashDeals = useMemo(
+    () => products.filter((product) => product.discountPercentage >= 15).slice(0, 10),
+    [products]
+  );
 
   const fetchData = useCallback(async (isRefresh = false) => {
     try {
@@ -56,33 +80,32 @@ export default function HomeScreen() {
     void fetchData();
   }, [fetchData]);
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCountdown((seconds) => (seconds > 0 ? seconds - 1 : 5 * 60));
-    }, 1000);
-    return () => clearInterval(timer);
-  }, []);
-
-  const handleFavorite = async (product: Product) => {
+  const handleFavorite = useCallback(async (product: Product) => {
     try {
       const added = await toggleFavorite(product.id);
       Alert.alert(added ? 'Saved to wishlist' : 'Removed from wishlist', product.title);
     } catch (favoriteError) {
       Alert.alert('Wishlist unavailable', favoriteError instanceof Error ? favoriteError.message : 'Please try again.');
     }
-  };
+  }, [toggleFavorite]);
 
-  const renderProduct = (product: Product, compact = false) => {
+  const renderProduct = useCallback((product: Product, compact = false) => {
     const salePrice = product.price * (1 - product.discountPercentage / 100);
     return (
-      <View key={product.id} style={[styles.productCard, compact && styles.carouselCard]}>
+      <View style={[styles.productCard, compact && styles.carouselCard]}>
         <TouchableOpacity
           activeOpacity={0.85}
           onPress={() => router.push(`/(app)/product/${product.id}`)}
         >
           <Card style={styles.card} mode="contained">
             <View style={styles.imageContainer}>
-              <Image source={{ uri: product.thumbnail }} style={styles.productImage} resizeMode="contain" />
+              <Image
+                source={{ uri: product.thumbnail }}
+                style={styles.productImage}
+                contentFit="contain"
+                cachePolicy="memory-disk"
+                recyclingKey={String(product.id)}
+              />
               {product.discountPercentage > 0 && (
                 <View style={styles.discountBadge}>
                   <Text style={styles.discountText}>-{Math.round(product.discountPercentage)}%</Text>
@@ -118,7 +141,7 @@ export default function HomeScreen() {
         </TouchableOpacity>
       </View>
     );
-  };
+  }, [handleFavorite, isFavorite, router]);
 
   const renderSectionHeading = (title: string, action?: () => void, actionLabel = 'See all') => (
     <View style={styles.sectionHeader}>
@@ -149,13 +172,18 @@ export default function HomeScreen() {
     );
   }
 
-  const flashDeals = products.filter((product) => product.discountPercentage >= 15).slice(0, 10);
-  const minutes = Math.floor(countdown / 60).toString().padStart(2, '0');
-  const seconds = (countdown % 60).toString().padStart(2, '0');
-
   return (
-    <ScrollView
+    <FlatList
+      data={products}
+      numColumns={2}
+      keyExtractor={(item) => String(item.id)}
+      renderItem={({ item }) => renderProduct(item)}
+      columnWrapperStyle={styles.productGridRow}
+      initialNumToRender={6}
+      maxToRenderPerBatch={6}
+      windowSize={5}
       style={styles.scrollView}
+      contentContainerStyle={styles.scrollContent}
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
@@ -166,15 +194,16 @@ export default function HomeScreen() {
           colors={[brandPurple]}
         />
       }
-      contentContainerStyle={styles.scrollContent}
-    >
+      ListHeaderComponent={
+        <>
       <View style={styles.topBar}>
         <View style={styles.brandBlock}>
           <View style={styles.brandRow}>
             <Image
               source={require('../../../assets/kartora-logo.png')}
               style={styles.brandLogo}
-              resizeMode="contain"
+              contentFit="contain"
+              cachePolicy="memory-disk"
               accessibilityLabel="Kartora logo"
             />
             <View>
@@ -237,7 +266,7 @@ export default function HomeScreen() {
       <View style={styles.sectionContainer}>
         {renderSectionHeading('Shop by category', () => router.push('/(app)/(tabs)/categories'))}
         <FlatList
-          data={categories.slice(0, 12)}
+          data={categoryItems}
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.categoryList}
@@ -258,10 +287,7 @@ export default function HomeScreen() {
 
       <View style={styles.flashSection}>
         {renderSectionHeading('Flash sale', () => router.push('/(app)/(tabs)/search'), 'Shop more')}
-        <View style={styles.flashTimer}>
-          <Text style={styles.flashCaption}>Deals end in</Text>
-          <Text style={styles.timerDigits}>{minutes}:{seconds}</Text>
-        </View>
+        <DealCountdown />
         {flashDeals.length === 0 ? (
           <Text style={styles.emptyText}>More deals are coming soon.</Text>
         ) : (
@@ -278,14 +304,12 @@ export default function HomeScreen() {
 
       <View style={styles.sectionContainer}>
         {renderSectionHeading("Today's picks", () => router.push('/(app)/(tabs)/search'))}
-        {Array.from({ length: Math.ceil(products.length / 2) }, (_, rowIndex) => (
-          <View key={`row-${rowIndex}`} style={styles.productGridRow}>
-            {products.slice(rowIndex * 2, rowIndex * 2 + 2).map((product) => renderProduct(product))}
-          </View>
-        ))}
-        {products.length === 0 && <Text style={styles.emptyText}>No products available right now.</Text>}
       </View>
-    </ScrollView>
+        </>
+      }
+      ListEmptyComponent={<Text style={styles.emptyText}>No products available right now.</Text>}
+      showsVerticalScrollIndicator={false}
+    />
   );
 }
 

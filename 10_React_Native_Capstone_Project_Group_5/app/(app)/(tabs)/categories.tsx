@@ -9,7 +9,7 @@ import { Card, Title } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import ProductRecommendations from '@/components/ProductRecommendations';
 import { productApi } from '@/services/productApi';
-import { styles } from './categoriesStyles';
+import { styles } from '@/styles/categoriesStyles';
 
 interface Category {
   name: string;

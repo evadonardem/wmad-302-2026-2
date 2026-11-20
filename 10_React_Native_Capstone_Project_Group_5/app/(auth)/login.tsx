@@ -17,7 +17,7 @@ import {
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
 import { Card, Button, TextInput as PaperTextInput, Divider } from 'react-native-paper';
-import { styles } from './styles';
+import { styles } from '@/styles/authStyles';
 
 export default function LoginScreen() {
   const router = useRouter();
