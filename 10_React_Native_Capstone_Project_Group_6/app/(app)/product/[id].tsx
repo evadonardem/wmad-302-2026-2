@@ -4,7 +4,7 @@
  * - Image gallery (swipe or tap a thumbnail)
  * - Price, discount, rating, stock, description, tags
  * - Specifications table
- * - Customer reviews
+ * - Customer reviews (see them, write your own)
  * - Wishlist heart + Share
  * - Quantity picker + Add to cart
  */
@@ -30,6 +30,7 @@ import { productApi } from '@/services/productApi';
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
 import { useRecentlyViewed } from '@/context/RecentlyViewedContext';
+import { ProductReviews, useMyReview } from '@/components/ProductReviews';
 import { Product } from '@/types/product';
 import { formatCategory, getFinalPrice } from '@/utils/productFilters';
 import { useAppTheme, useThemedStyles } from '@/context/ThemeContext';
@@ -67,6 +68,7 @@ export default function ProductDetailScreen() {
   const [quantity, setQuantity] = useState(1);
   const [toast, setToast] = useState<string | null>(null);
   const galleryRef = useRef<FlatList<string>>(null);
+  const myReview = useMyReview(product?.id); // the review this person wrote (saved on the device)
 
   const galleryWidth = Math.min(width, MAX_CONTENT_WIDTH);
 
@@ -283,7 +285,7 @@ export default function ProductDetailScreen() {
             <View style={styles.ratingRow}>
               <Stars rating={product.rating} />
               <Text style={styles.ratingText}>
-                {product.rating.toFixed(1)} ({product.reviews.length} reviews)
+                {product.rating.toFixed(1)} ({product.reviews.length + (myReview.review ? 1 : 0)} reviews)
               </Text>
             </View>
 
@@ -325,21 +327,13 @@ export default function ProductDetailScreen() {
 
           {/* Reviews */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Customer reviews ({product.reviews.length})</Text>
-            {product.reviews.length === 0 ? (
-              <Text style={styles.mutedText}>No reviews yet.</Text>
-            ) : (
-              product.reviews.map((review, index) => (
-                <View key={`${review.reviewerEmail}-${index}`} style={styles.review}>
-                  <View style={styles.reviewHeader}>
-                    <Text style={styles.reviewer}>{review.reviewerName}</Text>
-                    <Text style={styles.mutedText}>{new Date(review.date).toLocaleDateString()}</Text>
-                  </View>
-                  <Stars rating={review.rating} size={14} />
-                  <Text style={styles.reviewComment}>{review.comment}</Text>
-                </View>
-              ))
-            )}
+            <ProductReviews
+              apiReviews={product.reviews}
+              myReview={myReview.review}
+              loadingMine={myReview.loading}
+              onSave={myReview.save}
+              onRemove={myReview.remove}
+            />
           </View>
         </View>
       </ScrollView>
