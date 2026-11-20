@@ -5,7 +5,12 @@ import { AuthUser } from '@/types/auth';
 
 // The fake axios client from jest.setup.js: we decide what each call returns
 const { __client: client } = jest.requireMock('axios') as {
-  __client: { get: jest.Mock; post: jest.Mock; put: jest.Mock };
+  __client: jest.Mock & {
+    get: jest.Mock;
+    post: jest.Mock;
+    put: jest.Mock;
+    interceptors: { request: { use: jest.Mock }; response: { use: jest.Mock } };
+  };
 };
 
 /** What axios throws for an HTTP error such as 400 */
@@ -46,6 +51,7 @@ const makeUser = (overrides: Partial<AuthUser> = {}): AuthUser => ({
 let api: AuthApiService;
 
 beforeEach(async () => {
+  client.mockReset();
   client.get.mockReset();
   client.post.mockReset();
   client.put.mockReset();
@@ -265,5 +271,94 @@ describe('refreshAccessToken', () => {
     client.post.mockRejectedValueOnce(httpError(401));
     await expect(api.refreshAccessToken()).rejects.toBeDefined();
     expect(api.getStoredUser()).toBeNull();
+  });
+});
+
+// The two axios interceptors the service registers when it is created
+describe('interceptors', () => {
+  type RequestConfig = { headers?: Record<string, string> };
+  type FailedRequest = { url?: string; headers: Record<string, string>; _retry?: boolean };
+
+  const lastCall = (mock: jest.Mock) => mock.mock.calls[mock.mock.calls.length - 1];
+  const onRequest = () => lastCall(client.interceptors.request.use)[0] as (c: RequestConfig) => RequestConfig;
+  const onRequestError = () => lastCall(client.interceptors.request.use)[1] as (e: unknown) => Promise<never>;
+  const onResponseOk = () => lastCall(client.interceptors.response.use)[0] as (r: unknown) => unknown;
+  const onResponseError = () => lastCall(client.interceptors.response.use)[1] as (e: unknown) => Promise<unknown>;
+
+  const unauthorized = (config: FailedRequest) => ({ isAxiosError: true, config, response: { status: 401, data: {} } });
+
+  const logIn = async () => {
+    client.post.mockResolvedValueOnce(loginResponse());
+    await api.login({ username: 'emilys', password: 'emilyspass' });
+  };
+
+  it('adds the Bearer token to requests once logged in', async () => {
+    expect(onRequest()({ headers: {} }).headers).toEqual({}); // no token yet
+    await logIn();
+    expect(onRequest()({ headers: {} }).headers).toEqual({ Authorization: 'Bearer ACCESS' });
+  });
+
+  it('leaves a request without headers alone, and passes request errors on', async () => {
+    await logIn();
+    expect(onRequest()({})).toEqual({});
+    const error = new Error('bad request');
+    await expect(onRequestError()(error)).rejects.toBe(error);
+  });
+
+  it('passes successful responses through', () => {
+    const response = { data: 1 };
+    expect(onResponseOk()(response)).toBe(response);
+  });
+
+  it('on 401 it refreshes the token and replays the request with the new token', async () => {
+    await logIn();
+    client.post.mockResolvedValueOnce({ data: { accessToken: 'NEW', refreshToken: 'NEWR' } }); // /refresh
+    client.mockResolvedValueOnce({ data: 'replayed' }); // the replayed request
+
+    const request: FailedRequest = { url: '/me', headers: {} };
+    const result = await onResponseError()(unauthorized(request));
+
+    expect(result).toEqual({ data: 'replayed' });
+    expect(request.headers.Authorization).toBe('Bearer NEW');
+    expect(request._retry).toBe(true);
+    expect(api.getStoredUser()?.token).toBe('NEW');
+  });
+
+  it('logs the person out (and tells the app) when the refresh fails', async () => {
+    await logIn();
+    const handler = jest.fn();
+    api.setSessionExpiredHandler(handler);
+    client.post.mockRejectedValueOnce(httpError(401)); // /refresh fails
+
+    await expect(onResponseError()(unauthorized({ url: '/me', headers: {} }))).rejects.toBeDefined();
+    expect(handler).toHaveBeenCalledTimes(1);
+    expect(api.getStoredUser()).toBeNull();
+  });
+
+  it('never tries to refresh for login/refresh calls or for a request already retried', async () => {
+    await logIn();
+    const loginFailure = unauthorized({ url: '/login', headers: {} });
+    await expect(onResponseError()(loginFailure)).rejects.toBe(loginFailure);
+
+    const retried = unauthorized({ url: '/me', headers: {}, _retry: true });
+    await expect(onResponseError()(retried)).rejects.toBe(retried);
+    expect(client.post).toHaveBeenCalledTimes(1); // only the login, no /refresh
+  });
+
+  it('passes other errors (not 401) on unchanged', async () => {
+    const serverError = { isAxiosError: true, config: { url: '/me', headers: {} }, response: { status: 500 } };
+    await expect(onResponseError()(serverError)).rejects.toBe(serverError);
+  });
+});
+
+describe('refreshAccessToken (extra)', () => {
+  it('shares one refresh when several requests need it at the same time', async () => {
+    client.post.mockResolvedValueOnce(loginResponse());
+    await api.login({ username: 'emilys', password: 'emilyspass' });
+    client.post.mockResolvedValueOnce({ data: { accessToken: 'NEW', refreshToken: 'NEWR' } });
+
+    const [a, b] = await Promise.all([api.refreshAccessToken(), api.refreshAccessToken()]);
+    expect(a).toBe(b);
+    expect(client.post).toHaveBeenCalledTimes(2); // 1 login + 1 refresh
   });
 });

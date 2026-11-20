@@ -4,12 +4,16 @@ import { CartItem, Order } from '@/types/product';
 import {
   accountStorage,
   addressStorage,
+  authStorage,
   cartStorage,
   clearAllStorage,
+  favoritesStorage,
+  getMultipleStorageItems,
   getStorageItem,
   orderStorage,
   profileEditStorage,
   removeStorageItem,
+  setMultipleStorageItems,
   setStorageItem,
   settingsStorage,
 } from '@/utils/storage';
@@ -155,5 +159,46 @@ describe('per-account storage (addresses, settings, profile edits)', () => {
   it('survives data saved in the wrong shape', async () => {
     await setStorageItem('addresses', [address]); // a list instead of {username: list}
     expect(await addressStorage.get('emilys')).toEqual([]);
+  });
+});
+
+describe('several values at once', () => {
+  it('saves and reads many keys in one go', async () => {
+    await setMultipleStorageItems([
+      { key: 'orders', value: [1, 2] },
+      { key: 'user_settings', value: { a: 1 } },
+    ]);
+    const result = await getMultipleStorageItems<Record<string, unknown>>(['orders', 'user_settings', 'cart']);
+    expect(result).toEqual({ orders: [1, 2], user_settings: { a: 1 }, cart: null });
+  });
+});
+
+describe('authStorage', () => {
+  it('saves, reads and clears the logged-in user', async () => {
+    expect(await authStorage.getUser()).toBeNull();
+    await authStorage.setUser({ id: 1, username: 'emilys', token: 'T' });
+    expect((await authStorage.getUser())?.username).toBe('emilys');
+    await authStorage.clearUser();
+    expect(await authStorage.getUser()).toBeNull();
+  });
+});
+
+describe('favoritesStorage (wishlist ids)', () => {
+  it('starts empty, adds without duplicates and removes', async () => {
+    expect(await favoritesStorage.getIds()).toEqual([]);
+    await favoritesStorage.addId(1);
+    await favoritesStorage.addId(1);
+    await favoritesStorage.addId(2);
+    expect(await favoritesStorage.getIds()).toEqual([1, 2]);
+    await favoritesStorage.removeId(1);
+    expect(await favoritesStorage.getIds()).toEqual([2]);
+  });
+
+  it('toggles and says whether the item is now a favorite', async () => {
+    expect(await favoritesStorage.toggleId(5)).toBe(true);
+    expect(await favoritesStorage.toggleId(5)).toBe(false);
+    expect(await favoritesStorage.getIds()).toEqual([]);
+    await favoritesStorage.setIds([7, 8]);
+    expect(await favoritesStorage.getIds()).toEqual([7, 8]);
   });
 });
