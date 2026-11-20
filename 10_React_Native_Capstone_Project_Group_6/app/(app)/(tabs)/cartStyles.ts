@@ -100,7 +100,7 @@ export const createStyles = (colors: ThemeColors) => StyleSheet.create({
   itemCurrentPrice: {
     fontSize: 16,
     fontWeight: '700',
-    color: colors.primary,
+    color: colors.primaryText,
   },
   itemOriginalPrice: {
     fontSize: 13,
@@ -213,7 +213,7 @@ export const createStyles = (colors: ThemeColors) => StyleSheet.create({
   summaryValueTotal: {
     fontSize: 18,
     fontWeight: '700',
-    color: colors.primary,
+    color: colors.primaryText,
   },
   checkoutButton: {
     borderRadius: 8,
@@ -230,7 +230,7 @@ export const createStyles = (colors: ThemeColors) => StyleSheet.create({
   guideTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: colors.primary,
+    color: colors.primaryText,
     marginBottom: 8,
   },
   guideText: {

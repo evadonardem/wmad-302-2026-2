@@ -140,7 +140,7 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
   info: { flex: 1, marginLeft: 12 },
   title: { fontSize: 14, fontWeight: '600', color: colors.text },
   priceRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4 },
-  price: { fontSize: 16, fontWeight: '700', color: colors.primary },
+  price: { fontSize: 16, fontWeight: '700', color: colors.primaryText },
   oldPrice: { fontSize: 12, color: colors.textMuted, textDecorationLine: 'line-through' },
   muted: { fontSize: 13, color: colors.textMuted },
   outOfStock: { fontSize: 13, color: colors.errorText },

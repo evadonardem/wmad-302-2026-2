@@ -31,10 +31,12 @@ export const lightTheme = {
   ...MD3LightTheme,
   colors: {
     ...MD3LightTheme.colors,
-    primary: lightColors.primary, // Google/Trust blue
+    primary: lightColors.primary, // Warm yellow accent
     primaryContainer: lightColors.primaryContainer,
-    secondary: '#5C6BC0', // Indigo
-    secondaryContainer: '#E8EAF6',
+    onPrimaryContainer: lightColors.text,
+    secondary: '#2B2B2B', // Near-black, for secondary buttons
+    secondaryContainer: lightColors.surfaceMuted,
+    onSecondaryContainer: lightColors.text,
     tertiary: '#34A853', // Success green
     tertiaryContainer: lightColors.successContainer,
     surface: lightColors.surface,
@@ -51,7 +53,7 @@ export const lightTheme = {
     outline: lightColors.borderStrong,
     outlineVariant: lightColors.borderSubtle,
   },
-  roundness: 8,
+  roundness: 14,
   fonts,
 };
 
@@ -63,9 +65,9 @@ export const darkTheme = {
     onPrimary: darkColors.onPrimary,
     primaryContainer: darkColors.primaryContainer,
     onPrimaryContainer: darkColors.text,
-    secondary: '#9FA8DA',
-    onSecondary: '#1A1F4D',
-    secondaryContainer: '#2A2F55',
+    secondary: '#D6D6D6',
+    onSecondary: '#1A1A1A',
+    secondaryContainer: darkColors.surfaceMuted,
     onSecondaryContainer: darkColors.text,
     tertiary: darkColors.success,
     onTertiary: '#0B2A17',
@@ -95,7 +97,7 @@ export const darkTheme = {
       level5: '#2F333A',
     },
   },
-  roundness: 8,
+  roundness: 14,
   fonts,
 };
 

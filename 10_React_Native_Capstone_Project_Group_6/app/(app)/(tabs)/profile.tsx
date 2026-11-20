@@ -138,7 +138,7 @@ export default function ProfileScreen() {
               description="Track and manage orders"
               left={(props) => (
                 <View style={props.style}>
-                  <MaterialCommunityIcons name="package-variant" size={24} color={colors.primary} />
+                  <MaterialCommunityIcons name="package-variant" size={24} color={colors.primaryText} />
                   {stats.count > 0 ? (
                     <Badge size={16} style={{ position: 'absolute', right: -4, top: -4 }}>
                       {stats.count}
@@ -154,7 +154,7 @@ export default function ProfileScreen() {
               title="Wishlist"
               description="Saved items for later"
               left={(props) => (
-                <MaterialCommunityIcons name="heart" size={24} color={colors.primary} style={props.style} />
+                <MaterialCommunityIcons name="heart" size={24} color={colors.primaryText} style={props.style} />
               )}
               right={(props) => <MaterialCommunityIcons name="chevron-right" size={24} color={colors.textMuted} style={props.style} />}
               onPress={() => router.push('/(app)/wishlist')}
@@ -164,7 +164,7 @@ export default function ProfileScreen() {
               title="Addresses"
               description="Manage delivery addresses"
               left={(props) => (
-                <MaterialCommunityIcons name="map-marker" size={24} color={colors.primary} style={props.style} />
+                <MaterialCommunityIcons name="map-marker" size={24} color={colors.primaryText} style={props.style} />
               )}
               right={(props) => <MaterialCommunityIcons name="chevron-right" size={24} color={colors.textMuted} style={props.style} />}
               onPress={handleAddresses}
@@ -174,7 +174,7 @@ export default function ProfileScreen() {
               title="Payment Methods"
               description="Choose your default payment"
               left={(props) => (
-                <MaterialCommunityIcons name="credit-card" size={24} color={colors.primary} style={props.style} />
+                <MaterialCommunityIcons name="credit-card" size={24} color={colors.primaryText} style={props.style} />
               )}
               right={(props) => <MaterialCommunityIcons name="chevron-right" size={24} color={colors.textMuted} style={props.style} />}
               onPress={handlePayment}
@@ -190,7 +190,7 @@ export default function ProfileScreen() {
               title="Edit Profile"
               description="Update your information"
               left={(props) => (
-                <MaterialCommunityIcons name="account-edit" size={24} color={colors.primary} style={props.style} />
+                <MaterialCommunityIcons name="account-edit" size={24} color={colors.primaryText} style={props.style} />
               )}
               right={(props) => <MaterialCommunityIcons name="chevron-right" size={24} color={colors.textMuted} style={props.style} />}
               onPress={handleEditProfile}
@@ -200,7 +200,7 @@ export default function ProfileScreen() {
               title="Settings"
               description="Notifications, theme, privacy"
               left={(props) => (
-                <MaterialCommunityIcons name="cog" size={24} color={colors.primary} style={props.style} />
+                <MaterialCommunityIcons name="cog" size={24} color={colors.primaryText} style={props.style} />
               )}
               right={(props) => <MaterialCommunityIcons name="chevron-right" size={24} color={colors.textMuted} style={props.style} />}
               onPress={handleSettings}

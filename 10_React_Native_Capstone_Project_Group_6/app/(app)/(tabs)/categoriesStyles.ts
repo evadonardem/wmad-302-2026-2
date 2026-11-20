@@ -98,7 +98,7 @@ export const createStyles = (colors: ThemeColors) => StyleSheet.create({
   guideTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: colors.primary,
+    color: colors.primaryText,
     marginBottom: 8,
   },
   guideText: {

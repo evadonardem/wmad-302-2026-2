@@ -204,6 +204,6 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
   itemTotal: { fontSize: 14, fontWeight: '600', color: colors.text },
   discount: { fontSize: 13, color: colors.success },
   totalRow: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border, marginTop: 8, paddingTop: 10 },
-  grandTotal: { fontSize: 18, fontWeight: '700', color: colors.primary },
+  grandTotal: { fontSize: 18, fontWeight: '700', color: colors.primaryText },
   backButton: { margin: 16 },
 });

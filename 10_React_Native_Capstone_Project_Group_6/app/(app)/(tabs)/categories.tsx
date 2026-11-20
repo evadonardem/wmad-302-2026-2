@@ -69,7 +69,7 @@ export default function CategoriesScreen() {
       <Card style={styles.card} elevation={1}>
         <Card.Content style={styles.cardContent}>
           <View style={styles.iconContainer}>
-            <MaterialCommunityIcons name={getCategoryIcon(item.name)} size={32} color={colors.primary} />
+            <MaterialCommunityIcons name={getCategoryIcon(item.name)} size={32} color={colors.primaryText} />
           </View>
           <Title style={styles.categoryName}>{formatCategory(item.name)}</Title>
           <Text style={styles.categoryCount}>
@@ -83,7 +83,7 @@ export default function CategoriesScreen() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={colors.primary} />
+        <ActivityIndicator size="large" color={colors.primaryText} />
         <Text style={styles.loadingText}>Loading categories...</Text>
       </View>
     );

@@ -26,7 +26,7 @@ export const createStyles = (colors: ThemeColors) => StyleSheet.create({
   appName: {
     fontSize: 32,
     fontWeight: '700',
-    color: colors.primary,
+    color: colors.primaryText,
     letterSpacing: -0.5,
   },
   tagline: {
@@ -102,7 +102,7 @@ export const createStyles = (colors: ThemeColors) => StyleSheet.create({
   },
   linkText: {
     fontSize: 14,
-    color: colors.primary,
+    color: colors.primaryText,
     fontWeight: '600',
   },
   footer: {
@@ -159,7 +159,7 @@ export const createStyles = (colors: ThemeColors) => StyleSheet.create({
     color: colors.textMuted,
   },
   genderOptionTextSelected: {
-    color: colors.primary,
+    color: colors.primaryText,
     fontWeight: '600',
   },
   termsContainer: {
@@ -202,7 +202,7 @@ export const createStyles = (colors: ThemeColors) => StyleSheet.create({
   guideTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: colors.primary,
+    color: colors.primaryText,
     marginBottom: 8,
   },
   guideText: {

@@ -124,7 +124,7 @@ export const createStyles = (colors: ThemeColors) => StyleSheet.create({
   currentPrice: {
     fontSize: 16,
     fontWeight: '700',
-    color: colors.primary,
+    color: colors.primaryText,
   },
   originalPrice: {
     fontSize: 13,

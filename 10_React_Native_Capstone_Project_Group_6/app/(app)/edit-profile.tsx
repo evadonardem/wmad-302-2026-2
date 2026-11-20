@@ -123,7 +123,7 @@ export default function EditProfileScreen() {
 const createStyles = (colors: ThemeColors) => StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.surface },
   content: { padding: 16, paddingBottom: 48 },
-  username: { fontSize: 14, color: colors.primary, fontWeight: '500', marginBottom: 12 },
+  username: { fontSize: 14, color: colors.primaryText, fontWeight: '500', marginBottom: 12 },
   field: { marginBottom: 4 },
   submitError: { color: colors.errorText, marginBottom: 12 },
   button: { marginTop: 8, borderRadius: 8 },

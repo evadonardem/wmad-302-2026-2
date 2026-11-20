@@ -45,8 +45,8 @@ export const createStyles = (colors: ThemeColors) => StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 20,
     backgroundColor: colors.primaryContainer,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
     marginBottom: 16,
   },
   welcomeTextContainer: {
@@ -86,7 +86,7 @@ export const createStyles = (colors: ThemeColors) => StyleSheet.create({
   seeAllText: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.primary,
+    color: colors.primaryText,
   },
   recentList: {
     paddingHorizontal: 4,
@@ -95,7 +95,7 @@ export const createStyles = (colors: ThemeColors) => StyleSheet.create({
   recentCard: {
     width: 128,
     padding: 8,
-    borderRadius: 12,
+    borderRadius: 16,
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
@@ -116,7 +116,7 @@ export const createStyles = (colors: ThemeColors) => StyleSheet.create({
   recentPrice: {
     fontSize: 14,
     fontWeight: '700',
-    color: colors.primary,
+    color: colors.text,
     marginTop: 2,
   },
   categoryList: {
@@ -139,19 +139,23 @@ export const createStyles = (colors: ThemeColors) => StyleSheet.create({
   categoryChipText: {
     fontSize: 13,
     fontWeight: '500',
-    color: colors.primary,
+    color: colors.primaryText,
   },
   productCard: {
     marginBottom: 12,
   },
   card: {
-    borderRadius: 12,
+    borderRadius: 18,
     overflow: 'hidden',
     backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   imageContainer: {
     position: 'relative',
     height: 160,
+    margin: 8,
+    borderRadius: 14,
     backgroundColor: colors.surfaceMuted,
     alignItems: 'center',
     justifyContent: 'center',
@@ -201,7 +205,7 @@ export const createStyles = (colors: ThemeColors) => StyleSheet.create({
   },
   productCategory: {
     fontSize: 12,
-    color: colors.primary,
+    color: colors.primaryText,
     fontWeight: '500',
     marginBottom: 4,
     textTransform: 'capitalize',
@@ -246,7 +250,7 @@ export const createStyles = (colors: ThemeColors) => StyleSheet.create({
   currentPrice: {
     fontSize: 18,
     fontWeight: '700',
-    color: colors.primary,
+    color: colors.primaryText,
   },
   originalPrice: {
     fontSize: 14,
@@ -259,6 +263,7 @@ export const createStyles = (colors: ThemeColors) => StyleSheet.create({
     left: 8,
     zIndex: 1,
     backgroundColor: colors.primary,
+    color: colors.onPrimary,
   },
   cardSeparator: {
     height: 8,

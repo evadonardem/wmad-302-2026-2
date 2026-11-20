@@ -60,6 +60,9 @@ describe('dark palette readability (WCAG AA)', () => {
     ['primary', 'primaryContainer', 4.5],
     ['primary', 'surfaceMuted', 4.5],
     ['onPrimary', 'primary', 4.5],
+    ['primaryText', 'background', 4.5],
+    ['primaryText', 'surface', 4.5],
+    ['primaryText', 'primaryContainer', 4.5],
     ['onError', 'error', 4.5],
     ['error', 'background', 4.5],
     ['error', 'surface', 4.5],
@@ -83,5 +86,28 @@ describe('dark palette readability (WCAG AA)', () => {
   it('keeps surfaces layered: background < surface < surfaceMuted', () => {
     expect(luminance(darkColors.background)).toBeLessThan(luminance(darkColors.surface));
     expect(luminance(darkColors.surface)).toBeLessThan(luminance(darkColors.surfaceMuted));
+  });
+});
+
+describe('light palette readability (WCAG AA)', () => {
+  // Yellow is a light color, so text on it must be dark and brand-colored text must not be yellow.
+  const pairs: [keyof ThemeColors, keyof ThemeColors, number][] = [
+    ['text', 'background', 4.5],
+    ['text', 'surfaceMuted', 4.5],
+    ['textBody', 'surface', 4.5],
+    ['textMuted', 'surface', 4.5],
+    ['textMuted', 'surfaceMuted', 4.5],
+    ['textFaint', 'surface', 2.5],
+    ['onPrimary', 'primary', 4.5],
+    ['primaryText', 'surface', 4.5],
+    ['primaryText', 'primaryContainer', 4.5],
+    ['text', 'primaryContainer', 4.5],
+    ['onError', 'error', 3],
+    ['errorText', 'surface', 4.5],
+    ['success', 'surface', 4.5],
+  ];
+
+  it.each(pairs)('%s on %s is at least %s:1', (foreground, background, minimum) => {
+    expect(contrast(lightColors[foreground], lightColors[background])).toBeGreaterThanOrEqual(minimum);
   });
 });

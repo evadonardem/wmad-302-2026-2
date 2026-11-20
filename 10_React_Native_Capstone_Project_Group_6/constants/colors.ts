@@ -27,6 +27,7 @@ export interface ThemeColors {
   onPrimary: string; // text/icons on a primary background
   primaryContainer: string; // pale brand tint (selected rows, badges)
   primaryBorder: string; // border that goes with primaryContainer
+  primaryText: string; // brand-colored TEXT/ICONS on plain surfaces (yellow itself is too light to read on white)
 
   // Lines
   border: string; // outlines and dividers
@@ -53,24 +54,25 @@ export interface ThemeColors {
 }
 
 export const lightColors: ThemeColors = {
-  background: '#F8F9FA',
+  background: '#FFFFFF',
   surface: '#FFFFFF',
-  surfaceMuted: '#F1F3F4',
+  surfaceMuted: '#F3F3F3',
 
-  text: '#202124',
-  textBody: '#3C4043',
-  textMuted: '#5F6368',
-  textFaint: '#9AA0A6',
+  text: '#111111',
+  textBody: '#333333',
+  textMuted: '#6B6B6B',
+  textFaint: '#9E9E9E',
 
-  primary: '#1A73E8',
-  onPrimary: '#FFFFFF',
-  primaryContainer: '#E8F0FE',
-  primaryBorder: '#D0E1F9',
+  primary: '#FFCC2F',
+  onPrimary: '#111111',
+  primaryContainer: '#FFF6D6',
+  primaryBorder: '#FFE59A',
+  primaryText: '#111111',
 
-  border: '#E0E0E0',
-  borderStrong: '#DADCE0',
-  borderSubtle: '#E8EAED',
-  iconMuted: '#DADCE0',
+  border: '#EDEDED',
+  borderStrong: '#DDDDDD',
+  borderSubtle: '#F3F3F3',
+  iconMuted: '#D9D9D9',
 
   error: '#EA4335',
   onError: '#FFFFFF',
@@ -82,7 +84,7 @@ export const lightColors: ThemeColors = {
   warningContainer: '#FEF7E0',
   onWarningContainer: '#3E2723',
   warningMuted: '#8D6E63',
-  star: '#F9AB00',
+  star: '#F5A623',
 
   overlay: 'rgba(255, 255, 255, 0.8)',
   shadow: '#000000',
@@ -93,7 +95,7 @@ export const lightColors: ThemeColors = {
  *  - No pure black or pure white: #111317 is easier on the eyes than #000 and text is
  *    off-white, so nothing glares at night.
  *  - Depth comes from LIGHTER surfaces (background < surface < surfaceMuted), not shadows.
- *  - Brand and status colors are the pale versions (blue 300 instead of blue 600).
+ *  - Brand and status colors are the pale versions (light yellow instead of the saturated light-mode yellow).
  *    The saturated light-mode colors vibrate and fail contrast on a dark background.
  *  - Every text/background pair passes WCAG AA (4.5:1). __tests__/colors.test.ts checks it.
  */
@@ -107,10 +109,11 @@ export const darkColors: ThemeColors = {
   textMuted: '#9AA0A6',
   textFaint: '#80868B',
 
-  primary: '#8AB4F8',
-  onPrimary: '#0F2A52',
-  primaryContainer: '#1F3556',
-  primaryBorder: '#2E4A78',
+  primary: '#FFD54A',
+  onPrimary: '#1A1400',
+  primaryContainer: '#3A3112',
+  primaryBorder: '#5C4C17',
+  primaryText: '#FFD54A',
 
   border: '#3C4043',
   borderStrong: '#4A4E54',

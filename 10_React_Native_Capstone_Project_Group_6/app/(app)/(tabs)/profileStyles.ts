@@ -42,7 +42,7 @@ export const createStyles = (colors: ThemeColors) => StyleSheet.create({
   },
   username: {
     fontSize: 14,
-    color: colors.primary,
+    color: colors.primaryText,
     fontWeight: '500',
     marginTop: 2,
   },
@@ -65,7 +65,7 @@ export const createStyles = (colors: ThemeColors) => StyleSheet.create({
   statValue: {
     fontSize: 24,
     fontWeight: '700',
-    color: colors.primary,
+    color: colors.primaryText,
   },
   statLabel: {
     fontSize: 12,
@@ -111,7 +111,7 @@ export const createStyles = (colors: ThemeColors) => StyleSheet.create({
   guideTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: colors.primary,
+    color: colors.primaryText,
     marginBottom: 8,
   },
   guideText: {

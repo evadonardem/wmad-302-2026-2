@@ -19,17 +19,19 @@ export default function TabsLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.textMuted,
+        tabBarActiveTintColor: colors.primaryText,
+        tabBarInactiveTintColor: colors.textFaint,
         tabBarStyle: {
           backgroundColor: colors.surface,
           // A shadow can't be seen on a dark background, so dark mode gets a thin line instead
-          borderTopWidth: isDark ? StyleSheet.hairlineWidth : 0,
+          borderTopWidth: StyleSheet.hairlineWidth,
           borderTopColor: colors.border,
+          borderTopLeftRadius: 24,
+          borderTopRightRadius: 24,
           elevation: 8,
           shadowColor: colors.shadow,
           shadowOffset: { width: 0, height: -2 },
-          shadowOpacity: 0.1,
+          shadowOpacity: isDark ? 0 : 0.06,
           shadowRadius: 8,
           // Fixed height: icon (24) + label + padding. Without it the icons get squeezed.
           height: 64 + insets.bottom,
@@ -37,8 +39,8 @@ export default function TabsLayout() {
           paddingBottom: 8 + insets.bottom,
         },
         tabBarLabelStyle: {
-          fontSize: 12,
-          fontWeight: '500',
+          fontSize: 11,
+          fontWeight: '600',
         },
       }}
     >
@@ -81,8 +83,9 @@ export default function TabsLayout() {
         name="cart"
         options={{
           title: 'Cart',
-          // Red badge with the number of items; hidden when the cart is empty
+          // Yellow badge with the number of items; hidden when the cart is empty
           tabBarBadge: totalQuantity > 0 ? totalQuantity : undefined,
+          tabBarBadgeStyle: { backgroundColor: colors.primary, color: colors.onPrimary, fontWeight: '700' },
           tabBarIcon: ({ focused, color }) => (
             <MaterialCommunityIcons
               name={focused ? 'cart' : 'cart-outline'}

@@ -239,7 +239,7 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
   cardLabel: { fontSize: 16, fontWeight: '700', color: colors.text, marginRight: 8 },
   cardText: { fontSize: 14, color: colors.textBody, marginTop: 2 },
   defaultBadge: { backgroundColor: colors.primaryContainer, borderRadius: 4, paddingHorizontal: 8, paddingVertical: 2 },
-  defaultBadgeText: { fontSize: 11, fontWeight: '700', color: colors.primary },
+  defaultBadgeText: { fontSize: 11, fontWeight: '700', color: colors.primaryText },
   cardActions: { flexDirection: 'row', justifyContent: 'flex-end', marginTop: 8, flexWrap: 'wrap' },
   defaultRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginVertical: 8 },
   defaultLabel: { flex: 1, fontSize: 14, color: colors.textBody, marginRight: 12 },
