@@ -99,6 +99,8 @@ interface AuthContextType extends AuthState {
   logout: () => void;
   /** Edit Profile: PUT /users/{id}. Throws if it fails (the screen shows the message). */
   updateProfile: (update: ProfileUpdate) => Promise<void>;
+  /** Profile picture: a picture string (utils/avatar.ts), or null to go back to the default one. Throws if it fails. */
+  updateAvatar: (uri: string | null) => Promise<void>;
   clearError: () => void;
   refreshUser: () => Promise<void>;
 }
@@ -199,6 +201,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'AUTH_UPDATE_USER', payload: user });
   }, []);
 
+  const updateAvatar = useCallback(async (uri: string | null) => {
+    const user = await authApi.updateAvatar(uri);
+    dispatch({ type: 'AUTH_UPDATE_USER', payload: user });
+  }, []);
+
   const clearError = useCallback(() => {
     dispatch({ type: 'AUTH_CLEAR_ERROR' });
   }, []);
@@ -226,6 +233,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         register,
         logout,
         updateProfile,
+        updateAvatar,
         clearError,
         refreshUser,
       }}

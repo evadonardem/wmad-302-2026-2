@@ -20,6 +20,8 @@ export interface AuthUser {
   phone?: string;
   /** true once the person edited their profile (so a refresh doesn't overwrite the edits) */
   profileEdited?: boolean;
+  /** true when `image` is a picture the person chose (not the one from the API) */
+  imageEdited?: boolean;
 }
 
 /** The fields the Edit Profile screen can change (sent with PUT /users/{id}) */
@@ -88,6 +90,8 @@ export interface LocalAccount {
   email: string;
   gender?: 'male' | 'female';
   phone?: string;
+  /** profile picture the person chose (a small "data:" string); empty/missing = the default one */
+  image?: string;
 }
 
 /** A saved delivery address (kept on the device, one list per account) */

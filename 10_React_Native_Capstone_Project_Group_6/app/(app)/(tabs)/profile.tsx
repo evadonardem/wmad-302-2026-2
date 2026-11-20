@@ -10,7 +10,8 @@ import { View, Text, ScrollView } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
 import { useWishlist } from '@/context/WishlistContext';
-import { Card, Button, List, Avatar, Divider, Badge, Dialog, Portal } from 'react-native-paper';
+import { Card, Button, List, Divider, Badge, Dialog, Portal } from 'react-native-paper';
+import { AvatarPicker } from '@/components/AvatarPicker';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { productApi } from '@/services/productApi';
 import { Order } from '@/types/product';
@@ -102,11 +103,7 @@ export default function ProfileScreen() {
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       {/* Profile Header */}
       <View style={styles.header}>
-        <Avatar.Image
-          size={88}
-          source={{ uri: user?.image || 'https://via.placeholder.com/150' }}
-          style={styles.avatar}
-        />
+        <AvatarPicker size={88} style={styles.avatar} />
         <View style={styles.nameContainer}>
           <Text style={styles.name}>
             {user?.firstName} {user?.lastName}

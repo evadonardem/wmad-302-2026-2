@@ -31,7 +31,6 @@ export const createStyles = (colors: ThemeColors) => StyleSheet.create({
   },
   avatar: {
     marginRight: 16,
-    backgroundColor: colors.primaryContainer,
   },
   nameContainer: {
     flex: 1,

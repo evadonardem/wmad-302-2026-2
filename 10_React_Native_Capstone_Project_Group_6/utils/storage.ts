@@ -20,6 +20,7 @@ const STORAGE_KEYS = {
   WISHLIST: 'wishlist',
   COUPON: 'applied_coupon',
   THEME_MODE: 'theme_mode',
+  AVATAR: 'profile_avatar',
 } as const;
 
 export type StorageKey = typeof STORAGE_KEYS[keyof typeof STORAGE_KEYS];
@@ -254,6 +255,16 @@ export const settingsStorage = {
 export const profileEditStorage = {
   get: (owner: string) => getForOwner<ProfileUpdate>(STORAGE_KEYS.PROFILE_EDITS, owner),
   set: (owner: string, edits: ProfileUpdate) => setForOwner(STORAGE_KEYS.PROFILE_EDITS, owner, edits),
+};
+
+/**
+ * Profile picture chosen by the person (a small "data:image/jpeg;base64,..." string).
+ * Like profile edits, the API can't keep it, so it is re-applied at the next login.
+ * An empty string means "no picture chosen" (they removed it).
+ */
+export const avatarStorage = {
+  get: (owner: string) => getForOwner<string>(STORAGE_KEYS.AVATAR, owner),
+  set: (owner: string, uri: string) => setForOwner(STORAGE_KEYS.AVATAR, owner, uri),
 };
 
 /** Wishlist (Profile > Wishlist): one list per account */

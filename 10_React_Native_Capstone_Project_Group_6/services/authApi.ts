@@ -21,11 +21,13 @@ import {
 import {
   accountStorage,
   profileEditStorage,
+  avatarStorage,
   getStorageItem,
   setStorageItem,
   removeStorageItem,
 } from '@/utils/storage';
 import { hashPassword } from '@/utils/hash';
+import { isAvatarUri, keepStoredAvatar, withSavedAvatar } from '@/utils/avatar';
 
 const API_BASE_URL = 'https://dummyjson.com/auth';
 // DummyJSON has no /auth/register. New users are created with POST /users/add.
@@ -187,8 +189,10 @@ class AuthApiService {
   /** Real accounts: put back any edits made in Edit Profile (the API doesn't keep them). */
   private async applyProfileEdits(user: AuthUser): Promise<AuthUser> {
     const edits = await profileEditStorage.get(user.username).catch(() => null);
-    if (!edits) return user;
-    const edited: AuthUser = { ...user, ...edits, profileEdited: true };
+    const avatar = await avatarStorage.get(user.username).catch(() => null);
+    const withEdits: AuthUser = edits ? { ...user, ...edits, profileEdited: true } : user;
+    const edited = withSavedAvatar(withEdits, avatar);
+    if (edited === user) return user;
     await this.setTokens(edited);
     return edited;
   }
@@ -225,6 +229,38 @@ class AuthApiService {
   }
 
   /**
+   * Profile picture: pass the picture (see utils/avatar.ts) or null to go back to the default one.
+   * DummyJSON can't store pictures, so it is kept on this device (like Edit Profile):
+   * - accounts made with Register: inside their saved account
+   * - real accounts (emilys...): in avatarStorage, re-applied at login
+   */
+  async updateAvatar(uri: string | null): Promise<AuthUser> {
+    const current = this.currentUser;
+    if (!current) throw new Error('Your session expired. Please log in again.');
+    if (uri !== null && !isAvatarUri(uri)) throw new Error('That image could not be used. Try another one.');
+
+    // Going back to the default picture: fetch it first, so a network error changes nothing
+    let image = uri;
+    if (image === null) {
+      try {
+        image = (await this.getMe()).image;
+      } catch {
+        throw new Error('Could not remove your photo. Check your connection and try again.');
+      }
+    }
+
+    if (current.isSimulated) {
+      await accountStorage.update(current.username, { image: uri ?? '' });
+    } else {
+      await avatarStorage.set(current.username, uri ?? '');
+    }
+
+    const user: AuthUser = { ...current, image: image ?? current.image, imageEdited: uri !== null };
+    await this.setTokens(user);
+    return user;
+  }
+
+  /**
    * Sign in a device-only account. DummyJSON gives tokens only to its own users, so we
    * borrow the test account's tokens (needed for carts etc.) and show this account's
    * profile. `isSimulated` marks the session so the profile is kept after refreshes.
@@ -241,8 +277,9 @@ class AuthApiService {
       gender: account.gender ?? demo.gender,
       isSimulated: true,
     };
-    await this.setTokens(user);
-    return user;
+    const withAvatar = withSavedAvatar(user, account.image);
+    await this.setTokens(withAvatar);
+    return withAvatar;
   }
 
   /**
@@ -304,7 +341,7 @@ class AuthApiService {
           profileEdited: stored.profileEdited,
         }
       : fresh;
-    return { ...base, token: stored.token, refreshToken: stored.refreshToken };
+    return { ...keepStoredAvatar(base, stored), token: stored.token, refreshToken: stored.refreshToken };
   }
 
   /**
