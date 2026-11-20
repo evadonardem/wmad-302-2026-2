@@ -15,7 +15,7 @@ import { AuthState, AuthAction, ProfileUpdate } from '@/types/auth';
 import { authApi, extractErrorMessage } from '@/services/authApi';
 
 // Initial state
-const initialState: AuthState = {
+export const initialState: AuthState = {
   user: null,
   isAuthenticated: false,
   isLoading: true, // Start with true for hydration
@@ -23,7 +23,7 @@ const initialState: AuthState = {
 };
 
 // Reducer
-function authReducer(state: AuthState, action: AuthAction): AuthState {
+export function authReducer(state: AuthState, action: AuthAction): AuthState {
   switch (action.type) {
     case 'AUTH_START':
       return {
