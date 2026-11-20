@@ -10,7 +10,7 @@ export const createStyles = (colors: ThemeColors) => StyleSheet.create({
     backgroundColor: colors.background,
   },
   scrollContent: {
-    paddingBottom: 100, // Space for tab bar
+    paddingBottom: 24,
   },
   loadingContainer: {
     flex: 1,

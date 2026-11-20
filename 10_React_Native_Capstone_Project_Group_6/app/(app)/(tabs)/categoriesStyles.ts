@@ -10,7 +10,7 @@ export const createStyles = (colors: ThemeColors) => StyleSheet.create({
     backgroundColor: colors.background,
     paddingHorizontal: 16,
     paddingTop: 20,
-    paddingBottom: 100,
+    paddingBottom: 0, // the tab bar already sits below this screen; the list adds its own bottom space
   },
   pageTitle: {
     fontSize: 28,

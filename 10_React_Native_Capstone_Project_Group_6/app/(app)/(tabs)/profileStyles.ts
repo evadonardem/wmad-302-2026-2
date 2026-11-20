@@ -12,7 +12,7 @@ export const createStyles = (colors: ThemeColors) => StyleSheet.create({
   content: {
     paddingHorizontal: 16,
     paddingTop: 20,
-    paddingBottom: 120,
+    paddingBottom: 24,
   },
   centerContainer: {
     flex: 1,
