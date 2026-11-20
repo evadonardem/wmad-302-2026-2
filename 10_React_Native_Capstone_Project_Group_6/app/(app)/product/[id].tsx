@@ -5,7 +5,7 @@
  * - Price, discount, rating, stock, description, tags
  * - Specifications table
  * - Customer reviews
- * - Share
+ * - Wishlist heart + Share
  * - Quantity picker + Add to cart
  */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
@@ -28,6 +28,7 @@ import { Button, IconButton, Snackbar } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { productApi } from '@/services/productApi';
 import { useCart } from '@/context/CartContext';
+import { useWishlist } from '@/context/WishlistContext';
 import { Product } from '@/types/product';
 import { formatCategory, getFinalPrice } from '@/utils/productFilters';
 
@@ -49,6 +50,7 @@ export default function ProductDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { items, addToCart } = useCart();
+  const { isInWishlist, toggleWishlist } = useWishlist();
   const { width } = useWindowDimensions();
 
   const [product, setProduct] = useState<Product | null>(null);
@@ -108,6 +110,12 @@ export default function ProductDetailScreen() {
     }
   };
 
+  const handleToggleWishlist = () => {
+    if (!product) return;
+    const added = toggleWishlist(product);
+    setToast(added ? 'Added to your wishlist' : 'Removed from your wishlist');
+  };
+
   const handleAddToCart = () => {
     if (!product) return;
     const result = addToCart(product, quantity);
@@ -137,6 +145,13 @@ export default function ProductDetailScreen() {
       <Text style={styles.topBarTitle} numberOfLines={1}>
         {product?.title ?? 'Product'}
       </Text>
+      <IconButton
+        icon={product && isInWishlist(product.id) ? 'heart' : 'heart-outline'}
+        iconColor={product && isInWishlist(product.id) ? '#EA4335' : undefined}
+        onPress={handleToggleWishlist}
+        disabled={!product}
+        accessibilityLabel={product && isInWishlist(product.id) ? 'Remove from wishlist' : 'Add to wishlist'}
+      />
       <IconButton
         icon="share-variant"
         onPress={handleShare}

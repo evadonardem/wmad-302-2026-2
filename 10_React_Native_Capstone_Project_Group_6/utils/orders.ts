@@ -39,10 +39,13 @@ export function buildOrder(params: {
   items: CartItem[];
   shipping: ShippingInfo;
   paymentMethod: PaymentMethod;
+  couponCode?: string | null; // coupon used at checkout
+  couponDiscount?: number; // dollars it took off
   now?: Date;
 }): Order {
-  const { userId, owner, items, shipping, paymentMethod, now = new Date() } = params;
+  const { userId, owner, items, shipping, paymentMethod, couponCode, couponDiscount = 0, now = new Date() } = params;
   const totals = calculateTotals(items);
+  const hasCoupon = !!couponCode && couponDiscount > 0;
   return {
     id: `ORD-${now.getTime()}`,
     userId,
@@ -58,10 +61,12 @@ export function buildOrder(params: {
       quantity: i.quantity,
     })),
     total: totals.total,
-    discountedTotal: totals.discountedTotal,
+    // What was actually paid: after the product discounts AND the coupon
+    discountedTotal: hasCoupon ? Math.round((totals.discountedTotal - couponDiscount) * 100) / 100 : totals.discountedTotal,
     totalQuantity: totals.totalQuantity,
     shipping: { ...shipping },
     paymentMethod,
+    ...(hasCoupon ? { couponCode, couponDiscount } : {}),
   };
 }
 

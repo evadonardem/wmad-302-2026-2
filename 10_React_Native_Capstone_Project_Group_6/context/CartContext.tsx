@@ -20,7 +20,8 @@ import React, {
   ReactNode,
 } from 'react';
 import { CartItem, Product } from '@/types/product';
-import { cartStorage } from '@/utils/storage';
+import { cartStorage, couponStorage } from '@/utils/storage';
+import { Coupon, evaluateCoupon } from '@/utils/coupons';
 import { useAuth } from '@/context/AuthContext';
 
 /** Only the product fields the cart needs (so any screen's Product type works). */
@@ -32,6 +33,7 @@ export type CartProduct = Pick<
 export interface CartState {
   items: CartItem[];
   isHydrated: boolean; // true once the saved cart has been read from AsyncStorage
+  couponCode: string | null; // coupon the person applied (checked again against the cart total)
 }
 
 export type CartAction =
@@ -39,7 +41,8 @@ export type CartAction =
   | { type: 'CART_ADD'; payload: CartItem }
   | { type: 'CART_SET_QUANTITY'; payload: { productId: number; quantity: number } }
   | { type: 'CART_REMOVE'; payload: number }
-  | { type: 'CART_CLEAR' };
+  | { type: 'CART_CLEAR' }
+  | { type: 'COUPON_SET'; payload: string | null };
 
 export interface CartTotals {
   total: number; // price before discounts
@@ -50,7 +53,7 @@ export interface CartTotals {
 
 export type AddToCartResult = 'added' | 'out_of_stock' | 'max_reached';
 
-export const initialCartState: CartState = { items: [], isHydrated: false };
+export const initialCartState: CartState = { items: [], isHydrated: false, couponCode: null };
 
 /** Price of one unit after its discount. */
 export function getDiscountedPrice(item: Pick<CartItem, 'price' | 'discountPercentage'>): number {
@@ -69,7 +72,7 @@ export function calculateTotals(items: CartItem[]): CartTotals {
 export function cartReducer(state: CartState, action: CartAction): CartState {
   switch (action.type) {
     case 'CART_HYDRATE':
-      return { items: action.payload, isHydrated: true };
+      return { items: action.payload, isHydrated: true, couponCode: null };
 
     case 'CART_ADD': {
       const incoming = action.payload;
@@ -108,7 +111,10 @@ export function cartReducer(state: CartState, action: CartAction): CartState {
       return { ...state, items: state.items.filter((i) => i.productId !== action.payload) };
 
     case 'CART_CLEAR':
-      return { ...state, items: [] };
+      return { ...state, items: [], couponCode: null }; // a used coupon goes away with the cart
+
+    case 'COUPON_SET':
+      return { ...state, couponCode: action.payload };
 
     default:
       return state;
@@ -124,6 +130,17 @@ interface CartContextType extends CartTotals {
   updateQuantity: (productId: number, quantity: number) => void;
   removeFromCart: (productId: number) => void;
   clearCart: () => void;
+  /** The applied coupon (null if none / unknown) */
+  coupon: Coupon | null;
+  /** Dollars the coupon takes off right now (0 if the cart is too small for it) */
+  couponDiscount: number;
+  /** Set when an applied coupon can't be used any more (e.g. the cart got smaller) */
+  couponError: string | null;
+  /** discountedTotal minus the coupon: what the customer really pays */
+  payableTotal: number;
+  /** Returns an error message to show, or null when the coupon was applied. */
+  applyCoupon: (code: string) => string | null;
+  removeCoupon: () => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -138,19 +155,19 @@ export function CartProvider({ children }: { children: ReactNode }) {
   // account's items under another account's name while switching.
   const loadedOwner = useRef<string | null>(null);
 
-  // 1. Load the cart of whoever is logged in (again every time the account changes)
+  // 1. Load the cart (and coupon) of whoever is logged in; again every time the account changes
   useEffect(() => {
     let cancelled = false;
     loadedOwner.current = null;
     dispatch({ type: 'CART_HYDRATE', payload: [] }); // never show the previous account's items
     if (!owner) return;
 
-    cartStorage
-      .getCart(owner)
-      .then((saved) => {
+    Promise.all([cartStorage.getCart(owner), couponStorage.get(owner)])
+      .then(([saved, savedCoupon]) => {
         if (cancelled) return;
         loadedOwner.current = owner;
         dispatch({ type: 'CART_HYDRATE', payload: saved });
+        dispatch({ type: 'COUPON_SET', payload: savedCoupon });
       })
       .catch(() => {
         if (cancelled) return;
@@ -169,6 +186,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
       console.error('Failed to save cart:', error);
     });
   }, [state.items, owner]);
+
+  // 3. Same for the applied coupon
+  useEffect(() => {
+    if (!owner || loadedOwner.current !== owner) return;
+    couponStorage.set(owner, state.couponCode).catch((error: unknown) => {
+      console.error('Failed to save coupon:', error);
+    });
+  }, [state.couponCode, owner]);
 
   const addToCart = useCallback(
     (product: CartProduct, quantity = 1): AddToCartResult => {
@@ -211,18 +236,58 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const totals = useMemo(() => calculateTotals(state.items), [state.items]);
 
+  // The coupon is checked against the cart every time, so it stops counting if the
+  // cart drops below its minimum spend
+  const couponResult = useMemo(
+    () => evaluateCoupon(state.couponCode, totals.discountedTotal),
+    [state.couponCode, totals.discountedTotal]
+  );
+
+  const applyCoupon = useCallback(
+    (code: string): string | null => {
+      const result = evaluateCoupon(code, totals.discountedTotal);
+      if (!code.trim()) return 'Enter a coupon code';
+      if (result.error || !result.coupon) return result.error ?? 'That coupon code is not valid';
+      dispatch({ type: 'COUPON_SET', payload: result.coupon.code });
+      return null;
+    },
+    [totals.discountedTotal]
+  );
+
+  const removeCoupon = useCallback(() => {
+    dispatch({ type: 'COUPON_SET', payload: null });
+  }, []);
+
   const value = useMemo<CartContextType>(
     () => ({
       items: state.items,
       isHydrated: state.isHydrated,
       ...totals,
+      coupon: couponResult.coupon,
+      couponDiscount: couponResult.discount,
+      couponError: couponResult.error,
+      payableTotal: Math.round((totals.discountedTotal - couponResult.discount) * 100) / 100,
       addToCart,
       restoreItem,
       updateQuantity,
       removeFromCart,
       clearCart,
+      applyCoupon,
+      removeCoupon,
     }),
-    [state.items, state.isHydrated, totals, addToCart, restoreItem, updateQuantity, removeFromCart, clearCart]
+    [
+      state.items,
+      state.isHydrated,
+      totals,
+      couponResult,
+      addToCart,
+      restoreItem,
+      updateQuantity,
+      removeFromCart,
+      clearCart,
+      applyCoupon,
+      removeCoupon,
+    ]
   );
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

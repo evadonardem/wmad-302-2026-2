@@ -1,13 +1,13 @@
 /**
  * Cart Screen - Marketplace
  * Reads the cart from CartContext (useReducer + AsyncStorage persistence).
- * Quantity buttons, remove with "Undo", order summary.
+ * Quantity buttons, remove with "Undo", coupon code, order summary.
  * The Checkout button opens the checkout screen (app/(app)/checkout.tsx).
  */
 import React, { useState } from 'react';
 import { View, Text, FlatList, ActivityIndicator, Image } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Title, Button, IconButton, Snackbar } from 'react-native-paper';
+import { Title, Button, IconButton, Snackbar, TextInput } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useCart, getDiscountedPrice } from '@/context/CartContext';
 import { CartItem } from '@/types/product';
@@ -24,7 +24,16 @@ export default function CartScreen() {
     updateQuantity,
     removeFromCart,
     restoreItem,
+    coupon,
+    couponDiscount,
+    couponError,
+    payableTotal,
+    applyCoupon,
+    removeCoupon,
   } = useCart();
+
+  const [couponInput, setCouponInput] = useState('');
+  const [couponMessage, setCouponMessage] = useState<string | null>(null); // why a code was rejected
 
   // One snackbar for messages; `undoItem` is set when it was caused by a removal
   const [snack, setSnack] = useState<{ message: string; undoItem?: CartItem } | null>(null);
@@ -32,6 +41,20 @@ export default function CartScreen() {
   const handleRemove = (item: CartItem) => {
     removeFromCart(item.productId);
     setSnack({ message: `Removed "${item.title}"`, undoItem: item });
+  };
+
+  const handleApplyCoupon = () => {
+    const error = applyCoupon(couponInput);
+    setCouponMessage(error);
+    if (!error) {
+      setCouponInput('');
+      setSnack({ message: 'Coupon applied' });
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    removeCoupon();
+    setCouponMessage(null);
   };
 
   const handleCheckout = () => {
@@ -129,6 +152,48 @@ export default function CartScreen() {
 
           {/* Order Summary */}
           <View style={styles.summaryContainer}>
+            {/* Coupon: an input before one is applied, a green tag after */}
+            {coupon ? (
+              <>
+                <View style={styles.couponApplied}>
+                  <MaterialCommunityIcons name="ticket-percent" size={18} color="#188038" />
+                  <Text style={styles.couponAppliedText} numberOfLines={1}>
+                    {coupon.code} - {coupon.description}
+                  </Text>
+                  <IconButton icon="close" size={16} onPress={handleRemoveCoupon} accessibilityLabel="Remove coupon" />
+                </View>
+                {couponError ? <Text style={styles.couponError}>{couponError}</Text> : null}
+              </>
+            ) : (
+              <>
+                <View style={styles.couponRow}>
+                  <TextInput
+                    mode="outlined"
+                    dense
+                    label="Coupon code"
+                    value={couponInput}
+                    onChangeText={(text) => {
+                      setCouponInput(text);
+                      setCouponMessage(null);
+                    }}
+                    autoCapitalize="characters"
+                    autoCorrect={false}
+                    error={!!couponMessage}
+                    onSubmitEditing={handleApplyCoupon}
+                    style={styles.couponInput}
+                  />
+                  <Button mode="outlined" onPress={handleApplyCoupon} style={styles.couponButton}>
+                    Apply
+                  </Button>
+                </View>
+                {couponMessage ? (
+                  <Text style={styles.couponError}>{couponMessage}</Text>
+                ) : (
+                  <Text style={styles.couponHint}>Try: WELCOME10, SAVE5 or BIGSPENDER</Text>
+                )}
+              </>
+            )}
+
             <View style={styles.summaryRow}>
               <Text style={styles.summaryLabel}>Subtotal</Text>
               <Text style={styles.summaryValue}>${total.toFixed(2)}</Text>
@@ -139,10 +204,16 @@ export default function CartScreen() {
                 <Text style={styles.discountValue}>-${(total - discountedTotal).toFixed(2)}</Text>
               </View>
             )}
+            {couponDiscount > 0 && (
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryLabel}>Coupon ({coupon?.code})</Text>
+                <Text style={styles.discountValue}>-${couponDiscount.toFixed(2)}</Text>
+              </View>
+            )}
             <View style={styles.summaryRowDivider} />
             <View style={styles.summaryRowTotal}>
               <Text style={styles.summaryLabelTotal}>Total</Text>
-              <Text style={styles.summaryValueTotal}>${discountedTotal.toFixed(2)}</Text>
+              <Text style={styles.summaryValueTotal}>${payableTotal.toFixed(2)}</Text>
             </View>
             <Button
               mode="contained"
@@ -163,11 +234,11 @@ export default function CartScreen() {
         action={
           snack?.undoItem
             ? {
-              label: 'Undo',
-              onPress: () => {
-                if (snack.undoItem) restoreItem(snack.undoItem);
-              },
-            }
+                label: 'Undo',
+                onPress: () => {
+                  if (snack.undoItem) restoreItem(snack.undoItem);
+                },
+              }
             : undefined
         }
       >

@@ -18,7 +18,7 @@ const item = (overrides: Partial<CartItem> = {}): CartItem => ({
   ...overrides,
 });
 
-const stateWith = (...items: CartItem[]): CartState => ({ items, isHydrated: true });
+const stateWith = (...items: CartItem[]): CartState => ({ items, isHydrated: true, couponCode: null });
 
 describe('getDiscountedPrice / calculateTotals', () => {
   it('applies the discount to one unit', () => {
@@ -40,7 +40,7 @@ describe('getDiscountedPrice / calculateTotals', () => {
 
 describe('cartReducer', () => {
   it('starts empty and not hydrated', () => {
-    expect(initialCartState).toEqual({ items: [], isHydrated: false });
+    expect(initialCartState).toEqual({ items: [], isHydrated: false, couponCode: null });
   });
 
   it('CART_HYDRATE loads saved items and marks the cart as loaded', () => {
@@ -87,6 +87,23 @@ describe('cartReducer', () => {
     const next = cartReducer(stateWith(item()), { type: 'CART_CLEAR' });
     expect(next.items).toHaveLength(0);
     expect(next.isHydrated).toBe(true);
+  });
+
+  it('COUPON_SET applies and removes a coupon code', () => {
+    const applied = cartReducer(stateWith(item()), { type: 'COUPON_SET', payload: 'SAVE5' });
+    expect(applied.couponCode).toBe('SAVE5');
+    expect(applied.items).toHaveLength(1);
+    expect(cartReducer(applied, { type: 'COUPON_SET', payload: null }).couponCode).toBeNull();
+  });
+
+  it('CART_CLEAR also removes the coupon (it was used with that cart)', () => {
+    const next = cartReducer({ ...stateWith(item()), couponCode: 'SAVE5' }, { type: 'CART_CLEAR' });
+    expect(next.couponCode).toBeNull();
+  });
+
+  it('CART_HYDRATE starts without a coupon (it is loaded separately)', () => {
+    const next = cartReducer({ ...stateWith(), couponCode: 'SAVE5' }, { type: 'CART_HYDRATE', payload: [] });
+    expect(next.couponCode).toBeNull();
   });
 
   it('ignores unknown actions', () => {

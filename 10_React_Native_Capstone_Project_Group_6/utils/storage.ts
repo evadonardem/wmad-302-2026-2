@@ -4,7 +4,7 @@
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import type { CartItem, Order } from '@/types/product';
+import type { CartItem, Order, WishlistItem } from '@/types/product';
 import type { Address, LocalAccount, ProfileUpdate, UserSettings } from '@/types/auth';
 
 const STORAGE_KEYS = {
@@ -16,6 +16,8 @@ const STORAGE_KEYS = {
   LOCAL_ACCOUNTS: 'local_accounts',
   ADDRESSES: 'addresses',
   PROFILE_EDITS: 'profile_edits',
+  WISHLIST: 'wishlist',
+  COUPON: 'applied_coupon',
 } as const;
 
 export type StorageKey = typeof STORAGE_KEYS[keyof typeof STORAGE_KEYS];
@@ -250,4 +252,22 @@ export const settingsStorage = {
 export const profileEditStorage = {
   get: (owner: string) => getForOwner<ProfileUpdate>(STORAGE_KEYS.PROFILE_EDITS, owner),
   set: (owner: string, edits: ProfileUpdate) => setForOwner(STORAGE_KEYS.PROFILE_EDITS, owner, edits),
+};
+
+/** Wishlist (Profile > Wishlist): one list per account */
+export const wishlistStorage = {
+  get: async (owner: string): Promise<WishlistItem[]> => {
+    const list = await getForOwner<WishlistItem[]>(STORAGE_KEYS.WISHLIST, owner);
+    return Array.isArray(list) ? list : [];
+  },
+  set: (owner: string, items: WishlistItem[]) => setForOwner(STORAGE_KEYS.WISHLIST, owner, items),
+};
+
+/** The coupon code currently applied to an account's cart (null = none) */
+export const couponStorage = {
+  get: async (owner: string): Promise<string | null> => {
+    const code = await getForOwner<string>(STORAGE_KEYS.COUPON, owner);
+    return typeof code === 'string' && code ? code : null;
+  },
+  set: (owner: string, code: string | null) => setForOwner<string | null>(STORAGE_KEYS.COUPON, owner, code),
 };

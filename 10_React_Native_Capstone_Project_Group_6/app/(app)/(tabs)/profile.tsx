@@ -9,7 +9,8 @@ import React, { useCallback, useState } from 'react';
 import { View, Text, ScrollView } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
-import { Card, Button, List, Avatar, Divider, Badge, Dialog, Portal, Snackbar } from 'react-native-paper';
+import { useWishlist } from '@/context/WishlistContext';
+import { Card, Button, List, Avatar, Divider, Badge, Dialog, Portal } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { productApi } from '@/services/productApi';
 import { Order } from '@/types/product';
@@ -21,11 +22,11 @@ import { styles } from './profileStyles';
 export default function ProfileScreen() {
   const router = useRouter();
   const { user, logout, isAuthenticated } = useAuth();
+  const { count: wishlistCount } = useWishlist();
 
   // Alert.alert does nothing in the browser, so the confirmation is a Paper Dialog
   // (works on web and phone)
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
   const [stats, setStats] = useState({ count: 0, spent: 0 });
 
   // Count the orders again every time this tab comes into view (e.g. after checkout).
@@ -123,7 +124,7 @@ export default function ProfileScreen() {
           <Text style={styles.statLabel}>Spent</Text>
         </View>
         <View style={styles.statItem}>
-          <Text style={styles.statValue}>0</Text>
+          <Text style={styles.statValue}>{wishlistCount}</Text>
           <Text style={styles.statLabel}>Wishlist</Text>
         </View>
       </View>
@@ -156,7 +157,7 @@ export default function ProfileScreen() {
                 <MaterialCommunityIcons name="heart" size={24} color="#1A73E8" style={props.style} />
               )}
               right={(props) => <MaterialCommunityIcons name="chevron-right" size={24} color="#5F6368" style={props.style} />}
-              onPress={() => setMessage('Wishlist is coming soon')}
+              onPress={() => router.push('/(app)/wishlist')}
             />
             <Divider style={styles.divider} />
             <List.Item
@@ -238,11 +239,6 @@ export default function ProfileScreen() {
             </Button>
           </Dialog.Actions>
         </Dialog>
-
-        {/* Inside Portal so it floats over the screen instead of sitting at the bottom of the scroll */}
-        <Snackbar visible={!!message} onDismiss={() => setMessage(null)} duration={2500}>
-          {message ?? ''}
-        </Snackbar>
       </Portal>
     </ScrollView>
   );

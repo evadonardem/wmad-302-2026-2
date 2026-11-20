@@ -84,6 +84,25 @@ describe('buildOrder', () => {
   });
 });
 
+describe('buildOrder with a coupon', () => {
+  const base = { userId: 1, owner: 'jlaw', items: [cartItem()], shipping: validShipping, paymentMethod: 'cod' as const };
+
+  it('subtracts the coupon from what was paid and remembers it', () => {
+    const order = buildOrder({ ...base, couponCode: 'SAVE5', couponDiscount: 5 });
+    expect(order.discountedTotal).toBeCloseTo(175); // 2 x 90 = 180, minus 5
+    expect(order.total).toBeCloseTo(200);
+    expect(order.couponCode).toBe('SAVE5');
+    expect(order.couponDiscount).toBe(5);
+  });
+
+  it('has no coupon fields when none was used', () => {
+    const order = buildOrder(base);
+    expect(order.discountedTotal).toBeCloseTo(180);
+    expect(order).not.toHaveProperty('couponCode');
+    expect(buildOrder({ ...base, couponCode: 'SAVE5', couponDiscount: 0 })).not.toHaveProperty('couponCode');
+  });
+});
+
 describe('apiCartToOrder', () => {
   const cart: Cart = {
     id: 51,

@@ -133,4 +133,13 @@ export interface Order {
   totalQuantity: number;
   shipping?: ShippingInfo;
   paymentMethod?: PaymentMethod;
+  /** coupon used on this order, and how many dollars it took off (already inside discountedTotal) */
+  couponCode?: string;
+  couponDiscount?: number;
 }
+
+/** What the wishlist keeps about a product (enough to show it without loading it again) */
+export type WishlistItem = Pick<
+  Product,
+  'id' | 'title' | 'thumbnail' | 'category' | 'price' | 'discountPercentage' | 'rating' | 'stock'
+>;

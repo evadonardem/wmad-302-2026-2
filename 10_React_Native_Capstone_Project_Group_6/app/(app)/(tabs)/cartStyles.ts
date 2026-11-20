@@ -51,7 +51,7 @@ export const styles = StyleSheet.create({
   listContent: {
     paddingHorizontal: 16,
     paddingTop: 16,
-    paddingBottom: 200, // Space for summary
+    paddingBottom: 340, // Space for summary (it is taller with the coupon box)
   },
   header: {
     paddingHorizontal: 16,
@@ -136,6 +136,44 @@ export const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: -2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
+  },
+  couponRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 6,
+  },
+  couponInput: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+  },
+  couponButton: {
+    borderRadius: 8,
+  },
+  couponApplied: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#E6F4EA',
+    borderRadius: 8,
+    paddingLeft: 10,
+    marginBottom: 6,
+  },
+  couponAppliedText: {
+    flex: 1,
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#188038',
+    marginLeft: 6,
+  },
+  couponError: {
+    fontSize: 12,
+    color: '#D93025',
+    marginBottom: 6,
+  },
+  couponHint: {
+    fontSize: 11,
+    color: '#5F6368',
+    marginBottom: 10,
   },
   summaryRow: {
     flexDirection: 'row',

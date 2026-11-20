@@ -16,6 +16,8 @@ import {
   setMultipleStorageItems,
   setStorageItem,
   settingsStorage,
+  couponStorage,
+  wishlistStorage,
 } from '@/utils/storage';
 
 const account = (overrides: Partial<LocalAccount> = {}): LocalAccount => ({
@@ -200,5 +202,25 @@ describe('favoritesStorage (wishlist ids)', () => {
     expect(await favoritesStorage.getIds()).toEqual([]);
     await favoritesStorage.setIds([7, 8]);
     expect(await favoritesStorage.getIds()).toEqual([7, 8]);
+  });
+});
+
+describe('wishlistStorage and couponStorage (per account)', () => {
+  const heart = { id: 1, title: 'Phone', thumbnail: '', category: 'beauty', price: 10, discountPercentage: 0, rating: 4, stock: 3 };
+
+  it('keeps each account\'s wishlist separate', async () => {
+    expect(await wishlistStorage.get('emilys')).toEqual([]);
+    await wishlistStorage.set('emilys', [heart]);
+    expect(await wishlistStorage.get('EMILYS')).toEqual([heart]);
+    expect(await wishlistStorage.get('jlaw')).toEqual([]);
+  });
+
+  it('keeps each account\'s coupon separate and can remove it', async () => {
+    expect(await couponStorage.get('emilys')).toBeNull();
+    await couponStorage.set('emilys', 'SAVE5');
+    expect(await couponStorage.get('emilys')).toBe('SAVE5');
+    expect(await couponStorage.get('jlaw')).toBeNull();
+    await couponStorage.set('emilys', null);
+    expect(await couponStorage.get('emilys')).toBeNull();
   });
 });

@@ -72,6 +72,9 @@ export default function OrderDetailScreen() {
   }
 
   const paymentLabel = PAYMENT_METHODS.find((m) => m.value === order.paymentMethod)?.label;
+  // order.discountedTotal is what was paid, so it already has the coupon taken off
+  const couponDiscount = order.couponDiscount ?? 0;
+  const productDiscount = order.total - order.discountedTotal - couponDiscount;
 
   return (
     <View style={styles.screen}>
@@ -118,10 +121,16 @@ export default function OrderDetailScreen() {
               <Text style={styles.muted}>Subtotal</Text>
               <Text style={styles.muted}>${order.total.toFixed(2)}</Text>
             </View>
-            {order.total !== order.discountedTotal && (
+            {productDiscount > 0.005 && (
               <View style={styles.row}>
                 <Text style={styles.muted}>Discount</Text>
-                <Text style={styles.discount}>-${(order.total - order.discountedTotal).toFixed(2)}</Text>
+                <Text style={styles.discount}>-${productDiscount.toFixed(2)}</Text>
+              </View>
+            )}
+            {couponDiscount > 0 && (
+              <View style={styles.row}>
+                <Text style={styles.muted}>Coupon ({order.couponCode})</Text>
+                <Text style={styles.discount}>-${couponDiscount.toFixed(2)}</Text>
               </View>
             )}
             <View style={[styles.row, styles.totalRow]}>

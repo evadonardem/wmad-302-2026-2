@@ -40,7 +40,7 @@ import {
 export default function CheckoutScreen() {
   const router = useRouter();
   const { user } = useAuth();
-  const { items, total, discountedTotal, totalQuantity, clearCart } = useCart();
+  const { items, total, discountedTotal, totalQuantity, clearCart, coupon, couponDiscount, payableTotal } = useCart();
 
   const [form, setForm] = useState<ShippingInfo>({
     fullName: user ? `${user.firstName} ${user.lastName}` : '',
@@ -115,7 +115,15 @@ export default function CheckoutScreen() {
       });
 
       // 2. Save it on the device so it appears in Order History
-      const order = buildOrder({ userId: user.id, owner: user.username, items, shipping: form, paymentMethod });
+      const order = buildOrder({
+        userId: user.id,
+        owner: user.username,
+        items,
+        shipping: form,
+        paymentMethod,
+        couponCode: coupon?.code,
+        couponDiscount,
+      });
       try {
         await orderStorage.addOrder(order);
       } catch (storageError) {
@@ -279,13 +287,19 @@ export default function CheckoutScreen() {
                 <Text style={styles.discount}>-${(total - discountedTotal).toFixed(2)}</Text>
               </View>
             )}
+            {couponDiscount > 0 && (
+              <View style={styles.totalRow}>
+                <Text style={styles.muted}>Coupon ({coupon?.code})</Text>
+                <Text style={styles.discount}>-${couponDiscount.toFixed(2)}</Text>
+              </View>
+            )}
             <View style={styles.totalRow}>
               <Text style={styles.muted}>Shipping</Text>
               <Text style={styles.muted}>Free</Text>
             </View>
             <View style={[styles.totalRow, styles.grandTotalRow]}>
               <Text style={styles.grandTotal}>Total</Text>
-              <Text style={styles.grandTotal}>${discountedTotal.toFixed(2)}</Text>
+              <Text style={styles.grandTotal}>${payableTotal.toFixed(2)}</Text>
             </View>
           </View>
 
@@ -299,7 +313,7 @@ export default function CheckoutScreen() {
             style={styles.placeButton}
             contentStyle={styles.placeButtonContent}
           >
-            {placing ? 'Placing order...' : `Place order - $${discountedTotal.toFixed(2)}`}
+            {placing ? 'Placing order...' : `Place order - $${payableTotal.toFixed(2)}`}
           </Button>
         </View>
       </ScrollView>
