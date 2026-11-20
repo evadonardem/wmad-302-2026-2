@@ -36,7 +36,7 @@ export const createStyles = (colors: ThemeColors) => StyleSheet.create({
   card: {
     borderRadius: 12,
     backgroundColor: colors.surface,
-    height: '100%',
+    flexGrow: 1, // cards in the same row match heights without stretching to the whole list
   },
   cardContent: {
     padding: 20,

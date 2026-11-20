@@ -2,11 +2,12 @@
  * Shared Styles for Auth Screens
  */
 import { StyleSheet } from 'react-native';
+import type { ThemeColors } from '@/constants/colors';
 
-export const styles = StyleSheet.create({
+export const createStyles = (colors: ThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: colors.background,
   },
   scrollContent: {
     flexGrow: 1,
@@ -25,12 +26,12 @@ export const styles = StyleSheet.create({
   appName: {
     fontSize: 32,
     fontWeight: '700',
-    color: '#1A73E8',
+    color: colors.primary,
     letterSpacing: -0.5,
   },
   tagline: {
     fontSize: 16,
-    color: '#5F6368',
+    color: colors.textMuted,
     marginTop: 4,
   },
   card: {
@@ -43,13 +44,13 @@ export const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#202124',
+    color: colors.text,
     textAlign: 'center',
     marginBottom: 4,
   },
   subtitle: {
     fontSize: 14,
-    color: '#5F6368',
+    color: colors.textMuted,
     textAlign: 'center',
     marginBottom: 28,
   },
@@ -63,13 +64,13 @@ export const styles = StyleSheet.create({
     fontSize: 20,
   },
   errorContainer: {
-    backgroundColor: '#FCE8E6',
+    backgroundColor: colors.errorContainer,
     borderRadius: 8,
     padding: 12,
     marginBottom: 16,
   },
   errorText: {
-    color: '#EA4335',
+    color: colors.error,
     fontSize: 14,
     textAlign: 'center',
   },
@@ -99,7 +100,7 @@ export const styles = StyleSheet.create({
   },
   demoButtonText: {
     fontSize: 14,
-    color: '#1A73E8',
+    color: colors.primary,
     fontWeight: '500',
   },
   registerContainer: {
@@ -109,14 +110,14 @@ export const styles = StyleSheet.create({
   },
   registerText: {
     fontSize: 14,
-    color: '#5F6368',
+    color: colors.textMuted,
   },
   link: {
     paddingHorizontal: 4,
   },
   linkText: {
     fontSize: 14,
-    color: '#1A73E8',
+    color: colors.primary,
     fontWeight: '600',
   },
   footer: {
@@ -125,7 +126,7 @@ export const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: 12,
-    color: '#5F6368',
+    color: colors.textMuted,
     textAlign: 'center',
     lineHeight: 18,
   },
@@ -147,7 +148,7 @@ export const styles = StyleSheet.create({
   genderLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#202124',
+    color: colors.text,
     marginBottom: 8,
   },
   genderOptions: {
@@ -159,21 +160,21 @@ export const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
-    backgroundColor: '#FFFFFF',
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
     alignItems: 'center',
   },
   genderOptionSelected: {
-    borderColor: '#1A73E8',
-    backgroundColor: '#E8F0FE',
+    borderColor: colors.primary,
+    backgroundColor: colors.primaryContainer,
   },
   genderOptionText: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#5F6368',
+    color: colors.textMuted,
   },
   genderOptionTextSelected: {
-    color: '#1A73E8',
+    color: colors.primary,
     fontWeight: '600',
   },
   termsContainer: {
@@ -187,7 +188,7 @@ export const styles = StyleSheet.create({
   termsText: {
     flex: 1,
     fontSize: 14,
-    color: '#5F6368',
+    color: colors.textMuted,
     lineHeight: 20,
   },
   registerButton: {
@@ -203,25 +204,25 @@ export const styles = StyleSheet.create({
   },
   loginText: {
     fontSize: 14,
-    color: '#5F6368',
+    color: colors.textMuted,
   },
   guideContainer: {
     marginTop: 24,
     padding: 16,
-    backgroundColor: '#E8F0FE',
+    backgroundColor: colors.primaryContainer,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#D0E1F9',
+    borderColor: colors.primaryBorder,
   },
   guideTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#1A73E8',
+    color: colors.primary,
     marginBottom: 8,
   },
   guideText: {
     fontSize: 13,
-    color: '#3C4043',
+    color: colors.textBody,
     lineHeight: 20,
   },
 });

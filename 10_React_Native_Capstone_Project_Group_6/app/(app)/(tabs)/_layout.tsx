@@ -5,12 +5,14 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
 import { StyleSheet } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useCart } from '@/context/CartContext';
 import { useAppTheme } from '@/context/ThemeContext';
 
 export default function TabsLayout() {
   const { colors, isDark } = useAppTheme();
+  const insets = useSafeAreaInsets();
   const { totalQuantity } = useCart();
 
   return (
@@ -29,8 +31,10 @@ export default function TabsLayout() {
           shadowOffset: { width: 0, height: -2 },
           shadowOpacity: 0.1,
           shadowRadius: 8,
+          // Fixed height: icon (24) + label + padding. Without it the icons get squeezed.
+          height: 64 + insets.bottom,
           paddingTop: 8,
-          paddingBottom: 8,
+          paddingBottom: 8 + insets.bottom,
         },
         tabBarLabelStyle: {
           fontSize: 12,

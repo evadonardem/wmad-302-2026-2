@@ -16,9 +16,12 @@ import {
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
 import { Card, Button, TextInput as PaperTextInput, Divider } from 'react-native-paper';
-import { styles } from './styles';
+import { createStyles } from './styles';
+import { useAppTheme, useThemedStyles } from '@/context/ThemeContext';
 
 export default function LoginScreen() {
+  const { colors } = useAppTheme();
+  const styles = useThemedStyles(createStyles);
   const router = useRouter();
   const { login, isLoading, error, clearError } = useAuth();
   const { redirect } = useLocalSearchParams<{ redirect?: string }>();
@@ -137,7 +140,7 @@ export default function LoginScreen() {
               contentStyle={styles.buttonContent}
             >
               {isLoading ? (
-                <ActivityIndicator color="white" size="small" />
+                <ActivityIndicator color={colors.onPrimary} size="small" />
               ) : (
                 <Text style={styles.buttonText}>Sign In</Text>
               )}
