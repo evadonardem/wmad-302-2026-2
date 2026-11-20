@@ -38,6 +38,15 @@ const AUTH_PATHS = ['/login', '/register', '/refresh'];
 
 type RetryableRequest = InternalAxiosRequestConfig & { _retry?: boolean };
 
+/**
+ * DummyJSON sends the access token as `accessToken`, but the rest of the app reads
+ * `token`. Convert once here so a saved or fresh session always has `token`.
+ */
+function normalizeSession(raw: AuthUser & { accessToken?: string }): AuthUser {
+  const { accessToken, ...rest } = raw;
+  return { ...rest, token: rest.token || accessToken || '' };
+}
+
 /** Turn any thrown value into a readable message (prefers the API's own message). */
 export function extractErrorMessage(error: unknown, fallback: string): string {
   if (axios.isAxiosError(error)) {
@@ -133,19 +142,22 @@ class AuthApiService {
 
   /** Read the saved session from AsyncStorage into memory. Call once on app start. */
   async loadStoredUser(): Promise<AuthUser | null> {
-    this.currentUser = await getStorageItem<AuthUser>('auth_user');
+    const saved = await getStorageItem<AuthUser & { accessToken?: string }>('auth_user');
+    // Sessions saved by an earlier version only have `accessToken`: convert them too
+    this.currentUser = saved ? normalizeSession(saved) : null;
     return this.currentUser;
   }
 
   /** The plain DummyJSON login (POST /auth/login). Saves the session on success. */
   private async requestLogin(credentials: LoginCredentials): Promise<AuthUser> {
-    const response = await this.client.post<AuthUser>('/login', {
+    const response = await this.client.post<AuthUser & { accessToken?: string }>('/login', {
       username: credentials.username,
       password: credentials.password,
       expiresInMins: credentials.expiresInMins || 60,
     });
-    await this.setTokens(response.data);
-    return response.data;
+    const user = normalizeSession(response.data);
+    await this.setTokens(user);
+    return user;
   }
 
   /**

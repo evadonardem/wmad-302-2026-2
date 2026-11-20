@@ -133,10 +133,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } else {
           dispatch({ type: 'AUTH_HYDRATE', payload: null });
         }
-      } catch {
-        // Token invalid and refresh failed (or offline): start logged out
-        await authApi.logout();
-        dispatch({ type: 'AUTH_HYDRATE', payload: null });
+      } catch (error: unknown) {
+        console.error('Could not restore the saved session:', error);
+        // If the token refresh failed, authApi already wiped the session: start logged out.
+        // But a plain network hiccup must NOT log the person out, so keep the saved session.
+        const stillSaved = authApi.getStoredUser();
+        if (stillSaved?.token && stillSaved?.refreshToken) {
+          dispatch({ type: 'AUTH_HYDRATE', payload: stillSaved });
+        } else {
+          await authApi.logout();
+          dispatch({ type: 'AUTH_HYDRATE', payload: null });
+        }
       }
     };
 
