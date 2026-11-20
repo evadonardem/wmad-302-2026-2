@@ -3,7 +3,7 @@
  * Students implement: Product grid, categories, flash deals, recommendations
  * APIs: https://dummyjson.com/docs/products
  */
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -19,6 +19,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useCart } from '@/context/CartContext';
 import { Card, Title, Avatar, Button, Badge, Snackbar } from 'react-native-paper';
 import { createStyles } from './homeStyles';
+import { HOME_PAGE_SIZE, hasMore, isNearBottom, mergeById } from '@/utils/pagination';
 import { useAppTheme, useThemedStyles } from '@/context/ThemeContext';
 
 // Types for DummyJSON Products API
@@ -66,14 +67,22 @@ export default function HomeScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Scroll on demand: the server's total, and the state of loading the next page
+  const [total, setTotal] = useState(0);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [loadMoreFailed, setLoadMoreFailed] = useState(false);
+  const loadingMoreRef = useRef(false); // blocks a second request while one is running
+  const generationRef = useRef(0); // bumped on every refresh, so a late page from before it is ignored
 
   const fetchData = async (isRefresh = false) => {
     try {
       if (!isRefresh) setLoading(true);
       setError(null);
+      setLoadMoreFailed(false);
+      generationRef.current += 1;
 
       const [productsRes, categoriesRes] = await Promise.all([
-        fetch('https://dummyjson.com/products?limit=20'),
+        fetch(`https://dummyjson.com/products?limit=${HOME_PAGE_SIZE}&skip=0`),
         fetch('https://dummyjson.com/products/categories'),
       ]);
 
@@ -86,6 +95,7 @@ export default function HomeScreen() {
       const categoriesData = rawCategories.map((c) => (typeof c === 'string' ? c : c.slug));
 
       setProducts(productsData.products);
+      setTotal(productsData.total);
       setCategories(categoriesData);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load products');
@@ -100,6 +110,28 @@ export default function HomeScreen() {
   }, []);
 
   const onRefresh = () => fetchData(true);
+
+  /** Loads the next page and adds it to the end of the list. */
+  const loadMore = async () => {
+    if (loadingMoreRef.current || !hasMore(products.length, total)) return;
+    loadingMoreRef.current = true;
+    setLoadingMore(true);
+    setLoadMoreFailed(false);
+    const generation = generationRef.current;
+    try {
+      const res = await fetch(`https://dummyjson.com/products?limit=${HOME_PAGE_SIZE}&skip=${products.length}`);
+      if (!res.ok) throw new Error('Failed to load more products');
+      const data: ProductsResponse = await res.json();
+      if (generation !== generationRef.current) return; // the list was refreshed meanwhile
+      setProducts((prev) => mergeById(prev, data.products));
+      setTotal(data.total);
+    } catch {
+      if (generation === generationRef.current) setLoadMoreFailed(true);
+    } finally {
+      loadingMoreRef.current = false;
+      setLoadingMore(false);
+    }
+  };
 
   const handleAddToCart = (product: Product) => {
     const result = addToCart(product);
@@ -190,6 +222,21 @@ export default function HomeScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.primary]} />
         }
         contentContainerStyle={styles.scrollContent}
+        scrollEventThrottle={200}
+        onScroll={({ nativeEvent }) => {
+          // After a failed load we wait for the person to tap "Try again" instead of retrying on every scroll
+          if (loadMoreFailed) return;
+          const { layoutMeasurement, contentSize, contentOffset } = nativeEvent;
+          if (
+            isNearBottom({
+              layoutHeight: layoutMeasurement.height,
+              contentHeight: contentSize.height,
+              offsetY: contentOffset.y,
+            })
+          ) {
+            loadMore();
+          }
+        }}
       >
         {/* Welcome Header */}
         <View style={styles.welcomeContainer}>
@@ -259,12 +306,30 @@ export default function HomeScreen() {
               <Text style={styles.emptyText}>No products found</Text>
             </View>
           ) : (
-            products.slice(0, 10).map((item, index) => (
+            products.map((item, index) => (
               <React.Fragment key={item.id}>
                 {index > 0 && <View style={styles.cardSeparator} />}
                 {renderProduct({ item })}
               </React.Fragment>
             ))
+          )}
+
+          {/* Scroll on demand: what is shown under the last product */}
+          {products.length > 0 && (
+            <View style={styles.listFooter}>
+              {loadingMore ? (
+                <ActivityIndicator size="small" color={colors.primary} />
+              ) : loadMoreFailed ? (
+                <>
+                  <Text style={styles.emptyText}>Couldn't load more products</Text>
+                  <Button mode="outlined" compact onPress={loadMore} style={styles.retryButton}>
+                    Try again
+                  </Button>
+                </>
+              ) : !hasMore(products.length, total) ? (
+                <Text style={styles.emptyText}>You've seen all {total} products</Text>
+              ) : null}
+            </View>
           )}
         </View>
       </ScrollView>

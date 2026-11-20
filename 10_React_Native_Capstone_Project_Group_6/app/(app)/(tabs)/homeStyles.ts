@@ -232,6 +232,11 @@ export const createStyles = (colors: ThemeColors) => StyleSheet.create({
   cardSeparator: {
     height: 8,
   },
+  listFooter: {
+    paddingVertical: 16,
+    alignItems: 'center',
+    gap: 8,
+  },
   emptyContainer: {
     paddingVertical: 40,
     alignItems: 'center',
