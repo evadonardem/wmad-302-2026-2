@@ -15,6 +15,7 @@ import { productApi } from '@/services/productApi';
 import { Order } from '@/types/product';
 import { orderStorage } from '@/utils/storage';
 import { apiCartToOrder, belongsToUser, formatOrderDate, getOrderNumber } from '@/utils/orders';
+import { resolveOrderStatus } from '@/utils/tracking';
 import { useAppTheme, useThemedStyles } from '@/context/ThemeContext';
 import type { ThemeColors } from '@/constants/colors';
 
@@ -36,7 +37,9 @@ export default function OrdersScreen() {
       setWarning(null);
 
       // Orders placed in the app: newest first, only this user's
-      const saved = (await orderStorage.getOrders().catch(() => [])).filter((o) => belongsToUser(o, user));
+      const saved = (await orderStorage.getOrders().catch(() => []))
+        .filter((o) => belongsToUser(o, user))
+        .map((o) => resolveOrderStatus(o)); // status moves forward as time passes
 
       // Past orders from the API (GET /carts/user/{id}). If it fails we still show the
       // saved ones. A newly registered account has no history, so we skip the call

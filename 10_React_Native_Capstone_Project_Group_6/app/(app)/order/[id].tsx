@@ -14,6 +14,8 @@ import { productApi } from '@/services/productApi';
 import { Order } from '@/types/product';
 import { orderStorage } from '@/utils/storage';
 import { PAYMENT_METHODS, apiCartToOrder, formatOrderDate, getOrderNumber } from '@/utils/orders';
+import { formatTrackingTime, getTracking } from '@/utils/tracking';
+import { OrderTimeline } from '@/components/OrderTimeline';
 import { useAppTheme, useThemedStyles } from '@/context/ThemeContext';
 import type { ThemeColors } from '@/constants/colors';
 
@@ -25,6 +27,7 @@ export default function OrderDetailScreen() {
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [now, setNow] = useState(() => new Date()); // ticks so tracking moves forward while the screen is open
 
   const loadOrder = useCallback(async () => {
     setLoading(true);
@@ -48,6 +51,11 @@ export default function OrderDetailScreen() {
   useEffect(() => {
     loadOrder();
   }, [loadOrder]);
+
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 15000);
+    return () => clearInterval(timer);
+  }, []);
 
   if (loading) {
     return (
@@ -75,6 +83,7 @@ export default function OrderDetailScreen() {
     );
   }
 
+  const tracking = getTracking(order, now);
   const paymentLabel = PAYMENT_METHODS.find((m) => m.value === order.paymentMethod)?.label;
   // order.discountedTotal is what was paid, so it already has the coupon taken off
   const couponDiscount = order.couponDiscount ?? 0;
@@ -85,15 +94,21 @@ export default function OrderDetailScreen() {
       <ScreenHeader title={`Order ${getOrderNumber(order)}`} />
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.content}>
-          {/* Status */}
+          {/* Status + tracking */}
           <View style={styles.section}>
             <View style={styles.row}>
               <Text style={styles.sectionTitle}>Status</Text>
-              <View style={[styles.status, order.status === 'Delivered' ? styles.statusDone : styles.statusActive]}>
-                <Text style={styles.statusText}>{order.status}</Text>
+              <View style={[styles.status, tracking.isDelivered ? styles.statusDone : styles.statusActive]}>
+                <Text style={styles.statusText}>{tracking.status}</Text>
               </View>
             </View>
             <Text style={styles.muted}>Placed: {formatOrderDate(order.placedAt)}</Text>
+            {tracking.estimatedDelivery && (
+              <Text style={styles.muted}>Estimated delivery: {formatTrackingTime(tracking.estimatedDelivery)}</Text>
+            )}
+            <View style={styles.timeline}>
+              <OrderTimeline steps={tracking.steps} />
+            </View>
           </View>
 
           {/* Items */}
@@ -177,6 +192,7 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
   muted: { fontSize: 13, color: colors.textMuted },
   bodyText: { fontSize: 14, color: colors.text, lineHeight: 20 },
   paymentLine: { marginTop: 6 },
+  timeline: { marginTop: 14 },
   status: { borderRadius: 12, paddingHorizontal: 10, paddingVertical: 3 },
   statusActive: { backgroundColor: colors.warningContainer },
   statusDone: { backgroundColor: colors.successContainer },
