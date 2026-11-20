@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from 'react';
-import { Alert, Platform, ScrollView, Text, View } from 'react-native';
+import { Alert, ScrollView, Text, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { Avatar, Badge, Button, Card, Divider, List } from 'react-native-paper';
+import { Avatar, Badge, Button, Card, Dialog, Divider, List, Portal } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '@/context/AuthContext';
 import { useFavorites } from '@/context/FavoritesContext';
@@ -14,6 +14,7 @@ export default function ProfileScreen() {
   const { user, logout, isAuthenticated } = useAuth();
   const { favoriteIds } = useFavorites();
   const [orders, setOrders] = useState<MarketplaceOrder[]>([]);
+  const [logoutDialogVisible, setLogoutDialogVisible] = useState(false);
 
   useFocusEffect(useCallback(() => {
     let active = true;
@@ -28,17 +29,7 @@ export default function ProfileScreen() {
   }, []));
 
   const handleLogout = () => {
-    if (Platform.OS === 'web') {
-      if (window.confirm('Are you sure you want to logout?')) {
-        logout();
-      }
-      return;
-    }
-
-    Alert.alert('Logout', 'Are you sure you want to logout?', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Logout', style: 'destructive', onPress: logout },
-    ]);
+    setLogoutDialogVisible(true);
   };
 
   if (!isAuthenticated) {
@@ -153,6 +144,47 @@ export default function ProfileScreen() {
       <ProductRecommendations />
 
       <Text style={styles.versionText}>Kartora · You Shop. We Deliver.</Text>
+      <Portal>
+        <Dialog
+          visible={logoutDialogVisible}
+          onDismiss={() => setLogoutDialogVisible(false)}
+          style={styles.logoutDialog}
+        >
+          <Dialog.Content>
+            <View style={styles.logoutDialogHeader}>
+              <View style={styles.logoutDialogIcon}>
+                <MaterialCommunityIcons name="logout" size={23} color="#B4233C" />
+              </View>
+              <View style={styles.logoutDialogHeading}>
+                <Text style={styles.logoutDialogEyebrow}>ACCOUNT</Text>
+                <Text style={styles.logoutDialogTitle}>Log out?</Text>
+              </View>
+            </View>
+            <Text style={styles.logoutDialogMessage}>
+              You will need to sign in again to access your account.
+            </Text>
+          </Dialog.Content>
+          <Dialog.Actions style={styles.logoutDialogActions}>
+            <Button
+              mode="outlined"
+              textColor="#75648A"
+              onPress={() => setLogoutDialogVisible(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              mode="contained"
+              buttonColor="#B4233C"
+              onPress={() => {
+                setLogoutDialogVisible(false);
+                logout();
+              }}
+            >
+              Log out
+            </Button>
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
     </ScrollView>
   );
 }

@@ -105,6 +105,48 @@ export const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#75648A',
   },
+  logoutDialog: {
+    borderRadius: 20,
+    backgroundColor: '#FFFFFF',
+  },
+  logoutDialogHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 18,
+  },
+  logoutDialogIcon: {
+    width: 48,
+    height: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 24,
+    backgroundColor: '#FCECEE',
+  },
+  logoutDialogHeading: {
+    marginLeft: 14,
+  },
+  logoutDialogEyebrow: {
+    color: '#8D7D9E',
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 1,
+  },
+  logoutDialogTitle: {
+    marginTop: 2,
+    color: marketplaceColors.text,
+    fontSize: 21,
+    fontWeight: '700',
+  },
+  logoutDialogMessage: {
+    color: marketplaceColors.muted,
+    fontSize: 14,
+    lineHeight: 21,
+  },
+  logoutDialogActions: {
+    paddingHorizontal: 20,
+    paddingBottom: 16,
+    gap: 8,
+  },
   guideContainer: {
     marginTop: 16,
     padding: 16,
