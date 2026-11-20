@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Image, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Button, Card, IconButton } from 'react-native-paper';
 import { Product } from '@/types/product';
 import { productApi } from '@/services/productApi';
 import { useFavorites } from '@/context/FavoritesContext';
 import { marketplaceCardShadow, marketplaceColors } from '@/constants/theme';
+import { showAlert } from '@/utils/platformAlert';
 
 const brandPurple = '#75648A';
 
@@ -30,7 +31,7 @@ export default function WishlistScreen() {
       })
       .catch((error: unknown) => {
         if (active) {
-          Alert.alert('Wishlist unavailable', error instanceof Error ? error.message : 'Please try again.');
+          showAlert('Wishlist unavailable', error instanceof Error ? error.message : 'Please try again.');
         }
       })
       .finally(() => {
@@ -47,7 +48,7 @@ export default function WishlistScreen() {
       await toggleFavorite(id);
       setProducts((current) => current.filter((product) => product.id !== id));
     } catch (error) {
-      Alert.alert('Could not update wishlist', error instanceof Error ? error.message : 'Please try again.');
+      showAlert('Could not update wishlist', error instanceof Error ? error.message : 'Please try again.');
     }
   };
 

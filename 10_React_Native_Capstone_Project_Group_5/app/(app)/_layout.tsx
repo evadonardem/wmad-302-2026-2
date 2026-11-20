@@ -1,23 +1,14 @@
 /**
- * App Layout - Protected routes with auth guard
+ * App layout; checkout enforces authentication while browsing remains public.
  */
 import { Stack } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
-import { Redirect } from 'expo-router';
 import React from 'react';
 
 export default function AppLayout() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isLoading } = useAuth();
 
-  // Show loading while checking auth
-  if (isLoading) {
-    return null; // Or a loading screen
-  }
-
-  // Redirect to login if not authenticated
-  if (!isAuthenticated) {
-    return <Redirect href="/(auth)/login" />;
-  }
+  if (isLoading) return null;
 
   return (
     <Stack screenOptions={{ headerShown: false }}>

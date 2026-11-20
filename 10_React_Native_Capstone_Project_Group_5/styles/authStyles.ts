@@ -59,6 +59,12 @@ export const styles = StyleSheet.create({
   input: {
     marginBottom: 16,
   },
+  passwordHint: {
+    color: '#746C7A',
+    fontSize: 12,
+    marginTop: -10,
+    marginBottom: 16,
+  },
   eyeIcon: {
     padding: 8,
   },
@@ -89,21 +95,6 @@ export const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     letterSpacing: 0.5,
-  },
-  demoContainer: {
-    marginTop: 8,
-  },
-  divider: {
-    marginVertical: 16,
-  },
-  demoButton: {
-    paddingVertical: 12,
-    alignItems: 'center',
-  },
-  demoButtonText: {
-    fontSize: 14,
-    color: '#75648A',
-    fontWeight: '500',
   },
   registerContainer: {
     flexDirection: 'row',

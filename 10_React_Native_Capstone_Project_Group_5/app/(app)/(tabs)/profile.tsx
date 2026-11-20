@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { Alert, ScrollView, Text, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { Avatar, Badge, Button, Card, Dialog, Divider, List, Portal } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -8,6 +8,7 @@ import { useFavorites } from '@/context/FavoritesContext';
 import ProductRecommendations from '@/components/ProductRecommendations';
 import { MarketplaceOrder, ordersStorage } from '@/utils/marketplaceStorage';
 import { styles } from '@/styles/profileStyles';
+import { showAlert } from '@/utils/platformAlert';
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -23,7 +24,7 @@ export default function ProfileScreen() {
         if (active) setOrders(savedOrders);
       })
       .catch((error: unknown) => {
-        Alert.alert('Could not load order summary', error instanceof Error ? error.message : 'Please try again.');
+        showAlert('Could not load order summary', error instanceof Error ? error.message : 'Please try again.');
       });
     return () => { active = false; };
   }, []));
@@ -45,11 +46,15 @@ export default function ProfileScreen() {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <View style={styles.header}>
-        <Avatar.Image
-          size={82}
-          source={{ uri: user?.image || 'https://dummyjson.com/icon/emilys/128' }}
-          style={styles.avatar}
-        />
+        {user?.image ? (
+          <Avatar.Image size={82} source={{ uri: user.image }} style={styles.avatar} />
+        ) : (
+          <Avatar.Text
+            size={82}
+            label={`${user?.firstName?.[0] ?? ''}${user?.lastName?.[0] ?? ''}`.toUpperCase() || 'U'}
+            style={styles.avatar}
+          />
+        )}
         <View style={styles.nameContainer}>
           <Text style={styles.name}>{user?.firstName} {user?.lastName}</Text>
           <Text style={styles.username}>@{user?.username}</Text>

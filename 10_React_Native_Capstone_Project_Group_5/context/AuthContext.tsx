@@ -8,6 +8,7 @@ import React, {
   useReducer,
   useEffect,
   useCallback,
+  useRef,
   ReactNode,
 } from 'react';
 import { AuthState, AuthAction, AuthUser } from '@/types/auth';
@@ -108,46 +109,19 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 // Provider
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(authReducer, initialState);
+  const registrationInProgressRef = useRef(false);
 
   // Hydrate from storage on mount
   useEffect(() => {
     const hydrateAuth = async () => {
       try {
         const storedUser = (await authApi.getStoredUserAsync()) ?? authApi.getStoredUser();
-        if (storedUser?.token && storedUser?.refreshToken) {
-          try {
-            const freshUser = await authApi.getMe();
-            const mergedUser = {
-              ...freshUser,
-              token: storedUser.token,
-              refreshToken: storedUser.refreshToken,
-            };
-            authApi.setTokens(mergedUser);
-            dispatch({ type: 'AUTH_HYDRATE', payload: mergedUser });
-          } catch {
-            try {
-              await authApi.refreshAccessToken();
-              const freshUser = await authApi.getMe();
-              const storedAgain = authApi.getStoredUser();
-              if (storedAgain) {
-                const mergedUser = {
-                  ...freshUser,
-                  token: storedAgain.token,
-                  refreshToken: storedAgain.refreshToken,
-                };
-                authApi.setTokens(mergedUser);
-                dispatch({ type: 'AUTH_HYDRATE', payload: mergedUser });
-              } else {
-                dispatch({ type: 'AUTH_HYDRATE', payload: null });
-              }
-            } catch {
-              authApi.logout();
-              dispatch({ type: 'AUTH_HYDRATE', payload: null });
-            }
-          }
-        } else {
-          dispatch({ type: 'AUTH_HYDRATE', payload: null });
+        if (storedUser?.authProvider === 'local') {
+          dispatch({ type: 'AUTH_HYDRATE', payload: storedUser });
+          return;
         }
+        if (storedUser) authApi.logout();
+        dispatch({ type: 'AUTH_HYDRATE', payload: null });
       } catch {
         dispatch({ type: 'AUTH_HYDRATE', payload: null });
       }
@@ -178,6 +152,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       age?: number;
       gender?: 'male' | 'female';
     }) => {
+      if (registrationInProgressRef.current) {
+        throw new Error('Registration is already in progress.');
+      }
+
+      registrationInProgressRef.current = true;
       dispatch({ type: 'AUTH_START' });
       try {
         const user = await authApi.register(data);
@@ -186,6 +165,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const message = error instanceof Error ? error.message : 'Registration failed';
         dispatch({ type: 'AUTH_FAILURE', payload: message });
         throw error;
+      } finally {
+        registrationInProgressRef.current = false;
       }
     },
     []
@@ -201,7 +182,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const refreshUser = useCallback(async () => {
-    if (!state.isAuthenticated) return;
+    if (!state.isAuthenticated || state.user?.authProvider === 'local') return;
     try {
       const user = await authApi.getMe();
       const storedUser = authApi.getStoredUser();
@@ -211,13 +192,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           token: storedUser.token,
           refreshToken: storedUser.refreshToken,
         };
-        authApi.setTokens(mergedUser);
+        await authApi.setStoredUser(mergedUser);
         dispatch({ type: 'AUTH_SUCCESS', payload: mergedUser });
       }
     } catch {
       // Silently fail - token refresh interceptor handles 401s
     }
-  }, [state.isAuthenticated]);
+  }, [state.isAuthenticated, state.user?.authProvider]);
 
   const updateProfile = useCallback(
     async (updates: Partial<Pick<AuthUser, 'firstName' | 'lastName' | 'email' | 'image'>>) => {

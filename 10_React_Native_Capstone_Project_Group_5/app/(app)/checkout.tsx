@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Button, Card, IconButton, TextInput } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -10,6 +10,7 @@ import { addressesStorage, DeliveryAddress, ordersStorage } from '@/utils/market
 import CouponEntry from '@/components/CouponEntry';
 import { marketplaceColors } from '@/constants/theme';
 import { calculateCouponDiscount } from '@/utils/coupons';
+import { showAlert } from '@/utils/platformAlert';
 
 const brandPurple = '#75648A';
 type PaymentMethod = 'cash' | 'demo-card';
@@ -18,6 +19,9 @@ export default function CheckoutScreen() {
   const router = useRouter();
   const { selectedItemIds: selectedItemIdsParam } = useLocalSearchParams<{ selectedItemIds?: string }>();
   const { user } = useAuth();
+  const checkoutRoute = selectedItemIdsParam
+    ? `/(app)/checkout?selectedItemIds=${encodeURIComponent(selectedItemIdsParam)}`
+    : '/(app)/checkout';
   const {
     items,
     appliedCoupon,
@@ -53,6 +57,15 @@ export default function CheckoutScreen() {
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!user?.id) {
+      router.replace({
+        pathname: '/(auth)/login',
+        params: { redirect: checkoutRoute },
+      });
+    }
+  }, [checkoutRoute, router, user?.id]);
+
+  useEffect(() => {
     addressesStorage.getAll()
       .then((saved) => {
         setSavedAddresses(saved);
@@ -67,27 +80,30 @@ export default function CheckoutScreen() {
         }
       })
       .catch((error: unknown) => {
-        Alert.alert('Could not load saved addresses', error instanceof Error ? error.message : 'Please try again.');
+        showAlert('Could not load saved addresses', error instanceof Error ? error.message : 'Please try again.');
       });
   }, []);
 
   const placeOrder = async () => {
     if (items.length === 0) {
-      Alert.alert('Your cart is empty', 'Add a product before checking out.');
+      showAlert('Your cart is empty', 'Add a product before checking out.');
       router.replace('/(app)/(tabs)/home');
       return;
     }
     if (orderItems.length === 0) {
-      Alert.alert('No products selected', 'Choose at least one product from your cart to continue.');
+      showAlert('No products selected', 'Choose at least one product from your cart to continue.');
       router.replace('/(app)/(tabs)/cart');
       return;
     }
     if (!recipient.trim() || !phone.trim() || !address.trim() || !city.trim() || !postalCode.trim()) {
-      Alert.alert('Shipping details required', 'Please fill in all delivery details before placing your order.');
+      showAlert('Shipping details required', 'Please fill in all delivery details before placing your order.');
       return;
     }
     if (!user?.id) {
-      Alert.alert('Sign in required', 'Please sign in again before placing your order.');
+      router.replace({
+        pathname: '/(auth)/login',
+        params: { redirect: checkoutRoute },
+      });
       return;
     }
 
@@ -135,7 +151,7 @@ export default function CheckoutScreen() {
         },
       });
     } catch (error) {
-      Alert.alert(
+      showAlert(
         'Could not place order',
         error instanceof Error ? error.message : 'Please check your connection and try again.'
       );

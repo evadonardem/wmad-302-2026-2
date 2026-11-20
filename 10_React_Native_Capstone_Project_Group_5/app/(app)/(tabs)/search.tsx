@@ -1,6 +1,7 @@
 /** Product search, category filtering, and client-side sorting. */
 import React, { useCallback, useEffect, useState } from 'react';
-import { View, Text, ScrollView, FlatList, TouchableOpacity, ActivityIndicator, Alert, Image } from 'react-native';
+import { View, Text, ScrollView, FlatList, TouchableOpacity, ActivityIndicator, Image } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Title, TextInput as PaperTextInput } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -11,6 +12,7 @@ import { Product } from '@/types/product';
 import { recordSearch } from '@/utils/searchHistory';
 import ProductTile from '@/components/ProductTile';
 import { styles } from '@/styles/searchStyles';
+import { showAlert } from '@/utils/platformAlert';
 
 type SortOption = 'price' | 'rating' | 'discount' | 'newest';
 
@@ -61,7 +63,7 @@ export default function SearchScreen() {
       })
       .catch((error: unknown) => {
         if (active) {
-          Alert.alert(
+          showAlert(
             'Could not load featured products',
             error instanceof Error ? error.message : 'Please try again.'
           );
@@ -97,7 +99,7 @@ export default function SearchScreen() {
       setResults(sortProducts(matchingProducts, sortBy));
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unable to search products';
-      Alert.alert('Search failed', message);
+      showAlert('Search failed', message);
       setResults([]);
     } finally {
       setLoading(false);
@@ -106,7 +108,7 @@ export default function SearchScreen() {
 
   const trackSearch = (term: string) => {
     void recordSearch(term).catch((error: unknown) => {
-      Alert.alert(
+      showAlert(
         'Could not save search',
         error instanceof Error ? error.message : 'Please try again.'
       );
@@ -135,9 +137,9 @@ export default function SearchScreen() {
   const handleFavorite = async (product: Product) => {
     try {
       const added = await toggleFavorite(product.id);
-      Alert.alert(added ? 'Saved to wishlist' : 'Removed from wishlist', product.title);
+      showAlert(added ? 'Saved to wishlist' : 'Removed from wishlist', product.title);
     } catch (favoriteError) {
-      Alert.alert(
+      showAlert(
         'Wishlist unavailable',
         favoriteError instanceof Error ? favoriteError.message : 'Please try again.'
       );
@@ -154,7 +156,7 @@ export default function SearchScreen() {
   );
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       {/* Search Bar */}
       <View style={[styles.searchField, styles.searchHeader]}>
         <TouchableOpacity
@@ -201,44 +203,6 @@ export default function SearchScreen() {
             </View>
           }
         />
-        {actionsExpanded && (
-          <>
-            <TouchableOpacity
-              style={styles.headerAction}
-              onPress={() => router.push('/(app)/wishlist')}
-              accessibilityRole="button"
-              accessibilityLabel="Open wishlist"
-            >
-              <MaterialCommunityIcons name="heart-outline" size={23} color="#75648A" />
-              {favoriteIds.length > 0 && (
-                <View style={styles.headerActionBadge}>
-                  <Text style={styles.headerActionBadgeText}>{favoriteIds.length}</Text>
-                </View>
-              )}
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.headerAction}
-              onPress={() => router.push('/(app)/(tabs)/cart')}
-              accessibilityRole="button"
-              accessibilityLabel="Open cart"
-            >
-              <MaterialCommunityIcons name="cart-outline" size={23} color="#75648A" />
-              {totalQuantity > 0 && (
-                <View style={styles.headerActionBadge}>
-                  <Text style={styles.headerActionBadgeText}>{totalQuantity}</Text>
-                </View>
-              )}
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.headerAction}
-              onPress={() => router.push('/(app)/(tabs)/profile')}
-              accessibilityRole="button"
-              accessibilityLabel="Open profile"
-            >
-              <MaterialCommunityIcons name="account-outline" size={23} color="#75648A" />
-            </TouchableOpacity>
-          </>
-        )}
         <TouchableOpacity
           style={styles.drawerToggle}
           onPress={() => setActionsExpanded((expanded) => !expanded)}
@@ -253,6 +217,48 @@ export default function SearchScreen() {
           />
         </TouchableOpacity>
       </View>
+
+      {actionsExpanded && (
+        <View style={styles.shortcutRow}>
+          <TouchableOpacity
+            style={styles.shortcutButton}
+            onPress={() => router.push('/(app)/wishlist')}
+            accessibilityRole="button"
+            accessibilityLabel="Open wishlist"
+          >
+            <MaterialCommunityIcons name="heart-outline" size={21} color="#75648A" />
+            <Text style={styles.shortcutText}>Wishlist</Text>
+            {favoriteIds.length > 0 && (
+              <View style={styles.headerActionBadge}>
+                <Text style={styles.headerActionBadgeText}>{favoriteIds.length}</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.shortcutButton}
+            onPress={() => router.push('/(app)/(tabs)/cart')}
+            accessibilityRole="button"
+            accessibilityLabel="Open cart"
+          >
+            <MaterialCommunityIcons name="cart-outline" size={21} color="#75648A" />
+            <Text style={styles.shortcutText}>Cart</Text>
+            {totalQuantity > 0 && (
+              <View style={styles.headerActionBadge}>
+                <Text style={styles.headerActionBadgeText}>{totalQuantity}</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.shortcutButton}
+            onPress={() => router.push('/(app)/(tabs)/profile')}
+            accessibilityRole="button"
+            accessibilityLabel="Open profile"
+          >
+            <MaterialCommunityIcons name="account-outline" size={21} color="#75648A" />
+            <Text style={styles.shortcutText}>Profile</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       <ScrollView
         style={styles.searchContent}
@@ -425,6 +431,6 @@ export default function SearchScreen() {
         </Text>
       </View>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }

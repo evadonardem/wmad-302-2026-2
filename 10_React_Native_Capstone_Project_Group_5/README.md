@@ -60,7 +60,7 @@ A React Native + Expo + React Native Paper e-commerce application (Lazada/Shopee
 #### 4. Authentication & Security (10 pts)
 | Criterion | Points | Expectation |
 |-----------|--------|-------------|
-| Login Flow | 3 | Working login, validation, error messages, demo account |
+| Login Flow | 3 | Working login, validation, error messages, account creation |
 | Register Flow | 3 | Complete implementation, validation, auto-login |
 | Token Management | 2 | Auto-refresh on 401, secure storage, logout clears tokens |
 | Protected Routes | 2 | Auth guard redirects unauthenticated users |
@@ -226,15 +226,17 @@ npm run web
 
 ## 🔐 Authentication
 
-**Pre-built (Working):**
-- Login with username/password → `POST /auth/login`
-- Token storage in AsyncStorage
-- Auto token refresh on 401
-- Protected route guard
-- Hydration on app start
-- Logout
+**Authentication:**
+- New accounts are stored locally. Native apps use encrypted secure storage; web uses browser storage.
+- Browsing and adding items to the cart do not require an account; sign-in is required for Buy now and checkout.
+- Sign in with the username or email and password used at registration.
+- Local accounts and profile changes are available only on the device or browser where they were created; there is no server sync or password recovery.
+- DummyJSON accounts are not accepted for sign-in; only accounts registered on this device are supported.
+- Protected routes, session restoration, and logout are supported.
 
-The demo includes login, registration, protected routes, stored session restoration, and token refresh. DummyJSON simulates registration; use its demo credentials to test sign-in.
+## 🌐 Web
+
+Start the browser app locally with `npm run web`, or create a static web export with `npm run build:web` (output is written to `dist/`).
 
 ## 🛒 Remaining Production Work
 
@@ -286,10 +288,8 @@ The demo includes login, registration, protected routes, stored session restorat
 - **Delete Cart**: `DELETE /carts/{id}`
 
 ### DummyJSON Auth API
-- **Login**: `POST /auth/login` - `{ username, password, expiresInMins? }`
-- **Register**: `POST /auth/register` - `{ firstName, lastName, username, password, email, age?, gender? }`
-- **Me**: `GET /auth/me` - Requires Bearer token
-- **Refresh**: `POST /auth/refresh` - `{ refreshToken, expiresInMins? }`
+- **Register**: Local device account creation; credentials are not sent to DummyJSON.
+- Authentication uses device-local encrypted secure storage only.
 
 ## 🎨 UI Components (React Native Paper)
 

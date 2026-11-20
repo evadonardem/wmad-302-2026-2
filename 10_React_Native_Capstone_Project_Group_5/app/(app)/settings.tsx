@@ -1,9 +1,10 @@
 import React, { useCallback, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { IconButton, Switch } from 'react-native-paper';
 import { MarketplacePreferences, preferencesStorage } from '@/utils/marketplaceStorage';
 import { marketplaceColors } from '@/constants/theme';
+import { showAlert } from '@/utils/platformAlert';
 
 const initialPreferences: MarketplacePreferences = {
   notificationsEnabled: true,
@@ -21,7 +22,7 @@ export default function SettingsScreen() {
         if (active) setPreferences(saved);
       })
       .catch((error: unknown) => {
-        Alert.alert('Could not load settings', error instanceof Error ? error.message : 'Please try again.');
+        showAlert('Could not load settings', error instanceof Error ? error.message : 'Please try again.');
       });
     return () => { active = false; };
   }, []));
@@ -33,7 +34,7 @@ export default function SettingsScreen() {
       await preferencesStorage.set(updated);
     } catch (error) {
       setPreferences(preferences);
-      Alert.alert('Could not save setting', error instanceof Error ? error.message : 'Please try again.');
+      showAlert('Could not save setting', error instanceof Error ? error.message : 'Please try again.');
     }
   };
 

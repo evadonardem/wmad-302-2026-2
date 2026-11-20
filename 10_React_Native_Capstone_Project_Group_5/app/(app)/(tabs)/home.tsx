@@ -1,13 +1,13 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
   RefreshControl,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Avatar, Button, Card, IconButton } from 'react-native-paper';
 import { Image } from 'expo-image';
@@ -18,6 +18,7 @@ import { useFavorites } from '@/context/FavoritesContext';
 import { productApi } from '@/services/productApi';
 import { Product } from '@/types/product';
 import { styles } from '@/styles/homeStyles';
+import { showAlert } from '@/utils/platformAlert';
 
 const brandPurple = '#75648A';
 
@@ -83,9 +84,9 @@ export default function HomeScreen() {
   const handleFavorite = useCallback(async (product: Product) => {
     try {
       const added = await toggleFavorite(product.id);
-      Alert.alert(added ? 'Saved to wishlist' : 'Removed from wishlist', product.title);
+      showAlert(added ? 'Saved to wishlist' : 'Removed from wishlist', product.title);
     } catch (favoriteError) {
-      Alert.alert('Wishlist unavailable', favoriteError instanceof Error ? favoriteError.message : 'Please try again.');
+      showAlert('Wishlist unavailable', favoriteError instanceof Error ? favoriteError.message : 'Please try again.');
     }
   }, [toggleFavorite]);
 
@@ -156,44 +157,49 @@ export default function HomeScreen() {
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={brandPurple} />
-        <Text style={styles.loadingText}>Finding today&apos;s deals...</Text>
-      </View>
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={brandPurple} />
+          <Text style={styles.loadingText}>Finding today&apos;s deals...</Text>
+        </View>
+      </SafeAreaView>
     );
   }
 
   if (error) {
     return (
-      <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>{error}</Text>
-        <Button mode="contained" buttonColor={brandPurple} onPress={() => void fetchData()}>Try again</Button>
-      </View>
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>{error}</Text>
+          <Button mode="contained" buttonColor={brandPurple} onPress={() => void fetchData()}>Try again</Button>
+        </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <FlatList
-      data={products}
-      numColumns={2}
-      keyExtractor={(item) => String(item.id)}
-      renderItem={({ item }) => renderProduct(item)}
-      columnWrapperStyle={styles.productGridRow}
-      initialNumToRender={6}
-      maxToRenderPerBatch={6}
-      windowSize={5}
-      style={styles.scrollView}
-      contentContainerStyle={styles.scrollContent}
-      refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={() => {
-            setRefreshing(true);
-            void fetchData(true);
-          }}
-          colors={[brandPurple]}
-        />
-      }
+    <SafeAreaView style={styles.safeArea}>
+      <FlatList
+        data={products}
+        numColumns={2}
+        keyExtractor={(item) => String(item.id)}
+        renderItem={({ item }) => renderProduct(item)}
+        columnWrapperStyle={styles.productGridRow}
+        initialNumToRender={6}
+        maxToRenderPerBatch={6}
+        windowSize={5}
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => {
+              setRefreshing(true);
+              void fetchData(true);
+            }}
+            colors={[brandPurple]}
+          />
+        }
       ListHeaderComponent={
         <>
       <View style={styles.topBar}>
@@ -214,18 +220,22 @@ export default function HomeScreen() {
           <Text style={styles.greeting}>Hi{user?.firstName ? `, ${user.firstName}` : ''}! What are you shopping for?</Text>
         </View>
         <View style={styles.topActions}>
-          <IconButton icon="heart-outline" iconColor={brandPurple} onPress={() => router.push('/(app)/wishlist')} accessibilityLabel="Open wishlist" />
+          <IconButton icon="heart-outline" iconColor={brandPurple} size={21} style={styles.topActionButton} onPress={() => router.push('/(app)/wishlist')} accessibilityLabel="Open wishlist" />
           <View>
-            <IconButton icon="cart-outline" iconColor={brandPurple} onPress={() => router.push('/(app)/(tabs)/cart')} accessibilityLabel="Open cart" />
+            <IconButton icon="cart-outline" iconColor={brandPurple} size={21} style={styles.topActionButton} onPress={() => router.push('/(app)/(tabs)/cart')} accessibilityLabel="Open cart" />
             {totalQuantity > 0 && (
               <View style={styles.cartBadge}><Text style={styles.cartBadgeText}>{totalQuantity}</Text></View>
             )}
           </View>
-          <Avatar.Image
-            size={38}
-            source={{ uri: user?.image || 'https://dummyjson.com/icon/emilys/128' }}
-            style={styles.avatar}
-          />
+          {user?.image ? (
+            <Avatar.Image size={38} source={{ uri: user.image }} style={styles.avatar} />
+          ) : (
+            <Avatar.Text
+              size={38}
+              label={`${user?.firstName?.[0] ?? ''}${user?.lastName?.[0] ?? ''}`.toUpperCase() || 'U'}
+              style={styles.avatar}
+            />
+          )}
         </View>
       </View>
 
@@ -310,6 +320,7 @@ export default function HomeScreen() {
       ListEmptyComponent={<Text style={styles.emptyText}>No products available right now.</Text>}
       showsVerticalScrollIndicator={false}
     />
+    </SafeAreaView>
   );
 }
 

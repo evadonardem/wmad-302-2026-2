@@ -1,5 +1,5 @@
 /** Marketplace account registration screen. */
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -7,17 +7,18 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
-  Alert,
   ActivityIndicator,
   TouchableOpacity,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
 import { Card, Button, TextInput as PaperTextInput, Checkbox } from 'react-native-paper';
 import { styles } from '@/styles/authStyles';
+import { showAlert } from '@/utils/platformAlert';
 
 export default function RegisterScreen() {
   const router = useRouter();
+  const { redirect } = useLocalSearchParams<{ redirect?: string }>();
   const { register, isLoading, error, clearError } = useAuth();
 
   // Form state
@@ -35,62 +36,74 @@ export default function RegisterScreen() {
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const isSubmittingRef = useRef(false);
 
   // Validation helpers
   const validateForm = (): string | null => {
     if (!formData.firstName.trim()) return 'First name is required';
     if (!formData.lastName.trim()) return 'Last name is required';
     if (!formData.username.trim()) return 'Username is required';
-    if (formData.username.length < 3) return 'Username must be at least 3 characters';
+    if (!/^[a-zA-Z0-9._-]{3,30}$/.test(formData.username.trim())) {
+      return 'Username must be 3-30 characters and use only letters, numbers, dots, underscores, or hyphens';
+    }
     if (!formData.email.trim()) return 'Email is required';
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) return 'Invalid email format';
+    if (formData.email.trim().length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
+      return 'Enter a valid email address';
+    }
     if (!formData.password) return 'Password is required';
     if (formData.password.length < 6) return 'Password must be at least 6 characters';
     if (formData.password !== formData.confirmPassword) return 'Passwords do not match';
-    if (formData.age && (parseInt(formData.age) < 13 || parseInt(formData.age) > 120)) {
-      return 'Age must be between 13 and 120';
+    if (formData.age) {
+      const age = Number(formData.age);
+      if (!Number.isInteger(age) || age < 13 || age > 120) {
+        return 'Age must be a whole number between 13 and 120';
+      }
     }
     if (!agreedToTerms) return 'You must agree to the Terms of Service';
     return null;
   };
 
   const handleRegister = async () => {
+    if (isSubmittingRef.current) return;
+
     const validationError = validateForm();
     if (validationError) {
-      Alert.alert('Validation Error', validationError);
+      showAlert('Validation Error', validationError);
       return;
     }
 
+    isSubmittingRef.current = true;
     try {
       await register({
         firstName: formData.firstName.trim(),
         lastName: formData.lastName.trim(),
         username: formData.username.trim(),
         password: formData.password,
-        email: formData.email.trim(),
-        age: formData.age ? parseInt(formData.age, 10) : undefined,
+        email: formData.email.trim().toLowerCase(),
+        age: formData.age ? Number(formData.age) : undefined,
         gender: formData.gender,
       });
 
-      Alert.alert('Success', 'Account created successfully!', [
+      showAlert('Success', 'Account created successfully!', [
         {
           text: 'Continue',
-          onPress: () => router.replace('/(app)/(tabs)/home'),
+          onPress: () => router.replace(redirect || '/(app)/(tabs)/home'),
         },
       ]);
     } catch (err) {
       console.error('Registration error:', err);
+      isSubmittingRef.current = false;
     }
   };
 
-  const handleFieldChange = (field: string, value: string) => {
+  const handleFieldChange = (field: keyof typeof formData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     if (error) clearError();
   };
 
   React.useEffect(() => {
     if (error) {
-      Alert.alert('Registration Failed', error, [{ text: 'OK', onPress: clearError }]);
+      showAlert('Registration Failed', error, [{ text: 'OK', onPress: clearError }]);
     }
   }, [error, clearError]);
 
@@ -116,7 +129,7 @@ export default function RegisterScreen() {
         <Card style={styles.card} elevation={3}>
           <Card.Content style={styles.cardContent}>
             <Text style={styles.title}>Create Account</Text>
-            <Text style={styles.subtitle}>Start shopping smarter today</Text>
+            <Text style={styles.subtitle}>Start shopping smarter today. Your account is stored on this device.</Text>
 
             {/* Name Fields Row */}
             <View style={styles.nameRow}>
@@ -180,16 +193,19 @@ export default function RegisterScreen() {
               style={styles.input}
               secureTextEntry={!showPassword}
               autoComplete="new-password"
+              autoCapitalize="none"
               returnKeyType="next"
               disabled={isLoading}
-              right={
-                <View style={styles.eyeIcon}>
-                  <Text onPress={() => setShowPassword(!showPassword)} style={styles.eyeText}>
-                    {showPassword ? '🙈' : '👁️'}
-                  </Text>
-                </View>
-              }
+              right={<PaperTextInput.Icon
+                icon={showPassword ? 'eye-off' : 'eye'}
+                onPress={() => setShowPassword((visible) => !visible)}
+                accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
+              />}
             />
+
+            <Text style={styles.passwordHint}>
+              Password must be at least 6 characters.
+            </Text>
 
             {/* Confirm Password */}
             <PaperTextInput
@@ -200,15 +216,14 @@ export default function RegisterScreen() {
               style={styles.input}
               secureTextEntry={!showConfirmPassword}
               autoComplete="new-password"
+              autoCapitalize="none"
               returnKeyType="next"
               disabled={isLoading}
-              right={
-                <View style={styles.eyeIcon}>
-                  <Text onPress={() => setShowConfirmPassword(!showConfirmPassword)} style={styles.eyeText}>
-                    {showConfirmPassword ? '🙈' : '👁️'}
-                  </Text>
-                </View>
-              }
+              right={<PaperTextInput.Icon
+                icon={showConfirmPassword ? 'eye-off' : 'eye'}
+                onPress={() => setShowConfirmPassword((visible) => !visible)}
+                accessibilityLabel={showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'}
+              />}
             />
 
             {/* Optional Fields */}

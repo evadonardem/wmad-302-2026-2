@@ -1,9 +1,10 @@
 import React, { useCallback, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { Button, Card, IconButton, Switch, TextInput } from 'react-native-paper';
 import { addressesStorage, DeliveryAddress } from '@/utils/marketplaceStorage';
 import { marketplaceColors } from '@/constants/theme';
+import { showAlert } from '@/utils/platformAlert';
 
 const brandPurple = '#75648A';
 const emptyAddress = { recipient: '', phone: '', street: '', city: '', postalCode: '' };
@@ -22,7 +23,7 @@ export default function AddressesScreen() {
     try {
       setAddresses(await addressesStorage.getAll());
     } catch (error) {
-      Alert.alert('Could not load addresses', error instanceof Error ? error.message : 'Please try again.');
+      showAlert('Could not load addresses', error instanceof Error ? error.message : 'Please try again.');
     } finally {
       setLoading(false);
     }
@@ -40,7 +41,7 @@ export default function AddressesScreen() {
 
   const saveAddress = async () => {
     if (Object.values(form).some((value) => !value.trim())) {
-      Alert.alert('Address details required', 'Please fill in every address field.');
+      showAlert('Address details required', 'Please fill in every address field.');
       return;
     }
     setSaving(true);
@@ -53,7 +54,7 @@ export default function AddressesScreen() {
       resetForm();
       await loadAddresses();
     } catch (error) {
-      Alert.alert('Could not save address', error instanceof Error ? error.message : 'Please try again.');
+      showAlert('Could not save address', error instanceof Error ? error.message : 'Please try again.');
     } finally {
       setSaving(false);
     }
@@ -72,7 +73,7 @@ export default function AddressesScreen() {
   };
 
   const removeAddress = (address: DeliveryAddress) => {
-    Alert.alert('Delete address', `Remove the address for ${address.recipient}?`, [
+    showAlert('Delete address', `Remove the address for ${address.recipient}?`, [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Delete',
@@ -81,7 +82,7 @@ export default function AddressesScreen() {
           addressesStorage.remove(address.id)
             .then(loadAddresses)
             .catch((error: unknown) =>
-              Alert.alert('Could not delete address', error instanceof Error ? error.message : 'Please try again.')
+              showAlert('Could not delete address', error instanceof Error ? error.message : 'Please try again.')
             );
         },
       },
@@ -93,7 +94,7 @@ export default function AddressesScreen() {
       await addressesStorage.setDefault(id);
       await loadAddresses();
     } catch (error) {
-      Alert.alert('Could not update default address', error instanceof Error ? error.message : 'Please try again.');
+      showAlert('Could not update default address', error instanceof Error ? error.message : 'Please try again.');
     }
   };
 

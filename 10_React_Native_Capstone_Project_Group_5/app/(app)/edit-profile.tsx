@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Button, Card, IconButton, TextInput } from 'react-native-paper';
 import { useAuth } from '@/context/AuthContext';
 import { marketplaceColors } from '@/constants/theme';
+import { showAlert } from '@/utils/platformAlert';
 
 const brandPurple = '#75648A';
 
@@ -23,11 +24,11 @@ export default function EditProfileScreen() {
 
   const save = async () => {
     if (!firstName.trim() || !lastName.trim()) {
-      Alert.alert('Name required', 'Enter your first and last name.');
+      showAlert('Name required', 'Enter your first and last name.');
       return;
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
-      Alert.alert('Check your email', 'Enter a valid email address.');
+      showAlert('Check your email', 'Enter a valid email address.');
       return;
     }
     setSaving(true);
@@ -37,11 +38,11 @@ export default function EditProfileScreen() {
         lastName: lastName.trim(),
         email: email.trim(),
       });
-      Alert.alert('Profile updated', 'Your changes have been saved on this device.', [
+      showAlert('Profile updated', 'Your changes have been saved on this device.', [
         { text: 'Done', onPress: () => router.back() },
       ]);
     } catch (error) {
-      Alert.alert('Could not update profile', error instanceof Error ? error.message : 'Please try again.');
+      showAlert('Could not update profile', error instanceof Error ? error.message : 'Please try again.');
     } finally {
       setSaving(false);
     }

@@ -1,12 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Divider, Menu, TextInput as PaperTextInput } from 'react-native-paper';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -17,6 +17,7 @@ import { Product } from '@/types/product';
 import { recordSearch } from '@/utils/searchHistory';
 import ProductTile from '@/components/ProductTile';
 import { styles } from '@/styles/searchResultsStyles';
+import { showAlert } from '@/utils/platformAlert';
 
 type SortOption = 'price' | 'rating' | 'discount' | 'newest' | 'name';
 type SortOrder = 'asc' | 'desc';
@@ -125,9 +126,9 @@ export default function SearchResultsScreen() {
   const handleFavorite = async (product: Product) => {
     try {
       const added = await toggleFavorite(product.id);
-      Alert.alert(added ? 'Saved to wishlist' : 'Removed from wishlist', product.title);
+      showAlert(added ? 'Saved to wishlist' : 'Removed from wishlist', product.title);
     } catch (favoriteError) {
-      Alert.alert(
+      showAlert(
         'Wishlist unavailable',
         favoriteError instanceof Error ? favoriteError.message : 'Please try again.'
       );
@@ -152,7 +153,7 @@ export default function SearchResultsScreen() {
   const submitSearch = () => {
     if (!searchText.trim()) return;
     void recordSearch(searchText.trim()).catch((error: unknown) => {
-      Alert.alert(
+      showAlert(
         'Could not save search',
         error instanceof Error ? error.message : 'Please try again.'
       );
@@ -161,7 +162,7 @@ export default function SearchResultsScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.homeButton}
@@ -207,44 +208,6 @@ export default function SearchResultsScreen() {
             </View>
           }
         />
-        {actionsExpanded && (
-          <>
-            <TouchableOpacity
-              style={styles.headerAction}
-              onPress={() => router.push('/(app)/wishlist')}
-              accessibilityRole="button"
-              accessibilityLabel="Open wishlist"
-            >
-              <MaterialCommunityIcons name="heart-outline" size={23} color="#75648A" />
-              {favoriteIds.length > 0 && (
-                <View style={styles.headerActionBadge}>
-                  <Text style={styles.headerActionBadgeText}>{favoriteIds.length}</Text>
-                </View>
-              )}
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.headerAction}
-              onPress={() => router.push('/(app)/(tabs)/cart')}
-              accessibilityRole="button"
-              accessibilityLabel="Open cart"
-            >
-              <MaterialCommunityIcons name="cart-outline" size={23} color="#75648A" />
-              {totalQuantity > 0 && (
-                <View style={styles.headerActionBadge}>
-                  <Text style={styles.headerActionBadgeText}>{totalQuantity}</Text>
-                </View>
-              )}
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.headerAction}
-              onPress={() => router.push('/(app)/(tabs)/profile')}
-              accessibilityRole="button"
-              accessibilityLabel="Open profile"
-            >
-              <MaterialCommunityIcons name="account-outline" size={23} color="#75648A" />
-            </TouchableOpacity>
-          </>
-        )}
         <TouchableOpacity
           style={styles.drawerToggle}
           onPress={() => setActionsExpanded((expanded) => !expanded)}
@@ -259,6 +222,48 @@ export default function SearchResultsScreen() {
           />
         </TouchableOpacity>
       </View>
+
+      {actionsExpanded && (
+        <View style={styles.shortcutRow}>
+          <TouchableOpacity
+            style={styles.shortcutButton}
+            onPress={() => router.push('/(app)/wishlist')}
+            accessibilityRole="button"
+            accessibilityLabel="Open wishlist"
+          >
+            <MaterialCommunityIcons name="heart-outline" size={21} color="#75648A" />
+            <Text style={styles.shortcutText}>Wishlist</Text>
+            {favoriteIds.length > 0 && (
+              <View style={styles.headerActionBadge}>
+                <Text style={styles.headerActionBadgeText}>{favoriteIds.length}</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.shortcutButton}
+            onPress={() => router.push('/(app)/(tabs)/cart')}
+            accessibilityRole="button"
+            accessibilityLabel="Open cart"
+          >
+            <MaterialCommunityIcons name="cart-outline" size={21} color="#75648A" />
+            <Text style={styles.shortcutText}>Cart</Text>
+            {totalQuantity > 0 && (
+              <View style={styles.headerActionBadge}>
+                <Text style={styles.headerActionBadgeText}>{totalQuantity}</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.shortcutButton}
+            onPress={() => router.push('/(app)/(tabs)/profile')}
+            accessibilityRole="button"
+            accessibilityLabel="Open profile"
+          >
+            <MaterialCommunityIcons name="account-outline" size={21} color="#75648A" />
+            <Text style={styles.shortcutText}>Profile</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       <View style={styles.sortRow}>
         <View style={styles.resultsHeading}>
@@ -365,6 +370,6 @@ export default function SearchResultsScreen() {
           contentContainerStyle={styles.resultsList}
         />
       )}
-    </View>
+    </SafeAreaView>
   );
 }

@@ -7,6 +7,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios, { AxiosInstance, InternalAxiosRequestConfig } from 'axios';
 import { LoginCredentials, RegisterData, AuthUser, RefreshTokenResponse } from '@/types/auth';
+import { authenticateLocalAccount, registerLocalAccount, updateLocalAccount } from '@/services/localAccounts';
 
 const API_BASE_URL = 'https://dummyjson.com/auth';
 const AUTH_STORAGE_KEY = 'auth_user';
@@ -52,7 +53,7 @@ class AuthApiService {
             }
             return this.client(originalRequest);
           } catch (refreshError) {
-            this.clearTokens();
+            this.clearStoredUser();
             console.warn('Token refresh failed, user logged out');
             return Promise.reject(refreshError);
           }
@@ -82,14 +83,12 @@ class AuthApiService {
     }
   }
 
-  setTokens(user: AuthUser): void {
+  async setStoredUser(user: AuthUser): Promise<void> {
+    await AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(user));
     this.cachedUser = user;
-    AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(user)).catch(() => {
-      // Ignore persistence errors; auth state still stays in memory.
-    });
   }
 
-  private clearTokens(): void {
+  private clearStoredUser(): void {
     this.cachedUser = null;
     AsyncStorage.removeItem(AUTH_STORAGE_KEY).catch(() => {
       // Ignore persistence errors.
@@ -97,35 +96,19 @@ class AuthApiService {
   }
 
   async login(credentials: LoginCredentials): Promise<AuthUser> {
-    const response = await this.client.post<AuthUser>('/login', {
-      username: credentials.username,
-      password: credentials.password,
-      expiresInMins: credentials.expiresInMins || 60,
-    });
-    this.setTokens(response.data);
-    return response.data;
+    const localUser = await authenticateLocalAccount(credentials.username, credentials.password);
+    if (!localUser) {
+      throw new Error('Invalid username/email or password.');
+    }
+
+    await this.setStoredUser(localUser);
+    return localUser;
   }
 
   async register(data: RegisterData): Promise<AuthUser> {
-    const response = await this.client.post<AuthUser>('/register', {
-      firstName: data.firstName,
-      lastName: data.lastName,
-      username: data.username,
-      password: data.password,
-      email: data.email,
-      age: data.age,
-      gender: data.gender,
-    });
-
-    if (!response.data?.username) {
-      throw new Error('Registration succeeded but no user data was returned');
-    }
-
-    return this.login({
-      username: data.username,
-      password: data.password,
-      expiresInMins: 60,
-    });
+    const user = await registerLocalAccount(data);
+    await this.setStoredUser(user);
+    return user;
   }
 
   async getMe(): Promise<AuthUser> {
@@ -137,16 +120,22 @@ class AuthApiService {
     id: number,
     updates: Partial<Pick<AuthUser, 'firstName' | 'lastName' | 'email' | 'image'>>
   ): Promise<AuthUser> {
+    const currentUser = this.getStoredUser();
+    if (currentUser?.authProvider === 'local') {
+      const updatedUser = await updateLocalAccount(currentUser, updates);
+      await this.setStoredUser(updatedUser);
+      return updatedUser;
+    }
+
     const token = this.getAccessToken();
     const response = await axios.put<Partial<AuthUser>>(
       `https://dummyjson.com/users/${id}`,
       updates,
       { headers: token ? { Authorization: `Bearer ${token}` } : undefined }
     );
-    const currentUser = this.getStoredUser();
     if (!currentUser) throw new Error('You need to sign in again to update your profile.');
     const updatedUser = { ...currentUser, ...response.data, ...updates };
-    this.setTokens(updatedUser);
+    await this.setStoredUser(updatedUser);
     return updatedUser;
   }
 
@@ -160,12 +149,12 @@ class AuthApiService {
       throw new Error('No refresh token available');
     }
 
-    this.refreshTokenPromise = this.client
-      .post<RefreshTokenResponse>('/refresh', {
-        refreshToken,
-        expiresInMins: 60,
-      })
-      .then((response) => {
+    this.refreshTokenPromise = (async () => {
+      try {
+        const response = await this.client.post<RefreshTokenResponse>('/refresh', {
+          refreshToken,
+          expiresInMins: 60,
+        });
         const currentUser = this.getStoredUser();
         if (currentUser) {
           const updatedUser = {
@@ -173,17 +162,16 @@ class AuthApiService {
             token: response.data.accessToken,
             refreshToken: response.data.refreshToken,
           };
-          this.setTokens(updatedUser);
+          await this.setStoredUser(updatedUser);
         }
         return response.data;
-      })
-      .catch((error) => {
-        this.clearTokens();
+      } catch (error) {
+        this.clearStoredUser();
         throw error;
-      })
-      .finally(() => {
+      } finally {
         this.refreshTokenPromise = null;
-      });
+      }
+    })();
 
     return this.refreshTokenPromise;
   }
@@ -193,12 +181,12 @@ class AuthApiService {
   }
 
   logout(): void {
-    this.clearTokens();
+    this.clearStoredUser();
   }
 
   hasValidTokens(): boolean {
     const user = this.getStoredUser();
-    return !!(user?.token && user?.refreshToken);
+    return user?.authProvider === 'local' || !!(user?.token && user?.refreshToken);
   }
 }
 

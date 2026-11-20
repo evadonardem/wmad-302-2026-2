@@ -12,12 +12,12 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
-  Alert,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
-import { Card, Button, TextInput as PaperTextInput, Divider } from 'react-native-paper';
+import { Card, Button, TextInput as PaperTextInput } from 'react-native-paper';
 import { styles } from '@/styles/authStyles';
+import { showAlert } from '@/utils/platformAlert';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -30,24 +30,12 @@ export default function LoginScreen() {
 
   const handleLogin = async () => {
     if (!username.trim() || !password.trim()) {
-      Alert.alert('Error', 'Please enter both username and password');
+      showAlert('Error', 'Please enter both username and password');
       return;
     }
 
     try {
-      await login(username.trim(), password.trim());
-      router.replace(redirect || '/(app)/(tabs)/home');
-    } catch {
-      // Error handled in context
-    }
-  };
-
-  const handleDemoLogin = async () => {
-    // DummyJSON test credentials: emilys / emilyspass
-    setUsername('emilys');
-    setPassword('emilyspass');
-    try {
-      await login('emilys', 'emilyspass');
+      await login(username.trim(), password);
       router.replace(redirect || '/(app)/(tabs)/home');
     } catch {
       // Error handled in context
@@ -56,7 +44,7 @@ export default function LoginScreen() {
 
   React.useEffect(() => {
     if (error) {
-      Alert.alert('Login Failed', error, [{ text: 'OK', onPress: clearError }]);
+      showAlert('Login Failed', error, [{ text: 'OK', onPress: clearError }]);
     }
   }, [error, clearError]);
 
@@ -87,7 +75,7 @@ export default function LoginScreen() {
 
             {/* Username Field */}
             <PaperTextInput
-              label="Username or Email"
+              label="Username or email"
               mode="outlined"
               value={username}
               onChangeText={setUsername}
@@ -109,12 +97,15 @@ export default function LoginScreen() {
               secureTextEntry={!showPassword}
               autoComplete="password"
               textContentType="password"
+              autoCapitalize="none"
               returnKeyType="go"
               onSubmitEditing={handleLogin}
               disabled={isLoading}
-              right={<TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
-                <Text style={styles.eyeText}>{showPassword ? '🙈' : '👁️'}</Text>
-              </TouchableOpacity>}
+              right={<PaperTextInput.Icon
+                icon={showPassword ? 'eye-off' : 'eye'}
+                onPress={() => setShowPassword((visible) => !visible)}
+                accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
+              />}
             />
 
             {/* Error Display */}
@@ -140,19 +131,15 @@ export default function LoginScreen() {
               )}
             </Button>
 
-            {/* Demo Login */}
-            <View style={styles.demoContainer}>
-              <Divider style={styles.divider} />
-              <TouchableOpacity onPress={handleDemoLogin} disabled={isLoading} style={styles.demoButton}>
-                <Text style={styles.demoButtonText}>Try Demo Account (emilys / emilyspass)</Text>
-              </TouchableOpacity>
-            </View>
-
             {/* Register Link */}
             <View style={styles.registerContainer}>
               <Text style={styles.registerText}>Don&apos;t have an account? </Text>
               <TouchableOpacity
-                onPress={() => router.push('/(auth)/register')}
+                onPress={() => router.push(
+                  redirect
+                    ? { pathname: '/(auth)/register', params: { redirect } }
+                    : '/(auth)/register'
+                )}
                 style={styles.link}
               >
                 <Text style={styles.linkText}>Sign Up</Text>

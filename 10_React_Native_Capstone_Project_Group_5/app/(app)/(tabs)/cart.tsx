@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Alert, Animated, Image, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Animated, Image, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Button, Card, IconButton, Snackbar } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -8,6 +8,7 @@ import ProductRecommendations from '@/components/ProductRecommendations';
 import CouponEntry from '@/components/CouponEntry';
 import { marketplaceColors } from '@/constants/theme';
 import { calculateCouponDiscount } from '@/utils/coupons';
+import { showAlert } from '@/utils/platformAlert';
 
 const brandPurple = '#75648A';
 
@@ -72,7 +73,7 @@ export default function CartScreen() {
     try {
       await updateQuantity(productId, quantity);
     } catch (error) {
-      Alert.alert('Quantity unavailable', error instanceof Error ? error.message : 'Try again.');
+      showAlert('Quantity unavailable', error instanceof Error ? error.message : 'Try again.');
     }
   };
 
@@ -105,7 +106,7 @@ export default function CartScreen() {
       void removeItem(productId)
         .then(() => setRemovedProductTitle(title))
         .catch((error: unknown) => {
-          Alert.alert('Could not remove item', error instanceof Error ? error.message : 'Try again.');
+          showAlert('Could not remove item', error instanceof Error ? error.message : 'Try again.');
         })
         .finally(() => {
           removalInProgress.current = null;
@@ -133,7 +134,7 @@ export default function CartScreen() {
       return;
     }
 
-    Alert.alert('Remove item', 'Remove this item from your cart?', [
+    showAlert('Remove item', 'Remove this item from your cart?', [
       { text: 'Keep item', style: 'cancel' },
       {
         text: 'Remove',

@@ -9,10 +9,12 @@ export interface AuthUser {
   email: string;
   firstName: string;
   lastName: string;
+  age?: number;
   gender: 'male' | 'female';
   image: string;
-  token: string;
-  refreshToken: string;
+  token?: string;
+  refreshToken?: string;
+  authProvider?: 'local' | 'dummyjson';
 }
 
 export interface LoginCredentials {
@@ -33,7 +35,7 @@ export interface RegisterData {
 }
 
 export interface AuthResponse extends AuthUser {
-  // DummyJSON returns the user object with tokens on login/register
+  // DummyJSON returns the user object with tokens on login.
 }
 
 export interface RefreshTokenResponse {

@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   Animated,
   Image,
   ScrollView,
@@ -15,16 +14,19 @@ import { Button, Card, IconButton } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { productApi } from '@/services/productApi';
 import { Product } from '@/types/product';
+import { useAuth } from '@/context/AuthContext';
 import { useCart } from '@/context/CartContext';
 import { useFavorites } from '@/context/FavoritesContext';
 import { availableCoupons } from '@/utils/coupons';
 import { marketplaceColors } from '@/constants/theme';
+import { showAlert } from '@/utils/platformAlert';
 
 const brandPurple = '#75648A';
 
 export default function ProductDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const { user } = useAuth();
   const { addItem } = useCart();
   const { isFavorite, toggleFavorite } = useFavorites();
   const [product, setProduct] = useState<Product | null>(null);
@@ -96,18 +98,29 @@ export default function ProductDetailScreen() {
     }, 2200);
   };
 
-  const addToCart = async (goToCart: boolean) => {
+  const addToCart = async (buyNow: boolean) => {
     if (!product) return;
     setAdding(true);
     try {
       await addItem(product, quantity);
-      if (goToCart) {
-        openCart(product.id);
+      if (buyNow) {
+        const checkoutRoute = `/(app)/checkout?selectedItemIds=${product.id}`;
+        if (user?.id) {
+          router.push({
+            pathname: '/(app)/checkout',
+            params: { selectedItemIds: String(product.id) },
+          });
+        } else {
+          router.replace({
+            pathname: '/(auth)/login',
+            params: { redirect: checkoutRoute },
+          });
+        }
       } else {
         showCartConfirmation(product.title);
       }
     } catch (addError) {
-      Alert.alert(
+      showAlert(
         'Could not add item',
         addError instanceof Error ? addError.message : 'Please try again.'
       );
@@ -127,9 +140,9 @@ export default function ProductDetailScreen() {
     if (!product) return;
     try {
       const saved = await toggleFavorite(product.id);
-      Alert.alert(saved ? 'Saved to wishlist' : 'Removed from wishlist');
+      showAlert(saved ? 'Saved to wishlist' : 'Removed from wishlist');
     } catch (favoriteError) {
-      Alert.alert(
+      showAlert(
         'Wishlist unavailable',
         favoriteError instanceof Error ? favoriteError.message : 'Please try again.'
       );

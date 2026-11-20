@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Alert, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ActivityIndicator, Button, Card } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -8,6 +8,7 @@ import { productApi } from '@/services/productApi';
 import { Product } from '@/types/product';
 import { getPopularSearches } from '@/utils/searchHistory';
 import { marketplaceCardShadow, marketplaceColors } from '@/constants/theme';
+import { showAlert } from '@/utils/platformAlert';
 
 interface ProductRecommendationsProps {
   title?: string;
@@ -83,9 +84,9 @@ export default function ProductRecommendations({
   const handleFavorite = async (product: Product) => {
     try {
       const added = await toggleFavorite(product.id);
-      Alert.alert(added ? 'Saved to wishlist' : 'Removed from wishlist', product.title);
+      showAlert(added ? 'Saved to wishlist' : 'Removed from wishlist', product.title);
     } catch (favoriteError) {
-      Alert.alert(
+      showAlert(
         'Wishlist unavailable',
         favoriteError instanceof Error ? favoriteError.message : 'Please try again.'
       );

@@ -2,6 +2,7 @@ import { StyleSheet } from 'react-native';
 import { marketplaceCardShadow, marketplaceColors } from '@/constants/theme';
 
 export const styles = StyleSheet.create({
+  safeArea: { flex: 1, backgroundColor: marketplaceColors.background },
   scrollView: { flex: 1, backgroundColor: marketplaceColors.background },
   scrollContent: { paddingBottom: 92 },
   loadingContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
@@ -16,6 +17,7 @@ export const styles = StyleSheet.create({
   brandTagline: { color: '#6D5A82', fontSize: 9, fontWeight: '600', marginTop: -2 },
   greeting: { color: '#555', fontSize: 12, marginTop: 3 },
   topActions: { flexDirection: 'row', alignItems: 'center' },
+  topActionButton: { width: 38, height: 38, margin: 0 },
   avatar: { marginLeft: 2, backgroundColor: '#F2EEF5' },
   cartBadge: { position: 'absolute', top: 0, right: 0, minWidth: 17, height: 17, backgroundColor: '#75648A', borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
   cartBadgeText: { color: '#FFF', fontSize: 10, fontWeight: '800' },
