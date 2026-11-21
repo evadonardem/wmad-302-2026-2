@@ -5,6 +5,7 @@ import {
   getBrands,
   getFinalPrice,
   parsePrice,
+  parseSortOption,
 } from '@/utils/productFilters';
 import { Product } from '@/types/product';
 
@@ -114,5 +115,16 @@ describe('parsePrice', () => {
     expect(parsePrice('')).toBeUndefined();
     expect(parsePrice('abc')).toBeUndefined();
     expect(parsePrice('-5')).toBeUndefined();
+  });
+});
+
+describe('parseSortOption', () => {
+  it('accepts a known sort from a link', () => {
+    expect(parseSortOption('discount')).toBe('discount');
+    expect(parseSortOption(['rating'])).toBe('rating');
+  });
+  it('ignores anything unknown or missing', () => {
+    expect(parseSortOption('hack')).toBeUndefined();
+    expect(parseSortOption(undefined)).toBeUndefined();
   });
 });

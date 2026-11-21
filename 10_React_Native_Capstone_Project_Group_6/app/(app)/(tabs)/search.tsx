@@ -5,6 +5,7 @@
  * - Sort: relevance, price, rating, discount, newest
  * - Loads results 20 at a time as you scroll
  * - Opened from Home/Categories with ?category=slug to pre-select a category
+ * - Opened from Flash Deals with ?sort=discount to start on the biggest discounts
  *
  * How it works: DummyJSON can search and filter by category, but not by brand or
  * price. So we download all products matching the search/category once, then
@@ -35,6 +36,7 @@ import {
   getBrands,
   getFinalPrice,
   parsePrice,
+  parseSortOption,
 } from '@/utils/productFilters';
 import { createStyles } from '@/styles/searchStyles';
 import { useAppTheme, useThemedStyles } from '@/context/ThemeContext';
@@ -46,7 +48,7 @@ export default function SearchScreen() {
   const styles = useThemedStyles(createStyles);
   const router = useRouter();
   const { addToCart } = useCart();
-  const params = useLocalSearchParams<{ category?: string }>();
+  const params = useLocalSearchParams<{ category?: string; sort?: string }>();
 
   // What the person typed / picked
   const [query, setQuery] = useState('');
@@ -74,6 +76,12 @@ export default function SearchScreen() {
       setSelectedBrand(null);
     }
   }, [params.category]);
+
+  // A sort passed in the link (Home > Flash Deals > Shop Now sends ?sort=discount)
+  useEffect(() => {
+    const requested = parseSortOption(params.sort);
+    if (requested) setSort(requested);
+  }, [params.sort]);
 
   // Category chips: load once
   useEffect(() => {

@@ -22,6 +22,7 @@ import { Card, Title, Avatar, Button, Badge, Snackbar } from 'react-native-paper
 import { createStyles } from '@/styles/homeStyles';
 import { HOME_PAGE_SIZE, hasMore, isNearBottom, mergeById } from '@/utils/pagination';
 import { useAppTheme, useThemedStyles } from '@/context/ThemeContext';
+import FlashDeals from '@/components/FlashDeals';
 
 // Types for DummyJSON Products API
 interface Product {
@@ -308,24 +309,8 @@ export default function HomeScreen() {
           </View>
         )}
 
-        {/* Flash Deals */}
-        <View style={styles.sectionContainer}>
-          <View style={styles.sectionHeader}>
-            <Title style={styles.sectionTitle}>⚡ Flash Deals</Title>
-            <TouchableOpacity style={styles.seeAll}>
-              <Text style={styles.seeAllText}>See All</Text>
-            </TouchableOpacity>
-          </View>
-          {/* Plain .map() (not a FlatList): this page already scrolls, and the list is only 5 items */}
-          <View style={styles.productGrid}>
-            {products
-              .filter((p) => p.discountPercentage > 20)
-              .slice(0, 6)
-              .map((item) => (
-                <React.Fragment key={item.id}>{renderProduct({ item })}</React.Fragment>
-              ))}
-          </View>
-        </View>
+        {/* Flash Deals: banner + countdown + biggest discounts (components/FlashDeals.tsx) */}
+        <FlashDeals />
 
         {/* Recommended Products */}
         <View style={styles.sectionContainer}>

@@ -90,3 +90,9 @@ export function parsePrice(text: string): number | undefined {
   const value = parseFloat(text);
   return Number.isFinite(value) && value >= 0 ? value : undefined;
 }
+
+/** Turns a link param like "discount" into a SortOption (anything unknown -> undefined). */
+export function parseSortOption(value: string | string[] | undefined): SortOption | undefined {
+  const text = Array.isArray(value) ? value[0] : value;
+  return SORT_OPTIONS.find((o) => o.value === text)?.value;
+}
