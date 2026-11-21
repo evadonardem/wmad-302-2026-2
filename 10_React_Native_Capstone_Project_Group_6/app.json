@@ -6,7 +6,14 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FFFFFF"
+    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.wmad302.marketplace"
@@ -14,7 +21,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#1A73E8"
+        "backgroundColor": "#FFCC2F"
       },
       "package": "com.wmad302.marketplace"
     },
@@ -32,9 +39,8 @@
         "origin": false
       },
       "eas": {
-        "projectId": "marketplace-capstone"
+        "projectId": "0eac933a-f756-4554-8727-5eadcdd32d8f"
       }
-    },
-    "owner": "wmad302"
+    }
   }
 }
