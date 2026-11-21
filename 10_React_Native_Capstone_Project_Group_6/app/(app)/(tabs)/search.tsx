@@ -36,7 +36,7 @@ import {
   getFinalPrice,
   parsePrice,
 } from '@/utils/productFilters';
-import { createStyles } from './searchStyles';
+import { createStyles } from '@/styles/searchStyles';
 import { useAppTheme, useThemedStyles } from '@/context/ThemeContext';
 
 const PAGE_SIZE = 20;

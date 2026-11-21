@@ -11,7 +11,7 @@ accounts come from the free [DummyJSON](https://dummyjson.com) API.
 |---|---|
 | Group number | **Group 6** |
 | Members | **Agustin, Jecressa** ·  **Liwanag, Denie** ·  **Laoeng Vera** |
-| GitHub | [Member 1](https://github.com/REPLACE) · [Member 2](https://github.com/REPLACE) · [Member 3](https://github.com/REPLACE) · [Member 4](https://github.com/REPLACE) |
+| GitHub | J-Llama · denieliwanag17-rave · Leone Greek |
 | Demo video (2-3 min) | **[LINK]** |
 
 ## Features

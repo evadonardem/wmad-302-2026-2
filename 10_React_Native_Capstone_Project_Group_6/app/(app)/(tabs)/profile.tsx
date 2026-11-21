@@ -18,7 +18,7 @@ import { Order } from '@/types/product';
 import { apiCartToOrder, belongsToUser } from '@/utils/orders';
 import { computeOrderStats } from '@/utils/profile';
 import { orderStorage } from '@/utils/storage';
-import { createStyles } from './profileStyles';
+import { createStyles } from '@/styles/profileStyles';
 import { useAppTheme, useThemedStyles } from '@/context/ThemeContext';
 
 export default function ProfileScreen() {
@@ -230,7 +230,7 @@ export default function ProfileScreen() {
         <Dialog visible={showLogoutDialog} onDismiss={() => setShowLogoutDialog(false)} style={{ borderRadius: 24, backgroundColor: colors.surface }}>
           <Dialog.Title>Logout</Dialog.Title>
           <Dialog.Content>
-            <Text>Are you sure you want to logout?</Text>
+            <Text style={{ color: colors.textBody }}>Are you sure you want to logout?</Text>
           </Dialog.Content>
           <Dialog.Actions>
             <Button textColor={colors.primaryText} onPress={() => setShowLogoutDialog(false)}>Cancel</Button>

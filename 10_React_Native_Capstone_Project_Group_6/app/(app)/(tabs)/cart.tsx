@@ -11,7 +11,7 @@ import { Title, Button, IconButton, Snackbar, TextInput } from 'react-native-pap
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useCart, getDiscountedPrice } from '@/context/CartContext';
 import { CartItem } from '@/types/product';
-import { createStyles } from './cartStyles';
+import { createStyles } from '@/styles/cartStyles';
 import { useAppTheme, useThemedStyles } from '@/context/ThemeContext';
 
 export default function CartScreen() {

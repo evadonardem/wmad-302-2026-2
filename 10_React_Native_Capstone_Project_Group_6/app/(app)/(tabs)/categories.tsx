@@ -10,7 +10,7 @@ import { Button, Card, Title } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { productApi } from '@/services/productApi';
 import { formatCategory } from '@/utils/productFilters';
-import { createStyles } from './categoriesStyles';
+import { createStyles } from '@/styles/categoriesStyles';
 import { useAppTheme, useThemedStyles } from '@/context/ThemeContext';
 
 interface Category {

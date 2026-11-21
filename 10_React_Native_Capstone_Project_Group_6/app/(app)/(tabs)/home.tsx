@@ -19,7 +19,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useCart } from '@/context/CartContext';
 import { useRecentlyViewed } from '@/context/RecentlyViewedContext';
 import { Card, Title, Avatar, Button, Badge, Snackbar } from 'react-native-paper';
-import { createStyles } from './homeStyles';
+import { createStyles } from '@/styles/homeStyles';
 import { HOME_PAGE_SIZE, hasMore, isNearBottom, mergeById } from '@/utils/pagination';
 import { useAppTheme, useThemedStyles } from '@/context/ThemeContext';
 

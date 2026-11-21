@@ -209,7 +209,7 @@ export default function AddressesScreen() {
         <Dialog visible={!!toDelete} onDismiss={() => setToDelete(null)} style={{ borderRadius: 24, backgroundColor: colors.surface }}>
           <Dialog.Title>Delete address</Dialog.Title>
           <Dialog.Content>
-            <Text>Delete your “{toDelete?.label}” address?</Text>
+            <Text style={{ color: colors.textBody }}>Delete your “{toDelete?.label}” address?</Text>
           </Dialog.Content>
           <Dialog.Actions>
             <Button textColor={colors.primaryText} onPress={() => setToDelete(null)}>Cancel</Button>
