@@ -108,6 +108,16 @@ export default function TabsLayout() {
           ),
         }}
       />
+
+      {/*
+        Safety net: if an old *Styles.ts file is still sitting in this folder, expo-router
+        would turn it into a tab. href: null keeps these out of the tab bar either way.
+      */}
+      <Tabs.Screen name="homeStyles" options={{ href: null }} />
+      <Tabs.Screen name="searchStyles" options={{ href: null }} />
+      <Tabs.Screen name="categoriesStyles" options={{ href: null }} />
+      <Tabs.Screen name="cartStyles" options={{ href: null }} />
+      <Tabs.Screen name="profileStyles" options={{ href: null }} />
     </Tabs>
   );
 }
