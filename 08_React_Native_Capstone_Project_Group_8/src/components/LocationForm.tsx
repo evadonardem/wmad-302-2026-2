@@ -1,0 +1,220 @@
+import {
+  getCitiesMunicipalitiesByRegion,
+  getRegions,
+  type City,
+  type Region,
+} from '@/services/geoPhotoService';
+import { useEffect, useMemo, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
+import { Button, Chip, Menu } from 'react-native-paper';
+
+type IslandFilter = 'all' | 'luzon' | 'visayas' | 'mindanao';
+
+const FILTERS: { value: IslandFilter; label: string }[] = [
+  { value: 'all', label: 'All' },
+  { value: 'luzon', label: 'Luzon' },
+  { value: 'visayas', label: 'Visayas' },
+  { value: 'mindanao', label: 'Mindanao' },
+];
+
+export default function LocationForm({ onSearch }: { onSearch: (cityName: string) => void }) {
+  // TODO 2.1 [State Trackers]
+  const [regions, setRegions] = useState<Region[]>([]);
+  const [cities, setCities] = useState<City[]>([]);
+  const [selectedRegion, setSelectedRegion] = useState('');
+  const [selectedCityName, setSelectedCityName] = useState('');
+  const [islandFilter, setIslandFilter] = useState<IslandFilter>('all');
+
+  // Paper <Menu> visibility flags
+  const [regionMenuVisible, setRegionMenuVisible] = useState(false);
+  const [cityMenuVisible, setCityMenuVisible] = useState(false);
+
+  // TODO 2.2 [Initial Data Populate]
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadRegions = async () => {
+      const data = await getRegions();
+      if (!cancelled) setRegions(data);
+    };
+    loadRegions();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // TODO 2.3 [Reactive Cascading Refresh]
+  useEffect(() => {
+    let cancelled = false; // guards against race conditions when the region changes quickly
+
+    const loadCities = async () => {
+      // Reset child state first so stale selections never leak into the next search
+      setCities([]);
+      setSelectedCityName('');
+
+      if (!selectedRegion) return;
+
+      const data = await getCitiesMunicipalitiesByRegion(selectedRegion);
+      if (!cancelled) setCities(data);
+    };
+    loadCities();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedRegion]);
+
+  // TODO 2.9 (b): filtered region list
+  const filteredRegions = useMemo(
+    () =>
+      islandFilter === 'all'
+        ? regions
+        : regions.filter((r) => r.islandGroupCode === islandFilter),
+    [regions, islandFilter]
+  );
+
+  // TODO 2.9 (d): safe reset when the selected region falls outside the new filter
+  const handleFilterChange = (value: IslandFilter) => {
+    setIslandFilter(value);
+    if (selectedRegion) {
+      const region = regions.find((r) => r.code === selectedRegion);
+      if (value !== 'all' && region?.islandGroupCode !== value) {
+        setSelectedRegion('');
+        setSelectedCityName('');
+      }
+    }
+  };
+
+  const handleSubmit = () => {
+    // TODO 2.4 [Form Submit Bubble]
+    if (selectedCityName) onSearch(selectedCityName);
+  };
+
+  // Display labels derived from the current selections
+  const selectedRegionLabel = regions.find((r) => r.code === selectedRegion)?.name ?? 'Select Region';
+  const selectedCityLabel = selectedCityName || 'Select City / Municipality';
+
+  return (
+    <View style={styles.form}>
+      {/* TODO 2.9 (c) [Island-Group Filter] */}
+      <View style={styles.filterRow}>
+        {FILTERS.map((f) => (
+          <Chip
+            key={f.value}
+            selected={islandFilter === f.value}
+            showSelectedOverlay
+            onPress={() => handleFilterChange(f.value)}
+          >
+            {f.label}
+          </Chip>
+        ))}
+      </View>
+
+      <View style={styles.row}>
+        <View style={styles.field}>
+          <Menu
+            visible={regionMenuVisible}
+            onDismiss={() => setRegionMenuVisible(false)}
+            anchor={
+              <Button
+                mode="outlined"
+                icon="menu-down"
+                contentStyle={styles.buttonContent}
+                style={styles.button}
+                onPress={() => setRegionMenuVisible(true)}
+              >
+                {selectedRegionLabel}
+              </Button>
+            }
+          >
+            {/* TODO 2.6 [Region Menu Map] */}
+            {filteredRegions.map((region) => (
+              <Menu.Item
+                key={region.code}
+                title={region.name}
+                onPress={() => {
+                  setSelectedRegion(region.code);
+                  setRegionMenuVisible(false);
+                }}
+              />
+            ))}
+          </Menu>
+        </View>
+
+        <View style={styles.field}>
+          <Menu
+            visible={cityMenuVisible}
+            onDismiss={() => setCityMenuVisible(false)}
+            anchor={
+              <Button
+                mode="outlined"
+                icon="menu-down"
+                disabled={!selectedRegion}
+                contentStyle={styles.buttonContent}
+                style={styles.button}
+                onPress={() => setCityMenuVisible(true)}
+              >
+                {selectedCityLabel}
+              </Button>
+            }
+          >
+            {/* TODO 2.8 [City Menu Map] */}
+            {cities.map((city) => (
+              <Menu.Item
+                key={city.code}
+                title={city.name}
+                onPress={() => {
+                  setSelectedCityName(city.name);
+                  setCityMenuVisible(false);
+                }}
+              />
+            ))}
+          </Menu>
+        </View>
+
+        <Button
+          mode="contained"
+          icon="magnify"
+          disabled={!selectedCityName}
+          contentStyle={styles.buttonContent}
+          style={styles.searchButton}
+          onPress={handleSubmit}
+        >
+          Search
+        </Button>
+      </View>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  form: {
+    width: '100%',
+    marginBottom: 8,
+  },
+  filterRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 14,
+    justifyContent: 'center',
+  },
+  row: {
+    flexDirection: 'column',
+    gap: 12,
+    alignItems: 'stretch',
+  },
+  field: {
+    width: '100%',
+  },
+  button: {
+    width: '100%',
+  },
+  buttonContent: {
+    paddingVertical: 6,
+  },
+  searchButton: {
+    width: '100%',
+  },
+});
