@@ -461,6 +461,6 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
     alignSelf: 'center',
   },
   quantity: { flexDirection: 'row', alignItems: 'center' },
-  quantityText: { minWidth: 24, textAlign: 'center', fontSize: 16, fontWeight: '600' },
+  quantityText: { minWidth: 24, textAlign: 'center', fontSize: 16, fontWeight: '600', color: colors.text },
   addButton: { flex: 1 },
 });
