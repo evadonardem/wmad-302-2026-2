@@ -176,11 +176,11 @@ export default function RegisterScreen() {
               returnKeyType="next"
               disabled={isLoading}
               right={
-                <View style={styles.eyeIcon}>
-                  <Text onPress={() => setShowPassword(!showPassword)} style={styles.eyeText}>
-                    {showPassword ? '🙈' : '👁️'}
-                  </Text>
-                </View>
+                <PaperTextInput.Icon
+                  icon={showPassword ? 'eye-off' : 'eye'}
+                  onPress={() => setShowPassword(!showPassword)}
+                  accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
+                />
               }
             />
 
@@ -196,11 +196,11 @@ export default function RegisterScreen() {
               returnKeyType="next"
               disabled={isLoading}
               right={
-                <View style={styles.eyeIcon}>
-                  <Text onPress={() => setShowConfirmPassword(!showConfirmPassword)} style={styles.eyeText}>
-                    {showConfirmPassword ? '🙈' : '👁️'}
-                  </Text>
-                </View>
+                <PaperTextInput.Icon
+                  icon={showConfirmPassword ? 'eye-off' : 'eye'}
+                  onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                  accessibilityLabel={showConfirmPassword ? 'Hide password' : 'Show password'}
+                />
               }
             />
 
