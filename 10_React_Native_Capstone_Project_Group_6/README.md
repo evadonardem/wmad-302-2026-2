@@ -12,7 +12,7 @@ accounts come from the free [DummyJSON](https://dummyjson.com) API.
 | Group number | **Group 6** |
 | Members | **Agustin, Jecressa** ·  **Liwanag, Denie** ·  **Laoeng Vera** |
 | GitHub | J-Llama · denieliwanag17-rave · Leone Greek |
-| Demo video (2-3 min) | **[LINK]** |
+| Demo video (2-3 min) | https://drive.google.com/drive/folders/1asDxysgXRn9fpfeUeJNOoeig9h8lgIld?usp=sharing |
 
 ## Features
 
