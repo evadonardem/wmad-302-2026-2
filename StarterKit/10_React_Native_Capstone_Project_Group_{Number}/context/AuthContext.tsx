@@ -1,6 +1,6 @@
 /**
- * Auth Context with useReducer - Complete scaffold
- * Students complete: register, token refresh integration, persistence hydration
+ * Auth Context with useReducer
+ * Handles login, register, logout, session hydration and expired-session logout.
  */
 
 import React, {
@@ -9,9 +9,10 @@ import React, {
   useReducer,
   useEffect,
   useCallback,
+  useMemo,
   ReactNode,
 } from 'react';
-import { AuthState, AuthAction, AuthUser } from '@/types/auth';
+import { AuthState, AuthAction, AuthUser, RegisterData } from '@/types/auth';
 import { authApi } from '@/services/authApi';
 
 // Initial state
@@ -87,18 +88,12 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
 // Context
 interface AuthContextType extends AuthState {
   login: (username: string, password: string) => Promise<void>;
-  register: (data: {
-    firstName: string;
-    lastName: string;
-    username: string;
-    password: string;
-    email: string;
-    age?: number;
-    gender?: 'male' | 'female';
-  }) => Promise<void>;
+  register: (data: RegisterData) => Promise<void>;
   logout: () => void;
   clearError: () => void;
   refreshUser: () => Promise<void>;
+  /** Apply local profile changes (e.g. after editing the profile). */
+  updateUser: (changes: Partial<AuthUser>) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -107,44 +102,30 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(authReducer, initialState);
 
-  // Hydrate from storage on mount
+  // Log out automatically when the API can no longer refresh the token
+  useEffect(() => {
+    authApi.setSessionExpiredHandler(() => dispatch({ type: 'AUTH_LOGOUT' }));
+    return () => authApi.setSessionExpiredHandler(null);
+  }, []);
+
+  // Restore the saved session on app start
   useEffect(() => {
     const hydrateAuth = async () => {
+      const stored = await authApi.hydrate();
+      if (!stored?.token || !stored.refreshToken) {
+        dispatch({ type: 'AUTH_HYDRATE', payload: null });
+        return;
+      }
+
       try {
-        const storedUser = authApi.getStoredUser();
-        if (storedUser?.token && storedUser?.refreshToken) {
-          // Verify token still works by fetching user profile
-          try {
-            const freshUser = await authApi.getMe();
-            // Merge stored tokens with fresh user data
-            const mergedUser = {
-              ...freshUser,
-              token: storedUser.token,
-              refreshToken: storedUser.refreshToken,
-            };
-            authApi.setTokens(mergedUser); // Update with fresh data
-            dispatch({ type: 'AUTH_HYDRATE', payload: mergedUser });
-          } catch {
-            // Token expired, try refresh
-            try {
-              await authApi.refreshAccessToken();
-              const freshUser = await authApi.getMe();
-              const storedAgain = authApi.getStoredUser();
-              if (storedAgain) {
-                dispatch({ type: 'AUTH_HYDRATE', payload: storedAgain });
-              } else {
-                dispatch({ type: 'AUTH_HYDRATE', payload: null });
-              }
-            } catch {
-              // Refresh failed, clear storage
-              authApi.logout();
-              dispatch({ type: 'AUTH_HYDRATE', payload: null });
-            }
-          }
-        } else {
-          dispatch({ type: 'AUTH_HYDRATE', payload: null });
-        }
+        // The 401 interceptor refreshes the token automatically if it expired
+        const profile = await authApi.getMe();
+        const current = authApi.getStoredUser() ?? stored;
+        const merged: AuthUser = { ...current, ...profile };
+        authApi.setTokens(merged);
+        dispatch({ type: 'AUTH_HYDRATE', payload: merged });
       } catch {
+        authApi.logout();
         dispatch({ type: 'AUTH_HYDRATE', payload: null });
       }
     };
@@ -164,31 +145,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const register = useCallback(
-    async (data: {
-      firstName: string;
-      lastName: string;
-      username: string;
-      password: string;
-      email: string;
-      age?: number;
-      gender?: 'male' | 'female';
-    }) => {
-      dispatch({ type: 'AUTH_START' });
-      try {
-        // TODO: Student implementation
-        // 1. Call authApi.register(data) - implement in services/authApi.ts
-        // 2. On success, dispatch AUTH_SUCCESS
-        // 3. On failure, dispatch AUTH_FAILURE
-        throw new Error('TODO: Implement register in AuthContext - call authApi.register');
-      } catch (error: unknown) {
-        const message = error instanceof Error ? error.message : 'Registration failed';
-        dispatch({ type: 'AUTH_FAILURE', payload: message });
-        throw error;
-      }
-    },
-    []
-  );
+  const register = useCallback(async (data: RegisterData) => {
+    dispatch({ type: 'AUTH_START' });
+    try {
+      // Creates the account and signs the user in (auto-login)
+      const user = await authApi.register(data);
+      dispatch({ type: 'AUTH_SUCCESS', payload: user });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Registration failed';
+      dispatch({ type: 'AUTH_FAILURE', payload: message });
+      throw error;
+    }
+  }, []);
 
   const logout = useCallback(() => {
     authApi.logout();
@@ -202,36 +170,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const refreshUser = useCallback(async () => {
     if (!state.isAuthenticated) return;
     try {
-      const user = await authApi.getMe();
-      const storedUser = authApi.getStoredUser();
-      if (storedUser) {
-        const mergedUser = {
-          ...user,
-          token: storedUser.token,
-          refreshToken: storedUser.refreshToken,
-        };
-        authApi.setTokens(mergedUser);
-        dispatch({ type: 'AUTH_SUCCESS', payload: mergedUser });
+      const profile = await authApi.getMe();
+      const current = authApi.getStoredUser();
+      if (current) {
+        const merged: AuthUser = { ...current, ...profile };
+        authApi.setTokens(merged);
+        dispatch({ type: 'AUTH_SUCCESS', payload: merged });
       }
     } catch {
-      // Silently fail - token refresh interceptor handles 401s
+      // Ignore: the 401 interceptor handles expired tokens
     }
   }, [state.isAuthenticated]);
 
-  return (
-    <AuthContext.Provider
-      value={{
-        ...state,
-        login,
-        register,
-        logout,
-        clearError,
-        refreshUser,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
+  const updateUser = useCallback((changes: Partial<AuthUser>) => {
+    authApi.updateSession(changes);
+    dispatch({ type: 'AUTH_UPDATE_USER', payload: changes });
+  }, []);
+
+  const value = useMemo<AuthContextType>(
+    () => ({ ...state, login, register, logout, clearError, refreshUser, updateUser }),
+    [state, login, register, logout, clearError, refreshUser, updateUser]
   );
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 // Hook
@@ -243,4 +204,4 @@ export function useAuth(): AuthContextType {
   return context;
 }
 
-export { AuthContext };
+export { AuthContext, authReducer, initialState as initialAuthState };

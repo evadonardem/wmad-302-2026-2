@@ -180,23 +180,4 @@ export const styles = StyleSheet.create({
     borderRadius: 8,
     height: 52,
   },
-  guideContainer: {
-    margin: 16,
-    padding: 16,
-    backgroundColor: '#E8F0FE',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#D0E1F9',
-  },
-  guideTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#1A73E8',
-    marginBottom: 8,
-  },
-  guideText: {
-    fontSize: 13,
-    color: '#3C4043',
-    lineHeight: 20,
-  },
 });

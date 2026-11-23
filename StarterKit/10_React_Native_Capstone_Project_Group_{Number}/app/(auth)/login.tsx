@@ -1,27 +1,25 @@
 /**
- * Login Screen - Complete, working implementation
- * Students can use as reference for building register screen
+ * Login Screen
  */
 import React, { useState } from 'react';
 import {
   View,
   Text,
-  TextInput,
   TouchableOpacity,
   ScrollView,
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
-  Alert,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
-import { Card, Button, TextInput as PaperTextInput, Divider } from 'react-native-paper';
+import { Card, Button, TextInput as PaperTextInput, Divider, Snackbar } from 'react-native-paper';
 import { styles } from './styles';
 
 export default function LoginScreen() {
   const router = useRouter();
   const { login, isLoading, error, clearError } = useAuth();
+  const [formError, setFormError] = useState<string | null>(null);
   const { redirect } = useLocalSearchParams<{ redirect?: string }>();
 
   const [username, setUsername] = useState('');
@@ -30,7 +28,7 @@ export default function LoginScreen() {
 
   const handleLogin = async () => {
     if (!username.trim() || !password.trim()) {
-      Alert.alert('Error', 'Please enter both username and password');
+      setFormError('Please enter both username and password');
       return;
     }
 
@@ -53,12 +51,6 @@ export default function LoginScreen() {
       // Error handled in context
     }
   };
-
-  React.useEffect(() => {
-    if (error) {
-      Alert.alert('Login Failed', error, [{ text: 'OK', onPress: clearError }]);
-    }
-  }, [error, clearError]);
 
   return (
     <KeyboardAvoidingView
@@ -145,7 +137,7 @@ export default function LoginScreen() {
 
             {/* Register Link */}
             <View style={styles.registerContainer}>
-              <Text style={styles.registerText}>Don't have an account? </Text>
+              <Text style={styles.registerText}>Don&apos;t have an account? </Text>
               <TouchableOpacity
                 onPress={() => router.push('/(auth)/register')}
                 style={styles.link}
@@ -163,6 +155,16 @@ export default function LoginScreen() {
           </Text>
         </View>
       </ScrollView>
+      <Snackbar
+        visible={Boolean(formError ?? error)}
+        onDismiss={() => {
+          setFormError(null);
+          clearError();
+        }}
+        duration={5000}
+      >
+        {formError ?? error ?? ''}
+      </Snackbar>
     </KeyboardAvoidingView>
   );
 }

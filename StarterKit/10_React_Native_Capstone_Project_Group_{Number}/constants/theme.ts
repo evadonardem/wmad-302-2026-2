@@ -2,33 +2,53 @@
  * React Native Paper Theme - Marketplace App
  * Clean, commerce-friendly color palette
  */
+
+/**
+ * React Native Paper Theme - Marketplace App
+ * Modern, clean blue marketplace theme
+ */
+
+/**
+ * React Native Paper Theme - Marketplace App
+ * Modern Lavender and White Theme
+ */
 import { MD3LightTheme } from 'react-native-paper';
 
 export const theme = {
   ...MD3LightTheme,
   colors: {
     ...MD3LightTheme.colors,
-    primary: '#1A73E8',      // Google/Trust blue
-    primaryContainer: '#E8F0FE',
-    secondary: '#5C6BC0',    // Indigo
-    secondaryContainer: '#E8EAF6',
-    tertiary: '#34A853',     // Success green
-    tertiaryContainer: '#E6F4EA',
+
+    primary: '#8B5CF6',
+    primaryContainer: '#EDE9FE',
+
+    secondary: '#A78BFA',
+    secondaryContainer: '#F3E8FF',
+
+    tertiary: '#16A34A',
+    tertiaryContainer: '#DCFCE7',
+
     surface: '#FFFFFF',
-    surfaceVariant: '#F8F9FA',
-    background: '#F8F9FA',
-    error: '#EA4335',
-    errorContainer: '#FCE8E6',
+    surfaceVariant: '#F5F3FF',
+    background: '#FAF9FF',
+
+    error: '#DC2626',
+    errorContainer: '#FEE2E2',
+
     onPrimary: '#FFFFFF',
     onSecondary: '#FFFFFF',
     onTertiary: '#FFFFFF',
-    onSurface: '#202124',
-    onSurfaceVariant: '#5F6368',
-    onBackground: '#202124',
-    outline: '#DADCE0',
-    outlineVariant: '#E8EAED',
+
+    onSurface: '#27213A',
+    onSurfaceVariant: '#77718A',
+    onBackground: '#27213A',
+
+    outline: '#DDD6FE',
+    outlineVariant: '#EDE9FE',
   },
-  roundness: 8,
+
+  roundness: 14,
+
   fonts: {
     ...MD3LightTheme.fonts,
     displayLarge: { fontFamily: 'System', fontWeight: '700' as const, fontSize: 57, lineHeight: 64, letterSpacing: -0.25 },

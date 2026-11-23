@@ -15,6 +15,9 @@ export interface AuthUser {
   refreshToken: string;
 }
 
+/** User fields returned by GET /auth/me (no tokens). */
+export type UserProfile = Omit<AuthUser, 'token' | 'refreshToken'>;
+
 export interface LoginCredentials {
   username: string;
   password: string;
@@ -32,9 +35,14 @@ export interface RegisterData {
   image?: string;
 }
 
-export interface AuthResponse extends AuthUser {
-  // DummyJSON returns the user object with tokens on login/register
-}
+/**
+ * Raw login payload from DummyJSON. Newer API versions return `accessToken`;
+ * older ones returned `token`. authApi normalises both into AuthUser.token.
+ */
+export type AuthResponse = Omit<AuthUser, 'token'> & {
+  accessToken: string;
+  token?: string;
+};
 
 export interface RefreshTokenResponse {
   id: number;

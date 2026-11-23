@@ -44,3 +44,7 @@ ios/build/
 # Debug
 *.orig
 *.rej
+node_modules/
+**/node_modules/
+.expo/
+coverage/

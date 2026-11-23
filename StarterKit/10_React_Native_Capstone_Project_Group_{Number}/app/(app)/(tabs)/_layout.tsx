@@ -4,11 +4,11 @@
  */
 import { Tabs } from 'expo-router';
 import React from 'react';
-import { useAuth } from '@/context/AuthContext';
+import { useCart } from '@/context/CartContext';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 export default function TabsLayout() {
-  const { user } = useAuth();
+  const { totals } = useCart();
 
   return (
     <Tabs
@@ -47,6 +47,15 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="search"
+        options={{
+          title: 'Search',
+          tabBarIcon: ({ color }) => (
+            <MaterialCommunityIcons name="magnify" size={24} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="categories"
         options={{
           title: 'Categories',
@@ -63,6 +72,7 @@ export default function TabsLayout() {
         name="cart"
         options={{
           title: 'Cart',
+          tabBarBadge: totals.totalQuantity > 0 ? totals.totalQuantity : undefined,
           tabBarIcon: ({ focused, color }) => (
             <MaterialCommunityIcons
               name={focused ? 'cart' : 'cart-outline'}
