@@ -16,7 +16,7 @@ import {
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
-import { Card, Button, TextInput as PaperTextInput } from 'react-native-paper';
+import { Card, Button, TextInput as PaperTextInput, Divider } from 'react-native-paper';
 import { styles } from './styles';
 
 export default function LoginScreen() {
@@ -36,6 +36,18 @@ export default function LoginScreen() {
 
     try {
       await login(username.trim(), password.trim());
+      router.replace(redirect || '/(app)/(tabs)/home');
+    } catch {
+      // Error handled in context
+    }
+  };
+
+  const handleDemoLogin = async () => {
+    // DummyJSON test credentials: emilys / emilyspass
+    setUsername('emilys');
+    setPassword('emilyspass');
+    try {
+      await login('emilys', 'emilyspass');
       router.replace(redirect || '/(app)/(tabs)/home');
     } catch {
       // Error handled in context
@@ -122,6 +134,14 @@ export default function LoginScreen() {
                 <Text style={styles.buttonText}>Sign In</Text>
               )}
             </Button>
+
+            {/* Demo Login */}
+            <View style={styles.demoContainer}>
+              <Divider style={styles.divider} />
+              <TouchableOpacity onPress={handleDemoLogin} disabled={isLoading} style={styles.demoButton}>
+                <Text style={styles.demoButtonText}>Try Demo Account (emilys / emilyspass)</Text>
+              </TouchableOpacity>
+            </View>
 
             {/* Register Link */}
             <View style={styles.registerContainer}>

@@ -58,7 +58,7 @@ A React Native + Expo + React Native Paper e-commerce application (Lazada/Shopee
 #### 4. Authentication & Security (10 pts)
 | Criterion | Points | Expectation |
 |-----------|--------|-------------|
-| Login Flow | 3 | Working login, validation, and error messages |
+| Login Flow | 3 | Working login, validation, error messages, demo account |
 | Register Flow | 3 | Complete implementation, validation, auto-login |
 | Token Management | 2 | Auto-refresh on 401, secure storage, logout clears tokens |
 | Protected Routes | 2 | Auth guard redirects unauthenticated users |
