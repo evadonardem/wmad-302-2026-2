@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { Button, Card, IconButton, Switch, TextInput } from 'react-native-paper';
+import { Button, Card, IconButton, TextInput } from 'react-native-paper';
 import PhilippineAddressFields, { PhilippineAddressValue } from '@/components/PhilippineAddressFields';
 import { addressesStorage, DeliveryAddress, formatDeliveryAddress } from '@/utils/marketplaceStorage';
 import { marketplaceColors } from '@/constants/theme';
@@ -27,7 +27,6 @@ export default function AddressesScreen() {
   const router = useRouter();
   const [addresses, setAddresses] = useState<DeliveryAddress[]>([]);
   const [form, setForm] = useState(emptyAddress);
-  const [isDefault, setIsDefault] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -50,7 +49,6 @@ export default function AddressesScreen() {
   const resetForm = () => {
     setEditingId(null);
     setForm(emptyAddress);
-    setIsDefault(false);
   };
 
   const saveAddress = async () => {
@@ -71,7 +69,7 @@ export default function AddressesScreen() {
       await addressesStorage.save({
         id: editingId ?? `address-${Date.now()}`,
         ...form,
-        isDefault: isDefault || addresses.length === 0,
+        isDefault: true,
       });
       resetForm();
       await loadAddresses();
@@ -98,7 +96,6 @@ export default function AddressesScreen() {
       barangayCode: address.barangayCode ?? '',
       barangay: address.barangay ?? '',
     });
-    setIsDefault(address.isDefault);
   };
 
   const updateLocality = (locality: PhilippineAddressValue) => {
@@ -158,36 +155,34 @@ export default function AddressesScreen() {
           </Card.Content>
         </Card>
       ))}
-      <Card style={styles.card} mode="contained">
-        <Card.Content>
-          <Text style={styles.formTitle}>{editingId ? 'Edit address' : 'Add a new address'}</Text>
-          <TextInput label="Recipient name" mode="outlined" value={form.recipient} onChangeText={(recipient) => setForm({ ...form, recipient })} style={styles.input} />
-          <TextInput label="Phone number" mode="outlined" value={form.phone} onChangeText={(phone) => setForm({ ...form, phone })} keyboardType="phone-pad" style={styles.input} />
-          <TextInput label="Street address" mode="outlined" value={form.street} onChangeText={(street) => setForm({ ...form, street })} style={styles.input} />
-          <PhilippineAddressFields
-            value={{
-              regionCode: form.regionCode ?? '',
-              region: form.region ?? '',
-              provinceCode: form.provinceCode ?? '',
-              province: form.province ?? '',
-              cityCode: form.cityCode ?? '',
-              city: form.city,
-              barangayCode: form.barangayCode ?? '',
-              barangay: form.barangay ?? '',
-            }}
-            onChange={updateLocality}
-          />
-          <TextInput label="Postal code" mode="outlined" value={form.postalCode} onChangeText={(postalCode) => setForm({ ...form, postalCode })} keyboardType="number-pad" style={styles.input} />
-          <View style={styles.defaultRow}>
-            <Text style={styles.body}>Make this my default address</Text>
-            <Switch value={isDefault} onValueChange={setIsDefault} color={brandPurple} />
-          </View>
-          <Button mode="contained" buttonColor={brandPurple} onPress={() => void saveAddress()} loading={saving} disabled={saving}>
-            {editingId ? 'Save changes' : 'Add address'}
-          </Button>
-          {editingId && <Button onPress={resetForm}>Cancel editing</Button>}
-        </Card.Content>
-      </Card>
+      {(addresses.length === 0 || editingId !== null) && (
+        <Card style={styles.card} mode="contained">
+          <Card.Content>
+            <Text style={styles.formTitle}>{editingId ? 'Edit address' : 'Add a delivery address'}</Text>
+            <TextInput label="Recipient name" mode="outlined" value={form.recipient} onChangeText={(recipient) => setForm({ ...form, recipient })} style={styles.input} />
+            <TextInput label="Phone number" mode="outlined" value={form.phone} onChangeText={(phone) => setForm({ ...form, phone })} keyboardType="phone-pad" style={styles.input} />
+            <TextInput label="Street address" mode="outlined" value={form.street} onChangeText={(street) => setForm({ ...form, street })} style={styles.input} />
+            <PhilippineAddressFields
+              value={{
+                regionCode: form.regionCode ?? '',
+                region: form.region ?? '',
+                provinceCode: form.provinceCode ?? '',
+                province: form.province ?? '',
+                cityCode: form.cityCode ?? '',
+                city: form.city,
+                barangayCode: form.barangayCode ?? '',
+                barangay: form.barangay ?? '',
+              }}
+              onChange={updateLocality}
+            />
+            <TextInput label="Postal code" mode="outlined" value={form.postalCode} onChangeText={(postalCode) => setForm({ ...form, postalCode })} keyboardType="number-pad" style={styles.input} />
+            <Button mode="contained" buttonColor={brandPurple} onPress={() => void saveAddress()} loading={saving} disabled={saving}>
+              {editingId ? 'Save changes' : 'Add address'}
+            </Button>
+            {editingId && <Button onPress={resetForm}>Cancel editing</Button>}
+          </Card.Content>
+        </Card>
+      )}
     </ScrollView>
   );
 }
@@ -206,5 +201,4 @@ const styles = StyleSheet.create({
   actions: { flexDirection: 'row', justifyContent: 'flex-end', marginTop: 8 },
   formTitle: { fontSize: 18, fontWeight: '800', color: '#30283A', marginBottom: 14 },
   input: { marginBottom: 10, backgroundColor: '#FFF' },
-  defaultRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
 });

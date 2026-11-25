@@ -103,8 +103,7 @@ export const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   registerContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
+    alignItems: 'center',
     marginTop: 20,
   },
   registerText: {
@@ -115,6 +114,7 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 4,
     minHeight: 48,
     justifyContent: 'center',
+    alignItems: 'center',
   },
   linkText: {
     fontSize: 14,

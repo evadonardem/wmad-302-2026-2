@@ -48,6 +48,15 @@ export interface MarketplaceOrder {
   paymentMethod: 'cash' | 'demo-card';
 }
 
+export const ORDER_CANCELLATION_WINDOW_MS = 12 * 60 * 60 * 1000;
+
+export function getOrderCancellationTimeRemaining(order: MarketplaceOrder, now = Date.now()): number | null {
+  const createdAt = Date.parse(order.createdAt);
+  if (!Number.isFinite(createdAt)) return null;
+  const remaining = createdAt + ORDER_CANCELLATION_WINDOW_MS - now;
+  return remaining > 0 ? remaining : null;
+}
+
 export interface MarketplacePreferences {
   notificationsEnabled: boolean;
   promotionalEmailsEnabled: boolean;
@@ -76,6 +85,9 @@ async function updateOrderStatus(
   const order = orders.find((entry) => entry.id === id);
   if (!order) throw new Error('Order not found.');
   if (order.status !== 'Processing') throw new Error('Only in-progress orders can change status.');
+  if (status === 'Cancelled' && order.paymentMethod === 'demo-card' && getOrderCancellationTimeRemaining(order) === null) {
+    throw new Error('Paid orders can only be cancelled within 12 hours of being placed.');
+  }
 
   const updatedOrder: MarketplaceOrder = { ...order, status };
   await write(KEYS.orders, orders.map((entry) => entry.id === id ? updatedOrder : entry));
@@ -93,14 +105,17 @@ export const ordersStorage = {
 };
 
 export const addressesStorage = {
-  getAll: () => read<DeliveryAddress[]>(KEYS.addresses, []),
+  getAll: async () => {
+    const saved = await read<DeliveryAddress[]>(KEYS.addresses, []);
+    if (saved.length <= 1) return saved;
+
+    const retained = saved.find((address) => address.isDefault) ?? saved[0];
+    const onlyAddress = [{ ...retained, isDefault: true }];
+    await write(KEYS.addresses, onlyAddress);
+    return onlyAddress;
+  },
   save: async (address: DeliveryAddress) => {
-    const current = await addressesStorage.getAll();
-    const remaining = current.filter((entry) => entry.id !== address.id);
-    const updated = address.isDefault
-      ? remaining.map((entry) => ({ ...entry, isDefault: false }))
-      : remaining;
-    await write(KEYS.addresses, [...updated, address]);
+    await write(KEYS.addresses, [{ ...address, isDefault: true }]);
   },
   remove: async (id: string) => {
     const current = await addressesStorage.getAll();

@@ -1,9 +1,14 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { Button, Card, Dialog, IconButton, Portal } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { formatDeliveryAddress, MarketplaceOrder, ordersStorage } from '@/utils/marketplaceStorage';
+import {
+  formatDeliveryAddress,
+  getOrderCancellationTimeRemaining,
+  MarketplaceOrder,
+  ordersStorage,
+} from '@/utils/marketplaceStorage';
 
 const brandPurple = '#75648A';
 
@@ -15,6 +20,18 @@ export default function OrderDetailScreen() {
   const [updatingStatus, setUpdatingStatus] = useState<'Cancelled' | 'Completed' | null>(null);
   const [pendingStatus, setPendingStatus] = useState<'Cancelled' | 'Completed' | null>(null);
   const [statusError, setStatusError] = useState<string | null>(null);
+  const [cancellationTimeRemaining, setCancellationTimeRemaining] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!order || order.status !== 'Processing') {
+      setCancellationTimeRemaining(null);
+      return;
+    }
+    const updateTimeRemaining = () => setCancellationTimeRemaining(getOrderCancellationTimeRemaining(order));
+    updateTimeRemaining();
+    const timer = setInterval(updateTimeRemaining, 1000);
+    return () => clearInterval(timer);
+  }, [order]);
 
   useFocusEffect(useCallback(() => {
     let active = true;
@@ -66,7 +83,7 @@ export default function OrderDetailScreen() {
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
       <View style={styles.header}>
-        <IconButton icon="arrow-left" onPress={() => router.back()} accessibilityLabel="Go back" />
+        <IconButton icon="arrow-left" onPress={() => router.replace('/(app)/orders')} accessibilityLabel="Back to orders" />
         <Text style={styles.heading}>Order details</Text>
       </View>
       <Card style={styles.card} mode="contained">
@@ -170,7 +187,14 @@ export default function OrderDetailScreen() {
       </Card>
       {order.status === 'Processing' && (
         <View style={styles.actions}>
-          <Button
+          <Text style={styles.cancellationTimer}>
+            {cancellationTimeRemaining === null
+              ? order.paymentMethod === 'demo-card'
+                ? 'Cancellation window closed'
+                : '12-hour cancellation timer ended'
+              : `Cancel within ${formatCountdown(cancellationTimeRemaining)}`}
+          </Text>
+          {(order.paymentMethod !== 'demo-card' || cancellationTimeRemaining !== null) && <Button
             mode="outlined"
             icon="close-circle-outline"
             textColor="#B00020"
@@ -183,7 +207,7 @@ export default function OrderDetailScreen() {
             style={styles.cancelButton}
           >
             Cancel order
-          </Button>
+          </Button>}
           <Button
             mode="outlined"
             icon="check-circle-outline"
@@ -285,6 +309,7 @@ const styles = StyleSheet.create({
   sectionTitle: { color: '#222', fontSize: 16, fontWeight: '700' },
   muted: { color: '#77717F', fontSize: 13 },
   dateRow: { flexDirection: 'row', alignItems: 'center', gap: 7, marginTop: 13 },
+  cancellationTimer: { color: '#B4233C', fontSize: 13, fontWeight: '700', marginTop: 8 },
   statusPill: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#F2EEF5', borderRadius: 20, paddingHorizontal: 10, paddingVertical: 7 },
   completedPill: { backgroundColor: '#E8F5EE' },
   cancelledPill: { backgroundColor: '#FCECEF' },
@@ -351,3 +376,11 @@ const styles = StyleSheet.create({
   error: { color: '#B00020', marginTop: 10 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
 });
+
+function formatCountdown(milliseconds: number): string {
+  const totalSeconds = Math.ceil(milliseconds / 1000);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  return [hours, minutes, seconds].map((value) => String(value).padStart(2, '0')).join(':');
+}

@@ -203,7 +203,7 @@ export default function PhilippineAddressFields({
           editable={false}
           showSoftInputOnFocus={false}
           pointerEvents="none"
-          right={<TextInput.Icon icon="menu-down" />}
+          right={<TextInput.Affix text="⌄" />}
           style={styles.input}
           accessibilityLabel="Select region"
         />
@@ -220,7 +220,7 @@ export default function PhilippineAddressFields({
           editable={false}
           showSoftInputOnFocus={false}
           pointerEvents="none"
-          right={!provinceNotApplicable && <TextInput.Icon icon="menu-down" />}
+          right={!provinceNotApplicable && <TextInput.Affix text="⌄" />}
           style={styles.input}
           accessibilityLabel={provinceNotApplicable ? 'Province not applicable' : 'Select province'}
         />
@@ -237,7 +237,7 @@ export default function PhilippineAddressFields({
           editable={false}
           showSoftInputOnFocus={false}
           pointerEvents="none"
-          right={<TextInput.Icon icon="menu-down" />}
+          right={<TextInput.Affix text="⌄" />}
           style={[styles.input, error && !value.city && styles.errorInput]}
           accessibilityLabel="Select city or municipality"
         />
@@ -254,7 +254,7 @@ export default function PhilippineAddressFields({
           editable={false}
           showSoftInputOnFocus={false}
           pointerEvents="none"
-          right={<TextInput.Icon icon="menu-down" />}
+          right={<TextInput.Affix text="⌄" />}
           style={[styles.input, error && !value.barangay && styles.errorInput]}
           accessibilityLabel="Select barangay"
         />

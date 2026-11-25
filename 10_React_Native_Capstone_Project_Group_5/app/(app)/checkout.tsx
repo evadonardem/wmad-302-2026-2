@@ -15,7 +15,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '@/context/AuthContext';
 import { useCart } from '@/context/CartContext';
 import PhilippineAddressFields, { PhilippineAddressValue } from '@/components/PhilippineAddressFields';
-import { addressesStorage, DeliveryAddress, ordersStorage } from '@/utils/marketplaceStorage';
+import { addressesStorage, DeliveryAddress, formatDeliveryAddress, ordersStorage } from '@/utils/marketplaceStorage';
 import CouponEntry from '@/components/CouponEntry';
 import { marketplaceColors } from '@/constants/theme';
 import { calculateCouponDiscount } from '@/utils/coupons';
@@ -74,7 +74,6 @@ export default function CheckoutScreen() {
   const [placingOrder, setPlacingOrder] = useState(false);
   const [showDeliveryErrors, setShowDeliveryErrors] = useState(false);
   const [savedAddresses, setSavedAddresses] = useState<DeliveryAddress[]>([]);
-  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
   const deliveryFieldErrors = validateDeliveryDetails({
     recipient,
     phone,
@@ -98,23 +97,22 @@ export default function CheckoutScreen() {
     addressesStorage.getAll()
       .then((saved) => {
         setSavedAddresses(saved);
-        const defaultAddress = saved.find((entry) => entry.isDefault);
-        if (defaultAddress) {
-          setSelectedAddressId(defaultAddress.id);
-          setRecipient(defaultAddress.recipient);
-          setPhone(defaultAddress.phone);
-          setAddress(defaultAddress.street);
+        const savedAddress = saved[0];
+        if (savedAddress) {
+          setRecipient(savedAddress.recipient);
+          setPhone(savedAddress.phone);
+          setAddress(savedAddress.street);
           setLocality({
-            regionCode: defaultAddress.regionCode ?? '',
-            region: defaultAddress.region ?? '',
-            provinceCode: defaultAddress.provinceCode ?? '',
-            province: defaultAddress.province ?? '',
-            cityCode: defaultAddress.cityCode ?? '',
-            city: defaultAddress.city,
-            barangayCode: defaultAddress.barangayCode ?? '',
-            barangay: defaultAddress.barangay ?? '',
+            regionCode: savedAddress.regionCode ?? '',
+            region: savedAddress.region ?? '',
+            provinceCode: savedAddress.provinceCode ?? '',
+            province: savedAddress.province ?? '',
+            cityCode: savedAddress.cityCode ?? '',
+            city: savedAddress.city,
+            barangayCode: savedAddress.barangayCode ?? '',
+            barangay: savedAddress.barangay ?? '',
           });
-          setPostalCode(defaultAddress.postalCode);
+          setPostalCode(savedAddress.postalCode);
         }
       })
       .catch((error: unknown) => {
@@ -122,7 +120,8 @@ export default function CheckoutScreen() {
       });
   }, []);
 
-  const placeOrder = async () => {
+  const submitOrder = async () => {
+    if (placingOrder) return;
     if (items.length === 0) {
       showAlert('Your cart is empty', 'Add a product before checking out.');
       router.replace('/(app)/(tabs)/home');
@@ -159,16 +158,14 @@ export default function CheckoutScreen() {
     try {
       const orderId = `KT-${Date.now()}`;
       const deliveryAddress: DeliveryAddress = {
-        id: selectedAddressId ?? `address-${Date.now()}`,
+        id: savedAddresses[0]?.id ?? `address-${Date.now()}`,
         recipient: recipient.trim(),
         phone: phone.trim(),
         street: address.trim(),
         ...locality,
         city: locality.city.trim(),
         postalCode: postalCode.trim(),
-        isDefault:
-          savedAddresses.length === 0 ||
-          savedAddresses.find((saved) => saved.id === selectedAddressId)?.isDefault === true,
+        isDefault: true,
       };
       await addressesStorage.save(deliveryAddress);
       await ordersStorage.add({
@@ -204,6 +201,43 @@ export default function CheckoutScreen() {
     } finally {
       setPlacingOrder(false);
     }
+  };
+
+  const placeOrder = () => {
+    if (placingOrder) return;
+    const deliveryErrors = validateDeliveryDetails({
+      recipient,
+      phone,
+      address,
+      region: locality.region,
+      barangay: locality.barangay,
+      city: locality.city,
+      postalCode,
+    });
+    if (Object.keys(deliveryErrors).length > 0) {
+      setShowDeliveryErrors(true);
+      showAlert('Shipping details required', Object.values(deliveryErrors).join('\n'));
+      return;
+    }
+
+    const deliveryAddress: DeliveryAddress = {
+      id: savedAddresses[0]?.id ?? 'delivery-address',
+      recipient: recipient.trim(),
+      phone: phone.trim(),
+      street: address.trim(),
+      ...locality,
+      city: locality.city.trim(),
+      postalCode: postalCode.trim(),
+      isDefault: true,
+    };
+    showAlert(
+      'Confirm delivery address',
+      `${deliveryAddress.recipient}\n${deliveryAddress.phone}\n${formatDeliveryAddress(deliveryAddress)}\n\nConfirm this address to place your order. Delivery details can't be edited after placing.\n\nYou have 12 hours from placing this order to cancel it before delivery.`,
+      [
+        { text: 'Edit address', style: 'cancel' },
+        { text: 'Confirm and place order', onPress: () => void submitOrder() },
+      ]
+    );
   };
 
   if (orderItems.length === 0) {
@@ -255,41 +289,11 @@ export default function CheckoutScreen() {
             <MaterialCommunityIcons name="map-marker" size={22} color={brandPurple} />
             <Text style={styles.sectionTitle}>Delivery address</Text>
           </View>
-          {savedAddresses.length > 0 && (
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.savedAddresses}>
-              {savedAddresses.map((saved) => (
-                <Button
-                  key={saved.id}
-                  mode="outlined"
-                  compact
-                  textColor={brandPurple}
-                  style={styles.savedAddress}
-                  accessibilityRole="radio"
-                  accessibilityLabel={`${saved.recipient}${saved.isDefault ? ', default address' : ''}`}
-                  accessibilityState={{ checked: selectedAddressId === saved.id }}
-                  onPress={() => {
-                    setSelectedAddressId(saved.id);
-                    setRecipient(saved.recipient);
-                    setPhone(saved.phone);
-                    setAddress(saved.street);
-                    setLocality({
-                      regionCode: saved.regionCode ?? '',
-                      region: saved.region ?? '',
-                      provinceCode: saved.provinceCode ?? '',
-                      province: saved.province ?? '',
-                      cityCode: saved.cityCode ?? '',
-                      city: saved.city,
-                      barangayCode: saved.barangayCode ?? '',
-                      barangay: saved.barangay ?? '',
-                    });
-                    setPostalCode(saved.postalCode);
-                  }}
-                >
-                  {saved.recipient}{saved.isDefault ? ' · Default' : ''}
-                </Button>
-              ))}
-            </ScrollView>
-          )}
+          <Text style={styles.hint}>
+            {savedAddresses.length > 0
+              ? 'Your one saved delivery address is prefilled. Review or update it before placing the order.'
+              : 'You can save one delivery address for future orders.'}
+          </Text>
           <TextInput
             label="Recipient name"
             mode="outlined"
@@ -447,7 +451,7 @@ export default function CheckoutScreen() {
           <Button
             mode="contained"
             buttonColor={brandPurple}
-            onPress={() => void placeOrder()}
+            onPress={placeOrder}
             loading={placingOrder}
             disabled={placingOrder}
             accessibilityLabel={placingOrder ? 'Placing order' : 'Place order'}
@@ -497,8 +501,6 @@ const styles = StyleSheet.create({
   sectionHeading: { flexDirection: 'row' as const, alignItems: 'center', gap: 8, marginBottom: 12 },
   sectionTitle: { color: '#222', fontSize: 17, fontWeight: '700' as const },
   input: { marginBottom: 10, backgroundColor: '#FFF', borderRadius: 12 },
-  savedAddresses: { marginBottom: 10 },
-  savedAddress: { marginRight: 8, minHeight: 48 },
   fieldError: { color: '#B4233C', fontSize: 12, marginTop: -6, marginBottom: 8, marginLeft: 12 },
   paymentOption: { flexDirection: 'row' as const, alignItems: 'center', gap: 10, padding: 14, borderWidth: 1, borderColor: marketplaceColors.border, borderRadius: 12, marginTop: 8 },
   paymentSelected: { borderColor: brandPurple, backgroundColor: marketplaceColors.primarySoft },

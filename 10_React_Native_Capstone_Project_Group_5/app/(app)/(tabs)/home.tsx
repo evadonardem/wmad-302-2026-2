@@ -234,15 +234,21 @@ export default function HomeScreen() {
               <View style={styles.cartBadge}><Text style={styles.cartBadgeText}>{totalQuantity}</Text></View>
             )}
           </View>
-          {user?.image ? (
-            <Avatar.Image size={38} source={{ uri: user.image }} style={styles.avatar} />
-          ) : (
-            <Avatar.Text
-              size={38}
-              label={`${user?.firstName?.[0] ?? ''}${user?.lastName?.[0] ?? ''}`.toUpperCase() || 'U'}
-              style={styles.avatar}
-            />
-          )}
+          <TouchableOpacity
+            onPress={() => router.push('/(app)/(tabs)/profile')}
+            accessibilityRole="button"
+            accessibilityLabel="Open profile"
+          >
+            {user?.image ? (
+              <Avatar.Image size={38} source={{ uri: user.image }} style={styles.avatar} />
+            ) : (
+              <Avatar.Text
+                size={38}
+                label={`${user?.firstName?.[0] ?? ''}${user?.lastName?.[0] ?? ''}`.toUpperCase() || 'U'}
+                style={styles.avatar}
+              />
+            )}
+          </TouchableOpacity>
         </View>
       </View>
 
