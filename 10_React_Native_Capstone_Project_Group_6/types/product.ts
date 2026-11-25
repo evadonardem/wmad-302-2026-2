@@ -1,0 +1,145 @@
+/**
+ * Product Types - DummyJSON Products API
+ * Docs: https://dummyjson.com/docs/products
+ */
+
+export interface Product {
+  id: number;
+  title: string;
+  description: string;
+  category: string;
+  price: number;
+  discountPercentage: number;
+  rating: number;
+  stock: number;
+  tags: string[];
+  brand?: string;
+  sku: string;
+  weight: number;
+  dimensions: {
+    width: number;
+    height: number;
+    depth: number;
+  };
+  warrantyInformation: string;
+  shippingInformation: string;
+  availabilityStatus: string;
+  reviews: {
+    rating: number;
+    comment: string;
+    date: string;
+    reviewerName: string;
+    reviewerEmail: string;
+  }[];
+  returnPolicy: string;
+  minimumOrderQuantity: number;
+  meta: {
+    createdAt: string;
+    updatedAt: string;
+    barcode: string;
+    qrCode: string;
+  };
+  images: string[];
+  thumbnail: string;
+}
+
+export interface ProductsResponse {
+  products: Product[];
+  total: number;
+  skip: number;
+  limit: number;
+}
+
+export interface ProductSearchParams {
+  q?: string;
+  category?: string;
+  brand?: string;
+  limit?: number;
+  skip?: number;
+  select?: string;
+  sortBy?: 'title' | 'price' | 'rating' | 'discountPercentage';
+  order?: 'asc' | 'desc';
+}
+
+export interface Cart {
+  id: number;
+  products: {
+    id: number;
+    title: string;
+    price: number;
+    quantity: number;
+    total: number;
+    discountPercentage: number;
+    discountedTotal: number;
+    thumbnail: string;
+  }[];
+  total: number;
+  discountedTotal: number;
+  totalProducts: number;
+  totalQuantity: number;
+  userId: number;
+}
+
+export interface CartAddRequest {
+  userId: number;
+  products: {
+    id: number;
+    quantity: number;
+  }[];
+}
+
+export interface CartItem {
+  productId: number;
+  title: string;
+  thumbnail: string;
+  price: number;
+  discountPercentage: number;
+  quantity: number;
+  stock: number;
+}
+
+// ============ Orders ============
+
+export type PaymentMethod = 'cod' | 'card' | 'gcash';
+
+export interface ShippingInfo {
+  fullName: string;
+  phone: string;
+  address: string;
+  city: string;
+  postalCode: string;
+}
+
+export interface OrderItem {
+  productId: number;
+  title: string;
+  thumbnail: string;
+  price: number;
+  discountPercentage: number;
+  quantity: number;
+}
+
+export interface Order {
+  /** "ORD-<time>" for orders placed in the app, "CART-<id>" for DummyJSON past orders */
+  id: string;
+  userId: number;
+  /** username of the account that placed it (accounts made via Register share a user id) */
+  owner?: string;
+  placedAt: string | null; // ISO date; DummyJSON past orders have no date
+  status: 'Processing' | 'Shipped' | 'Delivered';
+  items: OrderItem[];
+  total: number; // before discounts
+  discountedTotal: number; // what was paid
+  totalQuantity: number;
+  shipping?: ShippingInfo;
+  paymentMethod?: PaymentMethod;
+  /** coupon used on this order, and how many dollars it took off (already inside discountedTotal) */
+  couponCode?: string;
+  couponDiscount?: number;
+}
+
+/** What the wishlist keeps about a product (enough to show it without loading it again) */
+export type WishlistItem = Pick<
+  Product,
+  'id' | 'title' | 'thumbnail' | 'category' | 'price' | 'discountPercentage' | 'rating' | 'stock'
+>;

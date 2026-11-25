@@ -1,0 +1,303 @@
+/**
+ * Home Screen Styles - Marketplace
+ */
+import { StyleSheet } from 'react-native';
+import type { ThemeColors } from '@/constants/colors';
+
+export const createStyles = (colors: ThemeColors) => StyleSheet.create({
+  scrollView: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  scrollContent: {
+    paddingBottom: 24,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 60,
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: colors.textMuted,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+  },
+  errorText: {
+    fontSize: 16,
+    color: colors.error,
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  retryButton: {
+    marginTop: 8,
+  },
+  welcomeContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 20,
+    backgroundColor: colors.primaryContainer,
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
+    marginBottom: 16,
+  },
+  welcomeTextContainer: {
+    flex: 1,
+  },
+  welcomeGreeting: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: colors.text,
+  },
+  welcomeSubtitle: {
+    fontSize: 14,
+    color: colors.textMuted,
+    marginTop: 4,
+  },
+  welcomeAvatar: {
+    backgroundColor: colors.primary,
+  },
+  sectionContainer: {
+    paddingHorizontal: 16,
+    marginBottom: 24,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: colors.text,
+  },
+  seeAll: {
+    paddingVertical: 4,
+  },
+  seeAllText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.primaryText,
+  },
+  recentList: {
+    paddingHorizontal: 4,
+    gap: 10,
+  },
+  recentCard: {
+    width: 128,
+    padding: 8,
+    borderRadius: 16,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  recentImage: {
+    width: '100%',
+    height: 96,
+    borderRadius: 8,
+    backgroundColor: colors.surfaceMuted,
+  },
+  recentTitle: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.text,
+    marginTop: 6,
+    minHeight: 32,
+  },
+  recentPrice: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: colors.text,
+    marginTop: 2,
+  },
+  categoryList: {
+    paddingHorizontal: 4,
+    gap: 8,
+  },
+  categoryChip: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    elevation: 1,
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+  },
+  categoryChipText: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: colors.primaryText,
+  },
+  // Two products per row
+  productGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    rowGap: 12,
+  },
+  productCard: {
+    width: '48.5%',
+  },
+  card: {
+    flex: 1,
+    borderRadius: 18,
+    overflow: 'hidden',
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  imageContainer: {
+    position: 'relative',
+    height: 130,
+    margin: 8,
+    borderRadius: 14,
+    backgroundColor: colors.surfaceMuted,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  recipeImage: {
+    width: '100%',
+    height: '100%',
+  },
+  productImage: {
+    width: '100%',
+    height: '100%',
+    maxWidth: '90%',
+    maxHeight: '90%',
+  },
+  difficultyBadge: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    zIndex: 1,
+  },
+  difficultyChip: {
+    borderRadius: 12,
+  },
+  easy: {
+    backgroundColor: colors.successContainer,
+  },
+  medium: {
+    backgroundColor: colors.warningContainer,
+  },
+  hard: {
+    backgroundColor: colors.errorContainer,
+  },
+  cardContent: {
+    flex: 1,
+    paddingHorizontal: 10,
+    paddingTop: 0,
+    paddingBottom: 10,
+  },
+  recipeTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: colors.onWarningContainer,
+    marginBottom: 8,
+  },
+  productTitle: {
+    fontSize: 14,
+    lineHeight: 18,
+    minHeight: 36,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 4,
+  },
+  productCategory: {
+    fontSize: 12,
+    color: colors.primaryText,
+    fontWeight: '500',
+    marginBottom: 4,
+    textTransform: 'capitalize',
+  },
+  metaRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  metaText: {
+    fontSize: 12,
+    color: colors.warningMuted,
+    fontWeight: '500',
+  },
+  cuisineRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginBottom: 8,
+  },
+  cuisineChip: {
+    backgroundColor: colors.warningContainer,
+  },
+  mealChip: {
+    backgroundColor: colors.successContainer,
+  },
+  ratingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  ratingText: {
+    fontSize: 13,
+    color: colors.textMuted,
+    fontWeight: '500',
+  },
+  priceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    columnGap: 6,
+    marginBottom: 2,
+  },
+  // Pushed to the bottom so the buttons line up across a row
+  addButton: {
+    marginTop: 'auto',
+  },
+  currentPrice: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: colors.primaryText,
+  },
+  originalPrice: {
+    flexShrink: 1,
+    fontSize: 12,
+    color: colors.textFaint,
+    textDecorationLine: 'line-through',
+  },
+  discountBadge: {
+    position: 'absolute',
+    top: 8,
+    left: 8,
+    zIndex: 1,
+    backgroundColor: colors.primary,
+    color: colors.onPrimary,
+  },
+  cardSeparator: {
+    height: 8,
+  },
+  listFooter: {
+    paddingVertical: 16,
+    alignItems: 'center',
+    gap: 8,
+  },
+  emptyContainer: {
+    paddingVertical: 40,
+    alignItems: 'center',
+  },
+  emptyText: {
+    fontSize: 16,
+    color: colors.textMuted,
+  },
+});
