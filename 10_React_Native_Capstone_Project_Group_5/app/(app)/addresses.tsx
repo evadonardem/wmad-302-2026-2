@@ -2,12 +2,26 @@ import React, { useCallback, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { Button, Card, IconButton, Switch, TextInput } from 'react-native-paper';
-import { addressesStorage, DeliveryAddress } from '@/utils/marketplaceStorage';
+import PhilippineAddressFields, { PhilippineAddressValue } from '@/components/PhilippineAddressFields';
+import { addressesStorage, DeliveryAddress, formatDeliveryAddress } from '@/utils/marketplaceStorage';
 import { marketplaceColors } from '@/constants/theme';
 import { showAlert } from '@/utils/platformAlert';
 
 const brandPurple = '#75648A';
-const emptyAddress = { recipient: '', phone: '', street: '', city: '', postalCode: '' };
+const emptyAddress: Omit<DeliveryAddress, 'id' | 'isDefault'> = {
+  recipient: '',
+  phone: '',
+  street: '',
+  city: '',
+  postalCode: '',
+  regionCode: '',
+  region: '',
+  provinceCode: '',
+  province: '',
+  cityCode: '',
+  barangayCode: '',
+  barangay: '',
+};
 
 export default function AddressesScreen() {
   const router = useRouter();
@@ -40,8 +54,16 @@ export default function AddressesScreen() {
   };
 
   const saveAddress = async () => {
-    if (Object.values(form).some((value) => !value.trim())) {
-      showAlert('Address details required', 'Please fill in every address field.');
+    if (
+      !form.recipient.trim() ||
+      !form.phone.trim() ||
+      !form.street.trim() ||
+      !form.region?.trim() ||
+      !form.barangay?.trim() ||
+      !form.city.trim() ||
+      !form.postalCode.trim()
+    ) {
+      showAlert('Address details required', 'Complete the recipient, street, region, city, barangay, and postal code.');
       return;
     }
     setSaving(true);
@@ -68,8 +90,19 @@ export default function AddressesScreen() {
       street: address.street,
       city: address.city,
       postalCode: address.postalCode,
+      regionCode: address.regionCode ?? '',
+      region: address.region ?? '',
+      provinceCode: address.provinceCode ?? '',
+      province: address.province ?? '',
+      cityCode: address.cityCode ?? '',
+      barangayCode: address.barangayCode ?? '',
+      barangay: address.barangay ?? '',
     });
     setIsDefault(address.isDefault);
+  };
+
+  const updateLocality = (locality: PhilippineAddressValue) => {
+    setForm((current) => ({ ...current, ...locality }));
   };
 
   const removeAddress = (address: DeliveryAddress) => {
@@ -112,9 +145,7 @@ export default function AddressesScreen() {
               {address.isDefault && <Text style={styles.defaultTag}>DEFAULT</Text>}
             </View>
             <Text style={styles.muted}>{address.phone}</Text>
-            <Text style={styles.body}>
-              {address.street}, {address.city} {address.postalCode}
-            </Text>
+            <Text style={styles.body}>{formatDeliveryAddress(address)}</Text>
             <View style={styles.actions}>
               {!address.isDefault && (
                 <Button compact textColor={brandPurple} onPress={() => void setDefault(address.id)}>
@@ -133,7 +164,19 @@ export default function AddressesScreen() {
           <TextInput label="Recipient name" mode="outlined" value={form.recipient} onChangeText={(recipient) => setForm({ ...form, recipient })} style={styles.input} />
           <TextInput label="Phone number" mode="outlined" value={form.phone} onChangeText={(phone) => setForm({ ...form, phone })} keyboardType="phone-pad" style={styles.input} />
           <TextInput label="Street address" mode="outlined" value={form.street} onChangeText={(street) => setForm({ ...form, street })} style={styles.input} />
-          <TextInput label="City" mode="outlined" value={form.city} onChangeText={(city) => setForm({ ...form, city })} style={styles.input} />
+          <PhilippineAddressFields
+            value={{
+              regionCode: form.regionCode ?? '',
+              region: form.region ?? '',
+              provinceCode: form.provinceCode ?? '',
+              province: form.province ?? '',
+              cityCode: form.cityCode ?? '',
+              city: form.city,
+              barangayCode: form.barangayCode ?? '',
+              barangay: form.barangay ?? '',
+            }}
+            onChange={updateLocality}
+          />
           <TextInput label="Postal code" mode="outlined" value={form.postalCode} onChangeText={(postalCode) => setForm({ ...form, postalCode })} keyboardType="number-pad" style={styles.input} />
           <View style={styles.defaultRow}>
             <Text style={styles.body}>Make this my default address</Text>

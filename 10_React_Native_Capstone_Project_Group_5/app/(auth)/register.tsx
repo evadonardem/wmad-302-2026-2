@@ -112,7 +112,12 @@ export default function RegisterScreen() {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
+      >
         {/* Logo/Brand */}
         <View style={styles.logoContainer}>
           <Image
@@ -128,13 +133,14 @@ export default function RegisterScreen() {
         {/* Register Card */}
         <Card style={styles.card} elevation={3}>
           <Card.Content style={styles.cardContent}>
-            <Text style={styles.title}>Create Account</Text>
+            <Text style={styles.title} accessibilityRole="header">Create Account</Text>
             <Text style={styles.subtitle}>Start shopping smarter today. Your account is stored on this device.</Text>
 
             {/* Name Fields Row */}
             <View style={styles.nameRow}>
               <PaperTextInput
                 label="First Name"
+                accessibilityLabel="First name"
                 mode="outlined"
                 value={formData.firstName}
                 onChangeText={(v) => handleFieldChange('firstName', v)}
@@ -146,6 +152,7 @@ export default function RegisterScreen() {
               />
               <PaperTextInput
                 label="Last Name"
+                accessibilityLabel="Last name"
                 mode="outlined"
                 value={formData.lastName}
                 onChangeText={(v) => handleFieldChange('lastName', v)}
@@ -160,6 +167,7 @@ export default function RegisterScreen() {
             {/* Username */}
             <PaperTextInput
               label="Username"
+              accessibilityLabel="Username"
               mode="outlined"
               value={formData.username}
               onChangeText={(v) => handleFieldChange('username', v)}
@@ -173,6 +181,7 @@ export default function RegisterScreen() {
             {/* Email */}
             <PaperTextInput
               label="Email"
+              accessibilityLabel="Email"
               mode="outlined"
               value={formData.email}
               onChangeText={(v) => handleFieldChange('email', v)}
@@ -187,6 +196,7 @@ export default function RegisterScreen() {
             {/* Password */}
             <PaperTextInput
               label="Password"
+              accessibilityLabel="Password"
               mode="outlined"
               value={formData.password}
               onChangeText={(v) => handleFieldChange('password', v)}
@@ -210,6 +220,7 @@ export default function RegisterScreen() {
             {/* Confirm Password */}
             <PaperTextInput
               label="Confirm Password"
+              accessibilityLabel="Confirm password"
               mode="outlined"
               value={formData.confirmPassword}
               onChangeText={(v) => handleFieldChange('confirmPassword', v)}
@@ -230,6 +241,7 @@ export default function RegisterScreen() {
             <View style={styles.optionalRow}>
               <PaperTextInput
                 label="Age (Optional)"
+                accessibilityLabel="Age, optional"
                 mode="outlined"
                 value={formData.age}
                 onChangeText={(v) => handleFieldChange('age', v)}
@@ -247,6 +259,9 @@ export default function RegisterScreen() {
                       styles.genderOption,
                       formData.gender === 'male' && styles.genderOptionSelected,
                     ]}
+                    accessibilityRole="radio"
+                    accessibilityLabel="Male"
+                    accessibilityState={{ checked: formData.gender === 'male' }}
                   >
                     <Text style={[
                       styles.genderOptionText,
@@ -259,6 +274,9 @@ export default function RegisterScreen() {
                       styles.genderOption,
                       formData.gender === 'female' && styles.genderOptionSelected,
                     ]}
+                    accessibilityRole="radio"
+                    accessibilityLabel="Female"
+                    accessibilityState={{ checked: formData.gender === 'female' }}
                   >
                     <Text style={[
                       styles.genderOptionText,
@@ -271,12 +289,20 @@ export default function RegisterScreen() {
 
             {/* Terms Checkbox */}
             <View style={styles.termsContainer}>
-              <View style={styles.checkbox}>
+              <TouchableOpacity
+                style={styles.checkbox}
+                onPress={() => setAgreedToTerms((agreed) => !agreed)}
+                accessibilityRole="checkbox"
+                accessibilityLabel="Agree to the Terms of Service and Privacy Policy"
+                accessibilityState={{ checked: agreedToTerms }}
+              >
+                <View importantForAccessibility="no-hide-descendants" pointerEvents="none">
                 <Checkbox
                   status={agreedToTerms ? 'checked' : 'unchecked'}
-                  onPress={() => setAgreedToTerms(!agreedToTerms)}
+                  onPress={() => setAgreedToTerms((agreed) => !agreed)}
                 />
-              </View>
+                </View>
+              </TouchableOpacity>
               <Text style={styles.termsText}>
                 I agree to the{' '}
                 <Text style={styles.linkText}>Terms of Service</Text>{' '}
@@ -292,6 +318,8 @@ export default function RegisterScreen() {
               loading={isLoading}
               style={styles.registerButton}
               disabled={isLoading}
+              accessibilityLabel={isLoading ? 'Creating account' : 'Create account'}
+              accessibilityState={{ disabled: isLoading, busy: isLoading }}
               contentStyle={styles.buttonContent}
             >
               {isLoading ? <ActivityIndicator color="white" size="small" /> : (

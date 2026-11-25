@@ -1,5 +1,5 @@
 import { beforeEach, expect, it, jest } from '@jest/globals';
-import { MarketplaceOrder, ordersStorage } from './marketplaceStorage';
+import { formatDeliveryAddress, MarketplaceOrder, ordersStorage } from './marketplaceStorage';
 
 const mockStorage = new Map<string, string>();
 
@@ -49,4 +49,14 @@ it('persists completed orders for the completed orders filter', async () => {
 
   await expect(ordersStorage.complete(order.id)).resolves.toMatchObject({ status: 'Completed' });
   await expect(ordersStorage.getAll()).resolves.toMatchObject([{ id: order.id, status: 'Completed' }]);
+});
+
+it('formats full Philippine delivery locations while supporting older saved addresses', () => {
+  expect(formatDeliveryAddress({
+    ...order.shippingAddress,
+    barangay: 'Barangay Test',
+    province: 'Test Province',
+    region: 'Test Region',
+  })).toBe('1 Test Street, Barangay Test, Test City, Test Province, Test Region, 12345');
+  expect(formatDeliveryAddress(order.shippingAddress)).toBe('1 Test Street, Test City, 12345');
 });

@@ -23,6 +23,29 @@ export const styles = StyleSheet.create({
     fontSize: 16,
     color: '#5F6368',
   },
+  guestTitle: {
+    color: marketplaceColors.text,
+    fontSize: 22,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  guestDescription: {
+    color: marketplaceColors.muted,
+    fontSize: 14,
+    lineHeight: 21,
+    maxWidth: 300,
+    marginTop: 8,
+    textAlign: 'center',
+  },
+  guestActions: {
+    width: '100%',
+    maxWidth: 320,
+    gap: 8,
+    marginTop: 20,
+  },
+  guestButton: {
+    borderRadius: 10,
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -2,8 +2,7 @@ import React, { useCallback, useState } from 'react';
 import { ActivityIndicator, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { Button, Card, IconButton } from 'react-native-paper';
-import { MarketplaceOrder, ordersStorage } from '@/utils/marketplaceStorage';
-import ProductRecommendations from '@/components/ProductRecommendations';
+import { formatDeliveryAddress, MarketplaceOrder, ordersStorage } from '@/utils/marketplaceStorage';
 
 const brandPurple = '#75648A';
 const orderFilters: { status: MarketplaceOrder['status']; label: string }[] = [
@@ -123,7 +122,7 @@ export default function OrdersScreen() {
                     </View>
                   ))}
                 </View>
-                <Text style={styles.body}>Delivering to {order.shippingAddress.city}</Text>
+                <Text style={styles.body}>Delivering to {formatDeliveryAddress(order.shippingAddress)}</Text>
                 <View style={styles.row}>
                   <Text style={styles.muted}>Total paid (demo)</Text>
                   <Text style={styles.total}>${order.total.toFixed(2)}</Text>
@@ -140,12 +139,6 @@ export default function OrdersScreen() {
           ))}
         </>
       )}
-        {!loading && !error && (
-          <ProductRecommendations
-            title="Recommended for you"
-            subtitle="Discover products you might like"
-          />
-        )}
     </ScrollView>
   );
 }

@@ -1,15 +1,25 @@
 import React, { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Button, Card, IconButton, TextInput } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '@/context/AuthContext';
 import { useCart } from '@/context/CartContext';
-import { productApi } from '@/services/productApi';
+import PhilippineAddressFields, { PhilippineAddressValue } from '@/components/PhilippineAddressFields';
 import { addressesStorage, DeliveryAddress, ordersStorage } from '@/utils/marketplaceStorage';
 import CouponEntry from '@/components/CouponEntry';
 import { marketplaceColors } from '@/constants/theme';
 import { calculateCouponDiscount } from '@/utils/coupons';
+import { validateDeliveryDetails } from '@/utils/checkoutValidation';
 import { showAlert } from '@/utils/platformAlert';
 
 const brandPurple = '#75648A';
@@ -49,12 +59,31 @@ export default function CheckoutScreen() {
   const [recipient, setRecipient] = useState(user ? `${user.firstName} ${user.lastName}` : '');
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
-  const [city, setCity] = useState('');
+  const [locality, setLocality] = useState<PhilippineAddressValue>({
+    regionCode: '',
+    region: '',
+    provinceCode: '',
+    province: '',
+    cityCode: '',
+    city: '',
+    barangayCode: '',
+    barangay: '',
+  });
   const [postalCode, setPostalCode] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash');
   const [placingOrder, setPlacingOrder] = useState(false);
+  const [showDeliveryErrors, setShowDeliveryErrors] = useState(false);
   const [savedAddresses, setSavedAddresses] = useState<DeliveryAddress[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
+  const deliveryFieldErrors = validateDeliveryDetails({
+    recipient,
+    phone,
+    address,
+    region: locality.region,
+    barangay: locality.barangay,
+    city: locality.city,
+    postalCode,
+  });
 
   useEffect(() => {
     if (!user?.id) {
@@ -75,7 +104,16 @@ export default function CheckoutScreen() {
           setRecipient(defaultAddress.recipient);
           setPhone(defaultAddress.phone);
           setAddress(defaultAddress.street);
-          setCity(defaultAddress.city);
+          setLocality({
+            regionCode: defaultAddress.regionCode ?? '',
+            region: defaultAddress.region ?? '',
+            provinceCode: defaultAddress.provinceCode ?? '',
+            province: defaultAddress.province ?? '',
+            cityCode: defaultAddress.cityCode ?? '',
+            city: defaultAddress.city,
+            barangayCode: defaultAddress.barangayCode ?? '',
+            barangay: defaultAddress.barangay ?? '',
+          });
           setPostalCode(defaultAddress.postalCode);
         }
       })
@@ -95,8 +133,18 @@ export default function CheckoutScreen() {
       router.replace('/(app)/(tabs)/cart');
       return;
     }
-    if (!recipient.trim() || !phone.trim() || !address.trim() || !city.trim() || !postalCode.trim()) {
-      showAlert('Shipping details required', 'Please fill in all delivery details before placing your order.');
+    const deliveryErrors = validateDeliveryDetails({
+      recipient,
+      phone,
+      address,
+      region: locality.region,
+      barangay: locality.barangay,
+      city: locality.city,
+      postalCode,
+    });
+    if (Object.keys(deliveryErrors).length > 0) {
+      setShowDeliveryErrors(true);
+      showAlert('Shipping details required', Object.values(deliveryErrors).join('\n'));
       return;
     }
     if (!user?.id) {
@@ -109,16 +157,14 @@ export default function CheckoutScreen() {
 
     setPlacingOrder(true);
     try {
-      const order = await productApi.addCart({
-        userId: user.id,
-        products: orderItems.map((item) => ({ id: item.productId, quantity: item.quantity })),
-      });
+      const orderId = `KT-${Date.now()}`;
       const deliveryAddress: DeliveryAddress = {
         id: selectedAddressId ?? `address-${Date.now()}`,
         recipient: recipient.trim(),
         phone: phone.trim(),
         street: address.trim(),
-        city: city.trim(),
+        ...locality,
+        city: locality.city.trim(),
         postalCode: postalCode.trim(),
         isDefault:
           savedAddresses.length === 0 ||
@@ -126,7 +172,7 @@ export default function CheckoutScreen() {
       };
       await addressesStorage.save(deliveryAddress);
       await ordersStorage.add({
-        id: `${order.id}-${Date.now()}`,
+        id: orderId,
         createdAt: new Date().toISOString(),
         status: 'Processing',
         items: [...orderItems],
@@ -141,7 +187,7 @@ export default function CheckoutScreen() {
       router.replace({
         pathname: '/(app)/order-confirmation',
         params: {
-          orderId: String(order.id),
+          orderId,
           total: totalAfterCoupon.toFixed(2),
           itemCount: String(totalQuantity),
           recipient: recipient.trim(),
@@ -153,7 +199,7 @@ export default function CheckoutScreen() {
     } catch (error) {
       showAlert(
         'Could not place order',
-        error instanceof Error ? error.message : 'Please check your connection and try again.'
+        error instanceof Error ? error.message : 'We could not place your order. Please try again.'
       );
     } finally {
       setPlacingOrder(false);
@@ -162,7 +208,7 @@ export default function CheckoutScreen() {
 
   if (orderItems.length === 0) {
     return (
-      <View style={styles.empty}>
+      <SafeAreaView style={styles.empty}>
         <Text style={styles.emptyTitle}>
           {items.length === 0 ? 'Nothing to check out yet' : 'No products selected'}
         </Text>
@@ -173,12 +219,22 @@ export default function CheckoutScreen() {
         >
           {items.length === 0 ? 'Browse products' : 'Return to cart'}
         </Button>
-      </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+    <SafeAreaView style={styles.screen}>
+    <KeyboardAvoidingView
+      style={styles.keyboardAvoiding}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+    <ScrollView
+      style={styles.scrollView}
+      contentContainerStyle={styles.content}
+      keyboardShouldPersistTaps="handled"
+      keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
+    >
       <View style={styles.header}>
         <IconButton
           icon="arrow-left"
@@ -188,7 +244,7 @@ export default function CheckoutScreen() {
           iconColor={brandPurple}
         />
         <View style={styles.headerText}>
-          <Text style={styles.title}>Checkout</Text>
+          <Text style={styles.title} accessibilityRole="header">Checkout</Text>
           <Text style={styles.headerSubtitle}>Review your order and delivery details</Text>
         </View>
       </View>
@@ -208,12 +264,24 @@ export default function CheckoutScreen() {
                   compact
                   textColor={brandPurple}
                   style={styles.savedAddress}
+                  accessibilityRole="radio"
+                  accessibilityLabel={`${saved.recipient}${saved.isDefault ? ', default address' : ''}`}
+                  accessibilityState={{ checked: selectedAddressId === saved.id }}
                   onPress={() => {
                     setSelectedAddressId(saved.id);
                     setRecipient(saved.recipient);
                     setPhone(saved.phone);
                     setAddress(saved.street);
-                    setCity(saved.city);
+                    setLocality({
+                      regionCode: saved.regionCode ?? '',
+                      region: saved.region ?? '',
+                      provinceCode: saved.provinceCode ?? '',
+                      province: saved.province ?? '',
+                      cityCode: saved.cityCode ?? '',
+                      city: saved.city,
+                      barangayCode: saved.barangayCode ?? '',
+                      barangay: saved.barangay ?? '',
+                    });
                     setPostalCode(saved.postalCode);
                   }}
                 >
@@ -222,13 +290,82 @@ export default function CheckoutScreen() {
               ))}
             </ScrollView>
           )}
-          <TextInput label="Recipient name" mode="outlined" value={recipient} onChangeText={setRecipient} style={styles.input} />
-          <TextInput label="Phone number" mode="outlined" value={phone} onChangeText={setPhone} keyboardType="phone-pad" style={styles.input} />
-          <TextInput label="Street address" mode="outlined" value={address} onChangeText={setAddress} style={styles.input} />
-          <View style={styles.cityRow}>
-            <TextInput label="City" mode="outlined" value={city} onChangeText={setCity} style={[styles.input, styles.cityInput]} />
-            <TextInput label="Postal code" mode="outlined" value={postalCode} onChangeText={setPostalCode} keyboardType="number-pad" style={[styles.input, styles.cityInput]} />
-          </View>
+          <TextInput
+            label="Recipient name"
+            mode="outlined"
+            value={recipient}
+            onChangeText={setRecipient}
+            style={styles.input}
+            accessibilityLabel="Recipient name"
+            accessibilityHint="Required"
+            error={showDeliveryErrors && Boolean(deliveryFieldErrors.recipient)}
+            returnKeyType="next"
+          />
+          {showDeliveryErrors && deliveryFieldErrors.recipient && (
+            <Text style={styles.fieldError} accessibilityRole="alert">
+              {deliveryFieldErrors.recipient}
+            </Text>
+          )}
+          <TextInput
+            label="Phone number"
+            mode="outlined"
+            value={phone}
+            onChangeText={setPhone}
+            keyboardType="phone-pad"
+            style={styles.input}
+            accessibilityLabel="Phone number"
+            accessibilityHint="Required"
+            error={showDeliveryErrors && Boolean(deliveryFieldErrors.phone)}
+            returnKeyType="next"
+          />
+          {showDeliveryErrors && deliveryFieldErrors.phone && (
+            <Text style={styles.fieldError} accessibilityRole="alert">
+              {deliveryFieldErrors.phone}
+            </Text>
+          )}
+          <TextInput
+            label="Street address"
+            mode="outlined"
+            value={address}
+            onChangeText={setAddress}
+            style={styles.input}
+            accessibilityLabel="Street address"
+            accessibilityHint="Required"
+            error={showDeliveryErrors && Boolean(deliveryFieldErrors.address)}
+            returnKeyType="next"
+          />
+          {showDeliveryErrors && deliveryFieldErrors.address && (
+            <Text style={styles.fieldError} accessibilityRole="alert">
+              {deliveryFieldErrors.address}
+            </Text>
+          )}
+          <PhilippineAddressFields
+            value={locality}
+            onChange={setLocality}
+            error={showDeliveryErrors}
+          />
+          {showDeliveryErrors && deliveryFieldErrors.city && (
+            <Text style={styles.fieldError} accessibilityRole="alert">
+              {deliveryFieldErrors.city}
+            </Text>
+          )}
+          <TextInput
+            label="Postal code"
+            mode="outlined"
+            value={postalCode}
+            onChangeText={setPostalCode}
+            keyboardType="number-pad"
+            style={styles.input}
+            accessibilityLabel="Postal code"
+            accessibilityHint="Required"
+            error={showDeliveryErrors && Boolean(deliveryFieldErrors.postalCode)}
+            returnKeyType="done"
+          />
+          {showDeliveryErrors && deliveryFieldErrors.postalCode && (
+            <Text style={styles.fieldError} accessibilityRole="alert">
+              {deliveryFieldErrors.postalCode}
+            </Text>
+          )}
         </Card.Content>
       </Card>
 
@@ -241,6 +378,10 @@ export default function CheckoutScreen() {
           <TouchableOpacity
             style={[styles.paymentOption, paymentMethod === 'cash' && styles.paymentSelected]}
             onPress={() => setPaymentMethod('cash')}
+            accessibilityRole="radio"
+            accessibilityLabel="Cash on delivery"
+            accessibilityHint="Pay when your order arrives"
+            accessibilityState={{ checked: paymentMethod === 'cash' }}
           >
             <MaterialCommunityIcons name="cash" size={22} color={brandPurple} />
             <View style={styles.paymentText}>
@@ -256,6 +397,10 @@ export default function CheckoutScreen() {
           <TouchableOpacity
             style={[styles.paymentOption, paymentMethod === 'demo-card' && styles.paymentSelected]}
             onPress={() => setPaymentMethod('demo-card')}
+            accessibilityRole="radio"
+            accessibilityLabel="Demo card"
+            accessibilityHint="Simulation only; no payment is charged"
+            accessibilityState={{ checked: paymentMethod === 'demo-card' }}
           >
             <MaterialCommunityIcons name="credit-card" size={22} color={brandPurple} />
             <View style={styles.paymentText}>
@@ -305,21 +450,43 @@ export default function CheckoutScreen() {
             onPress={() => void placeOrder()}
             loading={placingOrder}
             disabled={placingOrder}
+            accessibilityLabel={placingOrder ? 'Placing order' : 'Place order'}
+            accessibilityState={{ disabled: placingOrder, busy: placingOrder }}
             style={styles.placeOrder}
           >
             Place order
           </Button>
+          <Button
+            mode="outlined"
+            textColor="#75648A"
+            onPress={() => showAlert(
+              'Cancel checkout?',
+              'Your items will stay in your cart. You can come back any time.',
+              [
+                { text: 'Keep checking out', style: 'cancel' },
+                { text: 'Return to cart', onPress: () => router.replace('/(app)/(tabs)/cart') },
+              ]
+            )}
+            disabled={placingOrder}
+            style={styles.cancelCheckout}
+          >
+            Cancel checkout
+          </Button>
           <Text style={styles.disclaimer}>
-            This demo records an order using DummyJSON. It does not collect card details or process real payments.
+            Demo orders and delivery details are stored on this device. No real payment or delivery is processed.
           </Text>
         </Card.Content>
       </Card>
     </ScrollView>
+    </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: marketplaceColors.background },
+  keyboardAvoiding: { flex: 1 },
+  scrollView: { flex: 1 },
   content: { padding: 14, paddingBottom: 28 },
   header: { flexDirection: 'row' as const, alignItems: 'center', marginBottom: 14 },
   backButton: { margin: 0, marginRight: 8, backgroundColor: '#FFF', borderWidth: 1, borderColor: marketplaceColors.border, borderRadius: 12 },
@@ -331,9 +498,8 @@ const styles = StyleSheet.create({
   sectionTitle: { color: '#222', fontSize: 17, fontWeight: '700' as const },
   input: { marginBottom: 10, backgroundColor: '#FFF', borderRadius: 12 },
   savedAddresses: { marginBottom: 10 },
-  savedAddress: { marginRight: 8 },
-  cityRow: { flexDirection: 'row' as const, gap: 8 },
-  cityInput: { flex: 1 },
+  savedAddress: { marginRight: 8, minHeight: 48 },
+  fieldError: { color: '#B4233C', fontSize: 12, marginTop: -6, marginBottom: 8, marginLeft: 12 },
   paymentOption: { flexDirection: 'row' as const, alignItems: 'center', gap: 10, padding: 14, borderWidth: 1, borderColor: marketplaceColors.border, borderRadius: 12, marginTop: 8 },
   paymentSelected: { borderColor: brandPurple, backgroundColor: marketplaceColors.primarySoft },
   paymentText: { flex: 1 },
@@ -345,6 +511,7 @@ const styles = StyleSheet.create({
   totalLabel: { color: '#222', fontWeight: '700' as const, fontSize: 16 },
   total: { color: brandPurple, fontWeight: '800' as const, fontSize: 20 },
   placeOrder: { marginTop: 14, borderRadius: 12, paddingVertical: 3 },
+  cancelCheckout: { marginTop: 8, borderRadius: 12 },
   disclaimer: { color: '#888', fontSize: 11, lineHeight: 16, marginTop: 10 },
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16, backgroundColor: marketplaceColors.background },
   emptyTitle: { color: '#222', fontSize: 19, fontWeight: '700' as const },

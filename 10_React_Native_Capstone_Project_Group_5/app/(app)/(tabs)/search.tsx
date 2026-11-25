@@ -170,9 +170,11 @@ export default function SearchScreen() {
         <PaperTextInput
           style={styles.searchInput}
           placeholder="Search products..."
+          accessibilityLabel="Search products"
           value={query}
           onChangeText={setQuery}
           onSubmitEditing={handleSearch}
+          returnKeyType="search"
           underlineColor="transparent"
           activeUnderlineColor="transparent"
           right={
@@ -279,6 +281,9 @@ export default function SearchScreen() {
                 styles.filterChip,
                 selectedCategory === item && styles.filterChipSelected,
               ]}
+              accessibilityRole="button"
+              accessibilityState={{ selected: selectedCategory === item }}
+              accessibilityLabel={`Filter by ${item.replace(/-/g, ' ')}`}
               onPress={() => {
                 const nextCategory = selectedCategory === item ? null : item;
                 setSelectedCategory(nextCategory);
@@ -313,6 +318,8 @@ export default function SearchScreen() {
                 styles.sortChip,
                 sortBy === option && styles.sortChipSelected,
               ]}
+              accessibilityRole="button"
+              accessibilityState={{ selected: sortBy === option }}
               onPress={() => {
                 setSortBy(option);
                 setResults((current) => sortProducts(current, option));

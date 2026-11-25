@@ -59,7 +59,10 @@ export const styles = StyleSheet.create({
   currentPrice: { color: '#75648A', fontSize: 15, fontWeight: '800' },
   originalPrice: { color: '#777', fontSize: 11, textDecorationLine: 'line-through' },
   ratingText: { color: '#555', fontSize: 11, marginTop: 5 },
-  favoriteButton: { position: 'absolute', top: 6, right: 6, width: 30, height: 30, borderRadius: 15, backgroundColor: '#FFFFFFE8', alignItems: 'center', justifyContent: 'center' },
+  favoriteButton: { position: 'absolute', top: 2, right: 2, width: 48, height: 48, borderRadius: 24, backgroundColor: '#FFFFFFE8', alignItems: 'center', justifyContent: 'center' },
+  loadMoreFooter: { alignItems: 'center', gap: 8, paddingVertical: 16 },
+  loadMoreButton: { minHeight: 48, justifyContent: 'center', paddingHorizontal: 20 },
+  loadMoreText: { color: '#75648A', fontSize: 15, fontWeight: '700' },
   productGridRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 8 },
   emptyText: { color: '#777', fontSize: 13, paddingVertical: 20, textAlign: 'center' },
 });

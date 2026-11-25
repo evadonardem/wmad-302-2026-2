@@ -36,8 +36,8 @@ A React Native + Expo + React Native Paper e-commerce application (Lazada/Shopee
 | Product Detail Screen | 6 | Image gallery, specs, rating, reviews, share, add-to-cart from detail |
 | Categories Screen | 4 | Grid layout, category counts, navigation to filtered results |
 | Shopping Cart | 7 | Add/remove/update quantity, Context + AsyncStorage persistence, badge counts, empty state |
-| Checkout | 5 | Order placement via `POST /carts/add`, form validation, confirmation state |
-| Order History | 4 | `GET /carts/user/{id}`, order cards, order detail view |
+| Checkout | 5 | Device-local sample order, form validation, confirmation state |
+| Order History | 4 | Local order cards and order detail view |
 | User Profile | 4 | Edit profile (PUT /users/{id}), addresses, settings, logout |
 
 #### 2. Code Quality (20 pts)
@@ -229,6 +229,7 @@ npm run web
 **Authentication:**
 - New accounts are stored locally. Native apps use encrypted secure storage; web uses browser storage.
 - Browsing and adding items to the cart do not require an account; sign-in is required for Buy now and checkout.
+- The Profile tab lets guests sign in or create an account at any time, or continue browsing without signing in.
 - Sign in with the username or email and password used at registration.
 - Local accounts and profile changes are available only on the device or browser where they were created; there is no server sync or password recovery.
 - DummyJSON accounts are not accepted for sign-in; only accounts registered on this device are supported.
@@ -242,22 +243,23 @@ Start the browser app locally with `npm run web`, or create a static web export 
 
 ### Implemented Demo Features
 - Browse the marketplace home and search or filter products by category
+- Load additional home and search results in pages, with retry controls for failed requests
 - Open a product for its image gallery, pricing, stock, specifications, and reviews
 - Add products to a persistent cart, change quantities, and remove items; cart count is shown in navigation
 - Save products in a persistent wishlist
-- Enter delivery details, reuse saved addresses, select a demo payment option, and place a sample order
+- Enter delivery details with cascading Philippine region, province, city/municipality, and barangay selectors; reuse saved addresses and place a local sample order
 - View locally saved order history and order details
 - Update profile details and manage saved delivery addresses and preferences
 
-> Checkout is a demonstration flow backed by DummyJSON's sample cart endpoint. It saves the sample order and shipping details locally on this device. It does not collect card details, charge payments, or create a real fulfillment order.
+> Checkout stores the sample order and shipping details locally on this device. It does not collect card details, charge payments, or create a real fulfillment order. Philippine address options are provided by the public PSGC API.
 
 ### Core Features (Required)
 - [x] **Product Discovery** - Browse marketplace products and deals
-- [x] **Product Search** - Search by query and filter by category; sorting is client-side
+- [x] **Product Search** - Search by query, filter by category, and load paginated results; sorting is client-side
 - [x] **Product Details** - Product images, specs, ratings, reviews, and add-to-cart
 - [x] **Categories** - Browse products by category
 - [x] **Shopping Cart** - Add/remove/update quantities with AsyncStorage persistence
-- [x] **Checkout** - Demo order creation via `POST /carts/add`
+- [x] **Checkout** - Device-local demo orders with address validation and saved delivery details
 - [x] **Order History** - Device-local order history and detail screens
 - [x] **User Profile** - Profile editing, local addresses, preferences, and logout
 
@@ -266,6 +268,7 @@ Start the browser app locally with `npm run web`, or create a static web export 
 - [ ] **Coupons/Discounts** - Apply coupon codes
 - [ ] **Product Reviews** - Read/write reviews
 - [x] **Flash Deals** - Discount carousel and demo countdown (not a live promotion timer)
+- [x] **Android usability** - Screen-reader labels, larger touch targets on key controls, and keyboard-aware checkout
 - [ ] **Push Notifications** - Order updates, deals
 - [ ] **Dark Mode** - Theme switching
 - [ ] **Multi-language** - i18n support
@@ -282,6 +285,7 @@ Start the browser app locally with `npm run web`, or create a static web export 
 - **By Brand**: `GET /products/brand/apple`
 
 ### DummyJSON Carts API
+- The cart API service is available for demo requests; checkout stores orders locally and does not depend on this endpoint.
 - **Get User Cart**: `GET /carts/user/{userId}`
 - **Add Cart**: `POST /carts/add` - `{ userId, products: [{ id, quantity }] }`
 - **Update Cart**: `PUT /carts/{id}` - `{ products, merge? }`
@@ -290,6 +294,11 @@ Start the browser app locally with `npm run web`, or create a static web export 
 ### DummyJSON Auth API
 - **Register**: Local device account creation; credentials are not sent to DummyJSON.
 - Authentication uses device-local encrypted secure storage only.
+
+### Philippine Standard Geographic Code (PSGC) API
+- **Base URL**: `https://psgc.gitlab.io/api`
+- No API key is required.
+- Checkout and saved addresses load regions, provinces, cities/municipalities, and barangays from the PSGC API.
 
 ## 🎨 UI Components (React Native Paper)
 

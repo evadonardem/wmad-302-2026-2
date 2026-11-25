@@ -37,11 +37,15 @@ export const styles = StyleSheet.create({
     marginTop: 4,
   },
   card: {
+    width: '100%',
+    maxWidth: 480,
+    alignSelf: 'center',
     borderRadius: 12,
     padding: 0,
   },
   cardContent: {
     padding: 28,
+    width: '100%',
   },
   title: {
     fontSize: 24,
@@ -90,6 +94,8 @@ export const styles = StyleSheet.create({
   },
   buttonContent: {
     paddingHorizontal: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   buttonText: {
     fontSize: 16,
@@ -107,6 +113,8 @@ export const styles = StyleSheet.create({
   },
   link: {
     paddingHorizontal: 4,
+    minHeight: 48,
+    justifyContent: 'center',
   },
   linkText: {
     fontSize: 14,
@@ -150,6 +158,8 @@ export const styles = StyleSheet.create({
   },
   genderOption: {
     flex: 1,
+    minHeight: 48,
+    justifyContent: 'center',
     paddingVertical: 10,
     borderRadius: 8,
     borderWidth: 1,
@@ -177,6 +187,10 @@ export const styles = StyleSheet.create({
   },
   checkbox: {
     marginRight: 4,
+    width: 48,
+    height: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   termsText: {
     flex: 1,

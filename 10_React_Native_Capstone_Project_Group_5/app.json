@@ -3,6 +3,7 @@
     "name": "Kartora",
     "slug": "10-marketplace-capstone",
     "version": "1.0.0",
+    "icon": "./assets/kartora-logo.png",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "splash": {
@@ -19,7 +20,11 @@
       "bundleIdentifier": "com.wmad302.marketplace"
     },
     "android": {
-      "package": "com.wmad302.marketplace"
+      "package": "com.wmad302.marketplace",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/kartora-logo.png",
+        "backgroundColor": "#211033"
+      }
     },
     "web": {
       "bundler": "metro"

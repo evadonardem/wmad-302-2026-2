@@ -54,7 +54,12 @@ export default function LoginScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
     >
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
+      >
         {/* Logo/Brand */}
         <View style={styles.logoContainer}>
           <Image
@@ -70,12 +75,13 @@ export default function LoginScreen() {
         {/* Login Card */}
         <Card style={styles.card} elevation={3}>
           <Card.Content style={styles.cardContent}>
-            <Text style={styles.title}>Welcome Back</Text>
+            <Text style={styles.title} accessibilityRole="header">Welcome Back</Text>
             <Text style={styles.subtitle}>Sign in to continue shopping</Text>
 
             {/* Username Field */}
             <PaperTextInput
               label="Username or email"
+              accessibilityLabel="Username or email"
               mode="outlined"
               value={username}
               onChangeText={setUsername}
@@ -90,6 +96,7 @@ export default function LoginScreen() {
             {/* Password Field */}
             <PaperTextInput
               label="Password"
+              accessibilityLabel="Password"
               mode="outlined"
               value={password}
               onChangeText={setPassword}
@@ -123,6 +130,8 @@ export default function LoginScreen() {
               style={styles.loginButton}
               disabled={isLoading}
               contentStyle={styles.buttonContent}
+              accessibilityLabel={isLoading ? 'Signing in' : 'Sign in'}
+              accessibilityState={{ disabled: isLoading, busy: isLoading }}
             >
               {isLoading ? (
                 <ActivityIndicator color="white" size="small" />
@@ -145,6 +154,13 @@ export default function LoginScreen() {
                 <Text style={styles.linkText}>Sign Up</Text>
               </TouchableOpacity>
             </View>
+            <Button
+              mode="text"
+              textColor="#75648A"
+              onPress={() => router.replace('/(app)/(tabs)/home')}
+            >
+              Continue browsing without signing in
+            </Button>
           </Card.Content>
         </Card>
 

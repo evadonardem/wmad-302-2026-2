@@ -17,6 +17,7 @@ import { useCart } from '@/context/CartContext';
 import { useFavorites } from '@/context/FavoritesContext';
 import { productApi } from '@/services/productApi';
 import { Product } from '@/types/product';
+import { usePagedProducts } from '@/hooks/usePagedProducts';
 import { styles } from '@/styles/homeStyles';
 import { showAlert } from '@/utils/platformAlert';
 
@@ -48,38 +49,39 @@ export default function HomeScreen() {
   const { user } = useAuth();
   const { totalQuantity } = useCart();
   const { isFavorite, toggleFavorite } = useFavorites();
-  const [products, setProducts] = useState<Product[]>([]);
+  const {
+    products,
+    loading,
+    refreshing,
+    loadingMore,
+    hasMore,
+    error,
+    loadMoreError,
+    refresh,
+    loadMore,
+    retryLoadMore,
+  } = usePagedProducts({ pageSize: 30 });
   const [categories, setCategories] = useState<string[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const categoryItems = useMemo(() => categories.slice(0, 12), [categories]);
   const flashDeals = useMemo(
     () => products.filter((product) => product.discountPercentage >= 15).slice(0, 10),
     [products]
   );
 
-  const fetchData = useCallback(async (isRefresh = false) => {
+  const loadCategories = useCallback(async () => {
     try {
-      if (!isRefresh) setLoading(true);
-      setError(null);
-      const [productsResponse, categoryNames] = await Promise.all([
-        productApi.getProducts({ limit: 30 }),
-        productApi.getCategories(),
-      ]);
-      setProducts(productsResponse.products);
-      setCategories(categoryNames);
+      setCategories(await productApi.getCategories());
     } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : 'Failed to load products.');
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
+      showAlert(
+        'Could not load categories',
+        requestError instanceof Error ? requestError.message : 'Please try again.'
+      );
     }
   }, []);
 
   useEffect(() => {
-    void fetchData();
-  }, [fetchData]);
+    void loadCategories();
+  }, [loadCategories]);
 
   const handleFavorite = useCallback(async (product: Product) => {
     try {
@@ -97,6 +99,10 @@ export default function HomeScreen() {
         <TouchableOpacity
           activeOpacity={0.85}
           onPress={() => router.push(`/(app)/product/${product.id}`)}
+          accessibilityRole="button"
+          accessibilityLabel={`View ${product.title}, ${salePrice.toFixed(2)} dollars, ${
+            product.stock > 0 ? 'in stock' : 'sold out'
+          }`}
         >
           <Card style={styles.card} mode="contained">
             <View style={styles.imageContainer}>
@@ -133,6 +139,7 @@ export default function HomeScreen() {
           onPress={() => void handleFavorite(product)}
           accessibilityRole="button"
           accessibilityLabel={isFavorite(product.id) ? 'Remove from wishlist' : 'Add to wishlist'}
+          accessibilityState={{ selected: isFavorite(product.id) }}
         >
           <MaterialCommunityIcons
             name={isFavorite(product.id) ? 'heart' : 'heart-outline'}
@@ -166,12 +173,12 @@ export default function HomeScreen() {
     );
   }
 
-  if (error) {
+  if (error && products.length === 0) {
     return (
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>{error}</Text>
-          <Button mode="contained" buttonColor={brandPurple} onPress={() => void fetchData()}>Try again</Button>
+          <Button mode="contained" buttonColor={brandPurple} onPress={() => void refresh()}>Try again</Button>
         </View>
       </SafeAreaView>
     );
@@ -194,8 +201,8 @@ export default function HomeScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={() => {
-              setRefreshing(true);
-              void fetchData(true);
+              void refresh(true);
+              void loadCategories();
             }}
             colors={[brandPurple]}
           />
@@ -222,7 +229,7 @@ export default function HomeScreen() {
         <View style={styles.topActions}>
           <IconButton icon="heart-outline" iconColor={brandPurple} size={21} style={styles.topActionButton} onPress={() => router.push('/(app)/wishlist')} accessibilityLabel="Open wishlist" />
           <View>
-            <IconButton icon="cart-outline" iconColor={brandPurple} size={21} style={styles.topActionButton} onPress={() => router.push('/(app)/(tabs)/cart')} accessibilityLabel="Open cart" />
+            <IconButton icon="cart-outline" iconColor={brandPurple} size={21} style={styles.topActionButton} onPress={() => router.push('/(app)/(tabs)/cart')} accessibilityLabel={`Open cart, ${totalQuantity} items`} />
             {totalQuantity > 0 && (
               <View style={styles.cartBadge}><Text style={styles.cartBadgeText}>{totalQuantity}</Text></View>
             )}
@@ -250,7 +257,12 @@ export default function HomeScreen() {
         <MaterialCommunityIcons name="camera-outline" size={21} color={brandPurple} />
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.promoBanner} onPress={() => router.push('/(app)/(tabs)/search')}>
+      <TouchableOpacity
+        style={styles.promoBanner}
+        onPress={() => router.push('/(app)/(tabs)/search')}
+        accessibilityRole="button"
+        accessibilityLabel="Shop today's deals"
+      >
         <View style={styles.promoText}>
           <Text style={styles.promoEyebrow}>MEGA SHOPPING DAYS</Text>
           <Text style={styles.promoTitle}>Big deals.{'\n'}Bigger smiles.</Text>
@@ -285,6 +297,8 @@ export default function HomeScreen() {
             <TouchableOpacity
               style={styles.categoryItem}
               onPress={() => router.push(`/(app)/(tabs)/search?category=${encodeURIComponent(item)}`)}
+              accessibilityRole="button"
+              accessibilityLabel={`Browse ${item.replace(/-/g, ' ')}`}
             >
               <View style={[styles.categoryIcon, { backgroundColor: categoryColors[index % categoryColors.length] }]}>
                 <MaterialCommunityIcons name={categoryIcons[index % categoryIcons.length]} size={24} color={brandPurple} />
@@ -318,6 +332,36 @@ export default function HomeScreen() {
         </>
       }
       ListEmptyComponent={<Text style={styles.emptyText}>No products available right now.</Text>}
+      onEndReached={() => void loadMore()}
+      onEndReachedThreshold={0.5}
+      ListFooterComponent={
+        loadingMore || hasMore || loadMoreError || error ? (
+          <View style={styles.loadMoreFooter}>
+            {loadingMore ? (
+              <ActivityIndicator color={brandPurple} accessibilityLabel="Loading more products" />
+            ) : error ? (
+              <>
+                <Text accessibilityRole="alert" style={styles.errorText}>{error}</Text>
+                <Button mode="outlined" onPress={() => void refresh(true)}>Retry refresh</Button>
+              </>
+            ) : loadMoreError ? (
+              <>
+                <Text accessibilityRole="alert" style={styles.errorText}>{loadMoreError}</Text>
+                <Button mode="outlined" onPress={() => void retryLoadMore()}>Retry loading products</Button>
+              </>
+            ) : (
+              <TouchableOpacity
+                onPress={() => void loadMore()}
+                accessibilityRole="button"
+                accessibilityLabel="Load more products"
+                style={styles.loadMoreButton}
+              >
+                <Text style={styles.loadMoreText}>Load more products</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        ) : null
+      }
       showsVerticalScrollIndicator={false}
     />
     </SafeAreaView>

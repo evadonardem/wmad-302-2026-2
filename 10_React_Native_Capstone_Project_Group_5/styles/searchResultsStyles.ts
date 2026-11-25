@@ -19,8 +19,8 @@ export const styles = StyleSheet.create({
     borderColor: marketplaceColors.border,
   },
   homeButton: {
-    width: 34,
-    height: 44,
+    width: 48,
+    height: 48,
     alignItems: 'center',
     justifyContent: 'center',
     marginLeft: 4,
@@ -35,7 +35,10 @@ export const styles = StyleSheet.create({
     color: marketplaceColors.text,
   },
   clearButton: {
-    padding: 8,
+    width: 48,
+    height: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   searchActions: {
     flexDirection: 'row',
@@ -49,7 +52,7 @@ export const styles = StyleSheet.create({
   },
   shortcutButton: {
     width: '31%',
-    height: 44,
+    minHeight: 48,
     borderRadius: 10,
     borderWidth: 1,
     borderColor: marketplaceColors.border,
@@ -65,8 +68,8 @@ export const styles = StyleSheet.create({
     fontWeight: '700',
   },
   searchButton: {
-    width: 44,
-    height: 44,
+    width: 48,
+    height: 48,
     borderRadius: 12,
     backgroundColor: '#75648A',
     justifyContent: 'center',
@@ -97,8 +100,8 @@ export const styles = StyleSheet.create({
     fontWeight: '700',
   },
   drawerToggle: {
-    width: 28,
-    height: 44,
+    width: 48,
+    height: 48,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 4,
@@ -187,6 +190,21 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingBottom: 32,
   },
+  loadMoreFooter: {
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 16,
+  },
+  loadMoreButton: {
+    minHeight: 48,
+    justifyContent: 'center',
+    paddingHorizontal: 20,
+  },
+  loadMoreText: {
+    color: '#75648A',
+    fontSize: 15,
+    fontWeight: '700',
+  },
   productRow: {
     justifyContent: 'space-between',
   },
@@ -212,6 +230,8 @@ export const styles = StyleSheet.create({
     marginTop: 16,
     paddingHorizontal: 18,
     paddingVertical: 10,
+    minHeight: 48,
+    justifyContent: 'center',
     borderRadius: 8,
     backgroundColor: '#75648A',
   },

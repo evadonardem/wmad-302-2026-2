@@ -58,6 +58,7 @@ export default function ProductTile({
           onPress={onToggleFavorite}
           accessibilityRole="button"
           accessibilityLabel={isFavorite ? 'Remove from wishlist' : 'Add to wishlist'}
+          accessibilityState={{ selected: isFavorite }}
         >
           <MaterialCommunityIcons
             name={isFavorite ? 'heart' : 'heart-outline'}
@@ -150,10 +151,10 @@ const styles = StyleSheet.create({
   },
   favoriteButton: {
     position: 'absolute',
-    top: 6,
-    right: 6,
-    width: 32,
-    height: 32,
+    top: 2,
+    right: 2,
+    width: 48,
+    height: 48,
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 16,

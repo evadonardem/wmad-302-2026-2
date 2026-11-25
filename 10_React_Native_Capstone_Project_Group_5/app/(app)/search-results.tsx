@@ -10,10 +10,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Divider, Menu, TextInput as PaperTextInput } from 'react-native-paper';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { productApi } from '@/services/productApi';
 import { useCart } from '@/context/CartContext';
 import { useFavorites } from '@/context/FavoritesContext';
 import { Product } from '@/types/product';
+import { usePagedProducts } from '@/hooks/usePagedProducts';
 import { recordSearch } from '@/utils/searchHistory';
 import ProductTile from '@/components/ProductTile';
 import { styles } from '@/styles/searchResultsStyles';
@@ -63,9 +63,6 @@ export default function SearchResultsScreen() {
   const { totalQuantity } = useCart();
   const { favoriteIds, isFavorite, toggleFavorite } = useFavorites();
   const params = useLocalSearchParams<{ q?: string; category?: string }>();
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<SortOption>('rating');
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
   const [sortMenuOption, setSortMenuOption] = useState<SortOption | null>(null);
@@ -75,44 +72,22 @@ export default function SearchResultsScreen() {
 
   const query = params.q?.trim() ?? '';
   const category = params.category?.trim() ?? '';
-
-  useEffect(() => {
-    let active = true;
-
-    async function loadResults() {
-      setLoading(true);
-      setError(null);
-      try {
-        const response = category
-          ? await productApi.getProductsByCategory(category, { limit: 100 })
-          : await productApi.searchProducts(query, { limit: 100 });
-
-        const searchTerm = query.toLowerCase();
-        const matchingProducts = response.products.filter((product) =>
-          !searchTerm ||
-          [product.title, product.description, product.brand ?? '']
-            .some((value) => value.toLowerCase().includes(searchTerm))
-        );
-        if (active) setProducts(matchingProducts);
-      } catch (loadError) {
-        if (active) {
-          setError(loadError instanceof Error ? loadError.message : 'Unable to load results');
-        }
-      } finally {
-        if (active) setLoading(false);
-      }
-    }
-
-    if (query || category) void loadResults();
-    else {
-      setProducts([]);
-      setLoading(false);
-    }
-
-    return () => {
-      active = false;
-    };
-  }, [query, category]);
+  const {
+    products,
+    loading,
+    loadingMore,
+    hasMore,
+    error,
+    loadMoreError,
+    refresh,
+    loadMore,
+    retryLoadMore,
+  } = usePagedProducts({
+    query,
+    category: category || undefined,
+    enabled: Boolean(query || category),
+    pageSize: 30,
+  });
 
   useEffect(() => {
     setSearchText(query);
@@ -175,9 +150,11 @@ export default function SearchResultsScreen() {
         <PaperTextInput
           style={styles.searchInput}
           placeholder="Search products..."
+          accessibilityLabel="Search products"
           value={searchText}
           onChangeText={setSearchText}
           onSubmitEditing={submitSearch}
+          returnKeyType="search"
           underlineColor="transparent"
           activeUnderlineColor="transparent"
           right={
@@ -269,7 +246,9 @@ export default function SearchResultsScreen() {
         <View style={styles.resultsHeading}>
           <Text style={styles.resultsTitle} numberOfLines={1}>{heading}</Text>
           {!loading && !error && (
-            <Text style={styles.resultsCount}>{sortedProducts.length} products</Text>
+            <Text style={styles.resultsCount} accessibilityLiveRegion="polite">
+              {sortedProducts.length} {hasMore ? 'products loaded' : 'products'}
+            </Text>
           )}
         </View>
         <Menu
@@ -342,23 +321,62 @@ export default function SearchResultsScreen() {
 
       {loading ? (
         <View style={styles.centerState}>
-          <ActivityIndicator size="large" color="#75648A" />
+          <ActivityIndicator size="large" color="#75648A" accessibilityLabel="Loading products" />
         </View>
       ) : error ? (
         <View style={styles.centerState}>
           <MaterialCommunityIcons name="alert-circle-outline" size={48} color="#D93025" />
           <Text style={styles.errorText}>{error}</Text>
+          <TouchableOpacity
+            style={styles.backToSearchButton}
+            onPress={() => void refresh()}
+            accessibilityRole="button"
+            accessibilityLabel="Retry loading products"
+          >
+            <Text style={styles.backToSearchText}>Try again</Text>
+          </TouchableOpacity>
         </View>
       ) : sortedProducts.length === 0 ? (
         <View style={styles.centerState}>
           <MaterialCommunityIcons name="magnify" size={64} color="#DADCE0" />
-          <Text style={styles.emptyTitle}>No products found</Text>
-          <TouchableOpacity
-            style={styles.backToSearchButton}
-            onPress={() => router.push('/(app)/(tabs)/search')}
-          >
-            <Text style={styles.backToSearchText}>Change search</Text>
-          </TouchableOpacity>
+          <Text style={styles.emptyTitle}>
+            {hasMore ? 'No matching products on this page' : 'No products found'}
+          </Text>
+          {loadMoreError ? (
+            <>
+              <Text accessibilityRole="alert" style={styles.errorText}>{loadMoreError}</Text>
+              <TouchableOpacity
+                style={styles.backToSearchButton}
+                onPress={() => void retryLoadMore()}
+                accessibilityRole="button"
+                accessibilityLabel="Retry loading products"
+              >
+                <Text style={styles.backToSearchText}>Retry</Text>
+              </TouchableOpacity>
+            </>
+          ) : hasMore ? (
+            loadingMore ? (
+              <ActivityIndicator color="#75648A" accessibilityLabel="Loading more products" />
+            ) : (
+              <TouchableOpacity
+                style={styles.backToSearchButton}
+                onPress={() => void loadMore()}
+                accessibilityRole="button"
+                accessibilityLabel="Load more products"
+              >
+                <Text style={styles.backToSearchText}>Load more</Text>
+              </TouchableOpacity>
+            )
+          ) : (
+            <TouchableOpacity
+              style={styles.backToSearchButton}
+              onPress={() => router.push('/(app)/(tabs)/search')}
+              accessibilityRole="button"
+              accessibilityLabel="Change search"
+            >
+              <Text style={styles.backToSearchText}>Change search</Text>
+            </TouchableOpacity>
+          )}
         </View>
       ) : (
         <FlatList
@@ -368,6 +386,38 @@ export default function SearchResultsScreen() {
           numColumns={2}
           columnWrapperStyle={styles.productRow}
           contentContainerStyle={styles.resultsList}
+          onEndReached={() => void loadMore()}
+          onEndReachedThreshold={0.5}
+          ListFooterComponent={
+            loadingMore || hasMore || loadMoreError ? (
+              <View style={styles.loadMoreFooter}>
+                {loadingMore ? (
+                  <ActivityIndicator color="#75648A" accessibilityLabel="Loading more products" />
+                ) : loadMoreError ? (
+                  <>
+                    <Text accessibilityRole="alert" style={styles.errorText}>{loadMoreError}</Text>
+                    <TouchableOpacity
+                      style={styles.backToSearchButton}
+                      onPress={() => void retryLoadMore()}
+                      accessibilityRole="button"
+                      accessibilityLabel="Retry loading more products"
+                    >
+                      <Text style={styles.backToSearchText}>Retry</Text>
+                    </TouchableOpacity>
+                  </>
+                ) : (
+                  <TouchableOpacity
+                    style={styles.loadMoreButton}
+                    onPress={() => void loadMore()}
+                    accessibilityRole="button"
+                    accessibilityLabel="Load more products"
+                  >
+                    <Text style={styles.loadMoreText}>Load more products</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            ) : null
+          }
         />
       )}
     </SafeAreaView>

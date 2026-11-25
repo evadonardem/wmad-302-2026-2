@@ -3,7 +3,7 @@ import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { Button, Card, Dialog, IconButton, Portal } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { MarketplaceOrder, ordersStorage } from '@/utils/marketplaceStorage';
+import { formatDeliveryAddress, MarketplaceOrder, ordersStorage } from '@/utils/marketplaceStorage';
 
 const brandPurple = '#75648A';
 
@@ -153,7 +153,7 @@ export default function OrderDetailScreen() {
           <View style={styles.detailRow}>
             <MaterialCommunityIcons name="map-marker-outline" size={17} color="#81788A" />
             <Text style={styles.detailText}>
-              {order.shippingAddress.street}, {order.shippingAddress.city} {order.shippingAddress.postalCode}
+              {formatDeliveryAddress(order.shippingAddress)}
             </Text>
           </View>
           <View style={styles.paymentMethod}>

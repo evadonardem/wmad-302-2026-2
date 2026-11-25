@@ -5,7 +5,6 @@ import { Avatar, Badge, Button, Card, Dialog, Divider, List, Portal } from 'reac
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '@/context/AuthContext';
 import { useFavorites } from '@/context/FavoritesContext';
-import ProductRecommendations from '@/components/ProductRecommendations';
 import { MarketplaceOrder, ordersStorage } from '@/utils/marketplaceStorage';
 import { styles } from '@/styles/profileStyles';
 import { showAlert } from '@/utils/platformAlert';
@@ -36,7 +35,35 @@ export default function ProfileScreen() {
   if (!isAuthenticated) {
     return (
       <View style={styles.centerContainer}>
-        <Text style={styles.notLoggedIn}>Please log in to view your account.</Text>
+        <Text style={styles.guestTitle}>Welcome to Kartora</Text>
+        <Text style={styles.guestDescription}>
+          Sign in whenever you are ready. You can browse products without an account.
+        </Text>
+        <View style={styles.guestActions}>
+          <Button
+            mode="contained"
+            buttonColor="#75648A"
+            onPress={() => router.push('/(auth)/login')}
+            style={styles.guestButton}
+          >
+            Sign in
+          </Button>
+          <Button
+            mode="outlined"
+            textColor="#75648A"
+            onPress={() => router.push('/(auth)/register')}
+            style={styles.guestButton}
+          >
+            Create account
+          </Button>
+          <Button
+            mode="text"
+            textColor="#75648A"
+            onPress={() => router.replace('/(app)/(tabs)/home')}
+          >
+            Continue browsing
+          </Button>
+        </View>
       </View>
     );
   }
@@ -145,8 +172,6 @@ export default function ProfileScreen() {
           Logout
         </Button>
       </View>
-
-      <ProductRecommendations />
 
       <Text style={styles.versionText}>Kartora · You Shop. We Deliver.</Text>
       <Portal>

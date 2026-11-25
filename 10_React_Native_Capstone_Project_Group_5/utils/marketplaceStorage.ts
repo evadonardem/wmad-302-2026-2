@@ -15,6 +15,24 @@ export interface DeliveryAddress {
   city: string;
   postalCode: string;
   isDefault: boolean;
+  regionCode?: string;
+  region?: string;
+  provinceCode?: string;
+  province?: string;
+  cityCode?: string;
+  barangayCode?: string;
+  barangay?: string;
+}
+
+export function formatDeliveryAddress(address: DeliveryAddress): string {
+  return [
+    address.street,
+    address.barangay,
+    address.city,
+    address.province,
+    address.region,
+    address.postalCode,
+  ].filter(Boolean).join(', ');
 }
 
 export interface MarketplaceOrder {

@@ -7,7 +7,6 @@ import { View, Text, FlatList, TouchableOpacity, ActivityIndicator } from 'react
 import { useRouter } from 'expo-router';
 import { Card, Title } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import ProductRecommendations from '@/components/ProductRecommendations';
 import { productApi } from '@/services/productApi';
 import { styles } from '@/styles/categoriesStyles';
 
@@ -116,18 +115,11 @@ export default function CategoriesScreen() {
         </View>
       }
       ListFooterComponent={
-        <View>
-          <ProductRecommendations
-            title="Popular search picks"
-            subtitle="Products matched to your most frequent searches"
-            searchBased
-          />
-          <View style={styles.guideContainer}>
-            <Text style={styles.guideTitle}>Find your next favorite</Text>
-            <Text style={styles.guideText}>
-              Choose a category to browse products, compare prices, and check customer ratings.
-            </Text>
-          </View>
+        <View style={styles.guideContainer}>
+          <Text style={styles.guideTitle}>Find your next favorite</Text>
+          <Text style={styles.guideText}>
+            Choose a category to browse products, compare prices, and check customer ratings.
+          </Text>
         </View>
       }
     />
