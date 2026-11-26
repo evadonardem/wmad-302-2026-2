@@ -1,15 +1,7 @@
 /**
- * Register Screen - SKELETON WITH TODOs
- * Students complete this screen to learn auth flow
- * 
- * TODO LIST:
- * 1. Wire form validation
- * 2. Call authApi.register() in handleRegister
- * 3. On success, call context.login() or navigate to login
- * 4. Add password confirmation field
- * 5. Add terms checkbox
- * 6. Handle loading/error states properly
- * 7. Test with DummyJSON /auth/register endpoint
+ * Register Screen
+ * Validates the form, creates the account through AuthContext.register()
+ * and signs the user in automatically.
  */
 import React, { useState } from 'react';
 import {
@@ -18,18 +10,18 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
-  Alert,
   ActivityIndicator,
   TouchableOpacity,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
-import { Card, Button, TextInput as PaperTextInput, Checkbox } from 'react-native-paper';
+import { Card, Button, TextInput as PaperTextInput, Checkbox, Snackbar } from 'react-native-paper';
 import { styles } from './styles';
 
 export default function RegisterScreen() {
   const router = useRouter();
   const { register, isLoading, error, clearError } = useAuth();
+  const [formError, setFormError] = useState<string | null>(null);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -68,56 +60,33 @@ export default function RegisterScreen() {
   const handleRegister = async () => {
     const validationError = validateForm();
     if (validationError) {
-      Alert.alert('Validation Error', validationError);
+      setFormError(validationError);
       return;
     }
-
-    // TODO: Student Implementation
-    // 1. Call authApi.register() with formData
-    //    - Import authApi from '@/services/authApi'
-    //    - Pass: firstName, lastName, username, password, email, age, gender
-    // 2. On success:
-    //    - Option A: Auto-login by calling context.login(username, password)
-    //    - Option B: Show success alert and navigate to login screen
-    // 3. On failure: Error is handled by context (shows in error state)
+    setFormError(null);
 
     try {
-      // TODO: Replace with actual implementation
-      // const user = await authApi.register({
-      //   firstName: formData.firstName.trim(),
-      //   lastName: formData.lastName.trim(),
-      //   username: formData.username.trim(),
-      //   password: formData.password,
-      //   email: formData.email.trim(),
-      //   age: formData.age ? parseInt(formData.age) : undefined,
-      //   gender: formData.gender,
-      // });
-      // 
-      // // Auto-login after registration
-      // await login(formData.username.trim(), formData.password);
-      // router.replace('/(app)/(tabs)/home');
-
-      Alert.alert(
-        'TODO: Implement Register',
-        'Complete the register function by:\n1. Calling authApi.register()\n2. Auto-login or redirect to login\n3. Handle errors',
-        [{ text: 'OK' }]
-      );
-    } catch (err) {
-      // Error handled by context
-      console.error('Registration error:', err);
+      // Creates the account, then signs in (auto-login)
+      await register({
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
+        username: formData.username.trim(),
+        password: formData.password,
+        email: formData.email.trim(),
+        age: formData.age ? parseInt(formData.age, 10) : undefined,
+        gender: formData.gender,
+      });
+      router.replace('/(app)/(tabs)/home');
+    } catch {
+      // The error message is shown by the Snackbar below (from context state)
     }
   };
 
   const handleFieldChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     if (error) clearError();
+    if (formError) setFormError(null);
   };
-
-  React.useEffect(() => {
-    if (error) {
-      Alert.alert('Registration Failed', error, [{ text: 'OK', onPress: clearError }]);
-    }
-  }, [error, clearError]);
 
   return (
     <KeyboardAvoidingView
@@ -313,18 +282,17 @@ export default function RegisterScreen() {
             </View>
           </Card.Content>
         </Card>
-
-        {/* Student Guide */}
-        <View style={styles.guideContainer}>
-          <Text style={styles.guideTitle}>📝 Student Implementation Guide</Text>
-          <Text style={styles.guideText}>
-            Complete the handleRegister function to:\n
-            1. Call authApi.register() with form data\n
-            2. Auto-login or redirect to login\n
-            3. Handle success/error states
-          </Text>
-        </View>
       </ScrollView>
+      <Snackbar
+        visible={Boolean(formError ?? error)}
+        onDismiss={() => {
+          setFormError(null);
+          clearError();
+        }}
+        duration={5000}
+      >
+        {formError ?? error ?? ''}
+      </Snackbar>
     </KeyboardAvoidingView>
   );
 }

@@ -1,0 +1,43 @@
+/**
+ * Product detail styles
+ */
+import { StyleSheet } from 'react-native';
+
+export const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#F8F9FA' },
+  centered: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24, backgroundColor: '#F8F9FA' },
+  errorText: { fontSize: 15, color: '#EA4335', textAlign: 'center', marginBottom: 12 },
+  gallery: { backgroundColor: '#FFFFFF' },
+  galleryImage: { height: 320, backgroundColor: '#FFFFFF' },
+  dots: { flexDirection: 'row', justifyContent: 'center', paddingVertical: 8, backgroundColor: '#FFFFFF' },
+  dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#DADCE0', marginHorizontal: 3 },
+  dotActive: { backgroundColor: '#1A73E8' },
+  body: { padding: 16 },
+  titleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
+  title: { flex: 1, fontSize: 20, fontWeight: '700', color: '#202124', marginRight: 8 },
+  category: { fontSize: 12, color: '#5F6368', textTransform: 'capitalize', marginBottom: 4 },
+  ratingRow: { flexDirection: 'row', alignItems: 'center', marginTop: 8 },
+  ratingText: { fontSize: 13, color: '#5F6368', marginLeft: 6 },
+  priceRow: { flexDirection: 'row', alignItems: 'baseline', marginTop: 12 },
+  price: { fontSize: 26, fontWeight: '700', color: '#1A73E8' },
+  originalPrice: { fontSize: 15, color: '#9AA0A6', textDecorationLine: 'line-through', marginLeft: 10 },
+  discountChip: { marginLeft: 10, backgroundColor: '#FCE8E6' },
+  stock: { fontSize: 13, marginTop: 8 },
+  sectionTitle: { fontSize: 16, fontWeight: '600', color: '#202124', marginTop: 20, marginBottom: 8 },
+  description: { fontSize: 14, lineHeight: 21, color: '#3C4043' },
+  specBox: { backgroundColor: '#FFFFFF', borderRadius: 8, padding: 12 },
+  specRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 6 },
+  specLabel: { fontSize: 13, color: '#5F6368' },
+  specValue: { fontSize: 13, color: '#202124', flexShrink: 1, textAlign: 'right', marginLeft: 16 },
+  review: { backgroundColor: '#FFFFFF', borderRadius: 8, padding: 12, marginBottom: 8 },
+  reviewHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 },
+  reviewer: { fontSize: 13, fontWeight: '600', color: '#202124' },
+  reviewDate: { fontSize: 12, color: '#9AA0A6' },
+  reviewComment: { fontSize: 13, color: '#3C4043', marginTop: 4 },
+  noReviews: { fontSize: 13, color: '#5F6368' },
+  footer: { flexDirection: 'row', alignItems: 'center', padding: 12, backgroundColor: '#FFFFFF', borderTopWidth: 1, borderTopColor: '#E8EAED' },
+  qtyBox: { flexDirection: 'row', alignItems: 'center', marginRight: 12 },
+  qtyText: { fontSize: 16, fontWeight: '600', minWidth: 24, textAlign: 'center' },
+  addButton: { flex: 1, borderRadius: 8 },
+  addContent: { height: 48 },
+});

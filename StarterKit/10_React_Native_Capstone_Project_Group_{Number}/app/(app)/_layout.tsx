@@ -1,20 +1,17 @@
 /**
  * App Layout - Protected routes with auth guard
  */
-import { Stack } from 'expo-router';
+import { Stack, Redirect } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
-import { Redirect } from 'expo-router';
 import React from 'react';
 
 export default function AppLayout() {
   const { isAuthenticated, isLoading } = useAuth();
 
-  // Show loading while checking auth
   if (isLoading) {
-    return null; // Or a loading screen
+    return null;
   }
 
-  // Redirect to login if not authenticated
   if (!isAuthenticated) {
     return <Redirect href="/(auth)/login" />;
   }
@@ -22,7 +19,13 @@ export default function AppLayout() {
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(tabs)" />
-      {/* Add other protected screens here */}
+      <Stack.Screen name="checkout" options={{ headerShown: true, title: 'Checkout' }} />
+      <Stack.Screen name="orders" options={{ headerShown: true, title: 'My Orders' }} />
+      <Stack.Screen name="order/[id]" options={{ headerShown: true, title: 'Order details' }} />
+      <Stack.Screen name="edit-profile" options={{ headerShown: true, title: 'Edit profile' }} />
+      <Stack.Screen name="addresses" options={{ headerShown: true, title: 'Addresses' }} />
+      <Stack.Screen name="settings" options={{ headerShown: true, title: 'Settings' }} />
+      <Stack.Screen name="product/[id]" options={{ headerShown: true, title: 'Product' }} />
     </Stack>
   );
 }

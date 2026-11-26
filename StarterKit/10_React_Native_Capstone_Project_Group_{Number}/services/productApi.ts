@@ -4,9 +4,11 @@
  */
 
 import axios, { AxiosInstance } from 'axios';
-import { Product, ProductsResponse, ProductSearchParams, Cart, CartAddRequest, CartItem } from '@/types/product';
+import { Product, ProductsResponse, ProductSearchParams, Cart, CartsResponse, CartAddRequest } from '@/types/product';
 
 const API_BASE_URL = 'https://dummyjson.com';
+
+type RawCategory = string | { slug: string; name: string; url?: string };
 
 class ProductApiService {
   private client: AxiosInstance;
@@ -60,11 +62,13 @@ class ProductApiService {
   }
 
   /**
-   * Get all categories
+   * Get all category slugs.
+   * DummyJSON returns plain strings in older versions and
+   * { slug, name, url } objects in newer ones; both are normalised to slugs.
    */
   async getCategories(): Promise<string[]> {
-    const response = await this.client.get<string[]>('/products/categories');
-    return response.data;
+    const response = await this.client.get<RawCategory[]>('/products/categories');
+    return response.data.map((c) => (typeof c === 'string' ? c : c.slug));
   }
 
   /**
@@ -80,10 +84,10 @@ class ProductApiService {
   // ============ Carts ============
 
   /**
-   * Get user's cart
+   * Get the carts (orders) that belong to a user
    */
-  async getUserCart(userId: number): Promise<Cart> {
-    const response = await this.client.get<Cart>(`/carts/user/${userId}`);
+  async getUserCarts(userId: number): Promise<CartsResponse> {
+    const response = await this.client.get<CartsResponse>(`/carts/user/${userId}`);
     return response.data;
   }
 

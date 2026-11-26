@@ -4,11 +4,17 @@
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import type { AuthUser } from '@/types/auth';
+import type { CartItem } from '@/types/product';
+import type { Order } from '@/types/order';
+import type { Address } from '@/types/address';
 
 const STORAGE_KEYS = {
   AUTH_USER: 'auth_user',
-  FAVORITES: 'favorite_recipe_ids',
+  FAVORITES: 'wishlist_product_ids',
   CART: 'cart_items',
+  ORDERS: 'orders',
+  ADDRESSES: 'addresses',
   SETTINGS: 'user_settings',
 } as const;
 
@@ -84,7 +90,7 @@ export async function getMultipleStorageItems<T extends Record<string, unknown>>
  * Set multiple items at once
  */
 export async function setMultipleStorageItems(
-  items: Array<{ key: StorageKey; value: unknown }>
+  items: { key: StorageKey; value: unknown }[]
 ): Promise<void> {
   try {
     const pairs = items.map(({ key, value }): [string, string] => [key, JSON.stringify(value)]);
@@ -98,16 +104,8 @@ export async function setMultipleStorageItems(
 // Specific helpers for common use cases
 
 export const authStorage = {
-  getUser: () => getStorageItem<{
-    id: number;
-    username: string;
-    email: string;
-    firstName: string;
-    lastName: string;
-    token: string;
-    refreshToken: string;
-  }>(STORAGE_KEYS.AUTH_USER),
-  setUser: (user: unknown) => setStorageItem(STORAGE_KEYS.AUTH_USER, user),
+  getUser: () => getStorageItem<AuthUser>(STORAGE_KEYS.AUTH_USER),
+  setUser: (user: AuthUser) => setStorageItem(STORAGE_KEYS.AUTH_USER, user),
   clearUser: () => removeStorageItem(STORAGE_KEYS.AUTH_USER),
 };
 
@@ -170,5 +168,32 @@ export const cartStorage = {
   clear: () => removeStorageItem(STORAGE_KEYS.CART),
 };
 
-// Import CartItem type for cartStorage
-import type { CartItem } from '@/types/product';
+export const ordersStorage = {
+  /** All locally saved orders (newest first), for every user on this device. */
+  getAll: async (): Promise<Order[]> => (await getStorageItem<Order[]>(STORAGE_KEYS.ORDERS)) ?? [],
+  getForUser: async (userId: number): Promise<Order[]> =>
+    (await ordersStorage.getAll()).filter((o) => o.userId === userId),
+  add: async (order: Order): Promise<void> => {
+    const all = await ordersStorage.getAll();
+    await setStorageItem(STORAGE_KEYS.ORDERS, [order, ...all]);
+  },
+};
+
+export const addressStorage = {
+  getAll: async (): Promise<Address[]> =>
+    (await getStorageItem<Address[]>(STORAGE_KEYS.ADDRESSES)) ?? [],
+  getForUser: async (userId: number): Promise<Address[]> =>
+    (await addressStorage.getAll()).filter((a) => a.userId === userId),
+  /** Replace one user's addresses, keeping other users' addresses untouched. */
+  setForUser: async (userId: number, addresses: Address[]): Promise<void> => {
+    const others = (await addressStorage.getAll()).filter((a) => a.userId !== userId);
+    await setStorageItem(STORAGE_KEYS.ADDRESSES, [...others, ...addresses]);
+  },
+  clearForUser: async (userId: number): Promise<void> => addressStorage.setForUser(userId, []),
+};
+
+/** Remove every saved order for one user (used by Settings). */
+export async function clearOrdersForUser(userId: number): Promise<void> {
+  const remaining = (await ordersStorage.getAll()).filter((o) => o.userId !== userId);
+  await setStorageItem(STORAGE_KEYS.ORDERS, remaining);
+}

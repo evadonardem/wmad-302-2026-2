@@ -215,4 +215,30 @@ export const styles = StyleSheet.create({
     color: '#3C4043',
     lineHeight: 20,
   },
+  priceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  priceInput: {
+    flex: 1,
+    height: 40,
+    backgroundColor: '#FFFFFF',
+  },
+  priceDash: {
+    marginHorizontal: 8,
+    color: '#5F6368',
+  },
+  footerLoader: {
+    paddingVertical: 16,
+  },
+  addButton: {
+    alignSelf: 'flex-end',
+    margin: 0,
+  },
+  errorText: {
+    fontSize: 14,
+    color: '#EA4335',
+    textAlign: 'center',
+    marginBottom: 12,
+  },
 });

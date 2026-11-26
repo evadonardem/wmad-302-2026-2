@@ -24,13 +24,13 @@ export interface Product {
   warrantyInformation: string;
   shippingInformation: string;
   availabilityStatus: string;
-  reviews: Array<{
+  reviews: {
     rating: number;
     comment: string;
     date: string;
     reviewerName: string;
     reviewerEmail: string;
-  }>;
+  }[];
   returnPolicy: string;
   minimumOrderQuantity: number;
   meta: {
@@ -63,7 +63,7 @@ export interface ProductSearchParams {
 
 export interface Cart {
   id: number;
-  products: Array<{
+  products: {
     id: number;
     title: string;
     price: number;
@@ -72,7 +72,7 @@ export interface Cart {
     discountPercentage: number;
     discountedTotal: number;
     thumbnail: string;
-  }>;
+  }[];
   total: number;
   discountedTotal: number;
   totalProducts: number;
@@ -80,12 +80,20 @@ export interface Cart {
   userId: number;
 }
 
+/** GET /carts/user/{id} returns a list of carts, not a single cart. */
+export interface CartsResponse {
+  carts: Cart[];
+  total: number;
+  skip: number;
+  limit: number;
+}
+
 export interface CartAddRequest {
   userId: number;
-  products: Array<{
+  products: {
     id: number;
     quantity: number;
-  }>;
+  }[];
 }
 
 export interface CartItem {
@@ -96,4 +104,32 @@ export interface CartItem {
   discountPercentage: number;
   quantity: number;
   stock: number;
+}
+
+// ============ Cart state (Context + useReducer) ============
+
+export interface CartState {
+  items: CartItem[];
+  /** False until the saved cart has been read from AsyncStorage. */
+  hydrated: boolean;
+}
+
+export type CartAction =
+  | { type: 'CART_HYDRATE'; payload: CartItem[] }
+  | { type: 'CART_ADD'; payload: CartItem }
+  | { type: 'CART_REMOVE'; payload: { productId: number } }
+  | { type: 'CART_SET_QUANTITY'; payload: { productId: number; quantity: number } }
+  | { type: 'CART_CLEAR' };
+
+export interface CartTotals {
+  /** Sum of price x quantity before discounts. */
+  subtotal: number;
+  /** Total saved through per-product discounts. */
+  discount: number;
+  /** Amount to pay (subtotal - discount). */
+  total: number;
+  /** Distinct products in the cart. */
+  totalProducts: number;
+  /** Sum of all quantities (used for the tab badge). */
+  totalQuantity: number;
 }
