@@ -20,6 +20,7 @@ import {
   Platform,
   Alert,
   ActivityIndicator,
+  TouchableOpacity,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
@@ -146,7 +147,7 @@ export default function RegisterScreen() {
                 onChangeText={(v) => handleFieldChange('firstName', v)}
                 style={[styles.input, styles.halfInput]}
                 autoCapitalize="words"
-                autoCompleteType="given-name"
+                autoComplete="given-name"
                 returnKeyType="next"
                 disabled={isLoading}
               />
@@ -157,7 +158,7 @@ export default function RegisterScreen() {
                 onChangeText={(v) => handleFieldChange('lastName', v)}
                 style={[styles.input, styles.halfInput]}
                 autoCapitalize="words"
-                autoCompleteType="family-name"
+                autoComplete="family-name"
                 returnKeyType="next"
                 disabled={isLoading}
               />
@@ -171,7 +172,7 @@ export default function RegisterScreen() {
               onChangeText={(v) => handleFieldChange('username', v)}
               style={styles.input}
               autoCapitalize="none"
-              autoCompleteType="username"
+              autoComplete="username"
               returnKeyType="next"
               disabled={isLoading}
             />
@@ -185,7 +186,7 @@ export default function RegisterScreen() {
               style={styles.input}
               autoCapitalize="none"
               keyboardType="email-address"
-              autoCompleteType="email"
+              autoComplete="email"
               returnKeyType="next"
               disabled={isLoading}
             />
@@ -198,7 +199,7 @@ export default function RegisterScreen() {
               onChangeText={(v) => handleFieldChange('password', v)}
               style={styles.input}
               secureTextEntry={!showPassword}
-              autoCompleteType="new-password"
+              autoComplete="new-password"
               returnKeyType="next"
               disabled={isLoading}
               right={
@@ -218,7 +219,7 @@ export default function RegisterScreen() {
               onChangeText={(v) => handleFieldChange('confirmPassword', v)}
               style={styles.input}
               secureTextEntry={!showConfirmPassword}
-              autoCompleteType="new-password"
+              autoComplete="new-password"
               returnKeyType="next"
               disabled={isLoading}
               right={
@@ -278,7 +279,6 @@ export default function RegisterScreen() {
               <Checkbox
                 status={agreedToTerms ? 'checked' : 'unchecked'}
                 onPress={() => setAgreedToTerms(!agreedToTerms)}
-                style={styles.checkbox}
               />
               <Text style={styles.termsText}>
                 I agree to the{' '}
@@ -326,6 +326,3 @@ export default function RegisterScreen() {
     </KeyboardAvoidingView>
   );
 }
-
-// Need to import TouchableOpacity for gender options
-import { TouchableOpacity } from 'react-native';
