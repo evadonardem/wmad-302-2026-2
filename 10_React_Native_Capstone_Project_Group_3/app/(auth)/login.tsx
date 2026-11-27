@@ -40,13 +40,16 @@ export default function LoginScreen() {
     }
 
     try {
-      await login({ username: username.trim(), password });
+      await login(username.trim(), password);
       router.replace('/(app)/(tabs)/home');
     } catch (err) {
-      Alert.alert(
-        'Login Failed',
-        err instanceof Error ? err.message : 'Unable to sign in. Please check your credentials.'
-      );
+      const message =
+        err instanceof Error ? err.message : 'Unable to sign in. Please check your credentials.';
+      if (Platform.OS === 'web') {
+        window.alert(`Login Failed: ${message}`);
+      } else {
+        Alert.alert('Login Failed', message);
+      }
     }
   };
 

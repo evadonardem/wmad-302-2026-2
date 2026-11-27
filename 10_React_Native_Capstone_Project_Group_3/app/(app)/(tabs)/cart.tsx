@@ -2,7 +2,7 @@
  * Cart & Checkout Screen - Marketplace
  */
 import React, { useState } from 'react';
-import { View, Text, FlatList, Image, Alert } from 'react-native';
+import { View, Text, FlatList, Image, Alert, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import {
   ActivityIndicator,
@@ -48,12 +48,27 @@ export default function CartScreen() {
   );
   const [confirmedOrder, setConfirmedOrder] = useState<Cart | null>(null);
 
+  const showAlert = (title: string, message: string) => {
+    if (Platform.OS === 'web') {
+      window.alert(`${title}: ${message}`);
+    } else {
+      Alert.alert(title, message);
+    }
+  };
+
   const handleApplyCoupon = () => {
     const result = applyCoupon(couponInput);
     setCouponFeedback({ text: result.message, isError: !result.ok });
   };
 
   const handleRemoveItem = (item: CartItem) => {
+    if (Platform.OS === 'web') {
+      if (window.confirm(`Remove "${item.title}" from your cart?`)) {
+        void removeItem(item.productId);
+      }
+      return;
+    }
+
     Alert.alert('Remove Item', `Remove "${item.title}" from your cart?`, [
       { text: 'Cancel', style: 'cancel' },
       {
@@ -69,7 +84,7 @@ export default function CartScreen() {
   const handleCheckout = async () => {
     if (items.length === 0) return;
     if (!shippingAddress.trim()) {
-      Alert.alert(
+      showAlert(
         'Missing Address',
         'Please enter a delivery address before placing your order.'
       );
@@ -83,7 +98,7 @@ export default function CartScreen() {
       setCouponFeedback(null);
       setConfirmedOrder(order);
     } catch (err) {
-      Alert.alert(
+      showAlert(
         'Checkout Failed',
         err instanceof Error ? err.message : 'Unable to place order right now.'
       );

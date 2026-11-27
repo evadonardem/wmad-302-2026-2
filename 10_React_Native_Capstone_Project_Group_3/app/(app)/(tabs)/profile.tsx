@@ -10,6 +10,7 @@ import {
   ScrollView,
   Alert,
   Modal,
+  Platform,
   StyleSheet,
 } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -65,6 +66,14 @@ export default function ProfileScreen() {
   const [pushNotifications, setPushNotifications] = useState(true);
   const [orderUpdates, setOrderUpdates] = useState(true);
 
+  const showAlert = (title: string, message: string) => {
+    if (Platform.OS === 'web') {
+      window.alert(`${title}: ${message}`);
+    } else {
+      Alert.alert(title, message);
+    }
+  };
+
   const loadOrdersAndAddresses = useCallback(async () => {
     if (!user?.id) return;
     setLoadingOrders(true);
@@ -109,13 +118,26 @@ export default function ProfileScreen() {
   }, [user, loadOrdersAndAddresses]);
 
   const handleLogout = () => {
+    const performLogout = async () => {
+      await logout();
+      router.replace('/(auth)/login');
+    };
+
+    if (Platform.OS === 'web') {
+      const confirmed = window.confirm('Are you sure you want to logout?');
+      if (confirmed) {
+        void performLogout();
+      }
+      return;
+    }
+
     Alert.alert('Logout', 'Are you sure you want to logout?', [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Logout',
         style: 'destructive',
         onPress: () => {
-          void logout();
+          void performLogout();
         },
       },
     ]);
@@ -123,7 +145,7 @@ export default function ProfileScreen() {
 
   const handleSaveProfile = async () => {
     if (!firstName.trim() || !lastName.trim() || !email.trim()) {
-      Alert.alert('Validation Error', 'First name, last name, and email are required.');
+      showAlert('Validation Error', 'First name, last name, and email are required.');
       return;
     }
     try {
@@ -135,9 +157,9 @@ export default function ProfileScreen() {
         phone: phone.trim() || undefined,
       });
       setActiveModal(null);
-      Alert.alert('Saved', 'Your profile has been updated.');
+      showAlert('Saved', 'Your profile has been updated.');
     } catch (err) {
-      Alert.alert(
+      showAlert(
         'Update Failed',
         err instanceof Error ? err.message : 'Could not update profile.'
       );
@@ -148,7 +170,7 @@ export default function ProfileScreen() {
 
   const handleAddAddress = async () => {
     if (!newStreet.trim() || !newCity.trim()) {
-      Alert.alert('Validation Error', 'Street and city are required.');
+      showAlert('Validation Error', 'Street and city are required.');
       return;
     }
     const created: UserAddress = {
@@ -273,7 +295,7 @@ export default function ProfileScreen() {
                 if (wishlistIds.length > 0) {
                   router.push(`/product/${wishlistIds[0]}`);
                 } else {
-                  Alert.alert('Wishlist Empty', 'Tap the heart icon on any product to save it.');
+                  showAlert('Wishlist Empty', 'Tap the heart icon on any product to save it.');
                 }
               }}
             />

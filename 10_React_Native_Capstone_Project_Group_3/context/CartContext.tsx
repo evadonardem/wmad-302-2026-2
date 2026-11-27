@@ -301,17 +301,41 @@ export function CartProvider({ children }: { children: ReactNode }) {
       }
       dispatch({ type: 'CART_CHECKOUT_START' });
       try {
-        const apiCart = await productApi.addCart({
-          userId,
-          products: state.items.map((item) => ({
-            id: item.productId,
-            quantity: item.quantity,
-          })),
-        });
+        let apiCart: Partial<Cart> | null = null;
+        try {
+          apiCart = await productApi.addCart({
+            userId,
+            products: state.items.map((item) => ({
+              id: item.productId,
+              quantity: item.quantity,
+            })),
+          });
+        } catch {
+          // DummyJSON /carts/add can return 404 for custom user IDs; continue locally
+          apiCart = null;
+        }
 
+        const now = Date.now();
         const orderRecord: Cart = {
-          ...apiCart,
-          id: apiCart.id ?? Date.now(),
+          id: apiCart?.id ?? now,
+          products:
+            apiCart?.products ??
+            state.items.map((item) => {
+              const lineTotal = item.price * item.quantity;
+              const lineDiscounted =
+                item.price * (1 - item.discountPercentage / 100) * item.quantity;
+              return {
+                id: item.productId,
+                title: item.title,
+                price: item.price,
+                quantity: item.quantity,
+                total: Number(lineTotal.toFixed(2)),
+                discountPercentage: item.discountPercentage,
+                discountedPrice: Number(lineDiscounted.toFixed(2)),
+                discountedTotal: Number(lineDiscounted.toFixed(2)),
+                thumbnail: item.thumbnail,
+              };
+            }),
           userId,
           discountedTotal: Number(state.discountedTotal.toFixed(2)),
           total: Number(state.total.toFixed(2)),
