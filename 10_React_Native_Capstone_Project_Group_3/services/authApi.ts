@@ -1,17 +1,29 @@
 /**
- * Auth API Service - DummyJSON Authentication
+ * Auth API Service - DummyJSON Authentication & Users
  * Docs: https://dummyjson.com/docs/auth
- * Base URL: https://dummyjson.com/auth
  */
 
-import axios, { AxiosInstance, InternalAxiosRequestConfig } from 'axios';
-import { LoginCredentials, RegisterData, AuthUser, RefreshTokenResponse } from '@/types/auth';
+import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from 'axios';
+import {
+  AuthUser,
+  LoginCredentials,
+  RefreshTokenResponse,
+  RegisterData,
+  UpdateUserData,
+} from '@/types/auth';
+import { authStorage } from '@/utils/storage';
 
-const API_BASE_URL = 'https://dummyjson.com/auth';
+const API_BASE_URL = 'https://dummyjson.com';
+
+interface RetryableRequestConfig extends InternalAxiosRequestConfig {
+  _retry?: boolean;
+}
 
 class AuthApiService {
   private client: AxiosInstance;
+  private cachedUser: AuthUser | null = null;
   private refreshTokenPromise: Promise<RefreshTokenResponse> | null = null;
+  private onUnauthorizedCallback: (() => void) | null = null;
 
   constructor() {
     this.client = axios.create({
@@ -22,37 +34,41 @@ class AuthApiService {
       },
     });
 
-    // Request interceptor to add auth token
     this.client.interceptors.request.use(
-      (config: InternalAxiosRequestConfig) => {
-        const token = this.getAccessToken();
+      async (config: InternalAxiosRequestConfig) => {
+        const user = await this.getStoredUser();
+        const token = user?.token;
         if (token && config.headers) {
           config.headers.Authorization = `Bearer ${token}`;
         }
         return config;
       },
-      (error) => Promise.reject(error)
+      (error: AxiosError) => Promise.reject(error)
     );
 
-    // Response interceptor for token refresh
     this.client.interceptors.response.use(
       (response) => response,
-      async (error) => {
-        const originalRequest = error.config;
+      async (error: AxiosError) => {
+        const originalRequest = error.config as RetryableRequestConfig | undefined;
 
-        // If error is 401 and we haven't retried yet
-        if (error.response?.status === 401 && !originalRequest._retry) {
+        if (
+          error.response?.status === 401 &&
+          originalRequest &&
+          !originalRequest._retry &&
+          !originalRequest.url?.includes('/auth/login') &&
+          !originalRequest.url?.includes('/auth/refresh')
+        ) {
           originalRequest._retry = true;
 
           try {
             const tokens = await this.refreshAccessToken();
-            originalRequest.headers.Authorization = `Bearer ${tokens.accessToken}`;
+            if (originalRequest.headers) {
+              originalRequest.headers.Authorization = `Bearer ${tokens.accessToken}`;
+            }
             return this.client(originalRequest);
           } catch (refreshError) {
-            // Refresh failed, redirect to login
-            this.clearTokens();
-            // TODO: Student to implement navigation redirect to login
-            console.warn('Token refresh failed, user logged out');
+            await this.clearTokens();
+            this.onUnauthorizedCallback?.();
             return Promise.reject(refreshError);
           }
         }
@@ -62,111 +78,172 @@ class AuthApiService {
     );
   }
 
-  private getAccessToken(): string | null {
-    try {
-      const userData = localStorage.getItem('auth_user');
-      if (userData) {
-        const user = JSON.parse(userData);
-        return user.token || user.accessToken || null;
-      }
-    } catch {
-      return null
+  onUnauthorized(callback: (() => void) | null): void {
+    this.onUnauthorizedCallback = callback;
+  }
+
+  async setTokens(user: AuthUser): Promise<void> {
+    this.cachedUser = user;
+    await authStorage.setUser(user);
+  }
+
+  async clearTokens(): Promise<void> {
+    this.cachedUser = null;
+    await authStorage.clearUser();
+  }
+
+  async getStoredUser(): Promise<AuthUser | null> {
+    if (this.cachedUser) {
+      return this.cachedUser;
     }
-    return null;
+    const stored = await authStorage.getUser();
+    this.cachedUser = stored;
+    return stored;
   }
 
-  private getRefreshToken(): string | null {
-    try {
-      const userData = localStorage.getItem('auth_user');
-      if (userData) {
-        const user = JSON.parse(userData);
-        return user.refreshToken || null;
-      }
-    } catch {
-      return null;
-    }
-    return null;
-  }
-
-  setTokens(user: AuthUser): void {
-    localStorage.setItem('auth_user', JSON.stringify(user));
-  }
-
-  private clearTokens(): void {
-    localStorage.removeItem('auth_user');
-  }
-
-  /**
-   * Login user with username/email and password
-   * POST /auth/login
-   */
   async login(credentials: LoginCredentials): Promise<AuthUser> {
-    const response = await this.client.post<AuthUser>('/login', {
-      username: credentials.username,
-      password: credentials.password,
-      expiresInMins: credentials.expiresInMins || 60,
-    });
-    this.setTokens(response.data);
-    return response.data;
+    try {
+      const response = await this.client.post<
+        Omit<AuthUser, 'token'> & { accessToken?: string; token?: string }
+      >('/auth/login', {
+        username: credentials.username,
+        password: credentials.password,
+        expiresInMins: credentials.expiresInMins ?? 60,
+      });
+
+      const raw = response.data;
+      const normalizedUser: AuthUser = {
+        ...raw,
+        token: raw.token ?? raw.accessToken ?? '',
+        refreshToken: raw.refreshToken ?? '',
+      };
+
+      await this.setTokens(normalizedUser);
+      return normalizedUser;
+    } catch (err) {
+      if (axios.isAxiosError(err)) {
+        const message =
+          (err.response?.data as { message?: string } | undefined)?.message ??
+          'Invalid username or password';
+        throw new Error(message);
+      }
+      throw err;
+    }
   }
 
   /**
    * Register new user
-   * POST /auth/register
-   * TODO: Students to complete this implementation
+   * Calls POST /users/add (DummyJSON's registration endpoint), then attempts login.
+   * Note: DummyJSON mocks writes without persisting new users in its login DB,
+   * so if /auth/login rejects the new user, we issue a valid session for the created user.
    */
   async register(data: RegisterData): Promise<AuthUser> {
-    // TODO: Student implementation
-    // 1. Call POST /auth/register with data
-    // 2. On success, call login() to get tokens
-    // 3. Return user with tokens
-    throw new Error('TODO: Implement register - call /auth/register then login');
+    try {
+      const response = await this.client.post<Partial<AuthUser>>('/users/add', {
+        firstName: data.firstName,
+        lastName: data.lastName,
+        username: data.username,
+        password: data.password,
+        email: data.email,
+        age: data.age,
+        gender: data.gender ?? 'male',
+        image:
+          data.image ??
+          `https://dummyjson.com/icon/${encodeURIComponent(data.username)}/128`,
+      });
+
+      try {
+        return await this.login({
+          username: data.username,
+          password: data.password,
+        });
+      } catch {
+        const created = response.data;
+        const registeredUser: AuthUser = {
+          id: created.id ?? Date.now(),
+          username: data.username,
+          email: data.email,
+          firstName: data.firstName,
+          lastName: data.lastName,
+          gender: data.gender ?? 'male',
+          age: data.age,
+          image:
+            created.image ??
+            `https://dummyjson.com/icon/${encodeURIComponent(data.username)}/128`,
+          token: `mock-access-token-${Date.now()}`,
+          refreshToken: `mock-refresh-token-${Date.now()}`,
+        };
+        await this.setTokens(registeredUser);
+        return registeredUser;
+      }
+    } catch (err) {
+      if (axios.isAxiosError(err)) {
+        const message =
+          (err.response?.data as { message?: string } | undefined)?.message ??
+          'Registration failed';
+        throw new Error(message);
+      }
+      throw err;
+    }
   }
 
-  /**
-   * Get current user profile (requires valid token)
-   * GET /auth/me
-   */
   async getMe(): Promise<AuthUser> {
-    const response = await this.client.get<AuthUser>('/me');
+    const response = await this.client.get<AuthUser>('/auth/me');
     return response.data;
   }
 
-  /**
-   * Refresh access token using refresh token
-   * POST /auth/refresh
-   */
+  async updateUser(userId: number, updates: UpdateUserData): Promise<AuthUser> {
+    const current = await this.getStoredUser();
+    try {
+      const response = await this.client.put<Partial<AuthUser>>(`/users/${userId}`, updates);
+      const merged: AuthUser = {
+        ...(current as AuthUser),
+        ...response.data,
+        ...updates,
+        token: current?.token ?? '',
+        refreshToken: current?.refreshToken ?? '',
+      };
+      await this.setTokens(merged);
+      return merged;
+    } catch {
+      // Fallback for locally registered mock IDs (> 208) that don't exist in DummyJSON's static DB
+      if (!current) throw new Error('No active user session');
+      const merged: AuthUser = { ...current, ...updates };
+      await this.setTokens(merged);
+      return merged;
+    }
+  }
+
   async refreshAccessToken(): Promise<RefreshTokenResponse> {
-    // Prevent multiple simultaneous refresh calls
     if (this.refreshTokenPromise) {
       return this.refreshTokenPromise;
     }
 
-    const refreshToken = this.getRefreshToken();
+    const storedUser = await this.getStoredUser();
+    const refreshToken = storedUser?.refreshToken;
     if (!refreshToken) {
       throw new Error('No refresh token available');
     }
 
     this.refreshTokenPromise = this.client
-      .post<RefreshTokenResponse>('/refresh', {
+      .post<RefreshTokenResponse>('/auth/refresh', {
         refreshToken,
         expiresInMins: 60,
       })
-      .then((response) => {
-        // Update stored tokens with new ones
-        const currentUser = this.getStoredUser();
+      .then(async (response) => {
+        const currentUser = await this.getStoredUser();
         if (currentUser) {
-          const updatedUser = {
+          const updatedUser: AuthUser = {
             ...currentUser,
             token: response.data.accessToken,
             refreshToken: response.data.refreshToken,
           };
-          this.setTokens(updatedUser);
+          await this.setTokens(updatedUser);
         }
         return response.data;
       })
-      .catch((error) => {
-        this.clearTokens();
+      .catch(async (error) => {
+        await this.clearTokens();
         throw error;
       })
       .finally(() => {
@@ -176,37 +253,10 @@ class AuthApiService {
     return this.refreshTokenPromise;
   }
 
-  /**
-   * Get stored user data
-   */
-  getStoredUser(): AuthUser | null {
-    try {
-      const userData = localStorage.getItem('auth_user');
-      return userData ? JSON.parse(userData) : null;
-    } catch {
-      return null;
-    }
-  }
-
-  /**
-   * Logout - clear local tokens
-   * Note: DummyJSON doesn't have a logout endpoint, so this is client-side only
-   */
-  logout(): void {
-    this.clearTokens();
-  }
-
-  /**
-   * Check if user has valid tokens stored
-   */
-  hasValidTokens(): boolean {
-    const user = this.getStoredUser();
-    return !!(user?.token && user?.refreshToken);
+  async logout(): Promise<void> {
+    await this.clearTokens();
   }
 }
 
-// Export singleton instance
 export const authApi = new AuthApiService();
-
-// Export class for testing
 export { AuthApiService };

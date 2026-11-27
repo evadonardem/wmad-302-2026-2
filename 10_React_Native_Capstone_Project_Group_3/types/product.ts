@@ -1,7 +1,14 @@
 /**
- * Product Types - DummyJSON Products API
- * Docs: https://dummyjson.com/docs/products
+ * Product & Cart Types - DummyJSON Products & Carts API
  */
+
+export interface ProductReview {
+  rating: number;
+  comment: string;
+  date: string;
+  reviewerName: string;
+  reviewerEmail: string;
+}
 
 export interface Product {
   id: number;
@@ -24,13 +31,7 @@ export interface Product {
   warrantyInformation: string;
   shippingInformation: string;
   availabilityStatus: string;
-  reviews: Array<{
-    rating: number;
-    comment: string;
-    date: string;
-    reviewerName: string;
-    reviewerEmail: string;
-  }>;
+  reviews: ProductReview[];
   returnPolicy: string;
   minimumOrderQuantity: number;
   meta: {
@@ -61,18 +62,20 @@ export interface ProductSearchParams {
   order?: 'asc' | 'desc';
 }
 
+export interface CartProductSummary {
+  id: number;
+  title: string;
+  price: number;
+  quantity: number;
+  total: number;
+  discountPercentage: number;
+  discountedTotal: number;
+  thumbnail: string;
+}
+
 export interface Cart {
   id: number;
-  products: Array<{
-    id: number;
-    title: string;
-    price: number;
-    quantity: number;
-    total: number;
-    discountPercentage: number;
-    discountedTotal: number;
-    thumbnail: string;
-  }>;
+  products: CartProductSummary[];
   total: number;
   discountedTotal: number;
   totalProducts: number;
@@ -80,12 +83,19 @@ export interface Cart {
   userId: number;
 }
 
+export interface CartsListResponse {
+  carts: Cart[];
+  total: number;
+  skip: number;
+  limit: number;
+}
+
 export interface CartAddRequest {
   userId: number;
-  products: Array<{
+  products: {
     id: number;
     quantity: number;
-  }>;
+  }[];
 }
 
 export interface CartItem {

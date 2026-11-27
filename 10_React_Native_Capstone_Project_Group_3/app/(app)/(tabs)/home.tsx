@@ -1,9 +1,8 @@
 /**
  * Home Screen - Marketplace Shop Tab
- * Students implement: Product grid, categories, flash deals, recommendations
- * APIs: https://dummyjson.com/docs/products
+ * Product discovery with pagination, flash deals, categories, and pull-to-refresh
  */
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -15,68 +14,46 @@ import {
   RefreshControl,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { Avatar, Badge, Button, Card, Title } from 'react-native-paper';
 import { useAuth } from '@/context/AuthContext';
-import { Card, Title, Chip, Avatar, Button, Badge } from 'react-native-paper';
+import { useCart } from '@/context/CartContext';
+import { productApi } from '@/services/productApi';
+import { Product } from '@/types/product';
 import { styles } from './homeStyles';
 
-// Types for DummyJSON Products API
-interface Product {
-  id: number;
-  title: string;
-  description: string;
-  category: string;
-  price: number;
-  discountPercentage: number;
-  rating: number;
-  stock: number;
-  tags: string[];
-  brand?: string;
-  sku: string;
-  weight: number;
-  dimensions: { width: number; height: number; depth: number };
-  warrantyInformation: string;
-  shippingInformation: string;
-  availabilityStatus: string;
-  reviews: Array<{ rating: number; comment: string; date: string; reviewerName: string }>;
-  returnPolicy: string;
-  minimumOrderQuantity: number;
-  meta: { createdAt: string; updatedAt: string; barcode: string; qrCode: string };
-  images: string[];
-  thumbnail: string;
-}
-
-interface ProductsResponse {
-  products: Product[];
-  total: number;
-  skip: number;
-  limit: number;
-}
+const PAGE_SIZE = 20;
 
 export default function HomeScreen() {
   const router = useRouter();
   const { user } = useAuth();
+  const { addToCart } = useCart();
+
   const [products, setProducts] = useState<Product[]>([]);
+  const [totalProducts, setTotalProducts] = useState(0);
   const [categories, setCategories] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchData = async (isRefresh = false) => {
+  const hasMore = products.length < totalProducts;
+
+  const loadInitialData = useCallback(async (isRefresh = false) => {
     try {
-      if (!isRefresh) setLoading(true);
+      if (isRefresh) {
+        setRefreshing(true);
+      } else {
+        setLoading(true);
+      }
       setError(null);
 
-      const [productsRes, categoriesRes] = await Promise.all([
-        fetch('https://dummyjson.com/products?limit=20'),
-        fetch('https://dummyjson.com/products/categories'),
+      const [productsData, categoriesData] = await Promise.all([
+        productApi.getProducts({ limit: PAGE_SIZE, skip: 0 }),
+        productApi.getCategories(),
       ]);
 
-      if (!productsRes.ok || !categoriesRes.ok) throw new Error('Failed to fetch data');
-
-      const productsData: ProductsResponse = await productsRes.json();
-      const categoriesData: string[] = await categoriesRes.json();
-
       setProducts(productsData.products);
+      setTotalProducts(productsData.total);
       setCategories(categoriesData);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load products');
@@ -84,22 +61,41 @@ export default function HomeScreen() {
       setLoading(false);
       setRefreshing(false);
     }
-  };
-
-  useEffect(() => {
-    fetchData();
   }, []);
 
-  const onRefresh = () => fetchData(true);
+  useEffect(() => {
+    loadInitialData(false);
+  }, [loadInitialData]);
 
-  const renderProduct = ({ item }: { item: Product }) => {
+  const handleLoadMore = async () => {
+    if (loading || loadingMore || !hasMore) return;
+    try {
+      setLoadingMore(true);
+      const nextData = await productApi.getProducts({
+        limit: PAGE_SIZE,
+        skip: products.length,
+      });
+      setTotalProducts(nextData.total);
+      setProducts((prev) => {
+        const seen = new Set(prev.map((p) => p.id));
+        const uniqueNext = nextData.products.filter((p) => !seen.has(p.id));
+        return [...prev, ...uniqueNext];
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load more products');
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
+  const renderProductCard = ({ item }: { item: Product }) => {
     const discountedPrice = item.price * (1 - item.discountPercentage / 100);
 
     return (
       <TouchableOpacity
         style={styles.productCard}
-        onPress={() => router.push(`/(app)/(tabs)/product/${item.id}`)}
-        activeOpacity={0.8}
+        onPress={() => router.push(`/product/${item.id}`)}
+        activeOpacity={0.85}
       >
         <Card style={styles.card} elevation={2}>
           <View style={styles.imageContainer}>
@@ -110,7 +106,7 @@ export default function HomeScreen() {
             />
             {item.discountPercentage > 0 && (
               <Badge style={styles.discountBadge}>
-                -{Math.round(item.discountPercentage)}%
+                {`-${Math.round(item.discountPercentage)}%`}
               </Badge>
             )}
           </View>
@@ -130,6 +126,15 @@ export default function HomeScreen() {
                 ⭐ {item.rating.toFixed(1)} · {item.stock > 0 ? 'In Stock' : 'Out of Stock'}
               </Text>
             </View>
+            <Button
+              mode="contained-tonal"
+              compact
+              disabled={item.stock <= 0}
+              onPress={() => addToCart(item, 1)}
+              style={{ marginTop: 10 }}
+            >
+              Add to Cart
+            </Button>
           </Card.Content>
         </Card>
       </TouchableOpacity>
@@ -145,53 +150,76 @@ export default function HomeScreen() {
     );
   }
 
-  if (error) {
+  if (error && products.length === 0) {
     return (
       <View style={styles.errorContainer}>
         <Text style={styles.errorText}>{error}</Text>
-        <Button mode="contained" onPress={() => fetchData()} style={styles.retryButton}>
+        <Button mode="contained" onPress={() => loadInitialData(false)} style={styles.retryButton}>
           Retry
         </Button>
       </View>
     );
   }
 
+  const flashDeals = products.filter((p) => p.discountPercentage >= 15).slice(0, 5);
+
   return (
     <ScrollView
       style={styles.scrollView}
       refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#1A73E8']} />
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={() => loadInitialData(true)}
+          colors={['#1A73E8']}
+        />
       }
       contentContainerStyle={styles.scrollContent}
     >
-      {/* Welcome Header */}
+      {/* Welcome & Quick Search Header */}
       <View style={styles.welcomeContainer}>
         <View style={styles.welcomeTextContainer}>
           <Text style={styles.welcomeGreeting}>
             {user ? `Welcome, ${user.firstName}!` : 'Welcome to Marketplace!'}
           </Text>
           <Text style={styles.welcomeSubtitle}>Discover amazing deals</Text>
+          <Button
+            mode="outlined"
+            compact
+            icon="magnify"
+            onPress={() => router.push('/(app)/(tabs)/search')}
+            style={{ marginTop: 10, alignSelf: 'flex-start', backgroundColor: '#FFFFFF' }}
+          >
+            Search Products
+          </Button>
         </View>
         <Avatar.Icon size={56} icon="storefront" style={styles.welcomeAvatar} />
       </View>
 
-      {/* Categories */}
+      {/* Categories Strip */}
       <View style={styles.sectionContainer}>
         <View style={styles.sectionHeader}>
           <Title style={styles.sectionTitle}>Categories</Title>
+          <TouchableOpacity
+            onPress={() => router.push('/(app)/(tabs)/categories')}
+            style={styles.seeAll}
+          >
+            <Text style={styles.seeAllText}>All Categories</Text>
+          </TouchableOpacity>
         </View>
         <FlatList
-          data={categories.slice(0, 10)}
+          data={categories.slice(0, 12)}
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.categoryList}
           renderItem={({ item }) => (
             <TouchableOpacity
               style={styles.categoryChip}
-              onPress={() => router.push(`/(app)/(tabs)/categories?category=${item}`)}
+              onPress={() =>
+                router.push(`/(app)/(tabs)/search?category=${encodeURIComponent(item)}`)
+              }
             >
               <Text style={styles.categoryChipText}>
-                {item.charAt(0).toUpperCase() + item.slice(1).replace('-', ' ')}
+                {item.charAt(0).toUpperCase() + item.slice(1).replace(/-/g, ' ')}
               </Text>
             </TouchableOpacity>
           )}
@@ -200,32 +228,44 @@ export default function HomeScreen() {
       </View>
 
       {/* Flash Deals */}
-      <View style={styles.sectionContainer}>
-        <View style={styles.sectionHeader}>
-          <Title style={styles.sectionTitle}>⚡ Flash Deals</Title>
-          <TouchableOpacity style={styles.seeAll}>
-            <Text style={styles.seeAllText}>See All</Text>
-          </TouchableOpacity>
+      {flashDeals.length > 0 && (
+        <View style={styles.sectionContainer}>
+          <View style={styles.sectionHeader}>
+            <Title style={styles.sectionTitle}>⚡ Flash Deals</Title>
+            <TouchableOpacity
+              onPress={() => router.push('/(app)/(tabs)/search?sort=discount')}
+              style={styles.seeAll}
+            >
+              <Text style={styles.seeAllText}>See All</Text>
+            </TouchableOpacity>
+          </View>
+          <FlatList
+            data={flashDeals}
+            scrollEnabled={false}
+            renderItem={renderProductCard}
+            keyExtractor={(item) => `flash-${item.id}`}
+            ItemSeparatorComponent={() => <View style={styles.cardSeparator} />}
+          />
         </View>
-        <FlatList
-          data={products.filter((p) => p.discountPercentage > 20).slice(0, 5)}
-          renderItem={renderProduct}
-          keyExtractor={(item) => item.id.toString()}
-          ItemSeparatorComponent={() => <View style={styles.cardSeparator} />}
-        />
-      </View>
+      )}
 
-      {/* Recommended Products */}
+      {/* All Products with Pagination */}
       <View style={styles.sectionContainer}>
         <View style={styles.sectionHeader}>
-          <Title style={styles.sectionTitle}>Recommended for You</Title>
-          <TouchableOpacity onPress={() => router.push('/(app)/(tabs)/search')} style={styles.seeAll}>
-            <Text style={styles.seeAllText}>See All</Text>
+          <Title style={styles.sectionTitle}>
+            Explore Products ({products.length}/{totalProducts})
+          </Title>
+          <TouchableOpacity
+            onPress={() => router.push('/(app)/(tabs)/search')}
+            style={styles.seeAll}
+          >
+            <Text style={styles.seeAllText}>Filter</Text>
           </TouchableOpacity>
         </View>
         <FlatList
-          data={products.slice(0, 10)}
-          renderItem={renderProduct}
+          data={products}
+          scrollEnabled={false}
+          renderItem={renderProductCard}
           keyExtractor={(item) => item.id.toString()}
           ItemSeparatorComponent={() => <View style={styles.cardSeparator} />}
           ListEmptyComponent={
@@ -234,6 +274,18 @@ export default function HomeScreen() {
             </View>
           }
         />
+
+        {hasMore && (
+          <Button
+            mode="contained"
+            onPress={handleLoadMore}
+            loading={loadingMore}
+            disabled={loadingMore}
+            style={{ marginTop: 16, borderRadius: 8 }}
+          >
+            {loadingMore ? 'Loading more...' : 'Load More Products'}
+          </Button>
+        )}
       </View>
     </ScrollView>
   );

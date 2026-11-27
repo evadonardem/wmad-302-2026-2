@@ -1,14 +1,15 @@
 /**
  * Tabs Layout - Marketplace App Navigation
- * Tabs: Home (Shop), Categories, Cart, Profile
  */
 import { Tabs } from 'expo-router';
 import React from 'react';
-import { useAuth } from '@/context/AuthContext';
+import { View } from 'react-native';
+import { Badge } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useCart } from '@/context/CartContext';
 
 export default function TabsLayout() {
-  const { user } = useAuth();
+  const { totalQuantity } = useCart();
 
   return (
     <Tabs
@@ -64,11 +65,26 @@ export default function TabsLayout() {
         options={{
           title: 'Cart',
           tabBarIcon: ({ focused, color }) => (
-            <MaterialCommunityIcons
-              name={focused ? 'cart' : 'cart-outline'}
-              size={24}
-              color={color}
-            />
+            <View>
+              <MaterialCommunityIcons
+                name={focused ? 'cart' : 'cart-outline'}
+                size={24}
+                color={color}
+              />
+              {totalQuantity > 0 && (
+                <Badge
+                  size={16}
+                  style={{
+                    position: 'absolute',
+                    top: -6,
+                    right: -10,
+                    backgroundColor: '#EA4335',
+                  }}
+                >
+                  {totalQuantity > 99 ? '99+' : totalQuantity}
+                </Badge>
+              )}
+            </View>
           ),
         }}
       />
@@ -83,6 +99,12 @@ export default function TabsLayout() {
               color={color}
             />
           ),
+        }}
+      />
+      <Tabs.Screen
+        name="search"
+        options={{
+          href: null,
         }}
       />
     </Tabs>

@@ -1,7 +1,14 @@
 /**
- * Auth Types - Shared between both capstone projects
- * Based on DummyJSON Auth API: https://dummyjson.com/docs/auth
+ * Auth Types - DummyJSON Auth & Users API
  */
+
+export interface UserAddress {
+  address: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  country: string;
+}
 
 export interface AuthUser {
   id: number;
@@ -13,12 +20,15 @@ export interface AuthUser {
   image: string;
   token: string;
   refreshToken: string;
+  age?: number;
+  phone?: string;
+  address?: UserAddress;
 }
 
 export interface LoginCredentials {
   username: string;
   password: string;
-  expiresInMins?: number; // optional, default 60
+  expiresInMins?: number;
 }
 
 export interface RegisterData {
@@ -32,8 +42,13 @@ export interface RegisterData {
   image?: string;
 }
 
-export interface AuthResponse extends AuthUser {
-  // DummyJSON returns the user object with tokens on login/register
+export interface UpdateUserData {
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  phone?: string;
+  age?: number;
+  address?: UserAddress;
 }
 
 export interface RefreshTokenResponse {

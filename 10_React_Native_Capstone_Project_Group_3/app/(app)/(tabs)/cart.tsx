@@ -1,161 +1,125 @@
 /**
- * Cart Screen - Marketplace
- * TODO: Students implement
- * - Cart state management (Context + useReducer)
- * - Add/remove/update quantities
- * - Persist cart to AsyncStorage
- * - Apply coupons/discounts
- * - Checkout flow (POST /carts)
- * - DummyJSON Carts API: https://dummyjson.com/docs/carts
+ * Cart & Checkout Screen - Marketplace
  */
-import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, FlatList, Image, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Card, Title, Button, IconButton, TextInput } from 'react-native-paper';
+import {
+  ActivityIndicator,
+  Button,
+  Card,
+  HelperText,
+  IconButton,
+  TextInput as PaperTextInput,
+  Title,
+} from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useCart } from '@/context/CartContext';
+import { useAuth } from '@/context/AuthContext';
+import { Cart, CartItem } from '@/types/product';
 import { styles } from './cartStyles';
-
-interface CartItem {
-  id: number;
-  productId: number;
-  title: string;
-  thumbnail: string;
-  price: number;
-  discountPercentage: number;
-  quantity: number;
-  stock: number;
-}
-
-interface Cart {
-  items: CartItem[];
-  total: number;
-  discountedTotal: number;
-  totalProducts: number;
-  totalQuantity: number;
-}
 
 export default function CartScreen() {
   const router = useRouter();
-  const [cart, setCart] = useState<Cart | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+  const {
+    items,
+    couponCode,
+    total,
+    discountedTotal,
+    totalQuantity,
+    isLoading,
+    isCheckingOut,
+    updateQuantity,
+    removeItem,
+    applyCoupon,
+    checkout,
+  } = useCart();
 
-  // TODO: Student implementation
-  // 1. Load cart from AsyncStorage on mount
-  // 2. Or fetch from DummyJSON: GET /carts/user/{userId}
-  // 3. Implement quantity updates with persistence
-  // 4. Implement checkout: POST /carts/add
+  const [couponInput, setCouponInput] = useState(couponCode ?? '');
+  const [couponFeedback, setCouponFeedback] = useState<{
+    text: string;
+    isError: boolean;
+  } | null>(null);
+  const [shippingAddress, setShippingAddress] = useState(
+    user?.address
+      ? `${user.address.address}, ${user.address.city}`
+      : '123 Main Street, Metro City'
+  );
+  const [confirmedOrder, setConfirmedOrder] = useState<Cart | null>(null);
 
-  useEffect(() => {
-    loadCart();
-  }, []);
-
-  const loadCart = async () => {
-    try {
-      // TODO: Load from AsyncStorage or API
-      // const savedCart = await AsyncStorage.getItem('cart');
-      // if (savedCart) setCart(JSON.parse(savedCart));
-      // else setCart({ items: [], total: 0, discountedTotal: 0, totalProducts: 0, totalQuantity: 0 });
-
-      // Mock empty cart for demo
-      setCart({ items: [], total: 0, discountedTotal: 0, totalProducts: 0, totalQuantity: 0 });
-    } catch (error) {
-      console.error('Failed to load cart:', error);
-    } finally {
-      setLoading(false);
-    }
+  const handleApplyCoupon = () => {
+    const result = applyCoupon(couponInput);
+    setCouponFeedback({ text: result.message, isError: !result.ok });
   };
 
-  const updateQuantity = (productId: number, newQuantity: number) => {
-    if (!cart) return;
-    if (newQuantity <= 0) {
-      removeItem(productId);
-      return;
-    }
-    const item = cart.items.find((i) => i.productId === productId);
-    if (item && newQuantity > item.stock) {
-      Alert.alert('Out of Stock', `Only ${item.stock} items available`);
-      return;
-    }
-
-    // TODO: Update AsyncStorage and state
-    setCart((prev) => {
-      if (!prev) return prev;
-      const updatedItems = prev.items.map((i) =>
-        i.productId === productId ? { ...i, quantity: newQuantity } : i
-      );
-      return calculateTotals({ ...prev, items: updatedItems });
-    });
-  };
-
-  const removeItem = (productId: number) => {
-    Alert.alert('Remove Item', 'Remove this item from cart?', [
+  const handleRemoveItem = (item: CartItem) => {
+    Alert.alert('Remove Item', `Remove "${item.title}" from your cart?`, [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Remove',
         style: 'destructive',
         onPress: () => {
-          setCart((prev) => {
-            if (!prev) return prev;
-            const updatedItems = prev.items.filter((i) => i.productId !== productId);
-            return calculateTotals({ ...prev, items: updatedItems });
-          });
+          void removeItem(item.productId);
         },
       },
     ]);
   };
 
-  const calculateTotals = (cartData: Cart): Cart => {
-    const total = cartData.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-    const discountedTotal = cartData.items.reduce(
-      (sum, item) => sum + item.price * (1 - item.discountPercentage / 100) * item.quantity,
-      0
-    );
-    const totalProducts = cartData.items.length;
-    const totalQuantity = cartData.items.reduce((sum, item) => sum + item.quantity, 0);
-    return { ...cartData, total, discountedTotal, totalProducts, totalQuantity };
-  };
-
   const handleCheckout = async () => {
-    if (!cart || cart.items.length === 0) return;
+    if (items.length === 0) return;
+    if (!shippingAddress.trim()) {
+      Alert.alert(
+        'Missing Address',
+        'Please enter a delivery address before placing your order.'
+      );
+      return;
+    }
 
-    // TODO: Student implementation
-    // 1. Call POST /carts/add with userId and products
-    // 2. Clear local cart on success
-    // 3. Navigate to order confirmation
-
-    Alert.alert(
-      'Checkout',
-      `Proceed to checkout?\nTotal: $${cart.discountedTotal.toFixed(2)}`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Place Order',
-          onPress: () => {
-            Alert.alert('TODO', 'Implement checkout: POST /carts/add');
-          },
-        },
-      ]
-    );
+    const activeUserId = user?.id ?? 1;
+    try {
+      const order = await checkout(activeUserId);
+      setCouponInput('');
+      setCouponFeedback(null);
+      setConfirmedOrder(order);
+    } catch (err) {
+      Alert.alert(
+        'Checkout Failed',
+        err instanceof Error ? err.message : 'Unable to place order right now.'
+      );
+    }
   };
 
   const renderItem = ({ item }: { item: CartItem }) => {
     const discountedPrice = item.price * (1 - item.discountPercentage / 100);
     return (
       <View style={styles.cartItem}>
-        <Image source={{ uri: item.thumbnail }} style={styles.itemImage} resizeMode="contain" />
+        <Image
+          source={{ uri: item.thumbnail }}
+          style={styles.itemImage}
+          resizeMode="contain"
+        />
         <View style={styles.itemInfo}>
-          <Text style={styles.itemTitle} numberOfLines={2}>{item.title}</Text>
+          <Text style={styles.itemTitle} numberOfLines={2}>
+            {item.title}
+          </Text>
           <View style={styles.itemPriceRow}>
-            <Text style={styles.itemCurrentPrice}>${discountedPrice.toFixed(2)}</Text>
+            <Text style={styles.itemCurrentPrice}>
+              ${discountedPrice.toFixed(2)}
+            </Text>
             {item.discountPercentage > 0 && (
-              <Text style={styles.itemOriginalPrice}>${item.price.toFixed(2)}</Text>
+              <Text style={styles.itemOriginalPrice}>
+                ${item.price.toFixed(2)}
+              </Text>
             )}
           </View>
           <View style={styles.quantityControls}>
             <IconButton
               icon="minus"
               size={20}
-              onPress={() => updateQuantity(item.productId, item.quantity - 1)}
+              onPress={() =>
+                void updateQuantity(item.productId, item.quantity - 1)
+              }
               disabled={item.quantity <= 1}
               accessibilityLabel="Decrease quantity"
             />
@@ -163,7 +127,9 @@ export default function CartScreen() {
             <IconButton
               icon="plus"
               size={20}
-              onPress={() => updateQuantity(item.productId, item.quantity + 1)}
+              onPress={() =>
+                void updateQuantity(item.productId, item.quantity + 1)
+              }
               disabled={item.quantity >= item.stock}
               accessibilityLabel="Increase quantity"
             />
@@ -173,14 +139,14 @@ export default function CartScreen() {
           icon="delete-outline"
           size={24}
           iconColor="#EA4335"
-          onPress={() => removeItem(item.productId)}
+          onPress={() => handleRemoveItem(item)}
           accessibilityLabel="Remove item"
         />
       </View>
     );
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#1A73E8" />
@@ -189,82 +155,164 @@ export default function CartScreen() {
     );
   }
 
-  const isEmpty = !cart || cart.items.length === 0;
+  if (confirmedOrder) {
+    return (
+      <View style={styles.emptyState}>
+        <MaterialCommunityIcons
+          name="check-circle"
+          size={84}
+          color="#34A853"
+        />
+        <Text style={styles.emptyTitle}>Order Placed!</Text>
+        <Text style={styles.emptyText}>
+          {`Order #${confirmedOrder.id} · ${confirmedOrder.totalQuantity} item(s)\nTotal Paid: $${confirmedOrder.discountedTotal.toFixed(2)}`}
+        </Text>
+        <Button
+          mode="contained"
+          onPress={() => {
+            setConfirmedOrder(null);
+            router.push('/(app)/(tabs)/profile');
+          }}
+          style={styles.browseButton}
+          contentStyle={styles.buttonContent}
+        >
+          View Order History
+        </Button>
+        <Button
+          mode="outlined"
+          onPress={() => {
+            setConfirmedOrder(null);
+            router.push('/(app)/(tabs)/home');
+          }}
+          style={{ marginTop: 12, borderRadius: 8 }}
+        >
+          Continue Shopping
+        </Button>
+      </View>
+    );
+  }
+
+  if (items.length === 0) {
+    return (
+      <View style={styles.emptyState}>
+        <MaterialCommunityIcons
+          name="cart-outline"
+          size={80}
+          color="#DADCE0"
+        />
+        <Text style={styles.emptyTitle}>Your Cart is Empty</Text>
+        <Text style={styles.emptyText}>Add some products to get started</Text>
+        <Button
+          mode="contained"
+          onPress={() => router.push('/(app)/(tabs)/home')}
+          style={styles.browseButton}
+          contentStyle={styles.buttonContent}
+        >
+          Continue Shopping
+        </Button>
+      </View>
+    );
+  }
+
+  const savings = Math.max(0, total - discountedTotal);
 
   return (
     <View style={styles.container}>
-      {isEmpty ? (
-        <View style={styles.emptyState}>
-          <MaterialCommunityIcons name="cart-outline" size={80} color="#DADCE0" />
-          <Text style={styles.emptyTitle}>Your Cart is Empty</Text>
-          <Text style={styles.emptyText}>Add some products to get started</Text>
-          <Button
-            mode="contained"
-            onPress={() => router.push('/(app)/(tabs)/home')}
-            style={styles.browseButton}
-            contentStyle={styles.buttonContent}
-          >
-            <Text style={styles.buttonText}>Continue Shopping</Text>
-          </Button>
-        </View>
-      ) : (
-        <>
-          <FlatList
-            data={cart!.items}
-            renderItem={renderItem}
-            keyExtractor={(item) => item.id.toString()}
-            contentContainerStyle={styles.listContent}
-            ItemSeparatorComponent={() => <View style={styles.separator} />}
-            ListHeaderComponent={
-              <View style={styles.header}>
-                <Title style={styles.headerTitle}>Shopping Cart ({cart!.totalQuantity} items)</Title>
-              </View>
-            }
-          />
-
-          {/* Order Summary */}
-          <View style={styles.summaryContainer}>
-            <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Subtotal</Text>
-              <Text style={styles.summaryValue}>${cart!.total.toFixed(2)}</Text>
-            </View>
-            {cart!.total !== cart!.discountedTotal && (
-              <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>Discount</Text>
-                <Text style={styles.discountValue}>-${(cart!.total - cart!.discountedTotal).toFixed(2)}</Text>
-              </View>
-            )}
-            <View style={styles.summaryRowDivider} />
-            <View style={styles.summaryRowTotal}>
-              <Text style={styles.summaryLabelTotal}>Total</Text>
-              <Text style={styles.summaryValueTotal}>${cart!.discountedTotal.toFixed(2)}</Text>
-            </View>
-            <Button
-              mode="contained"
-              onPress={handleCheckout}
-              style={styles.checkoutButton}
-              contentStyle={styles.buttonContent}
-            >
-              <Text style={styles.buttonText}>Checkout</Text>
-            </Button>
+      <FlatList
+        data={items}
+        renderItem={renderItem}
+        keyExtractor={(item) => item.productId.toString()}
+        contentContainerStyle={[styles.listContent, { paddingBottom: 310 }]}
+        ItemSeparatorComponent={() => <View style={styles.separator} />}
+        ListHeaderComponent={
+          <View style={styles.header}>
+            <Title style={styles.headerTitle}>
+              {`Shopping Cart (${totalQuantity} items)`}
+            </Title>
           </View>
-        </>
-      )}
+        }
+        ListFooterComponent={
+          <Card
+            style={{
+              marginTop: 16,
+              backgroundColor: '#FFFFFF',
+              borderRadius: 12,
+            }}
+          >
+            <Card.Content>
+              <Text
+                style={{ fontWeight: '700', marginBottom: 8, color: '#202124' }}
+              >
+                Delivery & Promo Code
+              </Text>
+              <PaperTextInput
+                mode="outlined"
+                label="Shipping Address"
+                value={shippingAddress}
+                onChangeText={setShippingAddress}
+                dense
+                style={{ marginBottom: 10, backgroundColor: '#FFFFFF' }}
+              />
+              <View
+                style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}
+              >
+                <PaperTextInput
+                  mode="outlined"
+                  label="Coupon (SAVE10 / SAVE20)"
+                  value={couponInput}
+                  onChangeText={setCouponInput}
+                  autoCapitalize="characters"
+                  dense
+                  style={{ flex: 1, backgroundColor: '#FFFFFF' }}
+                />
+                <Button mode="outlined" onPress={handleApplyCoupon}>
+                  Apply
+                </Button>
+              </View>
+              {couponFeedback && (
+                <HelperText
+                  type={couponFeedback.isError ? 'error' : 'info'}
+                  visible={!!couponFeedback}
+                >
+                  {couponFeedback.text}
+                </HelperText>
+              )}
+            </Card.Content>
+          </Card>
+        }
+      />
 
-      {/* Student Guide */}
-      <View style={styles.guideContainer}>
-        <Text style={styles.guideTitle}>📝 Student Implementation Guide</Text>
-        <Text style={styles.guideText}>
-          Complete the cart functionality:\n
-          1. Cart Context with useReducer (add, remove, update)\n
-          2. Persist cart to AsyncStorage\n
-          3. Sync with DummyJSON: GET/POST /carts\n
-          4. Apply coupons (GET /carts/{'{id}'}/apply-coupon)\n
-          5. Checkout flow with order confirmation
-        </Text>
+      <View style={styles.summaryContainer}>
+        <View style={styles.summaryRow}>
+          <Text style={styles.summaryLabel}>Subtotal</Text>
+          <Text style={styles.summaryValue}>${total.toFixed(2)}</Text>
+        </View>
+        {savings > 0 && (
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryLabel}>
+              {couponCode ? `Savings (${couponCode})` : 'Discount'}
+            </Text>
+            <Text style={styles.discountValue}>-${savings.toFixed(2)}</Text>
+          </View>
+        )}
+        <View style={styles.summaryRowDivider} />
+        <View style={styles.summaryRowTotal}>
+          <Text style={styles.summaryLabelTotal}>Total</Text>
+          <Text style={styles.summaryValueTotal}>
+            ${discountedTotal.toFixed(2)}
+          </Text>
+        </View>
+        <Button
+          mode="contained"
+          onPress={handleCheckout}
+          loading={isCheckingOut}
+          disabled={isCheckingOut}
+          style={styles.checkoutButton}
+          contentStyle={styles.buttonContent}
+        >
+          {isCheckingOut ? 'Placing Order...' : 'Place Order'}
+        </Button>
       </View>
     </View>
   );
 }
-
-import { Image } from 'react-native';

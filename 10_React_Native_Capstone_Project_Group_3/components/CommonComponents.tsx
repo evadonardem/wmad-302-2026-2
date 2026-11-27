@@ -3,7 +3,17 @@
  */
 
 import React from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, ActivityIndicator, DimensionValue } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  TouchableOpacity,
+  ActivityIndicator,
+  DimensionValue,
+  StyleProp,
+  ViewStyle,
+} from 'react-native';
 import { Card, Title, Chip, Badge, Button } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
@@ -22,7 +32,7 @@ interface RecipeCardProps {
     reviewCount: number;
   };
   onPress: () => void;
-  style?: any;
+  style?: StyleProp<ViewStyle>;
 }
 
 export function RecipeCard({ recipe, onPress, style }: RecipeCardProps) {
@@ -40,12 +50,14 @@ export function RecipeCard({ recipe, onPress, style }: RecipeCardProps) {
             resizeMode="cover"
           />
           <View style={styles.difficultyBadge}>
-            <Chip style={[
-              styles.difficultyChip,
-              recipe.difficulty === 'Easy' && styles.easy,
-              recipe.difficulty === 'Medium' && styles.medium,
-              recipe.difficulty === 'Hard' && styles.hard,
-            ]}>
+            <Chip
+              style={[
+                styles.difficultyChip,
+                recipe.difficulty === 'Easy' && styles.easy,
+                recipe.difficulty === 'Medium' && styles.medium,
+                recipe.difficulty === 'Hard' && styles.hard,
+              ]}
+            >
               {recipe.difficulty}
             </Chip>
           </View>
@@ -87,7 +99,7 @@ interface ProductCardProps {
     stock: number;
   };
   onPress: () => void;
-  style?: any;
+  style?: StyleProp<ViewStyle>;
 }
 
 export function ProductCard({ product, onPress, style }: ProductCardProps) {
@@ -108,7 +120,7 @@ export function ProductCard({ product, onPress, style }: ProductCardProps) {
           />
           {product.discountPercentage > 0 && (
             <Badge style={styles.discountBadge}>
-              -{Math.round(product.discountPercentage)}%
+              {`-${Math.round(product.discountPercentage)}%`}
             </Badge>
           )}
         </View>
@@ -139,7 +151,7 @@ interface CategoryChipProps {
   selected?: boolean;
   onPress: () => void;
   icon?: React.ComponentProps<typeof MaterialCommunityIcons>['name'];
-  style?: any;
+  style?: StyleProp<ViewStyle>;
 }
 
 export function CategoryChip({ label, selected, onPress, icon, style }: CategoryChipProps) {
@@ -160,10 +172,12 @@ export function CategoryChip({ label, selected, onPress, icon, style }: Category
           style={{ marginRight: 4 }}
         />
       )}
-      <Text style={[
-        styles.categoryChipText,
-        selected && styles.categoryChipTextSelected,
-      ]}>
+      <Text
+        style={[
+          styles.categoryChipText,
+          selected && styles.categoryChipTextSelected,
+        ]}
+      >
         {label}
       </Text>
     </TouchableOpacity>

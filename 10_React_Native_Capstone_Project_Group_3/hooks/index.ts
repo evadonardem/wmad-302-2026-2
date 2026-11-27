@@ -4,24 +4,18 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { authStorage } from '@/utils/storage';
+import { authStorage, getStorageItem, setStorageItem, StorageKey } from '@/utils/storage';
 
-/**
- * Hook for managing authentication state with persistence
- */
 export function useAuthPersistence() {
   const { user, isAuthenticated, isLoading, login, logout, refreshUser } = useAuth();
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
     const hydrate = async () => {
-      const storedUser = await authStorage.getUser();
-      if (storedUser) {
-        // User already hydrated in AuthContext, just mark as done
-      }
+      await authStorage.getUser();
       setHydrated(true);
     };
-    hydrate();
+    void hydrate();
   }, []);
 
   return {
@@ -34,17 +28,14 @@ export function useAuthPersistence() {
   };
 }
 
-/**
- * Hook for async storage with state
- */
-export function useAsyncStorage<T>(key: string, initialValue: T) {
+export function useAsyncStorage<T>(key: StorageKey, initialValue: T) {
   const [value, setValue] = useState<T>(initialValue);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const load = async () => {
       try {
-        const stored = await import('@/utils/storage').then((m) => m.getStorageItem<T>(key as any));
+        const stored = await getStorageItem<T>(key);
         if (stored !== null) setValue(stored);
       } catch (error) {
         console.error(`Failed to load ${key}:`, error);
@@ -52,15 +43,16 @@ export function useAsyncStorage<T>(key: string, initialValue: T) {
         setLoading(false);
       }
     };
-    load();
+    void load();
   }, [key]);
 
   const updateValue = useCallback(
     async (newValue: T | ((prev: T) => T)) => {
-      const resolvedValue = newValue instanceof Function ? newValue(value) : newValue;
+      const resolvedValue =
+        newValue instanceof Function ? newValue(value) : newValue;
       setValue(resolvedValue);
       try {
-        await import('@/utils/storage').then((m) => m.setStorageItem(key as any, resolvedValue));
+        await setStorageItem<T>(key, resolvedValue);
       } catch (error) {
         console.error(`Failed to save ${key}:`, error);
       }
@@ -71,10 +63,7 @@ export function useAsyncStorage<T>(key: string, initialValue: T) {
   return [value, updateValue, loading] as const;
 }
 
-/**
- * Hook for debounced values
- */
-export function useDebounce<T>(value: T, delay: number = 300): T {
+export function useDebounce<T>(value: T, delay = 300): T {
   const [debouncedValue, setDebouncedValue] = useState<T>(value);
 
   useEffect(() => {
@@ -85,12 +74,9 @@ export function useDebounce<T>(value: T, delay: number = 300): T {
   return debouncedValue;
 }
 
-/**
- * Hook for infinite scroll pagination
- */
 export function useInfiniteScroll<T>(
   fetchFn: (page: number, limit: number) => Promise<{ data: T[]; hasMore: boolean }>,
-  limit: number = 20
+  limit = 20
 ) {
   const [data, setData] = useState<T[]>([]);
   const [page, setPage] = useState(0);
@@ -133,13 +119,13 @@ export function useInfiniteScroll<T>(
   };
 }
 
-/**
- * Hook for network status
- */
-export function useNetworkStatus() {
+export function useNetworkStatus(): boolean {
   const [isOnline, setIsOnline] = useState(true);
 
   useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.addEventListener !== 'function') {
+      return;
+    }
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
 

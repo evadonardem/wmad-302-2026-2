@@ -1,168 +1,215 @@
 /**
- * Login Screen - Complete, working implementation
- * Students can use as reference for building register screen
+ * Login Screen - Marketplace Auth
  */
 import React, { useState } from 'react';
 import {
   View,
   Text,
-  TextInput,
-  TouchableOpacity,
-  ScrollView,
+  StyleSheet,
   KeyboardAvoidingView,
   Platform,
-  ActivityIndicator,
+  ScrollView,
+  TouchableOpacity,
   Alert,
 } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { TextInput as PaperTextInput, Button, Title, HelperText } from 'react-native-paper';
+import { useRouter } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
-import { Card, Button, TextInput as PaperTextInput, Divider } from 'react-native-paper';
-import { styles } from './styles';
 
 export default function LoginScreen() {
   const router = useRouter();
   const { login, isLoading, error, clearError } = useAuth();
-  const { redirect } = useLocalSearchParams<{ redirect?: string }>();
 
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const [username, setUsername] = useState('emilys');
+  const [password, setPassword] = useState('emilyspass');
   const [showPassword, setShowPassword] = useState(false);
+  const [validationError, setValidationError] = useState('');
 
   const handleLogin = async () => {
-    if (!username.trim() || !password.trim()) {
-      Alert.alert('Error', 'Please enter both username and password');
+    setValidationError('');
+    clearError();
+
+    if (!username.trim()) {
+      setValidationError('Please enter your username');
+      return;
+    }
+
+    if (!password) {
+      setValidationError('Please enter your password');
       return;
     }
 
     try {
-      await login(username.trim(), password.trim());
-      router.replace(redirect || '/(app)/(tabs)/home');
-    } catch {
-      // Error handled in context
+      await login({ username: username.trim(), password });
+      router.replace('/(app)/(tabs)/home');
+    } catch (err) {
+      Alert.alert(
+        'Login Failed',
+        err instanceof Error ? err.message : 'Unable to sign in. Please check your credentials.'
+      );
     }
   };
 
-  const handleDemoLogin = async () => {
-    // DummyJSON test credentials: emilys / emilyspass
+  const handleDemoFill = () => {
     setUsername('emilys');
     setPassword('emilyspass');
-    try {
-      await login('emilys', 'emilyspass');
-      router.replace(redirect || '/(app)/(tabs)/home');
-    } catch {
-      // Error handled in context
-    }
+    setValidationError('');
+    clearError();
   };
-
-  React.useEffect(() => {
-    if (error) {
-      Alert.alert('Login Failed', error, [{ text: 'OK', onPress: clearError }]);
-    }
-  }, [error, clearError]);
 
   return (
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
     >
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* Logo/Brand */}
-        <View style={styles.logoContainer}>
-          <Text style={styles.logoText}>🛒</Text>
-          <Text style={styles.appName}>Marketplace</Text>
-          <Text style={styles.tagline}>Shop Smart, Save More</Text>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={styles.header}>
+          <Title style={styles.title}>Marketplace</Title>
+          <Text style={styles.subtitle}>Sign in to discover great deals</Text>
         </View>
 
-        {/* Login Card */}
-        <Card style={styles.card} elevation={3}>
-          <Card.Content style={styles.cardContent}>
-            <Text style={styles.title}>Welcome Back</Text>
-            <Text style={styles.subtitle}>Sign in to continue shopping</Text>
+        <View style={styles.form}>
+          <PaperTextInput
+            mode="outlined"
+            label="Username"
+            value={username}
+            onChangeText={(text) => {
+              setUsername(text);
+              if (validationError) setValidationError('');
+              if (error) clearError();
+            }}
+            autoCapitalize="none"
+            autoCorrect={false}
+            left={<PaperTextInput.Icon icon="account" />}
+            style={styles.input}
+            disabled={isLoading}
+          />
 
-            {/* Username Field */}
-            <PaperTextInput
-              label="Username or Email"
-              mode="outlined"
-              value={username}
-              onChangeText={setUsername}
-              style={styles.input}
-              autoCapitalize="none"
-              autoComplete="username"
-              textContentType="username"
-              returnKeyType="next"
-              disabled={isLoading}
-            />
+          <PaperTextInput
+            mode="outlined"
+            label="Password"
+            value={password}
+            onChangeText={(text) => {
+              setPassword(text);
+              if (validationError) setValidationError('');
+              if (error) clearError();
+            }}
+            secureTextEntry={!showPassword}
+            left={<PaperTextInput.Icon icon="lock" />}
+            right={
+              <PaperTextInput.Icon
+                icon={showPassword ? 'eye-off' : 'eye'}
+                onPress={() => setShowPassword(!showPassword)}
+              />
+            }
+            style={styles.input}
+            disabled={isLoading}
+          />
 
-            {/* Password Field */}
-            <PaperTextInput
-              label="Password"
-              mode="outlined"
-              value={password}
-              onChangeText={setPassword}
-              style={styles.input}
-              secureTextEntry={!showPassword}
-              autoComplete="password"
-              textContentType="password"
-              returnKeyType="go"
-              onSubmitEditing={handleLogin}
-              disabled={isLoading}
-              right={<TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
-                <Text style={styles.eyeText}>{showPassword ? '🙈' : '👁️'}</Text>
-              </TouchableOpacity>}
-            />
+          {(validationError || error) && (
+            <HelperText type="error" visible={!!(validationError || error)}>
+              {validationError || error}
+            </HelperText>
+          )}
 
-            {/* Error Display */}
-            {error && (
-              <View style={styles.errorContainer}>
-                <Text style={styles.errorText}>{error}</Text>
-              </View>
-            )}
+          <Button
+            mode="contained"
+            onPress={handleLogin}
+            loading={isLoading}
+            disabled={isLoading}
+            style={styles.button}
+            contentStyle={styles.buttonContent}
+          >
+            {isLoading ? 'Signing In...' : 'Sign In'}
+          </Button>
 
-            {/* Login Button */}
-            <Button
-              mode="contained"
-              onPress={handleLogin}
-              loading={isLoading}
-              style={styles.loginButton}
-              disabled={isLoading}
-              contentStyle={styles.buttonContent}
-            >
-              {isLoading ? (
-                <ActivityIndicator color="white" size="small" />
-              ) : (
-                <Text style={styles.buttonText}>Sign In</Text>
-              )}
-            </Button>
+          <Button
+            mode="text"
+            onPress={handleDemoFill}
+            disabled={isLoading}
+            style={styles.demoButton}
+          >
+            Use Demo Account (emilys)
+          </Button>
 
-            {/* Demo Login */}
-            <View style={styles.demoContainer}>
-              <Divider style={styles.divider} />
-              <TouchableOpacity onPress={handleDemoLogin} disabled={isLoading} style={styles.demoButton}>
-                <Text style={styles.demoButtonText}>Try Demo Account (emilys / emilyspass)</Text>
-              </TouchableOpacity>
-            </View>
-
-            {/* Register Link */}
-            <View style={styles.registerContainer}>
-              <Text style={styles.registerText}>Don't have an account? </Text>
-              <TouchableOpacity
-                onPress={() => router.push('/(auth)/register')}
-                style={styles.link}
-              >
-                <Text style={styles.linkText}>Sign Up</Text>
-              </TouchableOpacity>
-            </View>
-          </Card.Content>
-        </Card>
-
-        {/* Footer */}
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>
-            By signing in, you agree to our Terms of Service and Privacy Policy
-          </Text>
+          <TouchableOpacity
+            onPress={() => router.push('/(auth)/register')}
+            style={styles.link}
+            disabled={isLoading}
+          >
+            <Text style={styles.linkText}>
+              Don&apos;t have an account?{' '}
+              <Text style={styles.linkBold}>Register</Text>
+            </Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#F8F9FA',
+  },
+  scrollContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    paddingHorizontal: 24,
+    paddingVertical: 32,
+  },
+  header: {
+    alignItems: 'center',
+    marginBottom: 32,
+  },
+  title: {
+    fontSize: 32,
+    fontWeight: '700',
+    color: '#1A73E8',
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#5F6368',
+  },
+  form: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 24,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+  },
+  input: {
+    marginBottom: 16,
+    backgroundColor: '#FFFFFF',
+  },
+  button: {
+    marginTop: 8,
+    borderRadius: 8,
+  },
+  buttonContent: {
+    paddingVertical: 6,
+  },
+  demoButton: {
+    marginTop: 8,
+  },
+  link: {
+    marginTop: 16,
+    alignItems: 'center',
+  },
+  linkText: {
+    fontSize: 14,
+    color: '#5F6368',
+  },
+  linkBold: {
+    color: '#1A73E8',
+    fontWeight: '700',
+  },
+});
