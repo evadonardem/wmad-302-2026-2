@@ -1,0 +1,48 @@
+{
+  "expo": {
+    "name": "Marketplace Capstone",
+    "slug": "10-marketplace-capstone",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/logo.jpg",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/logo.jpg",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.wmad302.marketplace"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/logo.jpg",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.wmad302.marketplace"
+    },
+    "web": {
+      "bundler": "metro",
+      "favicon": "./assets/logo.jpg"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      "expo-notifications"
+    ],
+    "scheme": "marketplace",
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "2ffd8bd7-6a05-4d13-a105-d8c084cd08f9"
+      }
+    },
+    "owner": "kitsmae"
+  }
+}
