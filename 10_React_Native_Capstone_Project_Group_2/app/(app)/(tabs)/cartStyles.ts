@@ -3,6 +3,10 @@
  */
 import { StyleSheet } from 'react-native';
 
+export default function Placeholder() {
+  return null;
+}
+
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -199,4 +203,6 @@ export const styles = StyleSheet.create({
     color: '#3C4043',
     lineHeight: 20,
   },
-});
+  
+}
+);

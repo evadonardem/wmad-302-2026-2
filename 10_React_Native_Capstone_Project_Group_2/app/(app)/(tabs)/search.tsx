@@ -78,7 +78,7 @@ export default function SearchScreen() {
   const renderResult = ({ item }: { item: Product }) => {
     const discountedPrice = item.price * (1 - item.discountPercentage / 100);
     return (
-      <TouchableOpacity style={styles.resultCard} onPress={() => router.push(`/(app)/(tabs)/product/${item.id}`)}>
+     <TouchableOpacity style={styles.resultCard} onPress={() => router.push(`/(app)/product/${item.id}`)}>
         <Card style={styles.card} elevation={1}>
           <View style={styles.resultContent}>
             <Image source={{ uri: item.thumbnail }} style={styles.resultImage} resizeMode="contain" />

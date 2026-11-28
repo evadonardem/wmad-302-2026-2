@@ -1,19 +1,30 @@
-/**
- * Root Layout - Entry point with providers
- */
 import { Stack } from 'expo-router';
-import { Providers } from './providers';
+import { useEffect } from 'react';
 import * as SplashScreen from 'expo-splash-screen';
+import { Providers } from './providers';
+import { useAuth } from '@/context/AuthContext';
 
 SplashScreen.preventAutoHideAsync();
+
+function RootNavigator() {
+  const { isLoading } = useAuth();
+
+  useEffect(() => {
+    if (!isLoading) SplashScreen.hideAsync();
+  }, [isLoading]);
+
+  return (
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="(auth)" />
+      <Stack.Screen name="(app)" />
+    </Stack>
+  );
+}
 
 export default function RootLayout() {
   return (
     <Providers>
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="(auth)" />
-        <Stack.Screen name="(app)" />
-      </Stack>
+      <RootNavigator />
     </Providers>
   );
 }

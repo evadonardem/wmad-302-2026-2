@@ -1,4 +1,3 @@
-
 /**
  * Home Screen - Marketplace Shop Tab
  * Product grid and category discovery with live marketplace data
@@ -99,7 +98,7 @@ export default function HomeScreen() {
     return (
       <TouchableOpacity
         style={styles.productCard}
-        onPress={() => router.push(`/(app)/(tabs)/product/${item.id}`)}
+        onPress={() => router.push(`/(app)/product/${item.id}`)}
         activeOpacity={0.8}
       >
         <Card style={styles.card} elevation={2}>
@@ -254,6 +253,7 @@ export default function HomeScreen() {
           renderItem={renderProduct}
           keyExtractor={(item) => item.id.toString()}
           ItemSeparatorComponent={() => <View style={styles.cardSeparator} />}
+          scrollEnabled={false} // ← added
         />
       </View>
 
@@ -275,6 +275,7 @@ export default function HomeScreen() {
           renderItem={renderProduct}
           keyExtractor={(item) => item.id.toString()}
           ItemSeparatorComponent={() => <View style={styles.cardSeparator} />}
+          scrollEnabled={false} // ← added
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <Text style={styles.emptyText}>No products found</Text>

@@ -3,6 +3,10 @@
  */
 import { StyleSheet } from 'react-native';
 
+export default function Placeholder() {
+  return null;
+}
+
 export const styles = StyleSheet.create({
   scrollView: {
     flex: 1,

@@ -1,4 +1,3 @@
-
 /**
  * Tabs Layout - Marketplace App Navigation
  * Tabs: Home (Shop), Categories, Cart, Profile
@@ -59,11 +58,6 @@ export default function TabsLayout() {
             />
           ),
         }}
-      />
-
-      <Tabs.Screen
-        name="product/[id]"
-        options={{ href: null }}
       />
 
       <Tabs.Screen

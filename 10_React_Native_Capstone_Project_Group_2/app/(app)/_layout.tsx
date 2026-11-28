@@ -22,7 +22,7 @@ export default function AppLayout() {
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(tabs)" />
-      {/* Add other protected screens here */}
+      <Stack.Screen name="product/[id]" />
     </Stack>
   );
 }
