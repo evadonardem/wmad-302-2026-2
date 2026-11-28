@@ -37,11 +37,7 @@
     "extra": {
       "router": {
         "origin": false
-      },
-      "eas": {
-        "projectId": "marketplace-capstone"
       }
-    },
-    "owner": "wmad302"
+    }
   }
 }
