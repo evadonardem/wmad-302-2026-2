@@ -5,6 +5,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { authStorage } from '@/utils/storage';
+import * as Network from 'expo-network';
 
 /**
  * Hook for managing authentication state with persistence
@@ -140,15 +141,34 @@ export function useNetworkStatus() {
   const [isOnline, setIsOnline] = useState(true);
 
   useEffect(() => {
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
+    let isMounted = true;
 
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
+    // Get the initial network status
+    Network.getNetworkStateAsync()
+      .then((state) => {
+        if (isMounted) {
+          setIsOnline(
+            state.isConnected === true &&
+            state.isInternetReachable !== false
+          );
+        }
+      })
+      .catch((error) => {
+        console.error('Failed to get network status:', error);
+      });
 
+    // Listen for network status changes
+    const subscription = Network.addNetworkStateListener((state) => {
+      setIsOnline(
+        state.isConnected === true &&
+        state.isInternetReachable !== false
+      );
+    });
+
+    // Clean up the network listener
     return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
+      isMounted = false;
+      subscription.remove();
     };
   }, []);
 

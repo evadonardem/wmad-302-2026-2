@@ -1,6 +1,7 @@
+
 /**
  * Home Screen - Marketplace Shop Tab
- * Students implement: Product grid, categories, flash deals, recommendations
+ * Product grid and category discovery with live marketplace data
  * APIs: https://dummyjson.com/docs/products
  */
 import React, { useState, useEffect } from 'react';
@@ -16,8 +17,9 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
-import { Card, Title, Chip, Avatar, Button, Badge } from 'react-native-paper';
+import { Card, Title, Avatar, Button, Badge } from 'react-native-paper';
 import { styles } from './homeStyles';
+import { productApi } from '@/services/productApi';
 
 // Types for DummyJSON Products API
 interface Product {
@@ -55,6 +57,7 @@ interface ProductsResponse {
 export default function HomeScreen() {
   const router = useRouter();
   const { user } = useAuth();
+
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
@@ -66,15 +69,10 @@ export default function HomeScreen() {
       if (!isRefresh) setLoading(true);
       setError(null);
 
-      const [productsRes, categoriesRes] = await Promise.all([
-        fetch('https://dummyjson.com/products?limit=20'),
-        fetch('https://dummyjson.com/products/categories'),
+      const [productsData, categoriesData] = await Promise.all([
+        productApi.getProducts({ limit: 20 }),
+        productApi.getCategories(),
       ]);
-
-      if (!productsRes.ok || !categoriesRes.ok) throw new Error('Failed to fetch data');
-
-      const productsData: ProductsResponse = await productsRes.json();
-      const categoriesData: string[] = await categoriesRes.json();
 
       setProducts(productsData.products);
       setCategories(categoriesData);
@@ -90,7 +88,10 @@ export default function HomeScreen() {
     fetchData();
   }, []);
 
-  const onRefresh = () => fetchData(true);
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchData(true);
+  };
 
   const renderProduct = ({ item }: { item: Product }) => {
     const discountedPrice = item.price * (1 - item.discountPercentage / 100);
@@ -110,24 +111,34 @@ export default function HomeScreen() {
             />
             {item.discountPercentage > 0 && (
               <Badge style={styles.discountBadge}>
-                -{Math.round(item.discountPercentage)}%
+                {`-${Math.round(item.discountPercentage)}%`}
               </Badge>
             )}
           </View>
+
           <Card.Content style={styles.cardContent}>
             <Text style={styles.productCategory}>{item.category}</Text>
+
             <Title style={styles.productTitle} numberOfLines={2}>
               {item.title}
             </Title>
+
             <View style={styles.priceRow}>
-              <Text style={styles.currentPrice}>${discountedPrice.toFixed(2)}</Text>
+              <Text style={styles.currentPrice}>
+                ${discountedPrice.toFixed(2)}
+              </Text>
+
               {item.discountPercentage > 0 && (
-                <Text style={styles.originalPrice}>${item.price.toFixed(2)}</Text>
+                <Text style={styles.originalPrice}>
+                  ${item.price.toFixed(2)}
+                </Text>
               )}
             </View>
+
             <View style={styles.ratingRow}>
               <Text style={styles.ratingText}>
-                ⭐ {item.rating.toFixed(1)} · {item.stock > 0 ? 'In Stock' : 'Out of Stock'}
+                ⭐ {item.rating.toFixed(1)} ·{' '}
+                {item.stock > 0 ? 'In Stock' : 'Out of Stock'}
               </Text>
             </View>
           </Card.Content>
@@ -139,7 +150,7 @@ export default function HomeScreen() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#1A73E8" />
+        <ActivityIndicator size="large" color="#38BDF8" />
         <Text style={styles.loadingText}>Loading products...</Text>
       </View>
     );
@@ -149,7 +160,12 @@ export default function HomeScreen() {
     return (
       <View style={styles.errorContainer}>
         <Text style={styles.errorText}>{error}</Text>
-        <Button mode="contained" onPress={() => fetchData()} style={styles.retryButton}>
+
+        <Button
+          mode="contained"
+          onPress={() => fetchData()}
+          style={styles.retryButton}
+        >
           Retry
         </Button>
       </View>
@@ -160,7 +176,11 @@ export default function HomeScreen() {
     <ScrollView
       style={styles.scrollView}
       refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#1A73E8']} />
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          colors={['#38BDF8']}
+        />
       }
       contentContainerStyle={styles.scrollContent}
     >
@@ -170,9 +190,17 @@ export default function HomeScreen() {
           <Text style={styles.welcomeGreeting}>
             {user ? `Welcome, ${user.firstName}!` : 'Welcome to Marketplace!'}
           </Text>
-          <Text style={styles.welcomeSubtitle}>Discover amazing deals</Text>
+
+          <Text style={styles.welcomeSubtitle}>
+            Discover amazing deals
+          </Text>
         </View>
-        <Avatar.Icon size={56} icon="storefront" style={styles.welcomeAvatar} />
+
+        <Avatar.Icon
+          size={56}
+          icon="storefront"
+          style={styles.welcomeAvatar}
+        />
       </View>
 
       {/* Categories */}
@@ -180,22 +208,31 @@ export default function HomeScreen() {
         <View style={styles.sectionHeader}>
           <Title style={styles.sectionTitle}>Categories</Title>
         </View>
+
         <FlatList
           data={categories.slice(0, 10)}
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.categoryList}
+          keyExtractor={(item) => item}
           renderItem={({ item }) => (
             <TouchableOpacity
               style={styles.categoryChip}
-              onPress={() => router.push(`/(app)/(tabs)/categories?category=${item}`)}
+              activeOpacity={0.7}
+              onPress={() =>
+                router.push({
+                  pathname: '/(app)/(tabs)/search',
+                  params: { category: item },
+                })
+              }
             >
               <Text style={styles.categoryChipText}>
-                {item.charAt(0).toUpperCase() + item.slice(1).replace('-', ' ')}
+                {item
+                  .charAt(0)
+                  .toUpperCase() + item.slice(1).replace(/-/g, ' ')}
               </Text>
             </TouchableOpacity>
           )}
-          keyExtractor={(item) => item}
         />
       </View>
 
@@ -203,10 +240,15 @@ export default function HomeScreen() {
       <View style={styles.sectionContainer}>
         <View style={styles.sectionHeader}>
           <Title style={styles.sectionTitle}>⚡ Flash Deals</Title>
-          <TouchableOpacity style={styles.seeAll}>
+
+          <TouchableOpacity
+            style={styles.seeAll}
+            onPress={() => router.push('/(app)/(tabs)/search')}
+          >
             <Text style={styles.seeAllText}>See All</Text>
           </TouchableOpacity>
         </View>
+
         <FlatList
           data={products.filter((p) => p.discountPercentage > 20).slice(0, 5)}
           renderItem={renderProduct}
@@ -219,10 +261,15 @@ export default function HomeScreen() {
       <View style={styles.sectionContainer}>
         <View style={styles.sectionHeader}>
           <Title style={styles.sectionTitle}>Recommended for You</Title>
-          <TouchableOpacity onPress={() => router.push('/(app)/(tabs)/search')} style={styles.seeAll}>
+
+          <TouchableOpacity
+            onPress={() => router.push('/(app)/(tabs)/search')}
+            style={styles.seeAll}
+          >
             <Text style={styles.seeAllText}>See All</Text>
           </TouchableOpacity>
         </View>
+
         <FlatList
           data={products.slice(0, 10)}
           renderItem={renderProduct}

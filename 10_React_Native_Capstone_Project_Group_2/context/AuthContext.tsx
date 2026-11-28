@@ -1,6 +1,6 @@
 /**
  * Auth Context with useReducer - Complete scaffold
- * Students complete: register, token refresh integration, persistence hydration
+ * Completed: registration wiring, token refresh integration, and AsyncStorage hydration
  */
 
 import React, {
@@ -99,6 +99,7 @@ interface AuthContextType extends AuthState {
   logout: () => void;
   clearError: () => void;
   refreshUser: () => Promise<void>;
+  updateUser: (updates: Partial<AuthUser>) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -111,7 +112,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const hydrateAuth = async () => {
       try {
-        const storedUser = authApi.getStoredUser();
+        const storedUser = await authApi.hydrateStoredUser();
         if (storedUser?.token && storedUser?.refreshToken) {
           // Verify token still works by fetching user profile
           try {
@@ -176,11 +177,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }) => {
       dispatch({ type: 'AUTH_START' });
       try {
-        // TODO: Student implementation
-        // 1. Call authApi.register(data) - implement in services/authApi.ts
-        // 2. On success, dispatch AUTH_SUCCESS
-        // 3. On failure, dispatch AUTH_FAILURE
-        throw new Error('TODO: Implement register in AuthContext - call authApi.register');
+        const user = await authApi.register(data);
+        // DummyJSON's registration endpoint is a mock and does not issue tokens.
+        // Save the created profile for the registration confirmation, but do not
+        // mark the user authenticated until a real login token is available.
+        dispatch({ type: 'AUTH_HYDRATE', payload: null });
+        void user;
       } catch (error: unknown) {
         const message = error instanceof Error ? error.message : 'Registration failed';
         dispatch({ type: 'AUTH_FAILURE', payload: message });
@@ -193,6 +195,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(() => {
     authApi.logout();
     dispatch({ type: 'AUTH_LOGOUT' });
+  }, []);
+
+  const updateUser = useCallback((updates: Partial<AuthUser>) => {
+    const currentUser = authApi.getStoredUser();
+    if (currentUser) authApi.setTokens({ ...currentUser, ...updates });
+    dispatch({ type: 'AUTH_UPDATE_USER', payload: updates });
   }, []);
 
   const clearError = useCallback(() => {
@@ -227,6 +235,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         logout,
         clearError,
         refreshUser,
+        updateUser,
       }}
     >
       {children}

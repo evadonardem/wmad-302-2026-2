@@ -51,7 +51,7 @@ export default function CategoriesScreen() {
   const renderCategory = ({ item }: { item: Category }) => (
     <TouchableOpacity
       style={styles.categoryCard}
-      onPress={() => router.push(`/app/(tabs)/search?category=${encodeURIComponent(item.name)}`)}
+      onPress={() => router.push({ pathname: '/(app)/(tabs)/search', params: { category: item.name } })}
       activeOpacity={0.8}
     >
       <Card style={styles.card} elevation={1}>
@@ -60,7 +60,7 @@ export default function CategoriesScreen() {
             <MaterialCommunityIcons
               name={getCategoryIcon(item.name)}
               size={32}
-              color="#1A73E8"
+              color="#38BDF8"
             />
           </View>
           <Title style={styles.categoryName}>
@@ -77,7 +77,7 @@ export default function CategoriesScreen() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#1A73E8" />
+        <ActivityIndicator size="large" color="#38BDF8" />
         <Text style={styles.loadingText}>Loading categories...</Text>
       </View>
     );
@@ -106,16 +106,11 @@ export default function CategoriesScreen() {
         ItemSeparatorComponent={() => <View style={styles.separator} />}
       />
 
-      {/* Student Guide */}
+      {/* Category browsing notes */}
       <View style={styles.guideContainer}>
-        <Text style={styles.guideTitle}>📝 Student Implementation Guide</Text>
+        <Text style={styles.guideTitle}>📝 Category Browsing</Text>
         <Text style={styles.guideText}>
-          Enhance the categories screen:\n
-          1. Add category images/banners\n
-          2. Show product count per category\n
-          3. Add sub-categories navigation\n
-          4. Add "Featured Brands" section\n
-          5. Implement pull-to-refresh
+          Browse live product categories, view product counts, and open the matching\n          filtered search results. Select any category card to explore its products.
         </Text>
       </View>
     </View>

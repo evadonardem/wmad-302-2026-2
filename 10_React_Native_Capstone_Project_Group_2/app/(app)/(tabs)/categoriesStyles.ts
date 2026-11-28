@@ -6,7 +6,7 @@ import { StyleSheet } from 'react-native';
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: '#E0F2FE',
     paddingHorizontal: 16,
     paddingTop: 20,
     paddingBottom: 100,
@@ -34,7 +34,7 @@ export const styles = StyleSheet.create({
   },
   card: {
     borderRadius: 12,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F0F9FF',
     height: '100%',
   },
   cardContent: {
@@ -45,7 +45,7 @@ export const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: '#E8F0FE',
+    backgroundColor: '#E0F2FE',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 12,
@@ -83,21 +83,21 @@ export const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 16,
-    color: '#EA4335',
+    color: '#0284C7',
     textAlign: 'center',
   },
   guideContainer: {
     marginTop: 24,
     padding: 16,
-    backgroundColor: '#E8F0FE',
+    backgroundColor: '#E0F2FE',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#D0E1F9',
+    borderColor: '#BAE6FD',
   },
   guideTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#1A73E8',
+    color: '#38BDF8',
     marginBottom: 8,
   },
   guideText: {

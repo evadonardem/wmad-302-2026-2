@@ -6,7 +6,7 @@ import { StyleSheet } from 'react-native';
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: '#E0F2FE',
   },
   content: {
     paddingHorizontal: 16,
@@ -17,10 +17,10 @@ export const styles = StyleSheet.create({
   },
   searchInput: {
     height: 52,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F0F9FF',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: '#BAE6FD',
     paddingHorizontal: 16,
     fontSize: 16,
     color: '#202124',
@@ -29,7 +29,7 @@ export const styles = StyleSheet.create({
     padding: 8,
   },
   searchButton: {
-    backgroundColor: '#1A73E8',
+    backgroundColor: '#38BDF8',
     borderRadius: 12,
     paddingHorizontal: 16,
     justifyContent: 'center',
@@ -57,20 +57,20 @@ export const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
-    backgroundColor: '#FFFFFF',
+    borderColor: '#BAE6FD',
+    backgroundColor: '#F0F9FF',
   },
   filterChipSelected: {
-    backgroundColor: '#1A73E8',
-    borderColor: '#1A73E8',
+    backgroundColor: '#38BDF8',
+    borderColor: '#38BDF8',
   },
   filterChipText: {
     fontSize: 13,
     fontWeight: '500',
-    color: '#1A73E8',
+    color: '#38BDF8',
   },
   filterChipTextSelected: {
-    color: '#FFFFFF',
+    color: '#F0F9FF',
   },
   sortOptions: {
     flexDirection: 'row',
@@ -82,20 +82,20 @@ export const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
-    backgroundColor: '#FFFFFF',
+    borderColor: '#BAE6FD',
+    backgroundColor: '#F0F9FF',
   },
   sortChipSelected: {
-    backgroundColor: '#1A73E8',
-    borderColor: '#1A73E8',
+    backgroundColor: '#38BDF8',
+    borderColor: '#38BDF8',
   },
   sortChipText: {
     fontSize: 13,
     fontWeight: '500',
-    color: '#1A73E8',
+    color: '#38BDF8',
   },
   sortChipTextSelected: {
-    color: '#FFFFFF',
+    color: '#F0F9FF',
   },
   resultsSection: {
     marginTop: 8,
@@ -114,7 +114,7 @@ export const styles = StyleSheet.create({
   },
   card: {
     borderRadius: 12,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F0F9FF',
   },
   resultContent: {
     flexDirection: 'row',
@@ -132,7 +132,7 @@ export const styles = StyleSheet.create({
   },
   resultCategory: {
     fontSize: 11,
-    color: '#1A73E8',
+    color: '#38BDF8',
     fontWeight: '600',
     textTransform: 'uppercase',
     marginBottom: 4,
@@ -152,7 +152,7 @@ export const styles = StyleSheet.create({
   currentPrice: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#1A73E8',
+    color: '#38BDF8',
   },
   originalPrice: {
     fontSize: 13,
@@ -165,10 +165,10 @@ export const styles = StyleSheet.create({
     marginBottom: 4,
   },
   difficultyChip: {
-    backgroundColor: '#FFF3E0',
+    backgroundColor: '#E0F2FE',
   },
   cuisineChip: {
-    backgroundColor: '#E8F5E9',
+    backgroundColor: '#BAE6FD',
   },
   resultDetails: {
     fontSize: 12,
@@ -199,15 +199,15 @@ export const styles = StyleSheet.create({
   guideContainer: {
     marginTop: 24,
     padding: 16,
-    backgroundColor: '#E8F0FE',
+    backgroundColor: '#E0F2FE',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#D0E1F9',
+    borderColor: '#BAE6FD',
   },
   guideTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#1A73E8',
+    color: '#38BDF8',
     marginBottom: 8,
   },
   guideText: {

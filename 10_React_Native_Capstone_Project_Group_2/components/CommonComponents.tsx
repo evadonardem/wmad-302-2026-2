@@ -108,8 +108,8 @@ export function ProductCard({ product, onPress, style }: ProductCardProps) {
           />
           {product.discountPercentage > 0 && (
             <Badge style={styles.discountBadge}>
-              -{Math.round(product.discountPercentage)}%
-            </Badge>
+  {`-${Math.round(product.discountPercentage)}%`}
+</Badge>
           )}
         </View>
         <Card.Content style={styles.cardContent}>
@@ -156,7 +156,7 @@ export function CategoryChip({ label, selected, onPress, icon, style }: Category
         <MaterialCommunityIcons
           name={icon}
           size={16}
-          color={selected ? '#FFFFFF' : '#1A73E8'}
+          color={selected ? '#F0F9FF' : '#38BDF8'}
           style={{ marginRight: 4 }}
         />
       )}
@@ -180,7 +180,7 @@ export function LoadingOverlay({ visible, message = 'Loading...' }: LoadingOverl
 
   return (
     <View style={styles.loadingOverlay}>
-      <ActivityIndicator size="large" color="#1A73E8" />
+      <ActivityIndicator size="large" color="#38BDF8" />
       <Text style={styles.loadingText}>{message}</Text>
     </View>
   );
@@ -197,7 +197,7 @@ interface EmptyStateProps {
 export function EmptyState({ icon, title, message, actionLabel, onAction }: EmptyStateProps) {
   return (
     <View style={styles.emptyState}>
-      <MaterialCommunityIcons name={icon} size={80} color="#DADCE0" />
+      <MaterialCommunityIcons name={icon} size={80} color="#BAE6FD" />
       <Text style={styles.emptyTitle}>{title}</Text>
       <Text style={styles.emptyMessage}>{message}</Text>
       {actionLabel && onAction && (
@@ -233,12 +233,12 @@ const styles = StyleSheet.create({
   card: {
     borderRadius: 12,
     overflow: 'hidden',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F0F9FF',
   },
   imageContainer: {
     position: 'relative',
     height: 160,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: '#E0F2FE',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -262,20 +262,20 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   easy: {
-    backgroundColor: '#E8F5E9',
+    backgroundColor: '#BAE6FD',
   },
   medium: {
-    backgroundColor: '#FFF3E0',
+    backgroundColor: '#E0F2FE',
   },
   hard: {
-    backgroundColor: '#FDEDED',
+    backgroundColor: '#BAE6FD',
   },
   discountBadge: {
     position: 'absolute',
     top: 8,
     left: 8,
     zIndex: 1,
-    backgroundColor: '#1A73E8',
+    backgroundColor: '#38BDF8',
   },
   cardContent: {
     padding: 12,
@@ -283,7 +283,7 @@ const styles = StyleSheet.create({
   recipeTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#3E2723',
+    color: '#202124',
     marginBottom: 8,
   },
   productTitle: {
@@ -294,7 +294,7 @@ const styles = StyleSheet.create({
   },
   productCategory: {
     fontSize: 12,
-    color: '#1A73E8',
+    color: '#38BDF8',
     fontWeight: '500',
     marginBottom: 4,
     textTransform: 'capitalize',
@@ -306,7 +306,7 @@ const styles = StyleSheet.create({
   },
   metaText: {
     fontSize: 12,
-    color: '#8D6E63',
+    color: '#0284C7',
     fontWeight: '500',
   },
   cuisineRow: {
@@ -316,7 +316,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   cuisineChip: {
-    backgroundColor: '#FFF3E0',
+    backgroundColor: '#E0F2FE',
   },
   ratingRow: {
     flexDirection: 'row',
@@ -336,7 +336,7 @@ const styles = StyleSheet.create({
   currentPrice: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#1A73E8',
+    color: '#38BDF8',
   },
   originalPrice: {
     fontSize: 13,
@@ -348,22 +348,22 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
-    backgroundColor: '#FFFFFF',
+    borderColor: '#BAE6FD',
+    backgroundColor: '#F0F9FF',
     flexDirection: 'row',
     alignItems: 'center',
   },
   categoryChipSelected: {
-    backgroundColor: '#1A73E8',
-    borderColor: '#1A73E8',
+    backgroundColor: '#38BDF8',
+    borderColor: '#38BDF8',
   },
   categoryChipText: {
     fontSize: 13,
     fontWeight: '500',
-    color: '#1A73E8',
+    color: '#38BDF8',
   },
   categoryChipTextSelected: {
-    color: '#FFFFFF',
+    color: '#F0F9FF',
   },
   loadingOverlay: {
     position: 'absolute',
@@ -405,7 +405,7 @@ const styles = StyleSheet.create({
     height: 52,
   },
   skeleton: {
-    backgroundColor: '#E0E0E0',
+    backgroundColor: '#BAE6FD',
     borderRadius: 8,
   },
 });

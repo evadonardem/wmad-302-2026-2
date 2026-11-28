@@ -8,25 +8,25 @@ export const theme = {
   ...MD3LightTheme,
   colors: {
     ...MD3LightTheme.colors,
-    primary: '#1A73E8',      // Google/Trust blue
-    primaryContainer: '#E8F0FE',
-    secondary: '#5C6BC0',    // Indigo
-    secondaryContainer: '#E8EAF6',
-    tertiary: '#34A853',     // Success green
-    tertiaryContainer: '#E6F4EA',
-    surface: '#FFFFFF',
-    surfaceVariant: '#F8F9FA',
-    background: '#F8F9FA',
-    error: '#EA4335',
-    errorContainer: '#FCE8E6',
-    onPrimary: '#FFFFFF',
-    onSecondary: '#FFFFFF',
-    onTertiary: '#FFFFFF',
+    primary: '#38BDF8',      // Sky blue
+    primaryContainer: '#BAE6FD',
+    secondary: '#0284C7',    // Deep sky blue
+    secondaryContainer: '#E0F2FE',
+    tertiary: '#0EA5E9',     // Sky blue
+    tertiaryContainer: '#BAE6FD',
+    surface: '#F0F9FF',
+    surfaceVariant: '#E0F2FE',
+    background: '#E0F2FE',
+    error: '#0369A1',
+    errorContainer: '#BAE6FD',
+    onPrimary: '#F0F9FF',
+    onSecondary: '#F0F9FF',
+    onTertiary: '#F0F9FF',
     onSurface: '#202124',
     onSurfaceVariant: '#5F6368',
     onBackground: '#202124',
-    outline: '#DADCE0',
-    outlineVariant: '#E8EAED',
+    outline: '#7DD3FC',
+    outlineVariant: '#BAE6FD',
   },
   roundness: 8,
   fonts: {

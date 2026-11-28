@@ -6,7 +6,7 @@ import { StyleSheet } from 'react-native';
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: '#E0F2FE',
   },
   loadingContainer: {
     flex: 1,
@@ -64,7 +64,7 @@ export const styles = StyleSheet.create({
   },
   cartItem: {
     flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F0F9FF',
     borderRadius: 12,
     padding: 12,
     alignItems: 'center',
@@ -79,7 +79,7 @@ export const styles = StyleSheet.create({
     height: 80,
     borderRadius: 8,
     marginRight: 12,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: '#E0F2FE',
   },
   itemInfo: {
     flex: 1,
@@ -99,7 +99,7 @@ export const styles = StyleSheet.create({
   itemCurrentPrice: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#1A73E8',
+    color: '#38BDF8',
   },
   itemOriginalPrice: {
     fontSize: 13,
@@ -126,9 +126,9 @@ export const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F0F9FF',
     borderTopWidth: 1,
-    borderTopColor: '#E8EAED',
+    borderTopColor: '#BAE6FD',
     padding: 20,
     paddingBottom: 30,
     elevation: 8,
@@ -154,11 +154,11 @@ export const styles = StyleSheet.create({
   discountValue: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#34A853',
+    color: '#0EA5E9',
   },
   summaryRowDivider: {
     height: 1,
-    backgroundColor: '#E8EAED',
+    backgroundColor: '#BAE6FD',
     marginVertical: 12,
   },
   summaryRowTotal: {
@@ -174,7 +174,7 @@ export const styles = StyleSheet.create({
   summaryValueTotal: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#1A73E8',
+    color: '#38BDF8',
   },
   checkoutButton: {
     borderRadius: 8,
@@ -183,15 +183,15 @@ export const styles = StyleSheet.create({
   guideContainer: {
     margin: 16,
     padding: 16,
-    backgroundColor: '#E8F0FE',
+    backgroundColor: '#E0F2FE',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#D0E1F9',
+    borderColor: '#BAE6FD',
   },
   guideTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#1A73E8',
+    color: '#38BDF8',
     marginBottom: 8,
   },
   guideText: {

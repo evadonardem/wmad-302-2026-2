@@ -6,7 +6,7 @@ import { StyleSheet } from 'react-native';
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: '#E0F2FE',
   },
   scrollContent: {
     flexGrow: 1,
@@ -25,7 +25,7 @@ export const styles = StyleSheet.create({
   appName: {
     fontSize: 32,
     fontWeight: '700',
-    color: '#1A73E8',
+    color: '#38BDF8',
     letterSpacing: -0.5,
   },
   tagline: {
@@ -63,13 +63,13 @@ export const styles = StyleSheet.create({
     fontSize: 20,
   },
   errorContainer: {
-    backgroundColor: '#FCE8E6',
+    backgroundColor: '#BAE6FD',
     borderRadius: 8,
     padding: 12,
     marginBottom: 16,
   },
   errorText: {
-    color: '#EA4335',
+    color: '#0284C7',
     fontSize: 14,
     textAlign: 'center',
   },
@@ -99,7 +99,7 @@ export const styles = StyleSheet.create({
   },
   demoButtonText: {
     fontSize: 14,
-    color: '#1A73E8',
+    color: '#38BDF8',
     fontWeight: '500',
   },
   registerContainer: {
@@ -116,7 +116,7 @@ export const styles = StyleSheet.create({
   },
   linkText: {
     fontSize: 14,
-    color: '#1A73E8',
+    color: '#38BDF8',
     fontWeight: '600',
   },
   footer: {
@@ -159,13 +159,13 @@ export const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
-    backgroundColor: '#FFFFFF',
+    borderColor: '#BAE6FD',
+    backgroundColor: '#F0F9FF',
     alignItems: 'center',
   },
   genderOptionSelected: {
-    borderColor: '#1A73E8',
-    backgroundColor: '#E8F0FE',
+    borderColor: '#38BDF8',
+    backgroundColor: '#E0F2FE',
   },
   genderOptionText: {
     fontSize: 14,
@@ -173,7 +173,7 @@ export const styles = StyleSheet.create({
     color: '#5F6368',
   },
   genderOptionTextSelected: {
-    color: '#1A73E8',
+    color: '#38BDF8',
     fontWeight: '600',
   },
   termsContainer: {
@@ -208,15 +208,15 @@ export const styles = StyleSheet.create({
   guideContainer: {
     marginTop: 24,
     padding: 16,
-    backgroundColor: '#E8F0FE',
+    backgroundColor: '#E0F2FE',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#D0E1F9',
+    borderColor: '#BAE6FD',
   },
   guideTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#1A73E8',
+    color: '#38BDF8',
     marginBottom: 8,
   },
   guideText: {

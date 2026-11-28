@@ -63,8 +63,8 @@ class ProductApiService {
    * Get all categories
    */
   async getCategories(): Promise<string[]> {
-    const response = await this.client.get<string[]>('/products/categories');
-    return response.data;
+    const response = await this.client.get<Array<string | { slug?: string; name?: string }>>('/products/categories');
+    return response.data.map((category) => typeof category === 'string' ? category : (category.slug || category.name || '')).filter(Boolean);
   }
 
   /**
@@ -74,6 +74,12 @@ class ProductApiService {
     const response = await this.client.get<ProductsResponse>(`/products/brand/${encodeURIComponent(brand)}`, {
       params,
     });
+    return response.data;
+  }
+
+  /** Update a user's profile (DummyJSON simulates this request). */
+  async updateUser(id: number, updates: { firstName?: string; lastName?: string; email?: string }): Promise<{ id: number; firstName: string; lastName: string; email: string }> {
+    const response = await this.client.put(`/users/${id}`, updates);
     return response.data;
   }
 

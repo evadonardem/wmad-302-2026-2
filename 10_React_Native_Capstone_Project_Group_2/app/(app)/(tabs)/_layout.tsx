@@ -1,9 +1,9 @@
+
 /**
  * Tabs Layout - Marketplace App Navigation
  * Tabs: Home (Shop), Categories, Cart, Profile
  */
 import { Tabs } from 'expo-router';
-import React from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
@@ -14,10 +14,10 @@ export default function TabsLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#1A73E8',
+        tabBarActiveTintColor: '#38BDF8',
         tabBarInactiveTintColor: '#5F6368',
         tabBarStyle: {
-          backgroundColor: '#FFFFFF',
+          backgroundColor: '#F0F9FF',
           borderTopWidth: 0,
           elevation: 8,
           shadowColor: '#000',
@@ -37,50 +37,72 @@ export default function TabsLayout() {
         name="home"
         options={{
           title: 'Shop',
-          tabBarIcon: ({ focused, color }) => (
+          tabBarIcon: ({ focused }: { focused: boolean }) => (
             <MaterialCommunityIcons
               name={focused ? 'storefront' : 'storefront-outline'}
               size={24}
-              color={color}
+              color={focused ? '#38BDF8' : '#5F6368'}
             />
           ),
         }}
       />
+
+      <Tabs.Screen
+        name="search"
+        options={{
+          title: 'Search',
+          tabBarIcon: ({ focused }: { focused: boolean }) => (
+            <MaterialCommunityIcons
+              name="magnify"
+              size={24}
+              color={focused ? '#38BDF8' : '#5F6368'}
+            />
+          ),
+        }}
+      />
+
+      <Tabs.Screen
+        name="product/[id]"
+        options={{ href: null }}
+      />
+
       <Tabs.Screen
         name="categories"
         options={{
           title: 'Categories',
-          tabBarIcon: ({ focused, color }) => (
+          tabBarIcon: ({ focused }: { focused: boolean }) => (
             <MaterialCommunityIcons
               name={focused ? 'view-grid' : 'view-grid-outline'}
               size={24}
-              color={color}
+              color={focused ? '#38BDF8' : '#5F6368'}
             />
           ),
         }}
       />
+
       <Tabs.Screen
         name="cart"
         options={{
           title: 'Cart',
-          tabBarIcon: ({ focused, color }) => (
+          tabBarIcon: ({ focused }: { focused: boolean }) => (
             <MaterialCommunityIcons
               name={focused ? 'cart' : 'cart-outline'}
               size={24}
-              color={color}
+              color={focused ? '#38BDF8' : '#5F6368'}
             />
           ),
         }}
       />
+
       <Tabs.Screen
         name="profile"
         options={{
           title: 'Profile',
-          tabBarIcon: ({ focused, color }) => (
+          tabBarIcon: ({ focused }: { focused: boolean }) => (
             <MaterialCommunityIcons
               name={focused ? 'account' : 'account-outline'}
               size={24}
-              color={color}
+              color={focused ? '#38BDF8' : '#5F6368'}
             />
           ),
         }}
