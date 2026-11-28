@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import {
@@ -24,6 +24,7 @@ import { AppLanguage, useAppPreferences } from '@/context/AppPreferencesContext'
 import { requestNotificationPermission, setDealNotificationsEnabled } from '@/services/localNotifications';
 import { getThemedStyles } from '@/utils/themeStyles';
 import { advanceOrderTracking, createDeliveredOrderTracking, createOrderTracking, DELIVERY_STATUSES } from '@/services/orderTracking';
+import { Alert } from '@/utils/alert';
 
 type ProfileDialog = 'edit' | 'orders' | 'addresses' | 'payment' | 'settings' | 'wishlist' | 'logout' | null;
 type ProfileSettings = { orderUpdates: boolean; dealUpdates: boolean };

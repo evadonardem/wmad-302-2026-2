@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Image, ScrollView, Share, Text, View } from 'react-native';
+import { ActivityIndicator, Image, ScrollView, Share, Text, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Button, Card, Dialog, IconButton, Portal, TextInput, useTheme } from 'react-native-paper';
+import { Button, Card, Dialog, IconButton, Portal, Snackbar, TextInput, useTheme } from 'react-native-paper';
 import { Product } from '@/types/product';
 import { productApi } from '@/services/productApi';
 import { useCart } from '@/context/CartContext';
 import { favoritesStorage, LocalProductReview, reviewsStorage } from '@/utils/storage';
 import { useAuth } from '@/context/AuthContext';
 import { useAppPreferences } from '@/context/AppPreferencesContext';
+import { Alert } from '@/utils/alert';
 
 export default function ProductDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -24,6 +25,7 @@ export default function ProductDetailScreen() {
   const [reviewDialogVisible, setReviewDialogVisible] = useState(false);
   const [reviewRating, setReviewRating] = useState(5);
   const [reviewComment, setReviewComment] = useState('');
+  const [cartFeedback, setCartFeedback] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -93,14 +95,17 @@ export default function ProductDetailScreen() {
   const discountedPrice = product.price * (1 - product.discountPercentage / 100);
   const handleAddToCart = () => {
     if (product.stock < 1) {
-      Alert.alert('Out of Stock', 'This product is currently unavailable.');
+      setCartFeedback(t('Out of stock'));
       return;
     }
-    if (cartLoading) return;
+    if (cartLoading) {
+      setCartFeedback(t('Cart is still loading. Please try again.'));
+      return;
+    }
     if (addToCart(product)) {
-      Alert.alert('Added to cart', `${product.title} was added to your cart.`);
+      setCartFeedback(`${product.title} ${t('Added to cart').toLowerCase()}`);
     } else {
-      Alert.alert('Stock limit reached', 'Your cart already contains the maximum available quantity.');
+      setCartFeedback(t('Stock limit reached'));
     }
   };
   const handleToggleFavorite = async () => {
@@ -150,7 +155,8 @@ export default function ProductDetailScreen() {
   const reviews = [...localReviews, ...product.reviews];
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: colors.background }}>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
+    <ScrollView style={{ flex: 1 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', padding: 8 }}>
         <IconButton icon="arrow-left" onPress={() => router.back()} accessibilityLabel="Go back" />
         <Text style={{ fontSize: 18, fontWeight: '700', color: colors.onSurface }}>{t('Product details')}</Text>
@@ -254,5 +260,20 @@ export default function ProductDetailScreen() {
         </Dialog>
       </Portal>
     </ScrollView>
+      <Snackbar
+        visible={cartFeedback !== null}
+        onDismiss={() => setCartFeedback(null)}
+        duration={3000}
+        action={{
+          label: t('View cart'),
+          onPress: () => {
+            setCartFeedback(null);
+            router.push('/(app)/(tabs)/cart');
+          },
+        }}
+      >
+        {cartFeedback ?? ''}
+      </Snackbar>
+    </View>
   );
 }

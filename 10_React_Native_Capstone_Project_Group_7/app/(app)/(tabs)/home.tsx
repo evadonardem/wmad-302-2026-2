@@ -4,7 +4,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
   Image,
   RefreshControl,
@@ -15,12 +14,13 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { Button } from 'react-native-paper';
+import { Button, Snackbar } from 'react-native-paper';
 import { useAuth } from '@/context/AuthContext';
 import { useCart } from '@/context/CartContext';
 import { productApi } from '@/services/productApi';
 import { Product } from '@/types/product';
 import { favoritesStorage } from '@/utils/storage';
+import { Alert } from '@/utils/alert';
 import { styles as baseStyles } from './homeStyles';
 import { useAppPreferences } from '@/context/AppPreferencesContext';
 import { getThemedStyles } from '@/utils/themeStyles';
@@ -67,7 +67,7 @@ export default function HomeScreen() {
   const { user } = useAuth();
   const { t, colorMode } = useAppPreferences();
   const styles = getThemedStyles(baseStyles, colorMode === 'dark');
-  const { addToCart, isLoading: cartLoading } = useCart();
+  const { addToCart, isLoading: cartLoading, itemCount } = useCart();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [favoriteIds, setFavoriteIds] = useState<number[]>([]);
@@ -76,6 +76,7 @@ export default function HomeScreen() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [total, setTotal] = useState(0);
+  const [cartFeedback, setCartFeedback] = useState<string | null>(null);
   const [dealCountdown, setDealCountdown] = useState('');
   const [dealsExpired, setDealsExpired] = useState(false);
   const [dealDeadline] = useState(() => {
@@ -128,7 +129,12 @@ export default function HomeScreen() {
     if (loadingMore || loading || products.length >= total) return;
     setLoadingMore(true);
     try {
-      const response = await productApi.getProducts({ limit: PAGE_SIZE, skip: products.length });
+      const response = await productApi.getProducts({
+        limit: PAGE_SIZE,
+        skip: products.length,
+        sortBy: 'rating',
+        order: 'desc',
+      });
       setProducts((current) => [...current, ...response.products]);
       setTotal(response.total);
     } catch (requestError: unknown) {
@@ -158,16 +164,19 @@ export default function HomeScreen() {
   };
 
   const addProductToCart = (product: Product) => {
-    if (cartLoading) return;
+    if (cartLoading) {
+      setCartFeedback(t('Cart is still loading. Please try again.'));
+      return;
+    }
     if (product.stock < 1) {
-      Alert.alert('Out of stock', 'This product is currently unavailable.');
+      setCartFeedback(t('Out of stock'));
       return;
     }
     if (!addToCart(product)) {
-      Alert.alert('Stock limit reached', `Only ${product.stock} items are available.`);
+      setCartFeedback(t('Stock limit reached'));
       return;
     }
-    Alert.alert('Added to cart', `${product.title} was added to your cart.`);
+    setCartFeedback(`${product.title} ${t('Added to cart').toLowerCase()}`);
   };
 
   const openProduct = (product: Product) => router.push(`/(app)/product/${product.id}`);
@@ -214,6 +223,8 @@ export default function HomeScreen() {
       <TouchableOpacity
         style={styles.quickAddButton}
         onPress={() => addProductToCart(item)}
+        disabled={cartLoading}
+        accessibilityState={{ disabled: cartLoading }}
         accessibilityRole="button"
         accessibilityLabel={`Add ${item.title} to cart`}
       >
@@ -239,6 +250,11 @@ export default function HomeScreen() {
           accessibilityLabel="Open shopping cart"
         >
           <MaterialCommunityIcons name="cart-outline" size={24} color="#202124" />
+          {itemCount > 0 && (
+            <View style={styles.cartCountBadge}>
+              <Text style={styles.cartCountText}>{itemCount > 99 ? '99+' : itemCount}</Text>
+            </View>
+          )}
         </TouchableOpacity>
       </View>
 
@@ -359,30 +375,46 @@ export default function HomeScreen() {
   }
 
   return (
-    <FlatList
-      style={styles.scrollView}
-      contentContainerStyle={styles.storeContent}
-      data={products}
-      renderItem={renderProduct}
-      keyExtractor={(item) => item.id.toString()}
-      numColumns={2}
-      columnWrapperStyle={styles.productRow}
-      ListHeaderComponent={listHeader}
-      ListFooterComponent={loadingMore ? (
-        <ActivityIndicator style={styles.listFooter} color="#66BB6A" />
-      ) : error ? (
-        <Button mode="text" onPress={() => void loadMore()}>{t('Could not load more. Tap to retry.')}</Button>
-      ) : null}
-      onEndReached={() => void loadMore()}
-      onEndReachedThreshold={0.5}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={() => void fetchData(true)} colors={['#66BB6A']} />
-      }
-      ListEmptyComponent={
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>{t('No products available right now.')}</Text>
-        </View>
-      }
-    />
+    <View style={{ flex: 1 }}>
+      <FlatList
+        style={styles.scrollView}
+        contentContainerStyle={styles.storeContent}
+        data={products}
+        renderItem={renderProduct}
+        keyExtractor={(item) => item.id.toString()}
+        numColumns={2}
+        columnWrapperStyle={styles.productRow}
+        ListHeaderComponent={listHeader}
+        ListFooterComponent={loadingMore ? (
+          <ActivityIndicator style={styles.listFooter} color="#66BB6A" />
+        ) : error ? (
+          <Button mode="text" onPress={() => void loadMore()}>{t('Could not load more. Tap to retry.')}</Button>
+        ) : null}
+        onEndReached={() => void loadMore()}
+        onEndReachedThreshold={0.5}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={() => void fetchData(true)} colors={['#66BB6A']} />
+        }
+        ListEmptyComponent={
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>{t('No products available right now.')}</Text>
+          </View>
+        }
+      />
+      <Snackbar
+        visible={cartFeedback !== null}
+        onDismiss={() => setCartFeedback(null)}
+        duration={3000}
+        action={{
+          label: t('View cart'),
+          onPress: () => {
+            setCartFeedback(null);
+            router.push('/(app)/(tabs)/cart');
+          },
+        }}
+      >
+        {cartFeedback ?? ''}
+      </Snackbar>
+    </View>
   );
 }

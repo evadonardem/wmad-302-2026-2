@@ -24,13 +24,13 @@ export interface Product {
   warrantyInformation: string;
   shippingInformation: string;
   availabilityStatus: string;
-  reviews: Array<{
+  reviews: {
     rating: number;
     comment: string;
     date: string;
     reviewerName: string;
     reviewerEmail: string;
-  }>;
+  }[];
   returnPolicy: string;
   minimumOrderQuantity: number;
   meta: {
@@ -63,7 +63,7 @@ export interface ProductSearchParams {
 
 export interface Cart {
   id: number;
-  products: Array<{
+  products: {
     id: number;
     title: string;
     price: number;
@@ -72,7 +72,7 @@ export interface Cart {
     discountPercentage: number;
     discountedTotal: number;
     thumbnail: string;
-  }>;
+  }[];
   total: number;
   discountedTotal: number;
   totalProducts: number;
@@ -96,10 +96,10 @@ export interface DeliveryTracking {
 
 export interface CartAddRequest {
   userId: number;
-  products: Array<{
+  products: {
     id: number;
     quantity: number;
-  }>;
+  }[];
 }
 
 export interface CartItem {

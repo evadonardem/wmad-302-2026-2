@@ -85,7 +85,7 @@ export async function getMultipleStorageItems<T extends Record<string, unknown>>
  * Set multiple items at once
  */
 export async function setMultipleStorageItems(
-  items: Array<{ key: StorageKey; value: unknown }>
+  items: { key: StorageKey; value: unknown }[]
 ): Promise<void> {
   try {
     const pairs = items.map(({ key, value }): [string, string] => [key, JSON.stringify(value)]);

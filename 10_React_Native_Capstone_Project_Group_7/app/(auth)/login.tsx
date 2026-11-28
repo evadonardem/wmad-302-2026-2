@@ -12,7 +12,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
-  Alert,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
@@ -21,6 +20,7 @@ import { FontAwesome } from '@expo/vector-icons';
 import { styles as baseStyles } from './styles';
 import { useAppPreferences } from '@/context/AppPreferencesContext';
 import { getThemedStyles } from '@/utils/themeStyles';
+import { Alert } from '@/utils/alert';
 
 export default function LoginScreen() {
   const router = useRouter();

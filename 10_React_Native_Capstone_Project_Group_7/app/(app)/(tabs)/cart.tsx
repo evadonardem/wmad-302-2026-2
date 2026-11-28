@@ -1,8 +1,8 @@
 import React, { useMemo, useState } from 'react';
-import { View, Text, FlatList, ActivityIndicator, Alert, Image } from 'react-native';
+import { View, Text, FlatList, ActivityIndicator, Image } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
-import { Title, Button, IconButton, TextInput, Dialog, Portal, useTheme } from 'react-native-paper';
+import { Title, Button, IconButton, TextInput, Dialog, Portal, Snackbar, useTheme } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '@/context/AuthContext';
 import { useCart } from '@/context/CartContext';
@@ -27,6 +27,9 @@ export default function CartScreen() {
   const [shippingName, setShippingName] = useState('');
   const [shippingAddress, setShippingAddress] = useState('');
   const [orderConfirmation, setOrderConfirmation] = useState<string | null>(null);
+  const [removeProductId, setRemoveProductId] = useState<number | null>(null);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
+  const [cartNotice, setCartNotice] = useState<string | null>(null);
   const [couponCode, setCouponCode] = useState('');
   const [coupon, setCoupon] = useState<Coupon | null>(null);
   const [couponError, setCouponError] = useState('');
@@ -63,10 +66,11 @@ export default function CartScreen() {
   const handleCheckout = async () => {
     if (!user || items.length === 0) return;
     if (!shippingName.trim() || !shippingAddress.trim()) {
-      Alert.alert('Shipping details required', 'Enter a recipient name and delivery address to continue.');
+      setCheckoutError('Enter a recipient name and delivery address to continue.');
       return;
     }
 
+    setCheckoutError(null);
     setPlacingOrder(true);
     try {
       const order = await productApi.addCart({
@@ -108,17 +112,14 @@ export default function CartScreen() {
       setCouponCode('');
     } catch (error) {
       console.error('Checkout failed:', error);
-      Alert.alert('Checkout failed', error instanceof Error ? error.message : 'Please try again.');
+      setCheckoutError(error instanceof Error ? error.message : 'Checkout failed. Please try again.');
     } finally {
       setPlacingOrder(false);
     }
   };
 
   const confirmRemove = (productId: number) => {
-    Alert.alert('Remove Item', 'Remove this item from your cart?', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Remove', style: 'destructive', onPress: () => removeItem(productId) },
-    ]);
+    setRemoveProductId(productId);
   };
 
   const renderItem = ({ item }: { item: CartItem }) => {
@@ -147,7 +148,7 @@ export default function CartScreen() {
               size={20}
               onPress={() => {
                 if (!updateQuantity(item.productId, item.quantity + 1)) {
-                  Alert.alert('Out of Stock', `Only ${item.stock} items are available.`);
+                  setCartNotice(`Only ${item.stock} items are available.`);
                 }
               }}
               disabled={item.quantity >= item.stock}
@@ -251,7 +252,10 @@ export default function CartScreen() {
               <Text style={styles.summaryLabelTotal}>{t('Total')}</Text>
               <Text style={styles.summaryValueTotal}>${checkoutTotal.toFixed(2)}</Text>
             </View>
-            <Button mode="contained" onPress={() => setCheckoutVisible(true)} style={styles.checkoutButton}>
+            <Button mode="contained" onPress={() => {
+              setCheckoutError(null);
+              setCheckoutVisible(true);
+            }} style={styles.checkoutButton}>
               {t('Checkout')}
             </Button>
           </View>
@@ -278,9 +282,15 @@ export default function CartScreen() {
               multiline
               disabled={placingOrder}
             />
+            {checkoutError ? (
+              <Text style={{ color: colors.error, marginTop: 8 }}>{checkoutError}</Text>
+            ) : null}
           </Dialog.Content>
           <Dialog.Actions>
-            <Button onPress={() => setCheckoutVisible(false)} disabled={placingOrder}>Cancel</Button>
+            <Button onPress={() => {
+              setCheckoutVisible(false);
+              setCheckoutError(null);
+            }} disabled={placingOrder}>Cancel</Button>
             <Button onPress={handleCheckout} loading={placingOrder} disabled={placingOrder}>{t('Place order')}</Button>
           </Dialog.Actions>
         </Dialog>
@@ -289,7 +299,32 @@ export default function CartScreen() {
           <Dialog.Content><Text style={{ color: colors.onSurface }}>{orderConfirmation}</Text></Dialog.Content>
           <Dialog.Actions><Button onPress={() => setOrderConfirmation(null)}>Continue</Button></Dialog.Actions>
         </Dialog>
+        <Dialog visible={removeProductId !== null} onDismiss={() => setRemoveProductId(null)}>
+          <Dialog.Title>Remove item?</Dialog.Title>
+          <Dialog.Content>
+            <Text style={{ color: colors.onSurface }}>Remove this item from your cart?</Text>
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={() => setRemoveProductId(null)}>Cancel</Button>
+            <Button
+              textColor={colors.error}
+              onPress={() => {
+                if (removeProductId !== null) removeItem(removeProductId);
+                setRemoveProductId(null);
+              }}
+            >
+              Remove
+            </Button>
+          </Dialog.Actions>
+        </Dialog>
       </Portal>
+      <Snackbar
+        visible={cartNotice !== null}
+        onDismiss={() => setCartNotice(null)}
+        duration={3000}
+      >
+        {cartNotice ?? ''}
+      </Snackbar>
     </View>
   );
 }

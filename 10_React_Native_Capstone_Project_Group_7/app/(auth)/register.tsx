@@ -9,7 +9,6 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
-  Alert,
   ActivityIndicator,
   TouchableOpacity,
 } from 'react-native';
@@ -19,6 +18,7 @@ import { Card, Button, TextInput as PaperTextInput, Checkbox } from 'react-nativ
 import { styles as baseStyles } from './styles';
 import { useAppPreferences } from '@/context/AppPreferencesContext';
 import { getThemedStyles } from '@/utils/themeStyles';
+import { Alert } from '@/utils/alert';
 
 export default function RegisterScreen() {
   const router = useRouter();
