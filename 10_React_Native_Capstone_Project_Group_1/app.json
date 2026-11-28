@@ -37,7 +37,11 @@
     "extra": {
       "router": {
         "origin": false
+      },
+      "eas": {
+        "projectId": "b61990ce-1125-4173-b13b-48b2b42ca433"
       }
-    }
+    },
+    "owner": "lloyd_67"
   }
 }
