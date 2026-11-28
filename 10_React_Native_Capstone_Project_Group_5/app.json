@@ -1,0 +1,54 @@
+{
+  "expo": {
+    "name": "Kartora",
+    "slug": "10-marketplace-capstone",
+    "version": "1.0.0",
+    "icon": "./assets/kartora-logo.png",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/kartora-logo.png",
+      "imageWidth": 200,
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.wmad302.marketplace"
+    },
+    "android": {
+      "package": "com.wmad302.marketplace",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/kartora-logo.png",
+        "backgroundColor": "#211033"
+      }
+    },
+    "web": {
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      "expo-secure-store",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Kartora needs access to your photos so you can choose a profile picture."
+        }
+      ]
+    ],
+    "scheme": "marketplace",
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "ef5a6348-3fda-4e13-b676-c9df419616bd"
+      }
+    },
+    "owner": "jdbdudh"
+  }
+}
